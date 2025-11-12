@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Tenant\Employees\SuspensionController;
+use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Models\User;
 use App\Models\Assets;
@@ -195,6 +196,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('leave-type')->middleware(CheckPermission::class . ':43');
     Route::get('/settings/approval-steps', [ApprovalController::class, 'approvalIndex'])->name('approval-steps')->middleware(CheckPermission::class . ':43');
     Route::get('/settings/custom-fields', [CustomfieldController::class, 'customfieldIndex'])->name('custom-fields');
+    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('biometrics')->middleware(CheckPermission::class . ':43');
 
     // Geofence
     Route::get('/settings/geofence', [GeofenceController::class, 'geofenceIndex'])->name('geofence-settings');

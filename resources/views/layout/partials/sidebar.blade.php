@@ -2,7 +2,8 @@
 <div class="sidebar" id="sidebar">
     <!-- Logo -->
     <div class="sidebar-logo">
-        <a href="#" class="logo logo-normal d-flex flex-column align-items-center justify-content-center" style="text-align: center;">
+        <a href="#" class="logo logo-normal d-flex flex-column align-items-center justify-content-center"
+            style="text-align: center;">
             <img src="{{ URL::asset('build/img/theos.png') }}" alt="Logo" style="max-width:30%; height:auto;">
         </a>
         <a href="#" class="logo-small">
@@ -160,8 +161,7 @@
                         <ul>
                             @if (in_array(3, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][8]) || $role_data['role_id'] == 'global_user')
-                                    <li
-                                        class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
+                                    <li class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
                                         <a href="{{ route('branch-grid') }}">
                                             <i class="ti ti-building"></i><span>Branch</span>
                                         </a>
@@ -182,7 +182,7 @@
                                                     Lists</a>
                                             </li>
                                         @endif
-                                         @if (isset($role_data['user_permission_ids'][9]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][9]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('employees/inactive') }}"
                                                     class="{{ Request::is('employees/inactive') ? 'active' : '' }}">Inactive
                                                     List</a>
@@ -209,8 +209,7 @@
                             @endif
                             @if (in_array(5, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][13]) || $role_data['role_id'] == 'global_user')
-                                    <li
-                                        class="{{ Request::is('holidays', 'holidays/holiday-exception') ? 'active' : '' }}">
+                                    <li class="{{ Request::is('holidays', 'holidays/holiday-exception') ? 'active' : '' }}">
                                         <a href="{{ url('holidays') }}">
                                             <i class="ti ti-calendar-event"></i><span>Holidays</span>
                                         </a>
@@ -218,59 +217,58 @@
                                 @endif
                             @endif
                             @if (in_array(6, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-                                            'attendance-admin',
-                                            'attendance-employee',
-                                            'attendance-settings',
-                                            'shift-management',
-                                            'shift-list',
-                                            'overtime',
-                                            'overtime-employee',
-                                            'attendance-employee/request-attendance',
-                                            'attendance-admin/bulk-atttendance',
-                                            'attendance-admin/request-attendance',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
-                                        <i class="ti ti-file-time"></i><span>Attendance</span>
-                                        <span class="menu-arrow"></span>
-                                    </a>
-                                    <ul>
-                                        @if (isset($role_data['user_permission_ids'][14]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('attendance-admin') }}"
-                                                    class="{{ Request::is('attendance-admin', 'attendance-admin/bulk-attednance', 'attendance-admin/request-attendance') ? 'active' : '' }}">Attendance
-                                                    (Admin)</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][15]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('attendance-employee') }}"
-                                                    class="{{ Request::is('attendance-employee','attendance-employee/request-attendance') ? 'active' : '' }}">Attendance
-                                                    (Employee)</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][16]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('shift-management') }}"
-                                                    class="{{ Request::is('shift-management') ? 'active' : '' }}">Shift
-                                                    &
-                                                    Schedule</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][17]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('overtime') }}"
-                                                    class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime(Admin)</a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('overtime-employee') }}"
-                                                    class="{{ Request::is('overtime-employee') ? 'active' : '' }}">Overtime(Employee)</a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][18]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('attendance-settings') }}"
-                                                    class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance
-                                                    Settings</a></li>
-                                        @endif
-                                    </ul>
-                                </li>
+                                                <li class="submenu">
+                                                    <a href="javascript:void(0);" class="{{ Request::is(
+                                    'attendance-admin',
+                                    'attendance-employee',
+                                    'attendance-settings',
+                                    'shift-management',
+                                    'shift-list',
+                                    'overtime',
+                                    'overtime-employee',
+                                    'attendance-employee/request-attendance',
+                                    'attendance-admin/bulk-atttendance',
+                                    'attendance-admin/request-attendance',
+                                )
+                                    ? 'active subdrop'
+                                    : '' }}">
+                                                        <i class="ti ti-file-time"></i><span>Attendance</span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+                                                        @if (isset($role_data['user_permission_ids'][14]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ route('attendance-admin') }}"
+                                                                    class="{{ Request::is('attendance-admin', 'attendance-admin/bulk-attednance', 'attendance-admin/request-attendance') ? 'active' : '' }}">Attendance
+                                                                    (Admin)</a></li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][15]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ route('attendance-employee') }}"
+                                                                    class="{{ Request::is('attendance-employee', 'attendance-employee/request-attendance') ? 'active' : '' }}">Attendance
+                                                                    (Employee)</a></li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][16]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ url('shift-management') }}"
+                                                                    class="{{ Request::is('shift-management') ? 'active' : '' }}">Shift
+                                                                    &
+                                                                    Schedule</a></li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][17]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ url('overtime') }}"
+                                                                    class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime(Admin)</a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ url('overtime-employee') }}"
+                                                                    class="{{ Request::is('overtime-employee') ? 'active' : '' }}">Overtime(Employee)</a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][18]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ route('attendance-settings') }}"
+                                                                    class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance
+                                                                    Settings</a></li>
+                                                        @endif
+                                                    </ul>
+                                                </li>
                             @endif
                             @if (in_array(7, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
@@ -299,52 +297,52 @@
                                 </li>
                             @endif
                             @if (in_array(8, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                              <li class="submenu">
+                                <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('resignation/hr', 'resignation/employee', 'resignation/admin') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-external-link"></i><span>Resignation</span>
                                         <span class="menu-arrow"></span>
-                                     </a> 
-                                    <ul> 
+                                    </a>
+                                    <ul>
                                         @if (isset($role_data['user_permission_ids'][22]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('resignation-admin') }}"
-                                                class="{{ Request::is('resignation/admin') ? 'active' : '' }}">Resignation
-                                                (Admin)</a></li> 
+                                            <li><a href="{{ route('resignation-admin') }}"
+                                                    class="{{ Request::is('resignation/admin') ? 'active' : '' }}">Resignation
+                                                    (Admin)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][58]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('resignation-employee') }}"
-                                                class="{{ Request::is('resignation/employee') ? 'active' : '' }}">Resignation
-                                                (Employee)</a></li> 
+                                            <li><a href="{{ route('resignation-employee') }}"
+                                                    class="{{ Request::is('resignation/employee') ? 'active' : '' }}">Resignation
+                                                    (Employee)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][59]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('resignation-hr') }}"
-                                                class="{{ Request::is('resignation/hr') ? 'active' : '' }}">Resignation
-                                               (HR)</a></li> 
+                                            <li><a href="{{ route('resignation-hr') }}"
+                                                    class="{{ Request::is('resignation/hr') ? 'active' : '' }}">Resignation
+                                                    (HR)</a></li>
                                         @endif
-                                    </ul> 
-                             </li>
-                            @endif 
+                                    </ul>
+                                </li>
+                            @endif
                             @if (in_array(4, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                              <li class="submenu">
+                                <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('suspension', 'suspension/employee', 'suspension/admin') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-alert-octagon"></i><span>Suspension</span>
                                         <span class="menu-arrow"></span>
-                                     </a> 
-                                    <ul> 
+                                    </a>
+                                    <ul>
                                         @if (isset($role_data['user_permission_ids'][60]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('suspension-admin') }}"
-                                                class="{{ Request::is('suspension/admin') ? 'active' : '' }}">Suspension
-                                                (Admin)</a></li> 
+                                            <li><a href="{{ route('suspension-admin') }}"
+                                                    class="{{ Request::is('suspension/admin') ? 'active' : '' }}">Suspension
+                                                    (Admin)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][61]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('suspension-employee-list') }}"
-                                                class="{{ Request::is('suspension/employee') ? 'active' : '' }}">Suspension
-                                                (Employee)</a></li> 
+                                            <li><a href="{{ route('suspension-employee-list') }}"
+                                                    class="{{ Request::is('suspension/employee') ? 'active' : '' }}">Suspension
+                                                    (Employee)</a></li>
                                         @endif
-                                    </ul> 
-                             </li>
-                            @endif 
+                                    </ul>
+                                </li>
+                            @endif
                             @if (in_array(9, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][23]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('termination') ? 'active' : '' }}" hidden>
@@ -355,45 +353,49 @@
                                 @endif
                             @endif
 
-                          @if (in_array(17, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is('official-business/employee', 'official-business/admin') ? 'active subdrop' : '' }}">
-                                    <i class="ti ti-briefcase"></i><span>Official Business</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul>
-                                     @if (isset($role_data['user_permission_ids'][47]) || $role_data['role_id'] == 'global_user')
-                                    <li><a href="{{ route('ob-admin') }}"
-                                            class="{{ Request::is('official-business/admin') ? 'active' : '' }}">Official Business
-                                            (Admin)</a></li>
-                                    @endif
-                                     @if (isset($role_data['user_permission_ids'][48]) || $role_data['role_id'] == 'global_user')
-                                    <li><a href="{{ route('ob-employee') }}"
-                                            class="{{ Request::is('official-business/employee') ? 'active' : '' }}">Official Business
-                                            (Employee)</a></li>
-                                     @endif
-                                </ul>
-                            </li>
+                            @if (in_array(17, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('official-business/employee', 'official-business/admin') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-briefcase"></i><span>Official Business</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][47]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('ob-admin') }}"
+                                                    class="{{ Request::is('official-business/admin') ? 'active' : '' }}">Official
+                                                    Business
+                                                    (Admin)</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][48]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('ob-employee') }}"
+                                                    class="{{ Request::is('official-business/employee') ? 'active' : '' }}">Official
+                                                    Business
+                                                    (Employee)</a></li>
+                                        @endif
+                                    </ul>
+                                </li>
                             @endif
-                             @if (in_array(18, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is('employee-assets','assets-settings') ? 'active subdrop' : '' }}">
-                                    <i class="ti ti-tools"></i><span>Assets Management</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul>
-                                     @if (isset($role_data['user_permission_ids'][49]) || $role_data['role_id'] == 'global_user')
-                                    <li><a href="{{ route('employee-assets') }}"
-                                            class="{{ Request::is('employee-assets') ? 'active' : '' }}">Employee Assets</a></li>
-                                    @endif
-                                     @if (isset($role_data['user_permission_ids'][50]) || $role_data['role_id'] == 'global_user')
-                                    <li><a href="{{ route('assets-settings') }}"
-                                            class="{{ Request::is('assets-settings') ? 'active' : '' }}">Assets Settings</a></li>
-                                     @endif
-                                </ul>
-                            </li>
+                            @if (in_array(18, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('employee-assets', 'assets-settings') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-tools"></i><span>Assets Management</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][49]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('employee-assets') }}"
+                                                    class="{{ Request::is('employee-assets') ? 'active' : '' }}">Employee Assets</a>
+                                            </li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][50]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('assets-settings') }}"
+                                                    class="{{ Request::is('assets-settings') ? 'active' : '' }}">Assets Settings</a>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </li>
                             @endif
                         </ul>
                     </li>
@@ -403,83 +405,81 @@
                     <li>
                         <ul>
                             @if (in_array(10, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-                                            'employee-salary',
-                                            'payroll/payroll-items/sss-contribution',
-                                            'payroll/payroll-items/withholding-tax',
-                                            'payroll/payroll-items/overtime-table',
-                                            'payroll/payroll-items/de-minimis-table',
-                                            'payroll/payroll-items/de-minimis-user',
-                                            'payroll/payroll-items/earnings',
-                                            'payroll/payroll-items/earnings/user',
-                                            'payroll/payroll-items/deductions',
-                                            'payroll/payroll-items/deductions/user',
-                                            'payroll',
-                                            'payroll/process',
-                                            'payroll/generated-payslips',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
-                                        <i class="ti ti-cash"></i><span>Payroll</span>
-                                        <span class="menu-arrow"></span>
-                                    </a>
-                                    <ul>
-                                        @if (isset($role_data['user_permission_ids'][24]) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('payroll-process') }}"
-                                                    class="{{ Request::is('payroll') ? 'active' : '' }}">
-                                                    Process Payroll
-                                                </a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('generatedPayslipIndex') }}"
-                                                    class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
-                                                    Generated Payslips
-                                                </a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('sss-contributionTable') }}"
-                                                    class="{{ Request::is(
-                                                        'payroll/payroll-items/sss-contribution',
-                                                        'payroll/payroll-items/withholding-tax',
-                                                        'payroll/payroll-items/overtime-table',
-                                                        'payroll/payroll-items/de-minimis-table',
-                                                        'payroll/payroll-items/de-minimis-user',
-                                                        'payroll/payroll-items/earnings',
-                                                        'payroll/payroll-items/earnings/user',
-                                                        'payroll/payroll-items/deductions',
-                                                        'payroll/payroll-items/deductions/user',
-                                                    )
-                                                        ? 'active'
-                                                        : '' }}">
-                                                    Payroll Items
-                                                </a>
-                                            </li>
-                                        @endif
-                                         @if (isset($role_data['user_permission_ids'][51]) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('payroll-batch-users') }}"
-                                                    class="{{ Request::is('payroll/batch/users') ? 'active' : '' }}">
-                                                    Payroll Batch Users
-                                                </a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][52]) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('payroll-batch-settings') }}"
-                                                    class="{{ Request::is('payroll/batch/settings') ? 'active' : '' }}">
-                                                    Payroll Batch Settings
-                                                </a>
-                                            </li>
-                                        @endif
-                                    </ul>
-                                </li>
+                                                <li class="submenu">
+                                                    <a href="javascript:void(0);" class="{{ Request::is(
+                                    'employee-salary',
+                                    'payroll/payroll-items/sss-contribution',
+                                    'payroll/payroll-items/withholding-tax',
+                                    'payroll/payroll-items/overtime-table',
+                                    'payroll/payroll-items/de-minimis-table',
+                                    'payroll/payroll-items/de-minimis-user',
+                                    'payroll/payroll-items/earnings',
+                                    'payroll/payroll-items/earnings/user',
+                                    'payroll/payroll-items/deductions',
+                                    'payroll/payroll-items/deductions/user',
+                                    'payroll',
+                                    'payroll/process',
+                                    'payroll/generated-payslips',
+                                )
+                                    ? 'active subdrop'
+                                    : '' }}">
+                                                        <i class="ti ti-cash"></i><span>Payroll</span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+                                                        @if (isset($role_data['user_permission_ids'][24]) || $role_data['role_id'] == 'global_user')
+                                                            <li>
+                                                                <a href="{{ route('payroll-process') }}"
+                                                                    class="{{ Request::is('payroll') ? 'active' : '' }}">
+                                                                    Process Payroll
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
+                                                            <li>
+                                                                <a href="{{ route('generatedPayslipIndex') }}"
+                                                                    class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
+                                                                    Generated Payslips
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
+                                                                                <li>
+                                                                                    <a href="{{ route('sss-contributionTable') }}" class="{{ Request::is(
+                                                                'payroll/payroll-items/sss-contribution',
+                                                                'payroll/payroll-items/withholding-tax',
+                                                                'payroll/payroll-items/overtime-table',
+                                                                'payroll/payroll-items/de-minimis-table',
+                                                                'payroll/payroll-items/de-minimis-user',
+                                                                'payroll/payroll-items/earnings',
+                                                                'payroll/payroll-items/earnings/user',
+                                                                'payroll/payroll-items/deductions',
+                                                                'payroll/payroll-items/deductions/user',
+                                                            )
+                                                                ? 'active'
+                                                                : '' }}">
+                                                                                        Payroll Items
+                                                                                    </a>
+                                                                                </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][51]) || $role_data['role_id'] == 'global_user')
+                                                            <li>
+                                                                <a href="{{ route('payroll-batch-users') }}"
+                                                                    class="{{ Request::is('payroll/batch/users') ? 'active' : '' }}">
+                                                                    Payroll Batch Users
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][52]) || $role_data['role_id'] == 'global_user')
+                                                            <li>
+                                                                <a href="{{ route('payroll-batch-settings') }}"
+                                                                    class="{{ Request::is('payroll/batch/settings') ? 'active' : '' }}">
+                                                                    Payroll Batch Settings
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                    </ul>
+                                                </li>
                             @endif
 
                             @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
@@ -494,8 +494,7 @@
                             @if (in_array(16, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][46]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('bank') ? 'active' : '' }}">
-                                        <a href="{{ route('bank') }}"
-                                            class="{{ Request::is('bank') ? 'active' : '' }}">
+                                        <a href="{{ route('bank') }}" class="{{ Request::is('bank') ? 'active' : '' }}">
                                             <i class="ti ti-building"></i><span>Bank</span>
                                         </a>
                                     </li>
@@ -532,8 +531,8 @@
                             @endif
                             @if (in_array(13, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
-                                    <a
-                                        href="javascript:void(0);"class="{{ Request::is('users', 'roles-permissions') ? 'active subdrop' : '' }}">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('users', 'roles-permissions') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-user-star"></i><span>User Management</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -553,8 +552,8 @@
                             @endif
                             @if (in_array(14, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu" hidden>
-                                    <a
-                                        href="javascript:void(0);"class="{{ Request::is('expenses-report', 'invoice-report', 'payment-report', 'project-report', 'task-report', 'user-report', 'employee-report', 'payslip-report', 'attendance-report', 'leave-report', 'daily-report') ? 'active subdrop' : '' }}">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('expenses-report', 'invoice-report', 'payment-report', 'project-report', 'task-report', 'user-report', 'employee-report', 'payslip-report', 'attendance-report', 'leave-report', 'daily-report') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-user-star"></i><span>Reports</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -621,43 +620,46 @@
                             @endif
                             @if (in_array(15, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][43]) || $role_data['role_id'] == 'global_user')
-                                    <li class="submenu">
-                                        <a href="javascript:void(0);"
-                                            class="{{ Request::is(
-                                                'settings/attendance-settings',
-                                                'settings/approval-steps',
-                                                'settings/leave-type',
-                                                'settings/general-settings',
-                                                'settings/company-settings',
-                                                'settings/email-settings',
-                                                'settings/sms-settings',
-                                                'settings/payment-gateway',
-                                            )
-                                                ? 'active subdrop'
-                                                : '' }}">
-                                            <i class="ti ti-settings"></i><span>Settings</span>
-                                            <span class="menu-arrow"></span>
-                                        </a>
-                                        <ul>
-                                            <li class="submenu submenu-two">
-                                                <a href="javascript:void(0);"
-                                                    class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
-                                                    Settings<span class="menu-arrow inside-submenu"></span></a>
-                                                <ul>
-                                                    <li><a href="{{ route('attendance-settings') }}"
-                                                            class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance
-                                                            Settings
-                                                        </a></li>
-                                                    <li><a href="{{ url('settings/approval-steps') }}"
-                                                            class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
-                                                            Settings</a></li>
-                                                    <li><a href="{{ url('settings/leave-type') }}"
-                                                            class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
-                                                            Type</a></li>
-                                                </ul>
-                                            </li>
-                                        </ul>
-                                    </li>
+                                                <li class="submenu">
+                                                    <a href="javascript:void(0);" class="{{ Request::is(
+                                        'settings/attendance-settings',
+                                        'settings/approval-steps',
+                                        'settings/leave-type',
+                                        'settings/general-settings',
+                                        'settings/company-settings',
+                                        'settings/email-settings',
+                                        'settings/sms-settings',
+                                        'settings/payment-gateway',
+                                    )
+                                        ? 'active subdrop'
+                                        : '' }}">
+                                                        <i class="ti ti-settings"></i><span>Settings</span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+                                                        <li class="submenu submenu-two">
+                                                            <a href="javascript:void(0);"
+                                                                class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
+                                                                Settings<span class="menu-arrow inside-submenu"></span></a>
+                                                            <ul>
+                                                                <li><a href="{{ route('attendance-settings') }}"
+                                                                        class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance
+                                                                        Settings
+                                                                    </a></li>
+                                                                <li><a href="{{ url('settings/approval-steps') }}"
+                                                                        class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
+                                                                        Settings</a></li>
+                                                                <li><a href="{{ url('settings/leave-type') }}"
+                                                                        class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
+                                                                        Type</a></li>
+                                                                <li><a href="{{ url('settings/biometrics') }}"
+                                                                                    class=" {{ Request::is('settings/biometrics') ? 'active' : '' }}">ZKTeco
+                                                                        Biometrics
+                                                                    </a></li>
+                                                            </ul>
+                                                        </li>
+                                                    </ul>
+                                                </li>
                                 @endif
                             @endif
                         </ul>
@@ -711,40 +713,38 @@
                         <li><a href="{{ url('packages') }}"
                                 class="{{ Request::is('packages', 'packages-grid') ? 'active' : '' }}">Packages</a>
                         </li>
-                        <li><a href="{{ url('domain') }}"
-                                class="{{ Request::is('domain') ? 'active' : '' }}">Domain</a></li>
+                        <li><a href="{{ url('domain') }}" class="{{ Request::is('domain') ? 'active' : '' }}">Domain</a>
+                        </li>
                         <li><a href="{{ url('purchase-transaction') }}"
                                 class="{{ Request::is('purchase-transaction') ? 'active' : '' }}">Purchase
                                 Transaction</a></li>
                     </ul>
                 </li>
                 <li class="submenu">
-                    <a href="#"
-                        class="{{ Request::is(
-                            'chat',
-                            'voice-call',
-                            'video-call',
-                            'outgoing-call',
-                            'incoming-call',
-                            'call-history',
-                            'calendar',
-                            'email',
-                            'todo',
-                            'notes',
-                            'social-feed',
-                            'file-manager',
-                            'kanban-view',
-                            'invoices',
-                            'invoice-details',
-                        )
-                            ? ' subdrop active '
-                            : '' }}">
+                    <a href="#" class="{{ Request::is(
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+    'invoice-details',
+)
+    ? ' subdrop active '
+    : '' }}">
                         <i class="ti ti-layout-grid-add"></i><span>Applications</span>
                         <span class="menu-arrow"></span>
                     </a>
                     <ul>
-                        <li><a href="{{ url('chat') }}"
-                                class="{{ Request::is('chat') ? 'active' : '' }}">Chat</a></li>
+                        <li><a href="{{ url('chat') }}" class="{{ Request::is('chat') ? 'active' : '' }}">Chat</a></li>
                         <li class="submenu submenu-two">
                             <a href="{{ url('call') }}"
                                 class="{{ Request::is('voice-call', 'video-call', 'outgoing-call', 'incoming-call', 'call-history') ? 'active subdrop' : '' }}">Calls<span
@@ -767,12 +767,12 @@
                         </li>
                         <li><a href="{{ url('calendar') }}"
                                 class="{{ Request::is('calendar') ? 'active' : '' }}">Calendar</a></li>
-                        <li><a href="{{ url('email') }}"
-                                class="{{ Request::is('email') ? 'active' : '' }}">Email</a></li>
+                        <li><a href="{{ url('email') }}" class="{{ Request::is('email') ? 'active' : '' }}">Email</a>
+                        </li>
                         <li><a href="{{ url('todo') }}" class="{{ Request::is('todo') ? 'active' : '' }}">To
                                 Do</a></li>
-                        <li><a href="{{ url('notes') }}"
-                                class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a></li>
+                        <li><a href="{{ url('notes') }}" class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a>
+                        </li>
                         <li><a href="{{ url('social-feed') }}"
                                 class="{{ Request::is('social-feed') ? 'active' : '' }}">Social Feed</a></li>
                         <li><a href="{{ url('file-manager') }}"
@@ -785,25 +785,24 @@
                     </ul>
                 </li>
                 <li class="submenu">
-                    <a href="#"
-                        class="{{ Request::is(
-                            'layout-horizontal',
-                            'layout-detached',
-                            'layout-modern',
-                            'layout-two-column',
-                            'layout-hovered',
-                            'layout-box',
-                            'layout-horizontal-single',
-                            'layout-horizontal-overlay',
-                            'layout-horizontal-box',
-                            'layout-horizontal-sidemenu',
-                            'layout-vertical-transparent',
-                            'layout-without-header',
-                            'layout-rtl',
-                            'layout-dark',
-                        )
-                            ? 'active subdrop'
-                            : '' }}">
+                    <a href="#" class="{{ Request::is(
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'active subdrop'
+    : '' }}">
                         <i class="ti ti-layout-board-split"></i><span>Layouts</span>
                         <span class="menu-arrow"></span>
                     </a>
@@ -839,8 +838,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url('layout-box') }}"
-                                class="{{ Request::is('layout-box') ? 'active' : '' }}">
+                            <a href="{{ url('layout-box') }}" class="{{ Request::is('layout-box') ? 'active' : '' }}">
                                 <span>Boxed</span>
                             </a>
                         </li>
@@ -881,78 +879,75 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url('layout-rtl') }}"
-                                class="{{ Request::is('layout-rtl') ? 'active' : '' }}">
+                            <a href="{{ url('layout-rtl') }}" class="{{ Request::is('layout-rtl') ? 'active' : '' }}">
                                 <span>RTL</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url('layout-dark') }}"
-                                class="{{ Request::is('layout-dark') ? 'active' : '' }}">
+                            <a href="{{ url('layout-dark') }}" class="{{ Request::is('layout-dark') ? 'active' : '' }}">
                                 <span>Dark</span>
                             </a>
                         </li>
                     </ul>
                 </li>
                 <li class="submenu">
-                    <a href="#"
-                        class="{{ Request::is(
-                            'clients-grid',
-                            'clients',
-                            'projects-grid',
-                            'projects',
-                            'tasks',
-                            'task-board',
-                            'contacts-grid',
-                            'contacts',
-                            'contact-details',
-                            'companies-grid',
-                            'companies-crm',
-                            'company-details',
-                            'deals-grid',
-                            'deals-details',
-                            'deals',
-                            'leads-grid',
-                            'leads-details',
-                            'leads',
-                            'pipeline',
-                            'analytics',
-                            'activity',
-                            'employees',
-                            'employees-grid',
-                            'employee-details',
-                            'departments',
-                            'designations',
-                            'policy',
-                            'tickets',
-                            'tickets-grid',
-                            'ticket-details',
-                            'holidays',
-                            'leaves',
-                            'leaves-employee',
-                            'leave-settings',
-                            'attendance-admin',
-                            'attendance-employee',
-                            'timesheets',
-                            'schedule-timing',
-                            'overtime',
-                            'leaves',
-                            'leaves-employee',
-                            'leave-settings',
-                            'performance-indicator',
-                            'performance-review',
-                            'performance-appraisal',
-                            'goal-tracking',
-                            'goal-type',
-                            'training',
-                            'trainers',
-                            'training-type',
-                            'promotion',
-                            'resignation',
-                            'termination',
-                        )
-                            ? 'active '
-                            : '' }}">
+                    <a href="#" class="{{ Request::is(
+    'clients-grid',
+    'clients',
+    'projects-grid',
+    'projects',
+    'tasks',
+    'task-board',
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? 'active '
+    : '' }}">
                         <i class="ti ti-user-star"></i><span>Projects</span>
                         <span class="menu-arrow"></span>
                     </a>
@@ -963,8 +958,8 @@
                             </a>
                         </li>
                         <li class="submenu">
-                            <a
-                                href="javascript:void(0);"class="{{ Request::is('projects-grid', 'tasks', 'task-board', 'projects', 'project-details', 'task-details') ? 'active subdrop' : '' }}"><span>Projects</span>
+                            <a href="javascript:void(0);"
+                                class="{{ Request::is('projects-grid', 'tasks', 'task-board', 'projects', 'project-details', 'task-details') ? 'active subdrop' : '' }}"><span>Projects</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
@@ -979,27 +974,25 @@
                             </ul>
                         </li>
                         <li class="submenu">
-                            <a href="{{ url('call') }}"
-                                class="{{ Request::is(
-                                    'contacts-grid',
-                                    'contacts',
-                                    'contact-details',
-                                    'companies-grid',
-                                    'companies-crm',
-                                    'company-details',
-                                    'deals-grid',
-                                    'deals-details',
-                                    'deals',
-                                    'leads-grid',
-                                    'leads-details',
-                                    'leads',
-                                    'pipeline',
-                                    'analytics',
-                                    'activity',
-                                )
-                                    ? 'active subdrop'
-                                    : '' }}">Crm<span
-                                    class="menu-arrow"></span></a>
+                            <a href="{{ url('call') }}" class="{{ Request::is(
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'active subdrop'
+    : '' }}">Crm<span class="menu-arrow"></span></a>
                             <ul>
                                 <li><a href="{{ url('contacts-grid') }}"
                                         class="{{ Request::is('contacts-grid', 'contacts', 'contact-details') ? 'active' : '' }}"><span>Contacts</span></a>
@@ -1067,19 +1060,18 @@
                         <li class="{{ Request::is('holidays') ? 'active' : '' }}"><a
                                 href="{{ url('holidays') }}"><span>Holidays</span></a></li>
                         <li class="submenu">
-                            <a href="javascript:void(0);"
-                                class="{{ Request::is(
-                                    'leaves',
-                                    'leaves-employee',
-                                    'leave-settings',
-                                    'attendance-admin',
-                                    'attendance-employee',
-                                    'timesheets',
-                                    'schedule-timing',
-                                    'overtime',
-                                )
-                                    ? 'active subdrop'
-                                    : '' }}"><span>Attendance</span>
+                            <a href="javascript:void(0);" class="{{ Request::is(
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Attendance</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
@@ -1163,76 +1155,75 @@
                     </ul>
                 </li>
                 <li class="submenu">
-                    <a href="#"
-                        class="{{ Request::is(
-                            'estimates',
-                            'invoices',
-                            'payments',
-                            'expenses',
-                            'provident-fund',
-                            'taxes',
-                            'categories',
-                            'budgets',
-                            'budget-expenses',
-                            'budget-revenues',
-                            'employee-salary',
-                            'payslip',
-                            'payroll',
-                            'assets',
-                            'asset-categories',
-                            'knowledgebase',
-                            'activity',
-                            'users',
-                            'roles-permissions',
-                            'expenses-report',
-                            'invoice-report',
-                            'payment-report',
-                            'project-report',
-                            'task-report',
-                            'user-report',
-                            'employee-report',
-                            'payslip-report',
-                            'attendance-report',
-                            'leave-report',
-                            'daily-report',
-                            'profile-settings',
-                            'security-settings',
-                            'notification-settings',
-                            'connected-apps',
-                            'bussiness-settings',
-                            'seo-settings',
-                            'localization-settings',
-                            'prefixes',
-                            'preferences',
-                            'performance-appraisal',
-                            'language',
-                            'authentication-settings',
-                            'ai-settings',
-                            'salary-settings',
-                            'approval-settings',
-                            'invoice-settings',
-                            'leave-type',
-                            'custom-fields',
-                            'email-settings',
-                            'email-template',
-                            'sms-settings',
-                            'sms-template',
-                            'otp-settings',
-                            'gdpr',
-                            'maintenance-mode',
-                            'payment-gateways',
-                            'tax-rates',
-                            'currencies',
-                            'custom-css',
-                            'custom-js',
-                            'cronjob',
-                            'storage-settings',
-                            'ban-ip-address',
-                            'backup',
-                            'clear-cache',
-                        )
-                            ? 'active subdrop'
-                            : '' }}">
+                    <a href="#" class="{{ Request::is(
+    'estimates',
+    'invoices',
+    'payments',
+    'expenses',
+    'provident-fund',
+    'taxes',
+    'categories',
+    'budgets',
+    'budget-expenses',
+    'budget-revenues',
+    'employee-salary',
+    'payslip',
+    'payroll',
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'active subdrop'
+    : '' }}">
                         <i class="ti ti-user-star"></i><span>Administration</span>
                         <span class="menu-arrow"></span>
                     </a>
@@ -1374,46 +1365,45 @@
                             </ul>
                         </li>
                         <li class="submenu">
-                            <a href="javascript:void(0);"
-                                class="{{ Request::is(
-                                    'profile-settings',
-                                    'security-settings',
-                                    'notification-settings',
-                                    'connected-apps',
-                                    'bussiness-settings',
-                                    'seo-settings',
-                                    'localization-settings',
-                                    'prefixes',
-                                    'preferences',
-                                    'performance-appraisal',
-                                    'language',
-                                    'authentication-settings',
-                                    'ai-settings',
-                                    'salary-settings',
-                                    'approval-settings',
-                                    'invoice-settings',
-                                    'leave-type',
-                                    'custom-fields',
-                                    'email-settings',
-                                    'email-template',
-                                    'sms-settings',
-                                    'sms-template',
-                                    'otp-settings',
-                                    'gdpr',
-                                    'maintenance-mode',
-                                    'payment-gateways',
-                                    'tax-rates',
-                                    'currencies',
-                                    'custom-css',
-                                    'custom-js',
-                                    'cronjob',
-                                    'storage-settings',
-                                    'ban-ip-address',
-                                    'backup',
-                                    'clear-cache',
-                                )
-                                    ? 'active subdrop'
-                                    : '' }}"><span>Settings</span>
+                            <a href="javascript:void(0);" class="{{ Request::is(
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Settings</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
@@ -1598,26 +1588,24 @@
                         title="Dashboard" data-bs-toggle="tab" data-bs-target="#dashboard">
                         <i class="ti ti-smart-home"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
-                            'chat',
-                            'voice-call',
-                            'video-call',
-                            'outgoing-call',
-                            'incoming-call',
-                            'call-history',
-                            'calendar',
-                            'email',
-                            'todo',
-                            'notes',
-                            'social-feed',
-                            'file-manager',
-                            'kanban-view',
-                            'invoices',
-                        )
-                            ? ' show active '
-                            : '' }}"
-                        title="Apps" data-bs-toggle="tab" data-bs-target="#application">
+                    <a href="#" class="nav-link {{ Request::is(
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+)
+    ? ' show active '
+    : '' }}" title="Apps" data-bs-toggle="tab" data-bs-target="#application">
                         <i class="ti ti-layout-grid-add"></i>
                     </a>
                     <a href="#"
@@ -1625,26 +1613,24 @@
                         title="Super Admin" data-bs-toggle="tab" data-bs-target="#super-admin">
                         <i class="ti ti-user-star"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
-                            'layout-horizontal',
-                            'layout-detached',
-                            'layout-modern',
-                            'layout-two-column',
-                            'layout-hovered',
-                            'layout-box',
-                            'layout-horizontal-single',
-                            'layout-horizontal-overlay',
-                            'layout-horizontal-box',
-                            'layout-horizontal-sidemenu',
-                            'layout-vertical-transparent',
-                            'layout-without-header',
-                            'layout-rtl',
-                            'layout-dark',
-                        )
-                            ? 'show active'
-                            : '' }}"
-                        title="Layout" data-bs-toggle="tab" data-bs-target="#layout">
+                    <a href="#" class="nav-link {{ Request::is(
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'show active'
+    : '' }}" title="Layout" data-bs-toggle="tab" data-bs-target="#layout">
                         <i class="ti ti-layout-board-split"></i>
                     </a>
                     <a href="#"
@@ -1652,64 +1638,60 @@
                         title="Projects" data-bs-toggle="tab" data-bs-target="#projects">
                         <i class="ti ti-users-group"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
-                            'contacts-grid',
-                            'contacts',
-                            'contact-details',
-                            'companies-grid',
-                            'companies-crm',
-                            'company-details',
-                            'deals-grid',
-                            'deals-details',
-                            'deals',
-                            'leads-grid',
-                            'leads-details',
-                            'leads',
-                            'pipeline',
-                            'analytics',
-                            'activity',
-                        )
-                            ? 'show active'
-                            : '' }}"
-                        title="Crm" data-bs-toggle="tab" data-bs-target="#crm">
+                    <a href="#" class="nav-link {{ Request::is(
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'show active'
+    : '' }}" title="Crm" data-bs-toggle="tab" data-bs-target="#crm">
                         <i class="ti ti-user-shield"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
-                            'employees',
-                            'employees-grid',
-                            'employee-details',
-                            'departments',
-                            'designations',
-                            'policy',
-                            'tickets',
-                            'tickets-grid',
-                            'ticket-details',
-                            'holidays',
-                            'leaves',
-                            'leaves-employee',
-                            'leave-settings',
-                            'attendance-admin',
-                            'attendance-employee',
-                            'timesheets',
-                            'schedule-timing',
-                            'overtime',
-                            'performance-indicator',
-                            'performance-review',
-                            'performance-appraisal',
-                            'goal-tracking',
-                            'goal-type',
-                            'training',
-                            'trainers',
-                            'training-type',
-                            'promotion',
-                            'resignation',
-                            'termination',
-                        )
-                            ? ' show active '
-                            : '' }}"
-                        title="Hrm" data-bs-toggle="tab" data-bs-target="#hrm">
+                    <a href="#" class="nav-link {{ Request::is(
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active '
+    : '' }}" title="Hrm" data-bs-toggle="tab" data-bs-target="#hrm">
                         <i class="ti ti-user"></i>
                     </a>
                     <a href="#"
@@ -1717,64 +1699,62 @@
                         title="Finance" data-bs-toggle="tab" data-bs-target="#finance">
                         <i class="ti ti-shopping-cart-dollar"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
-                            'assets',
-                            'asset-categories',
-                            'knowledgebase',
-                            'activity',
-                            'users',
-                            'roles-permissions',
-                            'expenses-report',
-                            'invoice-report',
-                            'payment-report',
-                            'project-report',
-                            'task-report',
-                            'user-report',
-                            'employee-report',
-                            'payslip-report',
-                            'attendance-report',
-                            'leave-report',
-                            'daily-report',
-                            'profile-settings',
-                            'security-settings',
-                            'notification-settings',
-                            'connected-apps',
-                            'bussiness-settings',
-                            'seo-settings',
-                            'localization-settings',
-                            'prefixes',
-                            'preferences',
-                            'performance-appraisal',
-                            'language',
-                            'authentication-settings',
-                            'ai-settings',
-                            'salary-settings',
-                            'approval-settings',
-                            'invoice-settings',
-                            'leave-type',
-                            'custom-fields',
-                            'email-settings',
-                            'email-template',
-                            'sms-settings',
-                            'sms-template',
-                            'otp-settings',
-                            'gdpr',
-                            'maintenance-mode',
-                            'payment-gateways',
-                            'tax-rates',
-                            'currencies',
-                            'custom-css',
-                            'custom-js',
-                            'cronjob',
-                            'storage-settings',
-                            'ban-ip-address',
-                            'backup',
-                            'clear-cache',
-                        )
-                            ? 'show active '
-                            : '' }}"
-                        title="Administration" data-bs-toggle="tab" data-bs-target="#administration">
+                    <a href="#" class="nav-link {{ Request::is(
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'show active '
+    : '' }}" title="Administration" data-bs-toggle="tab" data-bs-target="#administration">
                         <i class="ti ti-cash"></i>
                     </a>
                     <a href="#"
@@ -1787,126 +1767,121 @@
                         title="Pages" data-bs-toggle="tab" data-bs-target="#pages">
                         <i class="ti ti-page-break"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
-                            'login',
-                            'login-2',
-                            'login-3',
-                            'register',
-                            'register-2',
-                            'register-3',
-                            'forgot-password',
-                            'forgot-password-2',
-                            'forgot-password-3',
-                            'reset-password',
-                            'reset-password-2',
-                            'reset-password-3',
-                            'email-verification',
-                            'email-verification-2',
-                            'email-verification-3',
-                            'two-step-verification',
-                            'two-step-verification-2',
-                            'two-step-verification-3',
-                            'lock-screen',
-                            'error-404',
-                            'error-500',
-                        )
-                            ? ' show active'
-                            : '' }} "
-                        title="Authentication" data-bs-toggle="tab" data-bs-target="#authentication">
+                    <a href="#" class="nav-link {{ Request::is(
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? ' show active'
+    : '' }} " title="Authentication" data-bs-toggle="tab" data-bs-target="#authentication">
                         <i class="ti ti-lock-check"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
-                            'ui-alerts',
-                            'ui-accordion',
-                            'ui-avatar',
-                            'ui-badges',
-                            'ui-borders',
-                            'ui-buttons',
-                            'ui-buttons-group',
-                            'ui-breadcrumb',
-                            'ui-cards',
-                            'ui-carousel',
-                            'ui-colors',
-                            'ui-dropdowns',
-                            'ui-grid',
-                            'ui-images',
-                            'ui-lightbox',
-                            'ui-media',
-                            'ui-modals',
-                            'ui-offcanvas',
-                            'ui-pagination',
-                            'ui-popovers',
-                            'ui-progress',
-                            'ui-placeholders',
-                            'ui-spinner',
-                            'ui-sweetalerts',
-                            'ui-nav-tabs',
-                            'ui-toasts',
-                            'ui-tooltips',
-                            'ui-typography',
-                            'ui-video',
-                            'ui-sortable',
-                            'ui-swiperjs',
-                            'ui-ribbon',
-                            'ui-clipboard',
-                            'ui-drag-drop',
-                            'ui-rangeslider',
-                            'ui-rating',
-                            'ui-text-editor',
-                            'ui-counter',
-                            'ui-scrollbar',
-                            'ui-stickynote',
-                            'ui-timeline',
-                            'form-basic-inputs',
-                            'form-checkbox-radios',
-                            'form-input-groups',
-                            'form-grid-gutters',
-                            'form-select',
-                            'form-mask',
-                            'form-fileupload',
-                            'form-horizontal',
-                            'form-vertical',
-                            'form-floating-labels',
-                            'form-validation',
-                            'form-select2',
-                            'form-wizard',
-                            'form-pickers',
-                            'tables-basic',
-                            'data-tables',
-                            'chart-apex',
-                            'chart-c3',
-                            'chart-js',
-                            'chart-morris',
-                            'chart-flot',
-                            'chart-peity',
-                            'icon-fontawesome',
-                            'icon-tabler',
-                            'icon-bootstrap',
-                            'icon-remix',
-                            'icon-feather',
-                            'icon-ionic',
-                            'icon-material',
-                            'icon-pe7',
-                            'icon-simpleline',
-                            'icon-themify',
-                            'icon-ionic',
-                            'icon-material',
-                            'icon-pe7',
-                            'icon-simpleline',
-                            'icon-themify',
-                            'icon-weather',
-                            'icon-typicon',
-                            'icon-flag',
-                        )
-                            ? ' show active '
-                            : '' }}"
-                        title="UI Elements" data-bs-toggle="tab" data-bs-target="#ui-elements">
+                    <a href="#" class="nav-link {{ Request::is(
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? ' show active '
+    : '' }}" title="UI Elements" data-bs-toggle="tab" data-bs-target="#ui-elements">
                         <i class="ti ti-ux-circle"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is('maps-vector', 'maps-leaflet') ? 'active' : '' }}"
+                    <a href="#" class="nav-link {{ Request::is('maps-vector', 'maps-leaflet') ? 'active' : '' }}"
                         title="Extras" data-bs-toggle="tab" data-bs-target="#extras">
                         <i class="ti ti-vector-triangle"></i>
                     </a>
@@ -1937,8 +1912,8 @@
                         id="dashboard">
                         <ul>
                             <li class="menu-title"><span>MAIN MENU</span></li>
-                            <li><a href="{{ url('index') }}"
-                                    class="{{ Request::is('index') ? 'active' : '' }}">Admin Dashboard</a></li>
+                            <li><a href="{{ url('index') }}" class="{{ Request::is('index') ? 'active' : '' }}">Admin
+                                    Dashboard</a></li>
                             <li><a href="{{ url('employee-dashboard') }}"
                                     class="{{ Request::is('employee-dashboard') ? 'active' : '' }}">Employee
                                     Dashboard</a></li>
@@ -1951,29 +1926,28 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'chat',
-                        'voice-call',
-                        'video-call',
-                        'outgoing-call',
-                        'incoming-call',
-                        'call-history',
-                        'calendar',
-                        'email',
-                        'todo',
-                        'notes',
-                        'social-feed',
-                        'file-manager',
-                        'kanban-view',
-                        'invoices',
-                        'invoice-details',
-                    )
-                        ? ' show active '
-                        : '' }}"
-                        id="application">
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+    'invoice-details',
+)
+    ? ' show active '
+    : '' }}" id="application">
                         <ul>
                             <li class="menu-title"><span>APPLICATION</span></li>
-                            <li><a
-                                    href="{{ url('voice-call') }}"class="{{ Request::is('voice-call') ? 'active' : '' }}">Voice
+                            <li><a href="{{ url('voice-call') }}"
+                                    class="{{ Request::is('voice-call') ? 'active' : '' }}">Voice
                                     Call</a></li>
                             <li><a href="{{ url('video-call') }}"
                                     class="{{ Request::is('video-call') ? 'active' : '' }}">Video Call</a></li>
@@ -1991,8 +1965,8 @@
                                     class="{{ Request::is('email') ? 'active' : '' }}">Email</a></li>
                             <li><a href="{{ url('todo') }}" class="{{ Request::is('todo') ? 'active' : '' }}">To
                                     Do</a></li>
-                            <li><a
-                                    href="{{ url('notes') }}"class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a>
+                            <li><a href="{{ url('notes') }}"
+                                    class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a>
                             </li>
                             <li><a href="{{ url('social-active') }}"
                                     class="{{ Request::is('social-active') ? 'active' : '' }}">File Manager</a>
@@ -2028,24 +2002,23 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'layout-horizontal',
-                        'layout-detached',
-                        'layout-modern',
-                        'layout-two-column',
-                        'layout-hovered',
-                        'layout-box',
-                        'layout-horizontal-single',
-                        'layout-horizontal-overlay',
-                        'layout-horizontal-box',
-                        'layout-horizontal-sidemenu',
-                        'layout-vertical-transparent',
-                        'layout-without-header',
-                        'layout-rtl',
-                        'layout-dark',
-                    )
-                        ? 'show active'
-                        : '' }}"
-                        id="layout">
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'show active'
+    : '' }}" id="layout">
                         <ul>
                             <li class="menu-title"><span>LAYOUT</span></li>
                             <li><a href="{{ url('layout-horizontal') }}"
@@ -2117,25 +2090,24 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'contacts-grid',
-                        'contacts',
-                        'contact-details',
-                        'companies-grid',
-                        'companies-crm',
-                        'company-details',
-                        'deals-grid',
-                        'deals-details',
-                        'deals',
-                        'leads-grid',
-                        'leads-details',
-                        'leads',
-                        'pipeline',
-                        'analytics',
-                        'activity',
-                    )
-                        ? ' show active '
-                        : '' }}"
-                        id="crm">
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? ' show active '
+    : '' }}" id="crm">
                         <ul>
                             <li class="menu-title"><span>CRM</span></li>
                             <li><a href="{{ url('contacts-grid') }}"
@@ -2162,39 +2134,38 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'employees',
-                        'employees-grid',
-                        'employee-details',
-                        'departments',
-                        'designations',
-                        'policy',
-                        'tickets',
-                        'tickets-grid',
-                        'ticket-details',
-                        'holidays',
-                        'leaves',
-                        'leaves-employee',
-                        'leave-settings',
-                        'attendance-admin',
-                        'attendance-employee',
-                        'timesheets',
-                        'schedule-timing',
-                        'overtime',
-                        'performance-indicator',
-                        'performance-review',
-                        'performance-appraisal',
-                        'goal-tracking',
-                        'goal-type',
-                        'training',
-                        'trainers',
-                        'training-type',
-                        'promotion',
-                        'resignation',
-                        'termination',
-                    )
-                        ? ' show active'
-                        : '' }}"
-                        id="hrm">
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active'
+    : '' }}" id="hrm">
                         <ul>
                             <li class="menu-title"><span>HRM</span></li>
                             <li class="submenu">
@@ -2239,19 +2210,18 @@
                             <li class="{{ Request::is('holidays') ? 'active' : '' }}"><a
                                     href="{{ url('holidays') }}"><span>Holidays</span></a></li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
-                                        'leaves',
-                                        'leaves-employee',
-                                        'leave-settings',
-                                        'attendance-admin',
-                                        'attendance-employee',
-                                        'timesheets',
-                                        'schedule-timing',
-                                        'overtime',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}"><span>Attendance</span>
+                                <a href="javascript:void(0);" class="{{ Request::is(
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Attendance</span>
                                     <span class="menu-arrow"></span>
                                 </a>
                                 <ul>
@@ -2338,23 +2308,22 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'estimates',
-                        'invoices',
-                        'payments',
-                        'expenses',
-                        'provident-fund',
-                        'taxes',
-                        'categories',
-                        'budgets',
-                        'budget-expenses',
-                        'budget-revenues',
-                        'employee-salary',
-                        'payslip',
-                        'payroll',
-                    )
-                        ? ' show active'
-                        : '' }}"
-                        id="finance">
+    'estimates',
+    'invoices',
+    'payments',
+    'expenses',
+    'provident-fund',
+    'taxes',
+    'categories',
+    'budgets',
+    'budget-expenses',
+    'budget-revenues',
+    'employee-salary',
+    'payslip',
+    'payroll',
+)
+    ? ' show active'
+    : '' }}" id="finance">
                         <ul>
                             <li class="menu-title"><span>FINANCE & ACCOUNTS</span></li>
                             <li class="submenu">
@@ -2417,62 +2386,61 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'assets',
-                        'asset-categories',
-                        'knowledgebase',
-                        'activity',
-                        'users',
-                        'roles-permissions',
-                        'expenses-report',
-                        'invoice-report',
-                        'payment-report',
-                        'project-report',
-                        'task-report',
-                        'user-report',
-                        'employee-report',
-                        'payslip-report',
-                        'attendance-report',
-                        'leave-report',
-                        'daily-report',
-                        'profile-settings',
-                        'security-settings',
-                        'notification-settings',
-                        'connected-apps',
-                        'bussiness-settings',
-                        'seo-settings',
-                        'localization-settings',
-                        'prefixes',
-                        'preferences',
-                        'performance-appraisal',
-                        'language',
-                        'authentication-settings',
-                        'ai-settings',
-                        'salary-settings',
-                        'approval-settings',
-                        'invoice-settings',
-                        'leave-type',
-                        'custom-fields',
-                        'email-settings',
-                        'email-template',
-                        'sms-settings',
-                        'sms-template',
-                        'otp-settings',
-                        'gdpr',
-                        'maintenance-mode',
-                        'payment-gateways',
-                        'tax-rates',
-                        'currencies',
-                        'custom-css',
-                        'custom-js',
-                        'cronjob',
-                        'storage-settings',
-                        'ban-ip-address',
-                        'backup',
-                        'clear-cache',
-                    )
-                        ? ' show active '
-                        : '' }}"
-                        id="administration">
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? ' show active '
+    : '' }}" id="administration">
                         <ul>
                             <li class="menu-title"><span>ADMINISTRATION</span></li>
                             <li class="submenu">
@@ -2753,27 +2721,26 @@
                             </li>
                             <li><a href="{{ url('testimonials') }}"
                                     class="{{ Request::is('testimonials') ? 'active' : '' }}">Testimonials</a></li>
-                            <li><a href="{{ url('faq') }}"
-                                    class="{{ Request::is('faq') ? 'active' : '' }}">FAQ’S</a></li>
+                            <li><a href="{{ url('faq') }}" class="{{ Request::is('faq') ? 'active' : '' }}">FAQ’S</a>
+                            </li>
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'starter',
-                        'profile',
-                        'gallery',
-                        'search-result',
-                        'timeline',
-                        'pricing',
-                        'coming-soon',
-                        'under-maintenance',
-                        'under-construction',
-                        'api-keys',
-                        'privacy-policy',
-                        'terms-condition',
-                    )
-                        ? ' show active'
-                        : '' }} "
-                        id="pages">
+    'starter',
+    'profile',
+    'gallery',
+    'search-result',
+    'timeline',
+    'pricing',
+    'coming-soon',
+    'under-maintenance',
+    'under-construction',
+    'api-keys',
+    'privacy-policy',
+    'terms-condition',
+)
+    ? ' show active'
+    : '' }} " id="pages">
                         <ul>
                             <li class="menu-title"><span>PAGES</span></li>
                             <li><a href="{{ url('starter') }}"
@@ -2815,31 +2782,30 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'login',
-                        'login-2',
-                        'login-3',
-                        'register',
-                        'register-2',
-                        'register-3',
-                        'forgot-password',
-                        'forgot-password-2',
-                        'forgot-password-3',
-                        'reset-password',
-                        'reset-password-2',
-                        'reset-password-3',
-                        'email-verification',
-                        'email-verification-2',
-                        'email-verification-3',
-                        'two-step-verification',
-                        'two-step-verification-2',
-                        'two-step-verification-3',
-                        'lock-screen',
-                        'error-404',
-                        'error-500',
-                    )
-                        ? ' show active'
-                        : '' }} "
-                        id="authentication">
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? ' show active'
+    : '' }} " id="authentication">
                         <ul>
                             <li class="menu-title"><span>AUTHENTICATION</span></li>
                             <li class="submenu">
@@ -2949,130 +2915,128 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'ui-alerts',
-                        'ui-accordion',
-                        'ui-avatar',
-                        'ui-badges',
-                        'ui-borders',
-                        'ui-buttons',
-                        'ui-buttons-group',
-                        'ui-breadcrumb',
-                        'ui-cards',
-                        'ui-carousel',
-                        'ui-colors',
-                        'ui-dropdowns',
-                        'ui-grid',
-                        'ui-images',
-                        'ui-lightbox',
-                        'ui-media',
-                        'ui-modals',
-                        'ui-offcanvas',
-                        'ui-pagination',
-                        'ui-popovers',
-                        'ui-progress',
-                        'ui-placeholders',
-                        'ui-spinner',
-                        'ui-sweetalerts',
-                        'ui-nav-tabs',
-                        'ui-toasts',
-                        'ui-tooltips',
-                        'ui-typography',
-                        'ui-video',
-                        'ui-sortable',
-                        'ui-swiperjs',
-                        'ui-ribbon',
-                        'ui-clipboard',
-                        'ui-drag-drop',
-                        'ui-rangeslider',
-                        'ui-rating',
-                        'ui-text-editor',
-                        'ui-counter',
-                        'ui-scrollbar',
-                        'ui-stickynote',
-                        'ui-timeline',
-                        'form-basic-inputs',
-                        'form-checkbox-radios',
-                        'form-input-groups',
-                        'form-grid-gutters',
-                        'form-select',
-                        'form-mask',
-                        'form-fileupload',
-                        'form-horizontal',
-                        'form-vertical',
-                        'form-floating-labels',
-                        'form-validation',
-                        'form-select2',
-                        'form-wizard',
-                        'form-pickers',
-                        'tables-basic',
-                        'data-tables',
-                        'chart-apex',
-                        'chart-c3',
-                        'chart-js',
-                        'chart-morris',
-                        'chart-flot',
-                        'chart-peity',
-                        'icon-fontawesome',
-                        'icon-tabler',
-                        'icon-bootstrap',
-                        'icon-remix',
-                        'icon-feather',
-                        'icon-ionic',
-                        'icon-material',
-                        'icon-pe7',
-                        'icon-simpleline',
-                        'icon-themify',
-                        'icon-ionic',
-                        'icon-material',
-                        'icon-pe7',
-                        'icon-simpleline',
-                        'icon-themify',
-                        'icon-weather',
-                        'icon-typicon',
-                        'icon-flag',
-                    )
-                        ? ' show active '
-                        : '' }}"
-                        id="ui-elements">
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? ' show active '
+    : '' }}" id="ui-elements">
                         <ul>
                             <li class="menu-title"><span>UI INTERFACE</span></li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
-                                        'ui-alerts',
-                                        'ui-accordion',
-                                        'ui-avatar',
-                                        'ui-badges',
-                                        'ui-borders',
-                                        'ui-buttons',
-                                        'ui-buttons-group',
-                                        'ui-breadcrumb',
-                                        'ui-cards',
-                                        'ui-carousel',
-                                        'ui-colors',
-                                        'ui-dropdowns',
-                                        'ui-grid',
-                                        'ui-images',
-                                        'ui-lightbox',
-                                        'ui-media',
-                                        'ui-modals',
-                                        'ui-offcanvas',
-                                        'ui-pagination',
-                                        'ui-popovers',
-                                        'ui-progress',
-                                        'ui-placeholders',
-                                        'ui-spinner',
-                                        'ui-sweetalerts',
-                                        'ui-nav-tabs',
-                                        'ui-toasts',
-                                        'ui-tooltips',
-                                        'ui-typography',
-                                        'ui-video',
-                                        'ui-sortable',
-                                        'ui-swiperjs',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}">Base
+                                <a href="javascript:void(0);" class="{{ Request::is(
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+)
+    ? 'active subdrop'
+    : '' }}">Base
                                     UI<span class="menu-arrow"></span>
                                 </a>
                                 <ul>
@@ -3206,21 +3170,20 @@
 
                             </li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
-                                        'ui-ribbon',
-                                        'ui-clipboard',
-                                        'ui-drag-drop',
-                                        'ui-rangeslider',
-                                        'ui-rating',
-                                        'ui-text-editor',
-                                        'ui-counter',
-                                        'ui-scrollbar',
-                                        'ui-stickynote',
-                                        'ui-timeline',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}">
+                                <a href="javascript:void(0);" class="{{ Request::is(
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+)
+    ? 'active subdrop'
+    : '' }}">
                                     Advanced UI <span class="menu-arrow"></span> </a>
                                 <ul>
                                     <li>
@@ -3270,45 +3233,43 @@
                                 </ul>
                             </li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
-                                        'form-basic-inputs',
-                                        'form-checkbox-radios',
-                                        'form-input-groups',
-                                        'form-grid-gutters',
-                                        'form-select',
-                                        'form-mask',
-                                        'form-fileupload',
-                                        'form-horizontal',
-                                        'form-vertical',
-                                        'form-floating-labels',
-                                        'form-validation',
-                                        'form-select2',
-                                        'form-wizard',
-                                        'form-pickers',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}">
+                                <a href="javascript:void(0);" class="{{ Request::is(
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">
                                     Forms <span class="menu-arrow"></span>
                                 </a>
                                 <ul>
                                     <li class="submenu submenu-two">
-                                        <a href="javascript:void(0);"
-                                            class="{{ Request::is(
-                                                'form-basic-inputs',
-                                                'form-checkbox-radios',
-                                                'form-input-groups',
-                                                'form-grid-gutters',
-                                                'form-select',
-                                                'form-mask',
-                                                'form-fileupload',
-                                                'form-validation',
-                                                'form-select2',
-                                                'form-wizard',
-                                                'form-pickers',
-                                            )
-                                                ? 'active subdrop'
-                                                : '' }}">Form
+                                        <a href="javascript:void(0);" class="{{ Request::is(
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">Form
                                             Elements<span class="menu-arrow inside-submenu"></span></a>
                                         <ul>
                                             <li>
@@ -3442,30 +3403,28 @@
                                 </ul>
                             </li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
-                                        'icon-fontawesome',
-                                        'icon-tabler',
-                                        'icon-bootstrap',
-                                        'icon-remix',
-                                        'icon-feather',
-                                        'icon-ionic',
-                                        'icon-material',
-                                        'icon-pe7',
-                                        'icon-simpleline',
-                                        'icon-themify',
-                                        'icon-ionic',
-                                        'icon-material',
-                                        'icon-pe7',
-                                        'icon-simpleline',
-                                        'icon-themify',
-                                        'icon-weather',
-                                        'icon-typicon',
-                                        'icon-flag',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}">Icons<span
-                                        class="menu-arrow"></span> </a>
+                                <a href="javascript:void(0);" class="{{ Request::is(
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? 'active subdrop'
+    : '' }}">Icons<span class="menu-arrow"></span> </a>
                                 <ul>
                                     <li>
                                         <a href="{{ url('icon-fontawesome') }}"
@@ -3652,26 +3611,24 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-application" role="tab"
-                                    class="nav-link {{ Request::is(
-                                        'chat',
-                                        'voice-call',
-                                        'video-call',
-                                        'outgoing-call',
-                                        'incoming-call',
-                                        'call-history',
-                                        'calendar',
-                                        'email',
-                                        'todo',
-                                        'notes',
-                                        'social-feed',
-                                        'file-manager',
-                                        'kanban-view',
-                                        'invoices',
-                                    )
-                                        ? ' show active '
-                                        : '' }} "
-                                    title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application"
+                                <a href="#menu-application" role="tab" class="nav-link {{ Request::is(
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+)
+    ? ' show active '
+    : '' }} " title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application"
                                     aria-selected="false">
                                     <span><i class="ti ti-layout-grid-add"></i></span>
                                     <p>Applications</p>
@@ -3687,140 +3644,132 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-layout" role="tab"
-                                    class="nav-link {{ Request::is(
-                                        'layout-horizontal',
-                                        'layout-detached',
-                                        'layout-modern',
-                                        'layout-two-column',
-                                        'layout-hovered',
-                                        'layout-box',
-                                        'layout-horizontal-single',
-                                        'layout-horizontal-overlay',
-                                        'layout-horizontal-box',
-                                        'layout-horizontal-sidemenu',
-                                        'layout-vertical-transparent',
-                                        'layout-without-header',
-                                        'layout-rtl',
-                                        'layout-dark',
-                                    )
-                                        ? 'show active'
-                                        : '' }}"
-                                    title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout"
+                                <a href="#menu-layout" role="tab" class="nav-link {{ Request::is(
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'show active'
+    : '' }}" title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout"
                                     aria-selected="false">
                                     <span><i class="ti ti-layout-board-split"></i></span>
                                     <p>Layouts</p>
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-project" role="tab"
-                                    class="nav-link {{ Request::is(
-                                        'activity',
-                                        'clients',
-                                        'employees',
-                                        'employees-grid',
-                                        'employee-details',
-                                        'departments',
-                                        'designations',
-                                        'policy',
-                                        'tickets',
-                                        'tickets-grid',
-                                        'ticket-details',
-                                        'holidays',
-                                        'leaves',
-                                        'leaves-employee',
-                                        'leave-settings',
-                                        'attendance-admin',
-                                        'attendance-employee',
-                                        'timesheets',
-                                        'schedule-timing',
-                                        'overtime',
-                                        'leaves',
-                                        'leaves-employee',
-                                        'leave-settings',
-                                        'performance-indicator',
-                                        'performance-review',
-                                        'performance-appraisal',
-                                        'goal-tracking',
-                                        'goal-type',
-                                        'training',
-                                        'trainers',
-                                        'training-type',
-                                        'promotion',
-                                        'resignation',
-                                        'termination',
-                                    )
-                                        ? ' show active '
-                                        : '' }}"
-                                    title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project"
+                                <a href="#menu-project" role="tab" class="nav-link {{ Request::is(
+    'activity',
+    'clients',
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active '
+    : '' }}" title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project"
                                     aria-selected="false">
                                     <span><i class="ti ti-folder"></i></span>
                                     <p>Projects</p>
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-crm" role="tab"
-                                    class="nav-link {{ Request::is(
-                                        'contacts-grid',
-                                        'contacts',
-                                        'contact-details',
-                                        'companies-grid',
-                                        'companies-crm',
-                                        'company-details',
-                                        'deals-grid',
-                                        'deals-details',
-                                        'deals',
-                                        'leads-grid',
-                                        'leads-details',
-                                        'leads',
-                                        'pipeline',
-                                        'analytics',
-                                        'activity',
-                                    )
-                                        ? 'show active'
-                                        : '' }}"
-                                    title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm"
+                                <a href="#menu-crm" role="tab" class="nav-link {{ Request::is(
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'show active'
+    : '' }}" title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm"
                                     aria-selected="false">
                                     <span><i class="ti ti-user-shield"></i></span>
                                     <p>Crm</p>
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-hrm" role="tab"
-                                    class="nav-link {{ Request::is(
-                                        'employees',
-                                        'employees-grid',
-                                        'employee-details',
-                                        'departments',
-                                        'designations',
-                                        'policy',
-                                        'tickets',
-                                        'tickets-grid',
-                                        'ticket-details',
-                                        'holidays',
-                                        'leaves',
-                                        'leaves-employee',
-                                        'leave-settings',
-                                        'attendance-admin',
-                                        'attendance-employee',
-                                        'timesheets',
-                                        'schedule-timing',
-                                        'overtime',
-                                        'performance-indicator',
-                                        'performance-review',
-                                        'performance-appraisal',
-                                        'goal-tracking',
-                                        'goal-type',
-                                        'training',
-                                        'trainers',
-                                        'training-type',
-                                        'promotion',
-                                        'resignation',
-                                        'termination',
-                                    )
-                                        ? ' show active '
-                                        : '' }}"
-                                    title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm"
+                                <a href="#menu-hrm" role="tab" class="nav-link {{ Request::is(
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active '
+    : '' }}" title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm"
                                     aria-selected="false">
                                     <span><i class="ti ti-users"></i></span>
                                     <p>Hrm</p>
@@ -3836,64 +3785,62 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-administration" role="tab"
-                                    class="nav-link {{ Request::is(
-                                        'assets',
-                                        'asset-categories',
-                                        'knowledgebase',
-                                        'activity',
-                                        'users',
-                                        'roles-permissions',
-                                        'expenses-report',
-                                        'invoice-report',
-                                        'payment-report',
-                                        'project-report',
-                                        'task-report',
-                                        'user-report',
-                                        'employee-report',
-                                        'payslip-report',
-                                        'attendance-report',
-                                        'leave-report',
-                                        'daily-report',
-                                        'profile-settings',
-                                        'security-settings',
-                                        'notification-settings',
-                                        'connected-apps',
-                                        'bussiness-settings',
-                                        'seo-settings',
-                                        'localization-settings',
-                                        'prefixes',
-                                        'preferences',
-                                        'performance-appraisal',
-                                        'language',
-                                        'authentication-settings',
-                                        'ai-settings',
-                                        'salary-settings',
-                                        'approval-settings',
-                                        'invoice-settings',
-                                        'leave-type',
-                                        'custom-fields',
-                                        'email-settings',
-                                        'email-template',
-                                        'sms-settings',
-                                        'sms-template',
-                                        'otp-settings',
-                                        'gdpr',
-                                        'maintenance-mode',
-                                        'payment-gateways',
-                                        'tax-rates',
-                                        'currencies',
-                                        'custom-css',
-                                        'custom-js',
-                                        'cronjob',
-                                        'storage-settings',
-                                        'ban-ip-address',
-                                        'backup',
-                                        'clear-cache',
-                                    )
-                                        ? 'show active '
-                                        : '' }}"
-                                    title="Administration" data-bs-toggle="tab"
+                                <a href="#menu-administration" role="tab" class="nav-link {{ Request::is(
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'show active '
+    : '' }}" title="Administration" data-bs-toggle="tab"
                                     data-bs-target="#menu-administration" aria-selected="false">
                                     <span><i class="ti ti-cash"></i></span>
                                     <p>Administration</p>
@@ -3918,127 +3865,123 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-authentication" role="tab"
-                                    class="nav-link {{ Request::is(
-                                        'login',
-                                        'login-2',
-                                        'login-3',
-                                        'register',
-                                        'register-2',
-                                        'register-3',
-                                        'forgot-password',
-                                        'forgot-password-2',
-                                        'forgot-password-3',
-                                        'reset-password',
-                                        'reset-password-2',
-                                        'reset-password-3',
-                                        'email-verification',
-                                        'email-verification-2',
-                                        'email-verification-3',
-                                        'two-step-verification',
-                                        'two-step-verification-2',
-                                        'two-step-verification-3',
-                                        'lock-screen',
-                                        'error-404',
-                                        'error-500',
-                                    )
-                                        ? ' show active'
-                                        : '' }} "
-                                    title="Authentication" data-bs-toggle="tab"
+                                <a href="#menu-authentication" role="tab" class="nav-link {{ Request::is(
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? ' show active'
+    : '' }} " title="Authentication" data-bs-toggle="tab"
                                     data-bs-target="#menu-authentication" aria-selected="false">
                                     <span><i class="ti ti-lock-check"></i></span>
                                     <p>Authentication</p>
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-ui-elements" role="tab"
-                                    class="nav-link {{ Request::is(
-                                        'ui-alerts',
-                                        'ui-accordion',
-                                        'ui-avatar',
-                                        'ui-badges',
-                                        'ui-borders',
-                                        'ui-buttons',
-                                        'ui-buttons-group',
-                                        'ui-breadcrumb',
-                                        'ui-cards',
-                                        'ui-carousel',
-                                        'ui-colors',
-                                        'ui-dropdowns',
-                                        'ui-grid',
-                                        'ui-images',
-                                        'ui-lightbox',
-                                        'ui-media',
-                                        'ui-modals',
-                                        'ui-offcanvas',
-                                        'ui-pagination',
-                                        'ui-popovers',
-                                        'ui-progress',
-                                        'ui-placeholders',
-                                        'ui-spinner',
-                                        'ui-sweetalerts',
-                                        'ui-nav-tabs',
-                                        'ui-toasts',
-                                        'ui-tooltips',
-                                        'ui-typography',
-                                        'ui-video',
-                                        'ui-sortable',
-                                        'ui-swiperjs',
-                                        'ui-ribbon',
-                                        'ui-clipboard',
-                                        'ui-drag-drop',
-                                        'ui-rangeslider',
-                                        'ui-rating',
-                                        'ui-text-editor',
-                                        'ui-counter',
-                                        'ui-scrollbar',
-                                        'ui-stickynote',
-                                        'ui-timeline',
-                                        'form-basic-inputs',
-                                        'form-checkbox-radios',
-                                        'form-input-groups',
-                                        'form-grid-gutters',
-                                        'form-select',
-                                        'form-mask',
-                                        'form-fileupload',
-                                        'form-horizontal',
-                                        'form-vertical',
-                                        'form-floating-labels',
-                                        'form-validation',
-                                        'form-select2',
-                                        'form-wizard',
-                                        'form-pickers',
-                                        'tables-basic',
-                                        'data-tables',
-                                        'chart-apex',
-                                        'chart-c3',
-                                        'chart-js',
-                                        'chart-morris',
-                                        'chart-flot',
-                                        'chart-peity',
-                                        'icon-fontawesome',
-                                        'icon-tabler',
-                                        'icon-bootstrap',
-                                        'icon-remix',
-                                        'icon-feather',
-                                        'icon-ionic',
-                                        'icon-material',
-                                        'icon-pe7',
-                                        'icon-simpleline',
-                                        'icon-themify',
-                                        'icon-ionic',
-                                        'icon-material',
-                                        'icon-pe7',
-                                        'icon-simpleline',
-                                        'icon-themify',
-                                        'icon-weather',
-                                        'icon-typicon',
-                                        'icon-flag',
-                                    )
-                                        ? ' show active '
-                                        : '' }}"
-                                    title="UI Elements" data-bs-toggle="tab" data-bs-target="#menu-ui-elements"
-                                    aria-selected="false">
+                                <a href="#menu-ui-elements" role="tab" class="nav-link {{ Request::is(
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? ' show active '
+    : '' }}" title="UI Elements" data-bs-toggle="tab"
+                                    data-bs-target="#menu-ui-elements" aria-selected="false">
                                     <span><i class="ti ti-ux-circle"></i></span>
                                     <p>Basic UI</p>
                                 </a>
@@ -4084,25 +4027,24 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'chat',
-                            'voice-call',
-                            'video-call',
-                            'outgoing-call',
-                            'incoming-call',
-                            'call-history',
-                            'calendar',
-                            'email',
-                            'todo',
-                            'notes',
-                            'social-feed',
-                            'file-manager',
-                            'kanban-view',
-                            'invoices',
-                            'invoice-details',
-                        )
-                            ? ' show active '
-                            : '' }}"
-                            id="menu-application">
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+    'invoice-details',
+)
+    ? ' show active '
+    : '' }}" id="menu-application">
                             <ul class="stack-submenu">
                                 <li><a href="{{ url('chat') }}"
                                         class="{{ Request::is('chat') ? 'active' : '' }}">Chat</a></li>
@@ -4133,8 +4075,8 @@
                                         class="{{ Request::is('calendar') ? 'active' : '' }}">Calendar</a></li>
                                 <li><a href="{{ url('email') }}"
                                         class="{{ Request::is('email') ? 'active' : '' }}">Email</a></li>
-                                <li><a href="{{ url('todo') }}"
-                                        class="{{ Request::is('todo') ? 'active' : '' }}">To Do</a></li>
+                                <li><a href="{{ url('todo') }}" class="{{ Request::is('todo') ? 'active' : '' }}">To
+                                        Do</a></li>
                                 <li><a href="{{ url('notes') }}"
                                         class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a></li>
                                 <li><a href="{{ url('file-manager') }}"
@@ -4148,24 +4090,23 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'layout-horizontal',
-                            'layout-detached',
-                            'layout-modern',
-                            'layout-two-column',
-                            'layout-hovered',
-                            'layout-box',
-                            'layout-horizontal-single',
-                            'layout-horizontal-overlay',
-                            'layout-horizontal-box',
-                            'layout-horizontal-sidemenu',
-                            'layout-vertical-transparent',
-                            'layout-without-header',
-                            'layout-rtl',
-                            'layout-dark',
-                        )
-                            ? 'show active'
-                            : '' }}"
-                            id="menu-layout">
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'show active'
+    : '' }}" id="menu-layout">
                             <ul class="stack-submenu">
                                 <li class="{{ Request::is('layout-horizontal') ? 'active' : '' }}">
                                     <a href="{{ url('layout-horizontal') }}">
@@ -4264,25 +4205,24 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'contacts-grid',
-                            'contacts',
-                            'contact-details',
-                            'companies-grid',
-                            'companies-crm',
-                            'company-details',
-                            'deals-grid',
-                            'deals-details',
-                            'deals',
-                            'leads-grid',
-                            'leads-details',
-                            'leads',
-                            'pipeline',
-                            'analytics',
-                            'activity',
-                        )
-                            ? 'show active'
-                            : '' }}"
-                            id="menu-crm">
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'show active'
+    : '' }}" id="menu-crm">
                             <ul class="stack-submenu">
                                 <li
                                     class="{{ Request::is('contacts-grid', 'contacts', 'contact-details') ? 'active' : '' }}">
@@ -4292,12 +4232,10 @@
                                     class="{{ Request::is('companies-grid', 'companies-crm', 'company-details') ? 'active' : '' }}">
                                     <a href="{{ url('companies-grid') }}"><span>Companies</span></a>
                                 </li>
-                                <li
-                                    class="{{ Request::is('deals-grid', 'deals-details', 'deals') ? 'active' : '' }}">
+                                <li class="{{ Request::is('deals-grid', 'deals-details', 'deals') ? 'active' : '' }}">
                                     <a href="{{ url('deals-grid') }}"><span>Deals</span></a>
                                 </li>
-                                <li
-                                    class="{{ Request::is('leads-grid', 'leads-details', 'leads') ? 'active' : '' }}">
+                                <li class="{{ Request::is('leads-grid', 'leads-details', 'leads') ? 'active' : '' }}">
                                     <a href="{{ url('leads-grid') }}"><span>Leads</span></a>
                                 </li>
                                 <li class="{{ Request::is('pipeline') ? 'active' : '' }}"><a
@@ -4310,39 +4248,38 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'employees',
-                            'employees-grid',
-                            'employee-details',
-                            'departments',
-                            'designations',
-                            'policy',
-                            'tickets',
-                            'tickets-grid',
-                            'ticket-details',
-                            'holidays',
-                            'leaves',
-                            'leaves-employee',
-                            'leave-settings',
-                            'attendance-admin',
-                            'attendance-employee',
-                            'timesheets',
-                            'schedule-timing',
-                            'overtime',
-                            'performance-indicator',
-                            'performance-review',
-                            'performance-appraisal',
-                            'goal-tracking',
-                            'goal-type',
-                            'training',
-                            'trainers',
-                            'training-type',
-                            'promotion',
-                            'resignation',
-                            'termination',
-                        )
-                            ? ' show active '
-                            : '' }}"
-                            id="menu-hrm">
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active '
+    : '' }}" id="menu-hrm">
                             <ul class="stack-submenu">
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
@@ -4388,19 +4325,18 @@
                                 <li class="{{ Request::is('holidays') ? 'active' : '' }}"><a
                                         href="{{ url('holidays') }}"><span>Holidays</span></a></li>
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-                                            'leaves',
-                                            'leaves-employee',
-                                            'leave-settings',
-                                            'attendance-admin',
-                                            'attendance-employee',
-                                            'timesheets',
-                                            'schedule-timing',
-                                            'overtime',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}"><span>Attendance</span>
+                                    <a href="javascript:void(0);" class="{{ Request::is(
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Attendance</span>
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
@@ -4554,62 +4490,61 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'assets',
-                            'asset-categories',
-                            'knowledgebase',
-                            'activity',
-                            'users',
-                            'roles-permissions',
-                            'expenses-report',
-                            'invoice-report',
-                            'payment-report',
-                            'project-report',
-                            'task-report',
-                            'user-report',
-                            'employee-report',
-                            'payslip-report',
-                            'attendance-report',
-                            'leave-report',
-                            'daily-report',
-                            'profile-settings',
-                            'security-settings',
-                            'notification-settings',
-                            'connected-apps',
-                            'bussiness-settings',
-                            'seo-settings',
-                            'localization-settings',
-                            'prefixes',
-                            'preferences',
-                            'performance-appraisal',
-                            'language',
-                            'authentication-settings',
-                            'ai-settings',
-                            'salary-settings',
-                            'approval-settings',
-                            'invoice-settings',
-                            'leave-type',
-                            'custom-fields',
-                            'email-settings',
-                            'email-template',
-                            'sms-settings',
-                            'sms-template',
-                            'otp-settings',
-                            'gdpr',
-                            'maintenance-mode',
-                            'payment-gateways',
-                            'tax-rates',
-                            'currencies',
-                            'custom-css',
-                            'custom-js',
-                            'cronjob',
-                            'storage-settings',
-                            'ban-ip-address',
-                            'backup',
-                            'clear-cache',
-                        )
-                            ? 'show active '
-                            : '' }}"
-                            id="menu-administration">
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'show active '
+    : '' }}" id="menu-administration">
                             <ul class="stack-submenu">
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
@@ -4925,31 +4860,30 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'login',
-                            'login-2',
-                            'login-3',
-                            'register',
-                            'register-2',
-                            'register-3',
-                            'forgot-password',
-                            'forgot-password-2',
-                            'forgot-password-3',
-                            'reset-password',
-                            'reset-password-2',
-                            'reset-password-3',
-                            'email-verification',
-                            'email-verification-2',
-                            'email-verification-3',
-                            'two-step-verification',
-                            'two-step-verification-2',
-                            'two-step-verification-3',
-                            'lock-screen',
-                            'error-404',
-                            'error-500',
-                        )
-                            ? ' show active'
-                            : '' }} "
-                            id="menu-authentication">
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? ' show active'
+    : '' }} " id="menu-authentication">
                             <ul class="stack-submenu">
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
@@ -5040,129 +4974,127 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'ui-alerts',
-                            'ui-accordion',
-                            'ui-avatar',
-                            'ui-badges',
-                            'ui-borders',
-                            'ui-buttons',
-                            'ui-buttons-group',
-                            'ui-breadcrumb',
-                            'ui-cards',
-                            'ui-carousel',
-                            'ui-colors',
-                            'ui-dropdowns',
-                            'ui-grid',
-                            'ui-images',
-                            'ui-lightbox',
-                            'ui-media',
-                            'ui-modals',
-                            'ui-offcanvas',
-                            'ui-pagination',
-                            'ui-popovers',
-                            'ui-progress',
-                            'ui-placeholders',
-                            'ui-spinner',
-                            'ui-sweetalerts',
-                            'ui-nav-tabs',
-                            'ui-toasts',
-                            'ui-tooltips',
-                            'ui-typography',
-                            'ui-video',
-                            'ui-sortable',
-                            'ui-swiperjs',
-                            'ui-ribbon',
-                            'ui-clipboard',
-                            'ui-drag-drop',
-                            'ui-rangeslider',
-                            'ui-rating',
-                            'ui-text-editor',
-                            'ui-counter',
-                            'ui-scrollbar',
-                            'ui-stickynote',
-                            'ui-timeline',
-                            'form-basic-inputs',
-                            'form-checkbox-radios',
-                            'form-input-groups',
-                            'form-grid-gutters',
-                            'form-select',
-                            'form-mask',
-                            'form-fileupload',
-                            'form-horizontal',
-                            'form-vertical',
-                            'form-floating-labels',
-                            'form-validation',
-                            'form-select2',
-                            'form-wizard',
-                            'form-pickers',
-                            'tables-basic',
-                            'data-tables',
-                            'chart-apex',
-                            'chart-c3',
-                            'chart-js',
-                            'chart-morris',
-                            'chart-flot',
-                            'chart-peity',
-                            'icon-fontawesome',
-                            'icon-tabler',
-                            'icon-bootstrap',
-                            'icon-remix',
-                            'icon-feather',
-                            'icon-ionic',
-                            'icon-material',
-                            'icon-pe7',
-                            'icon-simpleline',
-                            'icon-themify',
-                            'icon-ionic',
-                            'icon-material',
-                            'icon-pe7',
-                            'icon-simpleline',
-                            'icon-themify',
-                            'icon-weather',
-                            'icon-typicon',
-                            'icon-flag',
-                        )
-                            ? ' show active '
-                            : '' }}"
-                            id="menu-ui-elements">
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? ' show active '
+    : '' }}" id="menu-ui-elements">
                             <ul class="stack-submenu">
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-                                            'ui-alerts',
-                                            'ui-accordion',
-                                            'ui-avatar',
-                                            'ui-badges',
-                                            'ui-borders',
-                                            'ui-buttons',
-                                            'ui-buttons-group',
-                                            'ui-breadcrumb',
-                                            'ui-cards',
-                                            'ui-carousel',
-                                            'ui-colors',
-                                            'ui-dropdowns',
-                                            'ui-grid',
-                                            'ui-images',
-                                            'ui-lightbox',
-                                            'ui-media',
-                                            'ui-modals',
-                                            'ui-offcanvas',
-                                            'ui-pagination',
-                                            'ui-popovers',
-                                            'ui-progress',
-                                            'ui-placeholders',
-                                            'ui-spinner',
-                                            'ui-sweetalerts',
-                                            'ui-nav-tabs',
-                                            'ui-toasts',
-                                            'ui-tooltips',
-                                            'ui-typography',
-                                            'ui-video',
-                                            'ui-sortable',
-                                            'ui-swiperjs',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">Base
+                                    <a href="javascript:void(0);" class="{{ Request::is(
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+)
+    ? 'active subdrop'
+    : '' }}">Base
                                         UI<span class="menu-arrow"></span></a>
                                     <ul>
                                         <li>
@@ -5294,21 +5226,20 @@
                                     </ul>
                                 </li>
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-                                            'ui-ribbon',
-                                            'ui-clipboard',
-                                            'ui-drag-drop',
-                                            'ui-rangeslider',
-                                            'ui-rating',
-                                            'ui-text-editor',
-                                            'ui-counter',
-                                            'ui-scrollbar',
-                                            'ui-stickynote',
-                                            'ui-timeline',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
+                                    <a href="javascript:void(0);" class="{{ Request::is(
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+)
+    ? 'active subdrop'
+    : '' }}">
                                         Advanced UI<span class="menu-arrow"></span></a>
                                     <ul>
                                         <li>
@@ -5358,44 +5289,41 @@
                                     </ul>
                                 </li>
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-                                            'form-basic-inputs',
-                                            'form-checkbox-radios',
-                                            'form-input-groups',
-                                            'form-grid-gutters',
-                                            'form-select',
-                                            'form-mask',
-                                            'form-fileupload',
-                                            'form-horizontal',
-                                            'form-vertical',
-                                            'form-floating-labels',
-                                            'form-validation',
-                                            'form-select2',
-                                            'form-wizard',
-                                            'form-pickers',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">Forms<span
-                                            class="menu-arrow"></span> </a>
+                                    <a href="javascript:void(0);" class="{{ Request::is(
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">Forms<span class="menu-arrow"></span> </a>
                                     <ul>
                                         <li class="submenu submenu-two">
-                                            <a href="javascript:void(0);"
-                                                class="{{ Request::is(
-                                                    'form-basic-inputs',
-                                                    'form-checkbox-radios',
-                                                    'form-input-groups',
-                                                    'form-grid-gutters',
-                                                    'form-select',
-                                                    'form-mask',
-                                                    'form-fileupload',
-                                                    'form-validation',
-                                                    'form-select2',
-                                                    'form-wizard',
-                                                    'form-pickers',
-                                                )
-                                                    ? 'active subdrop'
-                                                    : '' }}">Form
+                                            <a href="javascript:void(0);" class="{{ Request::is(
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">Form
                                                 Elements<span class="menu-arrow inside-submenu"></span></a>
                                             <ul>
                                                 <li>
@@ -5531,30 +5459,28 @@
                                     </ul>
                                 </li>
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-                                            'icon-fontawesome',
-                                            'icon-tabler',
-                                            'icon-bootstrap',
-                                            'icon-remix',
-                                            'icon-feather',
-                                            'icon-ionic',
-                                            'icon-material',
-                                            'icon-pe7',
-                                            'icon-simpleline',
-                                            'icon-themify',
-                                            'icon-ionic',
-                                            'icon-material',
-                                            'icon-pe7',
-                                            'icon-simpleline',
-                                            'icon-themify',
-                                            'icon-weather',
-                                            'icon-typicon',
-                                            'icon-flag',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">Icons<span
-                                            class="menu-arrow"></span> </a>
+                                    <a href="javascript:void(0);" class="{{ Request::is(
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? 'active subdrop'
+    : '' }}">Icons<span class="menu-arrow"></span> </a>
                                     <ul>
                                         <li>
                                             <a href="{{ url('icon-fontawesome') }}"

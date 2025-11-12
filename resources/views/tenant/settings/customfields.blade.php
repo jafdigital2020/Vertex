@@ -66,6 +66,8 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Leave Type</a>
                                 <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Custom Fields</a>
+                                <a href="{{ route('biometrics') }}"
+                                    class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>
@@ -75,12 +77,12 @@
                         <div class="card-body">
                             <div class="border-bottom d-flex align-items-center justify-content-between pb-3 mb-3">
                                 <h4>Prefix</h4>
-                                @if(in_array('Create',$permission))
-                                <div>
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#add_prefix"
-                                        class="btn btn-primary d-flex align-items-center"><i
-                                            class="ti ti-circle-plus me-2"></i>Add Prefix</a>
-                                </div>
+                                @if(in_array('Create', $permission))
+                                    <div>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_prefix"
+                                            class="btn btn-primary d-flex align-items-center"><i
+                                                class="ti ti-circle-plus me-2"></i>Add Prefix</a>
+                                    </div>
                                 @endif
                             </div>
                             <div class="card-body p-0">
@@ -99,8 +101,8 @@
                                                     </th>
                                                     <th class="text-center">Prefix</th>
                                                     <th class="text-center">Remarks</th>
-                                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                                    <th class="text-center">Action</th>
+                                                    @if(in_array('Update', $permission) || in_array('Delete', $permission))
+                                                        <th class="text-center">Action</th>
                                                     @endif
                                                 </tr>
                                             </thead>
@@ -113,27 +115,25 @@
                                                             </div>
                                                         </td>
                                                         <td class="text-center">{{ $cf->prefix_name }}</td>
-                                                        <td  class="text-center">{{ $cf->remarks }}</td>
-                                                         @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                                        <td  class="text-center"> 
-                                                            <div class="action-icon d-inline-flex">
-                                                                @if(in_array('Update',$permission))
-                                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                    data-bs-target="#edit_prefix"
-                                                                    data-id="{{ $cf->id }}"
-                                                                    data-name="{{ $cf->prefix_name }}"
-                                                                    data-remarks="{{ $cf->remarks }}"><i
-                                                                        class="ti ti-edit"></i></a>
-                                                                 @endif
-                                                                @if(in_array('Delete',$permission))
-                                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                                    data-bs-target="#delete_prefix"
-                                                                    data-id="{{ $cf->id }}"
-                                                                    data-name="{{ $cf->prefix_name }}"><i
-                                                                        class="ti ti-trash"></i></a>
-                                                                @endif
-                                                            </div>
-                                                        </td>
+                                                        <td class="text-center">{{ $cf->remarks }}</td>
+                                                        @if(in_array('Update', $permission) || in_array('Delete', $permission))
+                                                            <td class="text-center">
+                                                                <div class="action-icon d-inline-flex">
+                                                                    @if(in_array('Update', $permission))
+                                                                        <a href="#" class="me-2" data-bs-toggle="modal"
+                                                                            data-bs-target="#edit_prefix" data-id="{{ $cf->id }}"
+                                                                            data-name="{{ $cf->prefix_name }}"
+                                                                            data-remarks="{{ $cf->remarks }}"><i
+                                                                                class="ti ti-edit"></i></a>
+                                                                    @endif
+                                                                    @if(in_array('Delete', $permission))
+                                                                        <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                                            data-bs-target="#delete_prefix" data-id="{{ $cf->id }}"
+                                                                            data-name="{{ $cf->prefix_name }}"><i
+                                                                                class="ti ti-trash"></i></a>
+                                                                    @endif
+                                                                </div>
+                                                            </td>
                                                         @endif
                                                     </tr>
                                                 @endforeach
@@ -152,7 +152,7 @@
 
 
         {{-- Footer --}}
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
     @component('components.modal-popup')
@@ -163,8 +163,8 @@
 @push('scripts')
     {{-- Create Function --}}
     <script>
-        $(document).ready(function() {
-            $('#addPrefixForm').on('submit', function(e) {
+        $(document).ready(function () {
+            $('#addPrefixForm').on('submit', function (e) {
                 e.preventDefault();
 
                 let formData = {
@@ -179,7 +179,7 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    success: function(response) {
+                    success: function (response) {
                         toastr.success(response.message);
                         $('#addPrefixForm')[0].reset();
                         $('#add_prefix').modal('hide');
@@ -187,30 +187,30 @@
                             window.location.reload();
                         }, 1000);
                     },
-                    error: function(xhr) {
-                       
+                    error: function (xhr) {
+
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             for (let field in errors) {
                                 toastr.error(errors[field][0]);
                             }
-                        } else if (xhr.status === 403) { 
+                        } else if (xhr.status === 403) {
                             toastr.error(xhr.responseJSON.message || 'Forbidden');
                         } else {
                             toastr.error('An unexpected error occurred.');
-                        } 
+                        }
                     }
                 });
             });
         });
     </script>
 
-    {{-- Edit Function  --}}
+    {{-- Edit Function --}}
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
 
             // 🖊️ Populate the modal fields on click
-            $('[data-bs-target="#edit_prefix"]').on('click', function() {
+            $('[data-bs-target="#edit_prefix"]').on('click', function () {
                 let id = $(this).data('id');
                 let name = $(this).data('name');
                 let remarks = $(this).data('remarks');
@@ -221,7 +221,7 @@
             });
 
             // Form Submission for Edit
-            $('#editPrefixForm').on('submit', function(e) {
+            $('#editPrefixForm').on('submit', function (e) {
                 e.preventDefault();
 
                 let id = $(this).data('id');
@@ -237,7 +237,7 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    success: function(response) {
+                    success: function (response) {
                         toastr.success(response.message);
                         $('#editPrefixForm')[0].reset();
                         $('#edit_prefix').modal('hide');
@@ -245,17 +245,17 @@
                             window.location.reload();
                         }, 1000);
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             for (let field in errors) {
                                 toastr.error(errors[field][0]);
                             }
-                        } else if (xhr.status === 403) { 
+                        } else if (xhr.status === 403) {
                             toastr.error(xhr.responseJSON.message || 'Forbidden');
                         } else {
                             toastr.error('An unexpected error occurred.');
-                        } 
+                        }
                     }
                 });
             });
@@ -264,7 +264,7 @@
 
     {{-- Delete Function --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
@@ -277,7 +277,7 @@
 
             // Set up the delete buttons to capture data
             prefixDeleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     prefixDeleteId = this.getAttribute('data-id');
                     const prefixName = this.getAttribute('data-name');
 
@@ -289,20 +289,20 @@
             });
 
             // Confirm delete button click event
-            prefixConfirmDeleteBtn?.addEventListener('click', function() {
+            prefixConfirmDeleteBtn?.addEventListener('click', function () {
                 if (!prefixDeleteId)
                     return; // Ensure both id is available
 
                 fetch(`/api/settings/custom-fields/delete-prefix/${prefixDeleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content"),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                })
                     .then(response => {
                         if (response.ok) {
                             toastr.success("Prefix deleted successfully.");

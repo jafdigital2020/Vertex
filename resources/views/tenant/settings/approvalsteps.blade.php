@@ -68,8 +68,10 @@
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Approval Settings</a>
                                 <a href="{{ route('leave-type') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Leave Type</a>
-                               <a href="{{ route('custom-fields') }}"
+                                <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
+                                <a href="{{ route('biometrics') }}"
+                                    class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>
@@ -149,7 +151,7 @@
             </div>
         </div>
 
-      @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
 @endsection
@@ -222,11 +224,11 @@
                         `<p class="mb-1"><strong>User:</strong> ${s.approver_user.name}</p>` :
                         '';
                     return `
-        <div class="card p-3" style="min-width:200px">
-          <span class="badge bg-secondary mb-2">Level ${s.level}</span>
-          <p class="mb-1"><strong>Type:</strong> ${type}</p>
-          ${userInfo}
-        </div>`;
+                    <div class="card p-3" style="min-width:200px">
+                      <span class="badge bg-secondary mb-2">Level ${s.level}</span>
+                      <p class="mb-1"><strong>Type:</strong> ${type}</p>
+                      ${userInfo}
+                    </div>`;
                 }).join('');
             }
 
@@ -241,10 +243,10 @@
                     // 1) fetch users
                     let res = await fetch(
                         `/api/settings/approval-steps/users?branch_id=${encodeURIComponent(branchId)}`, {
-                            headers: {
-                                'Accept': 'application/json'
-                            }
+                        headers: {
+                            'Accept': 'application/json'
                         }
+                    }
                     );
                     if (!res.ok) throw new Error('Users fetch failed');
                     ({
@@ -254,10 +256,10 @@
                     // 2) fetch steps
                     res = await fetch(
                         `/api/settings/approval-steps/steps?branch_id=${encodeURIComponent(branchId)}`, {
-                            headers: {
-                                'Accept': 'application/json'
-                            }
+                        headers: {
+                            'Accept': 'application/json'
                         }
+                    }
                     );
                     if (!res.ok) throw new Error('Steps fetch failed');
                     let {
@@ -292,14 +294,14 @@
                 e.preventDefault();
                 const branchId = branchSelect.value || null;
                 const steps = Array.from(stepsAccordion.querySelectorAll('.accordion-item')).map(item =>
-                    ({
-                        level: +item.dataset.level,
-                        approver_kind: item.querySelector('.approver-kind').value,
-                        approver_user_id: item.querySelector('.approver-kind').value ===
-                            'user' ?
-                            item.querySelector('.user-select').value :
-                            null
-                    }));
+                ({
+                    level: +item.dataset.level,
+                    approver_kind: item.querySelector('.approver-kind').value,
+                    approver_user_id: item.querySelector('.approver-kind').value ===
+                        'user' ?
+                        item.querySelector('.user-select').value :
+                        null
+                }));
 
                 for (let s of steps) {
                     if (s.approver_kind === 'user' && !s.approver_user_id) {

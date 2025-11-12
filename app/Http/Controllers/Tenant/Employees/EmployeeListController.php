@@ -64,14 +64,14 @@ class EmployeeListController extends Controller
         $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $branches = $accessData['branches']->where('name','Theos Helios Security Agency Corp')->get(); 
-        $branchIds = $branches->pluck('id')->toArray(); 
-        $departments = $accessData['departments']->whereIn('branch_id',$branchIds)->get(); 
-        $departmentIds = $departments->pluck('id')->toArray(); 
+        $branches = $accessData['branches']->where('name', 'Theos Helios Security Agency Corp')->get();
+        $branchIds = $branches->pluck('id')->toArray();
+        $departments = $accessData['departments']->whereIn('branch_id', $branchIds)->get();
+        $departmentIds = $departments->pluck('id')->toArray();
         $designations = $accessData['designations']->whereIn('department_id', $departmentIds)->get();
-        $employees = $accessData['employees']  ->whereHas('branch', function ($branchQuery) {
-                    $branchQuery->where('name', 'Theos Helios Security Agency Corp');
-                });
+        $employees = $accessData['employees']->whereHas('branch', function ($branchQuery) {
+            $branchQuery->where('name', 'Theos Helios Security Agency Corp');
+        });
 
 
         if ($branchId) {
@@ -173,9 +173,8 @@ class EmployeeListController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $query = $accessData['employees']->whereHas('branch', function ($branchQuery) {
-                    $branchQuery->where('name','Theos Helios Security Agency Corp');
-                
-            })->with([
+            $branchQuery->where('name', 'Theos Helios Security Agency Corp');
+        })->with([
             'personalInformation',
             'employmentDetail',
             'employmentDetail.department',
@@ -370,6 +369,7 @@ class EmployeeListController extends Controller
             'employee_id' => 'required|string|unique:employment_details,employee_id',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
+            'biometrics_id' => 'nullable|string',
             'security_license_number' => 'nullable|string',
             'security_license_expiration' => 'nullable|date',
             'reporting_to' => 'nullable|exists:users,id',
@@ -453,6 +453,7 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'reporting_to' => $request->reporting_to,
+                'biometrics_id' => $request->biometrics_id,
                 'security_license_number' => $request->security_license_number,
                 'security_license_expiration' => $request->security_license_expiration,
             ]);
@@ -648,6 +649,7 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'status' => 1,
+                'biometrics_id' => $request->biometrics_id,
                 'security_license_number' => $request->security_license_number,
                 'security_license_expiration' => $request->security_license_expiration,
                 'reporting_to' => $request->reporting_to,
@@ -1020,35 +1022,35 @@ class EmployeeListController extends Controller
     // SECURITY GUARD LIST
     public function sgListIndex(Request $request)
     {
-        $authUser = $this->authUser();  
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(9);
         $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $branches = $accessData['branches']->where('name','!=','Theos Helios Security Agency Corp')->get(); 
-        $branchIds = $branches->pluck('id')->toArray(); 
-        $departments = $accessData['departments']->whereIn('branch_id',$branchIds)->get(); 
-        $departmentIds = $departments->pluck('id')->toArray(); 
+        $branches = $accessData['branches']->where('name', '!=', 'Theos Helios Security Agency Corp')->get();
+        $branchIds = $branches->pluck('id')->toArray();
+        $departments = $accessData['departments']->whereIn('branch_id', $branchIds)->get();
+        $departmentIds = $departments->pluck('id')->toArray();
         $designations = $accessData['designations']->whereIn('department_id', $departmentIds)->get();
         $employees = $accessData['employees']->whereHas('branch', function ($branchQuery) {
-                    $branchQuery->where('name','!=', 'Theos Helios Security Agency Corp');
-                })->get();
+            $branchQuery->where('name', '!=', 'Theos Helios Security Agency Corp');
+        })->get();
 
         if ($request->wantsJson()) {
             return response()->json([
-                'status' => 'success', 
+                'status' => 'success',
                 'prefixes' => $prefixes,
                 'roles' => $roles,
                 'branches' => $branches,
                 'departments' => $departments,
                 'designations' => $designations,
                 'employees' => $employees,
-                'permission' => $permission 
+                'permission' => $permission
             ]);
         }
 
-        return view('tenant.employee.sglist', [ 
+        return view('tenant.employee.sglist', [
             'prefixes' => $prefixes,
             'roles' => $roles,
             'branches' => $branches,
@@ -1058,7 +1060,7 @@ class EmployeeListController extends Controller
             'permission' => $permission
         ]);
     }
-     public function sgListFilter(Request $request)
+    public function sgListFilter(Request $request)
     {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(9);
@@ -1071,9 +1073,8 @@ class EmployeeListController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $query = $accessData['employees']->whereHas('branch', function ($branchQuery) {
-                    $branchQuery->where('name','!=','Theos Helios Security Agency Corp');
-                
-            })->with([
+            $branchQuery->where('name', '!=', 'Theos Helios Security Agency Corp');
+        })->with([
             'personalInformation',
             'employmentDetail',
             'employmentDetail.department',

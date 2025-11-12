@@ -30,7 +30,7 @@
             </div>
             <!-- /Breadcrumb -->
 
-           <ul class="nav nav-tabs nav-tabs-solid bg-transparent border-bottom mb-3">
+            <ul class="nav nav-tabs nav-tabs-solid bg-transparent border-bottom mb-3">
                 {{-- <li class="nav-item">
                     <a class="nav-link " href="{{ url('profile-settings') }}"><i class="ti ti-settings me-2"></i>General
                         Settings</a>
@@ -70,6 +70,8 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Leave Type</a>
                                 <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
+                                <a href="{{ route('biometrics') }}"
+                                    class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>
@@ -158,8 +160,7 @@
                                                 <p>Create and view geofence locations.</p>
                                             </div>
                                             <div class="mb-3">
-                                                <a href="{{ route('geofence-settings') }}"
-                                                    class="btn btn-dark">Manage</a>
+                                                <a href="{{ route('geofence-settings') }}" class="btn btn-dark">Manage</a>
                                             </div>
                                         </div>
                                     </div>
@@ -275,8 +276,7 @@
                                             <p>Grace period in minutes.</p>
                                         </div>
                                         <div class="mb-3">
-                                            <input type="text" class="form-control" name="grace_period"
-                                                id="gracePeriod">
+                                            <input type="text" class="form-control" name="grace_period" id="gracePeriod">
                                         </div>
                                     </div>
 
@@ -322,8 +322,7 @@
                                             <p>Choose a time display format.</p>
                                         </div>
                                         <div class="mb-3">
-                                            <select name="time_display_format" id="timeDisplayFormat"
-                                                class="form-select">
+                                            <select name="time_display_format" id="timeDisplayFormat" class="form-select">
                                                 <option value="24">24hr format</option>
                                                 <option value="12">12hr format</option>
                                             </select>
@@ -337,14 +336,14 @@
             </div>
         </div>
 
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
 @endsection
 
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const toggle = document.getElementById('geofencingEnabled');
             const radiusSection = document.getElementById('geofencingRadiusSection');
 
@@ -362,7 +361,7 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const breakToggle = document.getElementById('enableBreakHourButtons');
             const breakOptions = document.getElementById('breakOptionsSection');
 
@@ -381,7 +380,7 @@
 
     {{-- Form Submission --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
             const authToken = localStorage.getItem("token");
 
@@ -489,7 +488,7 @@
                     if (!response.ok) {
                         console.error("Failed to save setting:", data);
                         toastr.error(data.message || `Failed to update ${label}`);
-                        
+
                         if (data.message && data.message.toLowerCase().includes('permission')) {
                             setTimeout(() => {
                                 window.location.reload();
@@ -520,7 +519,7 @@
                     saveSetting(name, value);
                     if (name === "geofencing_enabled") toggleGeofencingSection();
                     if (name === "enable_break_hour_buttons") toggleBreakOptionsSection();
-                    if (name === "geotagging_enabled")   toggleGeotaggingInput();
+                    if (name === "geotagging_enabled") toggleGeotaggingInput();
                 });
             });
 

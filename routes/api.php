@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Models\Designation;
 use Illuminate\Http\Request;
@@ -243,6 +244,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/settings/custom-fields/update-prefix/{id}', [CustomfieldController::class, 'customfieldUpdate'])->name('api.customfieldUpdate');
     Route::delete('/settings/custom-fields/delete-prefix/{id}', [CustomfieldController::class, 'customfieldDelete'])->name('api.customfieldDelete');
 
+    // ============ Biometrics Settings ================== //
+    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('api.biometrics');
+    Route::post('/settings/biometrics/create', [BioController::class, 'biometricsStore'])->name('api.biometricsStore');
+    Route::put('/settings/biometrics/update/{id}', [BioController::class, 'biometricsUpdate'])->name('api.biometricsUpdate');
+    Route::delete('/settings/biometrics/delete/{id}', [BioController::class, 'biometricsDestroy'])->name('api.biometricsDestroy');
+
     // ================= Overtime API ================== //
     Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('api.overtimeIndex');
     Route::post('/overtime/update/{id}', [OvertimeController::class, 'overtimeAdminUpdate'])->name('api.overtimeAdminUpdate');
@@ -459,5 +466,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resignation/remarks/mark-as-read/{id}', [ResignationController::class, 'markRemarksAsRead']);
     Route::post('/asset-remarks/hr/mark-as-read/{assetId}/{itemNo}', [ResignationController::class, 'HRassetmarkAsRead']);
     Route::post('/resignations/{id}/undo-clearance', [ResignationController::class, 'undoClearance']);
-
 });

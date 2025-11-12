@@ -452,6 +452,12 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
+                                                <label class="form-label">Biometrics ID</label>
+                                                <input type="text" class="form-control" name="biometrics_id" id="biometricsId" placeholder="Enter biometrics ID">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
                                                 <label class="form-label">Joining Date <span class="text-danger">
                                                         *</span></label>
                                                 <input type="date" class="form-control" placeholder="dd/mm/yyyy"
@@ -730,6 +736,12 @@
                                                             id="editEmployeeId">
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Biometrics ID</label>
+                                                <input type="text" class="form-control" name="biometrics_id" id="editBiometricsId" placeholder="Enter biometrics ID">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -1261,6 +1273,7 @@
                         $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger('change');
                         $('#editSecurityLicenseNumber').val(emp.employment_detail.security_license_number);
                         $('#editSecurityLicenseExpiration').val(emp.employment_detail.security_license_expiration);
+                        $('#editBiometricsId').val(emp.employment_detail.biometrics_id);
                         $('#editReportingTo').val(emp.employment_detail.reporting_to).trigger('change');
 
                         // Set Employee Status field
