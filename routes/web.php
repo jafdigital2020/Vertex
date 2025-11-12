@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Tenant\Employees\SuspensionController;
+use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Models\User;
 use App\Models\Assets;
 use App\Models\Department;
@@ -67,6 +68,24 @@ use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 Route::get('/', function () {
     return redirect('login');
 });
+
+Route::match(['get', 'post'], '/iclock/cdata',      [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest',                    [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd',                    [BiometricsController::class, 'deviceCommand']);
+
+Route::match(['get', 'post'], '/iclock/cdata.aspx',  [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest.aspx',               [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd.aspx',               [BiometricsController::class, 'deviceCommand']);
+
+Route::match(['get', 'post'], '/cdata',              [BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/cdata.aspx',         [BiometricsController::class, 'cdata']);
+
+// Add BioTime routes
+Route::prefix('biotime')->group(function () {
+    Route::get('/test-connection', [BiometricsController::class, 'testBioTimeConnection']);
+    Route::get('/fetch-attendance', [BiometricsController::class, 'fetchAttendanceFromBioTime']);
+});
+
 
 Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->middleware([RedirectIfAuthenticated::class]);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -214,8 +233,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('branch-grid')->middleware(CheckPermission::class . ':8');;
     Route::get('/branches/filter', [BranchController::class, 'filter'])->name('branches.filter');
     Route::get('/branches/by-group', [BranchController::class, 'getByGroup'])
-    ->name('branches.getByGroup');
-    
+        ->name('branches.getByGroup');
+
     // Policy
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12');
     Route::get('/policy-filter', [PolicyController::class, 'filter'])->name('policy_filter');
@@ -223,10 +242,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Resignation
     Route::get('/resignation-admin-filter', [ResignationController::class, 'filter'])->name('resignation-admin-filter');
     Route::get('/resignation/admin', [ResignationController::class, 'resignationAdminIndex'])->name('resignation-admin')->middleware(CheckPermission::class . ':22');
-    Route::get('/resignation/employee', [ResignationController::class, 'resignationEmployeeIndex'])->name('resignation-employee')->middleware(CheckPermission::class . ':58'); 
-    Route::get('/resignation/hr', [ResignationController::class, 'resignationHRIndex'])->name('resignation-hr')->middleware(CheckPermission::class . ':59'); 
-    Route::get('/resignation-hr-filter', [ResignationController::class, 'HRfilter'])->name('resignation-hr-filter');  
-    
+    Route::get('/resignation/employee', [ResignationController::class, 'resignationEmployeeIndex'])->name('resignation-employee')->middleware(CheckPermission::class . ':58');
+    Route::get('/resignation/hr', [ResignationController::class, 'resignationHRIndex'])->name('resignation-hr')->middleware(CheckPermission::class . ':59');
+    Route::get('/resignation-hr-filter', [ResignationController::class, 'HRfilter'])->name('resignation-hr-filter');
+
     // Termination
     Route::get('/termination', [TerminationController::class, 'terminationIndex'])->name('termination')->middleware(CheckPermission::class . ':23');
 
@@ -348,7 +367,6 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // export assets 
     Route::get('/export-asset-pdf/{assetDetailId}/{userId}', [AssetsController::class, 'exportAssetPDF'])->name('export.asset.pdf');
-
 });
 
 Route::get('/send-test-notif', function () {

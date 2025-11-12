@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
@@ -62,6 +63,30 @@ use App\Http\Controllers\Tenant\Employees\SuspensionController;
 */
 
 Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
+
+Route::prefix('zkapi')->group(function () {
+    // Standard API endpoints
+    Route::any('/cdata', [BiometricsController::class, 'cdata']);
+    Route::any('/getrequest', [BiometricsController::class, 'getRequest']);
+    Route::any('/devicecmd', [BiometricsController::class, 'deviceCommand']);
+    Route::any('/status', [BiometricsController::class, 'deviceStatus']);
+
+    // Test endpoint
+    Route::get('/test-attendance', [BiometricsController::class, 'testAttendance']);
+});
+
+// iClock endpoints (what your device is actually calling)
+Route::match(['get', 'post'], '/iclock/cdata', [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd', [BiometricsController::class, 'deviceCommand']);
+
+// Some devices use .aspx extensions
+Route::match(['get', 'post'], '/iclock/cdata.aspx', [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest.aspx', [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd.aspx', [BiometricsController::class, 'deviceCommand']);
+
+Route::match(['get', 'post'], '/cdata', [BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/cdata.aspx', [BiometricsController::class, 'cdata']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -248,13 +273,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============= Suspension API ================ //
     Route::get('/employees/suspensions', [SuspensionController::class, 'adminSuspensionEmployeeListIndex'])->name('api.adminSuspensionEmployeeListIndex');
-    
+
     Route::get('/suspension/{id}', [SuspensionController::class, 'show'])
         ->name('api.suspensionShow');
-    
+
     Route::put('/suspension/{id}', [SuspensionController::class, 'update'])
         ->name('api.suspensionUpdate');
-    
+
     Route::post('/suspension/file-report', [SuspensionController::class, 'fileSuspensionReport'])
         ->name('api.suspensionFileReport');
 
@@ -264,18 +289,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/suspension/{id}/receive-reply', [SuspensionController::class, 'receiveReply'])
         ->name('api.suspensionReceiveReply');
 
-        
+
     Route::post('/suspension/{id}/investigate', [SuspensionController::class, 'conductInvestigation'])
         ->name('api.suspensionConductInvestigation');
 
-        
+
     Route::post('/suspension/{id}/issue-dam', [SuspensionController::class, 'issueDAM'])
         ->name('api.suspensionIssueDAM');
 
     Route::post('/suspension/{id}/implement', [SuspensionController::class, 'implementSuspension'])
         ->name('api.suspensionImplementSuspension');
 
-        
+
 
     Route::post('/suspension/{id}/return', [SuspensionController::class, 'markReturnToWork'])
         ->name('api.suspensionMarkReturnToWork');
@@ -400,37 +425,37 @@ Route::middleware('auth:sanctum')->group(function () {
     // ===================Resignation ==================//
 
     // employee resignation api
-    Route::post('/resignation/employee/submit', [ResignationController::class, 'submitResignation'])->name('submit-resignation-letter'); 
-    Route::put('/resignations/{id}', [ResignationController::class, 'update']); 
+    Route::post('/resignation/employee/submit', [ResignationController::class, 'submitResignation'])->name('submit-resignation-letter');
+    Route::put('/resignations/{id}', [ResignationController::class, 'update']);
     Route::delete('/resignations/{id}', [ResignationController::class, 'destroy']);
     Route::post('/resignation/assets/return', [ResignationController::class, 'saveEmployeeAssets'])->name('resignation.assets.return');
     Route::post('/resignation/upload/{id}', [ResignationController::class, 'uploadAttachments']);
     Route::post('/resignation/assets/remarks/save', [ResignationController::class, 'saveRemark'])->name('assets.remarks.save');
-    Route::post('/resignation-attachments/employee/{id}/remarks', [ResignationController::class, 'storeEmployeeAttachmentRemarks']); 
+    Route::post('/resignation-attachments/employee/{id}/remarks', [ResignationController::class, 'storeEmployeeAttachmentRemarks']);
     Route::post('/resignation/employee/remarks/mark-as-read/{id}', [ResignationController::class, 'employeemarkRemarksAsRead']);
     Route::post('/asset-remarks/mark-as-read/{assetId}/{itemNo}', [ResignationController::class, 'assetmarkAsRead']);
     // admin resignation api
     Route::post('/resignation/approve/{id}', [ResignationController::class, 'approve'])->name('api.resignation-approve');
-    Route::post('/resignation/reject/{id}', [ResignationController::class, 'reject'])->name('api.resignation-reject'); 
-     
+    Route::post('/resignation/reject/{id}', [ResignationController::class, 'reject'])->name('api.resignation-reject');
+
     // hr resignation api 
     Route::get('/resignation/filter-from-branch', [ResignationController::class, 'HRfromBranch']);
     Route::get('/resignation/filter-from-department', [ResignationController::class, 'HRfromDepartment']);
     Route::get('/resignation/filter-from-designation', [ResignationController::class, 'HRfromDesignation']);
     Route::post('/resignation/accept/{id}', [ResignationController::class, 'acceptByHR'])
-    ->name('api.resignation-accept');
-    Route::get('/resignation/remarks/{id}', [ResignationController::class, 'getRemarks']); 
+        ->name('api.resignation-accept');
+    Route::get('/resignation/remarks/{id}', [ResignationController::class, 'getRemarks']);
     Route::post('/resignation/hr-attachments/{id}', [ResignationController::class, 'uploadHrAttachments'])
-    ->name('api.resignation.hr-attachments'); 
+        ->name('api.resignation.hr-attachments');
     Route::post('/resignation-attachments/{id}/remarks', [ResignationController::class, 'storeAttachmentRemarks']);
 
     Route::post('/resignation/assets/receive', [ResignationController::class, 'saveHRAssets'])
-    ->name('resignation.assets.receive'); 
+        ->name('resignation.assets.receive');
     Route::post('/resignation/assets/hr/remarks/save', [ResignationController::class, 'saveHRRemark'])->name('assets.hr.remarks.save');
     Route::put('/resignation/{id}/attachments/update-statuses', [ResignationController::class, 'updateAttachmentStatuses'])
-    ->name('resignation.attachments.updateStatuses'); 
+        ->name('resignation.attachments.updateStatuses');
     Route::post('/resignation/mark-cleared/{id}', [ResignationController::class, 'markCleared'])
-    ->name('resignation.markCleared'); 
+        ->name('resignation.markCleared');
     Route::post('/resignation/remarks/mark-as-read/{id}', [ResignationController::class, 'markRemarksAsRead']);
     Route::post('/asset-remarks/hr/mark-as-read/{assetId}/{itemNo}', [ResignationController::class, 'HRassetmarkAsRead']);
     Route::post('/resignations/{id}/undo-clearance', [ResignationController::class, 'undoClearance']);
