@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Tenant\Employees;
 
-use App\Helpers\PermissionHelper;
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\DataAccessController;
+use App\Models\User;
 use App\Models\Suspension;
-use App\Models\SuspensionAction;
-use App\Models\EmploymentDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
+use App\Models\EmploymentDetail;
+use App\Models\SuspensionAction;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 
 class SuspensionController extends Controller
 {
@@ -185,79 +186,99 @@ class SuspensionController extends Controller
         }
     }
 
+     public function filter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(60);
+
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+ 
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+ 
+        $query = Suspension::
+            with([
+                'employee.personalInformation',
+                'employee.employmentDetail.branch',
+                'employee.employmentDetail.department',
+                'employee.employmentDetail.designation', 
+            ])
+            ->whereHas('employee.employmentDetail', function ($q) {
+                $q->where('status', 1); 
+            })
+            ->latest(); 
+          
+        if ($branch) {
+            $query->whereHas('employee.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+ 
+        if ($department) {
+            $query->whereHas('employee.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+ 
+        if ($designation) {
+            $query->whereHas('employee.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        } 
+        if (!is_null($status)) {
+            $query->where('status', $status);
+        }
+ 
+        $suspension = $query->get(); 
+   
+
+        $html = view('tenant.suspension.suspension-admin-filter', [
+            'suspension' => $suspension,
+            'permission' => $permission
+        ])->render();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
 
 
     public function adminSuspensionEmployeeListIndex(Request $request)
     {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(60);
-
-        $status = $request->input('status'); // optional filter (e.g. pending, implemented, etc.)
-
-        $dataAccessController = new DataAccessController();
-
-        // branches for select options (use accessData if provided, otherwise load all)
+ 
+        $dataAccessController = new DataAccessController(); 
         $accessData = $dataAccessController->getAccessData($authUser);
-        $branches = $accessData['branches']->get();
-
-        // Employee options are not needed for admin view anymore since we use dynamic loading
+        $branches = $accessData['branches']->get(); 
+        $departments  = $accessData['departments']->get();
+        $designations = $accessData['designations']->get(); 
         $employeeOptions = [];
-
-        // Fetch ALL employees who have suspensions (not filtered by data access)
-        $employees = \App\Models\User::whereHas('suspensions', function ($query) use ($status) {
-                if ($status) {
-                    $query->where('status', $status);
-                }
-            })
-            ->with([
-                'personalInformation',
-                'employmentDetail.branch',
-                'employmentDetail.department',
-                'employmentDetail.designation',
-                'suspensions' => function ($q) use ($status) {
-                    if ($status) {
-                        $q->where('status', $status);
-                    }
-                    $q->latest();
-                },
+ 
+        $suspension = Suspension::
+             with([
+                'employee.personalInformation',
+                'employee.employmentDetail.branch',
+                'employee.employmentDetail.department',
+                'employee.employmentDetail.designation', 
             ])
-            ->whereHas('employmentDetail', function ($query) {
-                $query->where('status', 1); // active employees only
-            })
-            ->latest()
+            ->whereHas('employee.employmentDetail', function ($query) {
+                $query->where('status', 1); 
+            }) 
             ->get();
-
-        // JSON response for your fetch() JS in the Blade
-        if ($request->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'employees' => $employees->map(function ($emp) {
-                    $latestSuspension = $emp->suspensions->first();
-                    return [
-                        'id' => $emp->id,
-                        'name' => ($emp->personalInformation->first_name ?? '') . ' ' . ($emp->personalInformation->last_name ?? ''),
-                        'employee_id' => $emp->employmentDetail->employee_id ?? null,
-                        'branch' => $emp->employmentDetail->branch->name ?? null,
-                        'department' => $emp->employmentDetail->department->department_name ?? null,
-                        'designation' => $emp->employmentDetail->designation->designation_name ?? null,
-                        'suspension_id' => $latestSuspension ? $latestSuspension->id : null,
-                        'suspension_status' => $latestSuspension ? $latestSuspension->status : null,
-                        'suspension_type' => $latestSuspension ? $latestSuspension->suspension_type : null,
-                        'suspension_start' => $latestSuspension ? $latestSuspension->suspension_start_date : null,
-                        'suspension_end' => $latestSuspension ? $latestSuspension->suspension_end_date : null,
-                        'dam_file' => $latestSuspension ? $latestSuspension->dam_file : null,
-                    ];
-                }),
-                'branches' => $branches,
-                'employee_options' => $employeeOptions,
-            ]);
-        }
-
-        // For non-AJAX view load
+  
+ 
         return view('tenant.suspension.suspension-admin', [
             'permission' => $permission,
-            'employees' => $employees,
+            'suspension' => $suspension,
             'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations,
             'employeeOptions' => $employeeOptions,
         ]);
     }

@@ -312,6 +312,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/suspension/{id}/return', [SuspensionController::class, 'markReturnToWork'])
         ->name('api.suspensionMarkReturnToWork');
 
+        
     // ============= Resignation API ================ //
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('api.resignationIndex');
 

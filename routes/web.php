@@ -254,6 +254,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     //Suspension
     Route::get('/suspension/admin', [SuspensionController::class, 'adminSuspensionEmployeeListIndex'])->name('suspension-admin');
+    Route::get('/suspension/admin-filter', [SuspensionController::class, 'filter'])->name('suspension-admin-filter');
     // Route::get('/suspension/employees', [SuspensionController::class, 'suspensionEmployeeListIndex'])->name('suspension-employee-list')->middleware(CheckPermission::class . ':60');
     Route::get('/suspension/employees', [SuspensionController::class, 'suspensionEmployeeListIndex'])->name('suspension-employee-list');
 

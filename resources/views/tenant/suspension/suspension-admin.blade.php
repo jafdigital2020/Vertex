@@ -9,18 +9,24 @@
                 <!-- Breadcrumb -->
                 <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                     <div class="my-auto mb-2">
-                        <h2 class="mb-1">Employee Suspensions</h2>
+                        <h2 class="mb-1">Admin Suspension</h2>
                         <nav>
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item">
                                     <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                                 </li>
                                 <li class="breadcrumb-item">Suspension</li>
-                                <li class="breadcrumb-item active" aria-current="page">Employee Suspensions</li>
+                                <li class="breadcrumb-item active" aria-current="page">Admin Suspension</li>
                             </ol>
                         </nav>
                     </div>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap">
+                        <div class="mb-2">
+                            <button class="btn btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#fileSuspensionModal">
+                                    <i class="ti ti-file-plus"></i> File Suspension
+                                </button>
+                        </div>
                         <div class="head-icons ms-2">
                             <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="top"
                                 data-bs-original-title="Collapse" id="collapse-header">
@@ -38,41 +44,54 @@
                             <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                                 <h5 class="d-flex align-items-center mb-0">Suspension List</h5>
 
-                                <div class="d-flex align-items-center flex-wrap row-gap-2">
-                                    <input type="text" id="suspension-search" class="form-control form-control-sm me-2" 
-                                        placeholder="Search employee name..." style="width: 200px;">
-                                    
-                                    <select id="suspension-status" class="form-select form-select-sm w-auto me-2">
+                                <div class="d-flex align-items-center flex-wrap row-gap-2"> 
+                                    <div class="form-group me-2" style="max-width:200px;">
+                                        <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;"  oninput="filter()">
+                                            <option value="" selected>All Branches</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group me-2">
+                                        <select name="department_filter" id="department_filter" class="select2 form-select" style="width:150px;"
+                                            oninput="filter()">
+                                            <option value="" selected>All Departments</option>
+                                            @foreach ($departments as $department)
+                                                <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group me-2">
+                                        <select name="designation_filter" id="designation_filter" class="select2 form-select" style="width:150px;"
+                                            oninput="filter()">
+                                            <option value="" selected>All Designations</option>
+                                            @foreach ($designations as $designation)
+                                                <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group me-2"> 
+                                    <select id="suspension-status" class="form-select select2" style="width:150px;" oninput="filter()">
                                         <option value="">All Status</option>
                                         <option value="pending">Pending</option>
                                         <option value="implemented">Implemented</option>
                                         <option value="completed">Completed</option>
                                     </select>
+                                    </div>
 
                                     <!-- File Suspension Button -->
-                                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#fileSuspensionModal">
-                                        <i class="ti ti-file-plus"></i> File Suspension
-                                    </button>
+                                
                                 </div>
                             </div>
 
-                            <div class="card-body p-3">
-                                <div id="suspension-loading" class="text-center py-4">
-                                    <div class="spinner-border" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                </div>
-
-                                <div id="suspension-error" class="alert alert-danger d-none" role="alert"></div>
-
-                                <div class="table-responsive d-none" id="suspension-table-wrap">
-                                    <table class="table table-striped align-middle" id="suspension-table">
+                            <div class="card-body p-3">  
+                                <div class="table-responsive" id="suspension-table-wrap">
+                                    <table class="table datatable table-striped align-middle" id="suspension-table">
                                         <thead>
                                             <tr>
                                                 <th>#</th>
-                                                <th>Name</th>
-                                                <!-- <th>Employee ID</th> -->
+                                                <th>Name</th> 
                                                 <th>Branch</th>
                                                 <th>Department</th>
                                                 <th>Designation</th>
@@ -84,7 +103,106 @@
                                             </tr>
                                         </thead>
                                         <tbody id="suspension-tbody">
-                                            <!-- rows injected here -->
+                                            @php
+                                                function getStatusColor($status) {
+                                                    switch ($status) {
+                                                        case 'pending': 
+                                                            return 'warning';
+                                                        case 'implemented': 
+                                                            return 'info';
+                                                        case 'completed': 
+                                                            return 'success';
+                                                        default: 
+                                                            return 'secondary';
+                                                    }
+                                                }
+                                            @endphp
+                                               @foreach ($suspension as $idx => $sus) 
+                                                    <tr>    
+                                                        <td>{{ $idx + 1 }}</td>
+                                                        <td>{{  $sus->employee->personalInformation->first_name ?? '' }}  {{   $sus->employee->personalInformation->last_name ?? '' }}</td> 
+                                                        <td>{{ $sus->employee->employmentDetail->employee_id ?? '' }}</td>
+                                                        <td>{{ $sus->employee->employmentDetail->department->department_name ?? '' }}</td>
+                                                        <td>{{ $sus->employee->employmentDetail->designation->designation_name ?? '' }}</td>
+                                                        <td>
+                                                            <span class="badge bg-{{ getStatusColor($sus->status) }}">
+                                                                {{ $sus->status ?? '' }}
+                                                            </span>
+                                                        </td>
+                                                        <td>{{ $sus->suspension_type ?? '' }}</td>
+                                                        <td>{{ $sus->suspension_start_date ?? '' }}</td>
+                                                        <td>{{ $sus->suspension_end_date ?? '' }}</td>
+                                                        <td class="text-center">
+                                                            <div > 
+                                                                <button class="btn btn-sm btn-primary edit-suspension"
+                                                                    data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                    title="Edit Suspension">
+                                                                    <i class="ti ti-edit"></i>
+                                                                </button>
+ 
+                                                                @if ($sus->status === 'pending')
+                                                                    <button class="btn btn-sm btn-warning issue-nowe"
+                                                                        data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                        title="Issue NOWE">
+                                                                        <i class="ti ti-mail"></i>
+                                                                    </button>
+                                                                @else
+                                                                    <button class="btn btn-sm btn-secondary view-suspension"
+                                                                        data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                        title="View Suspension Details">
+                                                                        <i class="ti ti-eye"></i>
+                                                                    </button>
+                                                                @endif
+                                                            </div> 
+                                                            @switch($sus->status)
+                                                                @case('awaiting_reply')
+                                                                @case('under_investigation')
+                                                                    <button class="btn btn-sm btn-info"
+                                                                        onclick="openInvestigationModal({{ $sus->id ?? $sus->employee->id }})"
+                                                                        title="Upload Investigation Report">
+                                                                        <i class="ti ti-upload"></i>
+                                                                    </button>
+                                                                    @break
+
+                                                                @case('for_dam_issuance')
+                                                                    @if (!$sus->dam_file)
+                                                                        <button class="btn btn-sm btn-success"
+                                                                            onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
+                                                                            title="Issue DAM">
+                                                                            <i class="ti ti-file-check"></i>
+                                                                        </button>
+                                                                    @endif
+                                                                    @break
+
+                                                                @case('suspended')
+                                                                    @if (!$sus->dam_file)
+                                                                        <button class="btn btn-sm btn-success"
+                                                                            onclick="openDamModal({{$sus->id ?? $sus->employee->id }})"
+                                                                            title="Issue DAM">
+                                                                            <i class="ti ti-file-check"></i>
+                                                                        </button>
+                                                                    @endif
+                                                                    <button class="btn btn-sm btn-danger ms-1"
+                                                                        onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id  }})"
+                                                                        title="Implement Suspension">
+                                                                        <i class="ti ti-ban"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary ms-1"
+                                                                        onclick="completeSuspension({{ $sus->id ?? $sus->employee->id  }})"
+                                                                        title="Complete Suspension">
+                                                                        <i class="ti ti-check"></i>
+                                                                    </button>
+                                                                    @break
+
+                                                                @case('completed')
+                                                                    <button class="btn btn-sm btn-secondary" disabled title="Completed">
+                                                                        <i class="ti ti-check"></i>
+                                                                    </button>
+                                                                    @break
+                                                            @endswitch
+                                                        </td>
+                                                    </tr> 
+                                                @endforeach
                                         </tbody>
                                     </table>
                                 </div>
@@ -94,117 +212,8 @@
                 </div>
             </div>
 
-            @component('components.modal-popup') @endcomponent
-
-            <!-- Custom Styles for Enhanced Select2 -->
-            <style>
-                /* Modern Select2 Styling */
-                .select2-container--bootstrap-5 .select2-selection {
-                    border: 1px solid #dee2e6;
-                    border-radius: 0.375rem;
-                    min-height: 42px;
-                    transition: all 0.3s ease;
-                }
-
-                .select2-container--bootstrap-5 .select2-selection:hover {
-                    border-color: #86b7fe;
-                    box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.1);
-                }
-
-                .select2-container--bootstrap-5.select2-container--focus .select2-selection {
-                    border-color: #86b7fe;
-                    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-                }
-
-                .select2-container--bootstrap-5 .select2-dropdown {
-                    border: 1px solid #dee2e6;
-                    border-radius: 0.375rem;
-                    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-                }
-
-                .select2-container--bootstrap-5 .select2-results__option {
-                    padding: 0.5rem 0.75rem;
-                    transition: all 0.2s ease;
-                }
-
-                .select2-container--bootstrap-5 .select2-results__option--highlighted {
-                    background-color: #0d6efd;
-                    color: white;
-                }
-
-                .select2-container--bootstrap-5 .select2-results__option--selected {
-                    background-color: #e7f1ff;
-                    color: #0d6efd;
-                }
-
-                /* Avatar for employee options */
-                .avatar-xs {
-                    width: 32px;
-                    height: 32px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .bg-primary-transparent {
-                    background-color: rgba(13, 110, 253, 0.1);
-                    color: #0d6efd;
-                }
-
-                /* Search input styling */
-                .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
-                    border: 1px solid #dee2e6;
-                    border-radius: 0.375rem;
-                    padding: 0.5rem 0.75rem;
-                    font-size: 0.875rem;
-                }
-
-                .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field:focus {
-                    border-color: #86b7fe;
-                    outline: 0;
-                    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-                }
-
-                /* Multiple select badges */
-                .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-                    background-color: #0d6efd;
-                    border: 1px solid #0d6efd;
-                    color: white;
-                    border-radius: 0.25rem;
-                    padding: 0.25rem 0.5rem;
-                    margin: 0.25rem;
-                    font-size: 0.875rem;
-                }
-
-                .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
-                    color: white;
-                    margin-right: 0.25rem;
-                    opacity: 0.8;
-                }
-
-                .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
-                    opacity: 1;
-                }
-
-                /* Loading state */
-                .select2-container--bootstrap-5 .select2-results__option--loading {
-                    color: #6c757d;
-                    font-style: italic;
-                }
-
-                /* No results */
-                .select2-container--bootstrap-5 .select2-results__option--no-results {
-                    color: #dc3545;
-                    padding: 1rem;
-                    text-align: center;
-                }
-
-                /* Improve label styling */
-                .form-label i {
-                    color: #0d6efd;
-                }
-            </style>
-
+            @component('components.modal-popup') @endcomponent 
+            
             <!-- File Suspension Report Modal -->
             <div class="modal fade" id="fileSuspensionModal" tabindex="-1" aria-labelledby="fileSuspensionModalLabel"
                 aria-hidden="true">
@@ -221,10 +230,10 @@
 
                             <div class="mb-3">
                                 <label for="branch" class="form-label">
-                                    <i class="ti ti-building me-1"></i>Select Branch(es) <span class="text-danger">*</span>
+                                    Select Branch(es) <span class="text-danger">*</span>
                                 </label>
                                 <select id="branch" class="form-select select2" multiple required style="width: 100%;">
-                                    <option value="all">📍 All Branches</option>
+                                    <option value="all">All Branches</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
@@ -236,7 +245,7 @@
 
                             <div class="mb-3">
                                 <label for="employee" class="form-label">
-                                    <i class="ti ti-users me-1"></i>Select Employee <span class="text-danger">*</span>
+                                    Select Employee <span class="text-danger">*</span>
                                 </label>
                                 <select name="user_id" id="employee" class="form-select select2" required style="width: 100%;">
                                     <option value="">Select branch(es) first</option>
@@ -589,8 +598,7 @@
                             @csrf
                             <div class="modal-body">
                                 <input type="hidden" id="edit_suspension_id" name="suspension_id">
-
-                                <!-- Employee Info (Read-only) -->
+ 
                                 <div class="alert alert-info">
                                     <strong>Employee:</strong> <span id="edit_employee_info"></span>
                                 </div>
@@ -688,161 +696,51 @@
             </div>
 
 
-
+            @push('scripts')
             <!-- Scripts -->
+            <script>
+                 
+                function filter() { 
+                    const branch = $('#branch_filter').val();
+                    const department = $('#department_filter').val();
+                    const designation = $('#designation_filter').val();
+                    const status = $('#suspension-status').val(); 
+                    $.ajax({
+                            url: '{{ route('suspension-admin-filter') }}',
+                            type: 'GET',
+                            data: {
+                                branch,
+                                department,
+                                designation, 
+                                status,
+                            },
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    $('#suspension-table').DataTable().destroy();
+                                    $('#suspension-tbody').html(response.html);
+                                    $('#suspension-table').DataTable();
+                                    
+                                } else {
+                                    toastr.error(response.message || 'Something went wrong.');
+                                }
+                            },
+                            error: function(xhr) {
+                                let message = 'An unexpected error occurred.';
+                                if (xhr.status === 403) {
+                                    message = 'You are not authorized to perform this action.';
+                                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    message = xhr.responseJSON.message;
+                                }
+                                toastr.error(message);
+                            }
+                        });
+                    }
+            </script>
             <script>
                 (function () {
                     const url = "{{ route('suspension-admin') }}";
-
-                    function showLoading(show) {
-                        document.getElementById('suspension-loading').classList.toggle('d-none', !show);
-                    }
-
-                    function showError(message) {
-                        const el = document.getElementById('suspension-error');
-                        el.textContent = message;
-                        el.classList.remove('d-none');
-                    }
-
-                    function hideError() {
-                        document.getElementById('suspension-error').classList.add('d-none');
-                    }
-
-                   function renderTable(employees) {
-                        const wrap = document.getElementById('suspension-table-wrap');
-                        const tbody = document.getElementById('suspension-tbody');
-                        tbody.innerHTML = '';
-
-                        // Get search term
-                        const searchTerm = document.getElementById('suspension-search')?.value?.toLowerCase() || '';
-                        
-                        // Filter employees by search term
-                        const filteredEmployees = employees.filter(emp => {
-                            if (!searchTerm) return true;
-                            const name = (emp.name || '').toLowerCase();
-                            const employeeId = (emp.employee_id || '').toLowerCase();
-                            const branch = (emp.branch || '').toLowerCase();
-                            const department = (emp.department || '').toLowerCase();
-                            return name.includes(searchTerm) || 
-                                   employeeId.includes(searchTerm) || 
-                                   branch.includes(searchTerm) || 
-                                   department.includes(searchTerm);
-                        });
-
-                        if (!filteredEmployees || filteredEmployees.length === 0) {
-                            tbody.innerHTML = `<tr><td colspan="11" class="text-center">${searchTerm ? 'No matching employees found.' : 'No employees found.'}</td></tr>`;
-                        } else {
-                            filteredEmployees.forEach((emp, idx) => {
-                                const tr = document.createElement('tr');
-                                tr.innerHTML = `
-                    <td>${idx + 1}</td>
-                    <td>${emp.name ?? ''}</td>
-                    <!-- <td>${emp.employee_id ?? ''}</td> -->
-                    <td>${emp.branch ?? ''}</td>
-                    <td>${emp.department ?? ''}</td>
-                    <td>${emp.designation ?? ''}</td>
-                    <td><span class="badge bg-${getStatusColor(emp.suspension_status)}">${emp.suspension_status ?? ''}</span></td>
-                    <td>${emp.suspension_type ?? ''}</td>
-                    <td>${emp.suspension_start ?? ''}</td>
-                    <td>${emp.suspension_end ?? ''}</td>
-                    <td class="text-center">
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-outline-primary edit-suspension" data-id="${emp.suspension_id || emp.id}" title="Edit Suspension">
-                                <i class="ti ti-edit"></i>
-                            </button>
-                            ${ (emp.suspension_status === 'pending') ? `
-                                <button class="btn btn-sm btn-outline-warning issue-nowe" data-id="${emp.suspension_id || emp.id}" title="Issue NOWE">
-                                    <i class="ti ti-mail"></i>
-                                </button>
-                            ` : `
-                                <button class="btn btn-sm btn-outline-secondary view-suspension" data-id="${emp.suspension_id || emp.id}" title="View Suspension Details">
-                                    <i class="ti ti-eye"></i>
-                                </button>
-                            `}
-                        </div>
-                        ${(() => {
-                            const status = emp.suspension_status;
-                            if (!status) return '';
-                            switch (status) {
-                                case 'pending':
-                                    // Only show nothing or basic info - investigation comes after NOWE
-                                    return '';
-                                case 'awaiting_reply':
-                                case 'under_investigation':
-                                    // Show investigation button only after NOWE is issued
-                                    return ''
-                                        + '<button class="btn btn-sm btn-outline-info" onclick="openInvestigationModal(' + (emp.suspension_id || emp.id) + ')" title="Upload Investigation Report">'
-                                        + '<i class="ti ti-upload"></i></button>';
-                                case 'for_dam_issuance':
-                                    // Show DAM button only if DAM file doesn't exist yet
-                                    if (!emp.dam_file) {
-                                        return ''
-                                            + '<button class="btn btn-sm btn-outline-success" onclick="openDamModal(' + (emp.suspension_id || emp.id) + ')" title="Issue DAM">'
-                                            + '<i class="ti ti-file-check"></i></button>';
-                                    }
-                                    return '';
-                                case 'suspended':
-                                    // Show suspend button and complete button
-                                    let buttons = '';
-                                    // Only show DAM button if no DAM file exists yet
-                                    if (!emp.dam_file) {
-                                        buttons += '<button class="btn btn-sm btn-outline-success" onclick="openDamModal(' + (emp.suspension_id || emp.id) + ')" title="Issue DAM">'
-                                            + '<i class="ti ti-file-check"></i></button>';
-                                    }
-                                    // Show implement suspension button (this sets the dates)
-                                    buttons += '<button class="btn btn-sm btn-outline-danger ms-1" onclick="openSuspendModal(' + (emp.suspension_id || emp.id) + ')" title="Implement Suspension">'
-                                        + '<i class="ti ti-ban"></i></button>';
-                                    // Show complete button
-                                    buttons += '<button class="btn btn-sm btn-outline-secondary ms-1" onclick="completeSuspension(' + (emp.suspension_id || emp.id) + ')" title="Complete Suspension">'
-                                        + '<i class="ti ti-check"></i></button>';
-                                    return buttons;
-                                case 'completed':
-                                    return '<button class="btn btn-sm btn-outline-secondary" disabled title="Completed"><i class="ti ti-check"></i></button>';
-                                default:
-                                    return '';
-                            }
-                        })()}
-    
-
-                        </div>
-                    </td>
-                `;
-                                tbody.appendChild(tr);
-                            });
-                        }
-
-                        wrap.classList.remove('d-none');
-
-                        // ✅ Attach action listeners
-                        document.querySelectorAll('.edit-suspension').forEach(btn => {
-                            btn.addEventListener('click', () => openEditSuspensionModal(btn.dataset.id));
-                        });
-
-                        document.querySelectorAll('.issue-nowe').forEach(btn => {
-                            btn.addEventListener('click', () => openNoweModal(btn.dataset.id));
-                        });
-
-                        document.querySelectorAll('.view-suspension').forEach(btn => {
-                            btn.addEventListener('click', () => viewSuspensionDetails(btn.dataset.id));
-                        });
-
-                        document.querySelectorAll('.implement-dam').forEach(btn => {
-                            btn.addEventListener('click', () => openDamModal(btn.dataset.id));
-                        });
-                    }
-
-                    function getStatusColor(status) {
-                        switch (status) {
-                            case 'pending': return 'warning';
-                            case 'implemented': return 'info';
-                            case 'completed': return 'success';
-                            default: return 'secondary';
-                        }
-                    }
-
-                    async function loadEmployees() {
-                        showLoading(true);
-                        hideError();
+ 
+                    async function loadEmployees() { 
                         const status = document.getElementById('suspension-status')?.value || '';
 
                         try {
@@ -861,29 +759,12 @@
                                 throw new Error('Unexpected response from server.');
                             }
                         } catch (err) {
-                            showError(err.message || 'An error occurred while loading employees.');
+                          
                         } finally {
-                            showLoading(false);
+                            
                         }
                     }
-
-                    document.addEventListener('DOMContentLoaded', function () {
-                        loadEmployees();
-                        document.getElementById('suspension-status')?.addEventListener('change', loadEmployees);
-                        
-                        // Add search functionality with debounce
-                        const searchInput = document.getElementById('suspension-search');
-                        let searchTimeout;
-                        
-                        if (searchInput) {
-                            searchInput.addEventListener('input', function() {
-                                clearTimeout(searchTimeout);
-                                searchTimeout = setTimeout(() => {
-                                    loadEmployees();
-                                }, 500); // Wait 500ms after user stops typing
-                            });
-                        }
-                    });
+ 
                 })();
 
                 // File Suspension Report Submission
@@ -911,11 +792,9 @@
                             if (data.status === 'success') {
                                 successBox.textContent = data.message;
                                 successBox.classList.remove('d-none');
-                                fileForm.reset();
-                                setTimeout(() => {
-                                    document.querySelector('#fileSuspensionModal .btn-close').click();
-                                    location.reload();
-                                }, 1500);
+                                fileForm.reset(); 
+                                document.querySelector('#fileSuspensionModal .btn-close').click();
+                                filter(); 
                             } else {
                                 throw new Error(data.message || 'Something went wrong.');
                             }
@@ -1720,184 +1599,125 @@
                     });
                 });
             </script>
-
             <script>
-                // Edit Suspension Modal
-                document.addEventListener('DOMContentLoaded', () => {
+                $(document).ready(function() {
                     const apiSuspensionBase = "{{ url('/api/suspension') }}";
-                    const editModal = new bootstrap.Modal(document.getElementById('editSuspensionModal'));
-                    const editForm = document.getElementById('editSuspensionForm');
-                    const editError = document.getElementById('edit-suspension-error');
-                    const editSuccess = document.getElementById('edit-suspension-success');
-                    const editSuspensionId = document.getElementById('edit_suspension_id');
 
-                    // Open edit modal function
-                    window.openEditSuspensionModal = function (suspensionId) {
-                        editForm.reset();
-                        editError.classList.add('d-none');
-                        editSuccess.classList.add('d-none');
-                        document.getElementById('current_file_info').innerHTML = '';
-                        
+                    const $editModal = $('#editSuspensionModal');
+                    const $editForm = $('#editSuspensionForm');
+                    const $editError = $('#edit-suspension-error');
+                    const $editSuccess = $('#edit-suspension-success');
+                    const $editSuspensionId = $('#edit_suspension_id');
+                    const $currentFileInfo = $('#current_file_info');
+ 
+                    window.openEditSuspensionModal = function(suspensionId) {
+                        $editForm[0].reset();
+                        $editError.addClass('d-none').text('');
+                        $editSuccess.addClass('d-none').text('');
+                        $currentFileInfo.html('');
+
                         if (!suspensionId) {
-                            editError.textContent = 'Invalid suspension id.';
-                            editError.classList.remove('d-none');
+                            $editError.text('Invalid suspension id.').removeClass('d-none');
                             return;
                         }
-                        
-                        editSuspensionId.value = suspensionId;
-                        
-                        // Fetch suspension data and populate form
+
+                        $editSuspensionId.val(suspensionId);
+ 
                         fetchAndPopulateSuspension(suspensionId);
-                        
-                        editModal.show();
+
+                        $editModal.modal('show');
                     };
 
-                    async function fetchAndPopulateSuspension(suspensionId) {
-                        try {
-                            const res = await fetch(`${apiSuspensionBase}/${suspensionId}`, {
-                                method: 'GET',
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                credentials: 'same-origin'
-                            });
+                    function fetchAndPopulateSuspension(suspensionId) {
+                        $.ajax({
+                            url: `${apiSuspensionBase}/${suspensionId}`,
+                            method: 'GET',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            dataType: 'json',
+                            success: function(data) {
+                                if (data.status === 'success' && data.suspension) {
+                                    const suspension = data.suspension;
 
-                            if (!res.ok) {
-                                throw new Error(`Failed to fetch suspension details (${res.status})`);
-                            }
+                                    $('#edit_employee_info').text(`${suspension.employee_name || 'N/A'} (${suspension.employee_id || 'N/A'})`);
+                                    $('#edit_offense_details').val(suspension.offense_details || '');
+                                    $('#edit_disciplinary_action').val(suspension.disciplinary_action || '');
+                                    $('#edit_remarks').val(suspension.remarks || '');
 
-                            const data = await res.json();
-                            
-                            if (data.status === 'success' && data.suspension) {
-                                const suspension = data.suspension;
-                                
-                                // Populate employee info (read-only)
-                                document.getElementById('edit_employee_info').textContent = 
-                                    `${suspension.employee_name || 'N/A'} (${suspension.employee_id || 'N/A'})`;
-                                
-                                // Populate form fields
-                                document.getElementById('edit_offense_details').value = suspension.offense_details || '';
-                                document.getElementById('edit_disciplinary_action').value = suspension.disciplinary_action || '';
-                                document.getElementById('edit_remarks').value = suspension.remarks || '';
-                                
-                                // Display current file info if exists
-                                if (suspension.information_report_file) {
-                                    const fileInfo = document.getElementById('current_file_info');
-                                    fileInfo.innerHTML = `<small class="text-info">
-                                        <i class="ti ti-file-check"></i> Current file: 
-                                        <a href="/storage/${suspension.information_report_file}" target="_blank">View Document</a>
-                                    </small>`;
+                                    if (suspension.information_report_file) {
+                                        $currentFileInfo.html(
+                                            `<small class="text-info">
+                                                <i class="ti ti-file-check"></i> Current file: 
+                                                <a href="/storage/${suspension.information_report_file}" target="_blank">View Document</a>
+                                            </small>`
+                                        );
+                                    }
+                                } else {
+                                   toastr.error('Failed to load suspension details','Error');
                                 }
-                            } else {
-                                throw new Error(data.message || 'Failed to load suspension details.');
+                            },
+                            error: function(xhr, status, error) {
+                                  toastr.error('Error loading suspension details' + error ,'Error');
                             }
-                        } catch (err) {
-                            editError.textContent = err.message || 'Error loading suspension details.';
-                            editError.classList.remove('d-none');
-                        }
+                        });
                     }
-
-                    // Handle form submission
-                    editForm.addEventListener('submit', async (e) => {
+ 
+                    $editForm.on('submit', function(e) {
                         e.preventDefault();
-                        editError.classList.add('d-none');
-                        editSuccess.classList.add('d-none');
+                        $editError.addClass('d-none').text('');
+                        $editSuccess.addClass('d-none').text('');
 
-                        const id = editSuspensionId.value;
-                        const offenseDetails = document.getElementById('edit_offense_details').value;
-                        const disciplinaryAction = document.getElementById('edit_disciplinary_action').value;
-                        const remarks = document.getElementById('edit_remarks').value;
-                        const fileInput = document.getElementById('edit_information_report_file');
-                        
+                        const id = $editSuspensionId.val();
+                        const offenseDetails = $('#edit_offense_details').val().trim();
+                        const disciplinaryAction = $('#edit_disciplinary_action').val().trim();
+                        const remarks = $('#edit_remarks').val().trim();
+                        const fileInput = $('#edit_information_report_file')[0];
+
                         if (!id) {
-                            editError.textContent = 'Invalid suspension record.';
-                            editError.classList.remove('d-none');
-                            return;
-                        }
-                        
-                        if (!offenseDetails.trim()) {
-                            editError.textContent = 'Offense details is required.';
-                            editError.classList.remove('d-none');
+                            $editError.text('Invalid suspension record.').removeClass('d-none');
                             return;
                         }
 
-                        // Validate file if provided
-                        if (fileInput.files.length > 0) {
-                            const file = fileInput.files[0];
-                            const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-                            const maxSize = 2 * 1024 * 1024; // 2MB
-
-                            if (!allowedTypes.includes(file.type)) {
-                                editError.textContent = 'Invalid file type. Only PDF, DOC, and DOCX are allowed.';
-                                editError.classList.remove('d-none');
-                                return;
-                            }
-
-                            if (file.size > maxSize) {
-                                editError.textContent = 'File size must not exceed 2MB.';
-                                editError.classList.remove('d-none');
-                                return;
-                            }
+                        if (!offenseDetails) {
+                            $editError.text('Offense details is required.').removeClass('d-none');
+                            return;
                         }
 
                         const formData = new FormData();
-                        formData.append('_method', 'PUT'); // Laravel method spoofing for FormData
+                        formData.append('_method', 'PUT');
                         formData.append('offense_details', offenseDetails);
-                        if (disciplinaryAction) {
-                            formData.append('disciplinary_action', disciplinaryAction);
-                        }
-                        if (remarks) {
-                            formData.append('remarks', remarks);
-                        }
-                        if (fileInput.files.length > 0) {
-                            formData.append('information_report_file', fileInput.files[0]);
-                        }
+                        if (disciplinaryAction) formData.append('disciplinary_action', disciplinaryAction);
+                        if (remarks) formData.append('remarks', remarks);
+                        if (fileInput.files.length > 0) formData.append('information_report_file', fileInput.files[0]);
 
-                        try {
-                            const res = await fetch(`${apiSuspensionBase}/${id}`, {
-                                method: 'POST', // Use POST with _method=PUT for FormData
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
-                                },
-                                body: formData,
-                                credentials: 'same-origin'
-                            });
-
-                            const text = await res.text();
-                            let data;
-                            try { 
-                                data = JSON.parse(text); 
-                            } catch (_) {
-                                throw new Error('Unexpected server response.');
+                        $.ajax({
+                            url: `${apiSuspensionBase}/${id}`,
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            data: formData,
+                            contentType: false,
+                            processData: false,
+                            success: function(data) {
+                                if (data.status === 'success') {
+                                   toastr.success('Suspension updated successfully','Success');
+                                   filter();
+                                   $editModal.modal('hide'); 
+                                } else {
+                                    toastr.error('Error updating suspension','Error');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                               toastr.error('Error updating suspension' + error ,'Error');
                             }
-
-                            if (res.ok && data.status === 'success') {
-                                editSuccess.textContent = data.message || 'Suspension updated successfully.';
-                                editSuccess.classList.remove('d-none');
-                                setTimeout(() => {
-                                    editModal.hide();
-                                    location.reload();
-                                }, 1500);
-                            } else {
-                                throw new Error(data.message || `Server error (${res.status}).`);
-                            }
-                        } catch (err) {
-                            editError.textContent = err.message || 'Error updating suspension.';
-                            editError.classList.remove('d-none');
-                        }
-                    });
-
-                    // Add event listener to edit buttons in the table
-                    document.querySelectorAll('.edit-suspension').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const suspensionId = btn.dataset.id;
-                            openEditSuspensionModal(suspensionId);
                         });
+                    });
+ 
+                    $(document).on('click', '.edit-suspension', function() {
+                        const suspensionId = $(this).data('id');
+                        openEditSuspensionModal(suspensionId);
                     });
                 });
             </script>
+
 
             <script>
                 // Return to Work Modal
@@ -2010,9 +1830,75 @@
                         }
                     });
                 });
+                        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function() {
+
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
+
+                $.get('/api/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+
+            $('#department_filter').on('input', function() {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function() {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
+        });
             </script>
 
 
-
+        @endpush
 
 @endsection
