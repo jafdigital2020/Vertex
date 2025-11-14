@@ -25,6 +25,7 @@ class Overtime extends Model
         'is_holiday',
         'status',
         'file_attachment',
+        'reason',
         'current_step',
         'offset_date',
         'ot_login_type',

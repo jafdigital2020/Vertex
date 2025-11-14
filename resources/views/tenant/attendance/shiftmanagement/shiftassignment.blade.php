@@ -623,6 +623,11 @@
                     fetchFilteredData();
                     $('#assign_shift_modal').modal('hide');
 
+                    // Refresh the page after a short delay to allow UI updates/toast to show
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+
                     return;
                 }
 

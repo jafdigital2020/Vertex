@@ -2203,7 +2203,6 @@
                 processData: false,
                 contentType: false,
                 success: function(res) {
-                    console.log('Update success response:', res);
                     toastr.success("Payroll has been updated successfully!");
                     setTimeout(() => {
                         window.location.reload();
@@ -2597,6 +2596,7 @@
         }
     </script>
 
+    {{-- 13th Month Table --}}
     <script>
         $(document).ready(function() {
             // Initialize 13th month table datatable (check if not already initialized)

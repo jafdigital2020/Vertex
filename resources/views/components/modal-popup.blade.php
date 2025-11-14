@@ -6411,6 +6411,12 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea class="form-control" id="employeeOvertimeReason" name="reason" rows="3" required></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                     <label class="form-label">Offset Date</label>
                                     <input type="date" class="form-control" id="employeeOvertimeOffsetDate" name="offset_date">
                                 </div>
@@ -6469,6 +6475,12 @@
                                     <label class="form-label">File Attachment</label>
                                     <input type="file" class="form-control" id="employeeOvertimeFileAttachment" name="file_attachment">
                                     <div id="currentOvertimeAttachment" class="mb-2"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea class="form-control" id="editEmployeeOvertimeReason" name="reason" rows="3" required></textarea>
                                 </div>
                             </div>
                             <div class="col-md-12">

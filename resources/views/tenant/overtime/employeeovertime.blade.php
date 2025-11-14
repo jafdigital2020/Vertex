@@ -22,8 +22,8 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    {{-- <div class="me-2 mb-2">
+                    @if (in_array('Export', $permission))
+                        {{-- <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -43,22 +43,23 @@
                         </div>
                     </div> --}}
                     @endif
-                    @if(in_array('Create',$permission))
-                    <div class="mb-2 me-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee_overtime"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Manual
-                            Overtime</a>
-                    </div>
-                    <div class="mb-2 me-2">
-                        <a href="#" id="overtimeClockIn" class="btn btn-secondary d-flex align-items-center"><i
-                                class="ti ti-clock me-2"></i>Clock-In
-                            Overtime</a>
-                    </div>
-                    <div class="mb-2 me-2">
-                        <a href="#" id="overtimeClockOut" class="btn btn-secondary d-flex align-items-center"><i
-                                class="ti ti-clock me-2"></i>Clock-Out
-                            Overtime</a>
-                    </div>
+                    @if (in_array('Create', $permission))
+                        <div class="mb-2 me-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee_overtime"
+                                class="btn btn-primary d-flex align-items-center"><i
+                                    class="ti ti-circle-plus me-2"></i>Manual
+                                Overtime</a>
+                        </div>
+                        <div class="mb-2 me-2">
+                            <a href="#" id="overtimeClockIn" class="btn btn-secondary d-flex align-items-center"><i
+                                    class="ti ti-clock me-2"></i>Clock-In
+                                Overtime</a>
+                        </div>
+                        <div class="mb-2 me-2">
+                            <a href="#" id="overtimeClockOut" class="btn btn-secondary d-flex align-items-center"><i
+                                    class="ti ti-clock me-2"></i>Clock-Out
+                                Overtime</a>
+                        </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -135,14 +136,14 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange-filtered"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" >
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
                         <div class="form-group me-2">
-                             <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="approved">Approved</option>
                                 <option value="rejected">Rejected</option>
@@ -181,20 +182,20 @@
                                                             href="#">{{ $ot->user->personalInformation->last_name }},
                                                             {{ $ot->user->personalInformation->first_name }}</a></h6>
                                                     <span
-                                                        class="fs-12 fw-normal ">{{ $ot->user->employmentDetail->department->department_name ?? 'N/A'}}</span>
+                                                        class="fs-12 fw-normal ">{{ $ot->user->employmentDetail->department->department_name ?? 'N/A' }}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="text-center">
                                             {{ $ot->overtime_date ? $ot->overtime_date->format('F j, Y') : 'N/A' }}
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} -
                                             {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
                                         </td>
 
-                                         <td class="text-center">{{ $ot->total_ot_minutes_formatted }}</td>
-                                         <td class="text-center">
+                                        <td class="text-center">{{ $ot->total_ot_minutes_formatted }}</td>
+                                        <td class="text-center">
                                             @if ($ot->file_attachment)
                                                 <a href="{{ asset('storage/' . $ot->file_attachment) }}"
                                                     class="text-primary" target="_blank">
@@ -204,10 +205,10 @@
                                                 <span class="text-muted">No Attachment</span>
                                             @endif
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             {{ $ot->offset_date ? \Carbon\Carbon::parse($ot->offset_date)->format('F j, Y') : 'N/A' }}
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             @if ($ot->lastApproverName)
                                                 <div class="d-flex align-items-center">
                                                     <a href="javascript:void(0);"
@@ -228,7 +229,7 @@
                                                 &mdash;
                                             @endif
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             @php
                                                 $badgeClass = 'badge-info';
                                                 if ($ot->status == 'approved') {
@@ -242,29 +243,31 @@
                                                 <i class="ti ti-point-filled me-1"></i>{{ ucfirst($ot->status) }}
                                             </span>
                                         </td>
-                                         <td class="text-center">
-                                             @if ($ot->status !== 'approved')
-                                            <div class="action-icon d-inline-flex">
-                                                  @if(in_array('Update',$permission) )
-                                                    <a href="#" class="me-2" data-bs-toggle="modal"
-                                                        data-bs-target="#edit_employee_overtime"
-                                                        data-id="{{ $ot->id }}"
-                                                        data-overtime-date="{{ $ot->overtime_date }}"
-                                                        data-ot-in="{{ $ot->date_ot_in }}"
-                                                        data-ot-out="{{ $ot->date_ot_out }}"
-                                                        data-total-ot="{{ $ot->total_ot_minutes }}"
-                                                        data-file-attachment="{{ $ot->file_attachment }}"
-                                                        data-offset-date="{{ $ot->offset_date }}"
-                                                        data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a>
+                                        <td class="text-center">
+                                            @if ($ot->status !== 'approved')
+                                                <div class="action-icon d-inline-flex">
+                                                    @if (in_array('Update', $permission))
+                                                        <a href="#" class="me-2" data-bs-toggle="modal"
+                                                            data-bs-target="#edit_employee_overtime"
+                                                            data-id="{{ $ot->id }}"
+                                                            data-overtime-date="{{ $ot->overtime_date }}"
+                                                            data-ot-in="{{ $ot->date_ot_in }}"
+                                                            data-ot-out="{{ $ot->date_ot_out }}"
+                                                            data-total-ot="{{ $ot->total_ot_minutes }}"
+                                                            data-file-attachment="{{ $ot->file_attachment }}"
+                                                            data-reason="{{ $ot->reason }}"
+                                                            data-offset-date="{{ $ot->offset_date }}"
+                                                            data-status="{{ $ot->status }}"><i
+                                                                class="ti ti-edit"></i></a>
                                                     @endif
-                                                  @if(in_array('Delete',$permission) )
-                                                    <a href="#" data-bs-toggle="modal"
-                                                        data-bs-target="#delete_employee_overtime"
-                                                        data-id="{{ $ot->id }}"><i class="ti ti-trash"></i></a>
-                                                  @endif
-                                            </div>
-                                             @endif
-                                         </td>
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="#" data-bs-toggle="modal"
+                                                            data-bs-target="#delete_employee_overtime"
+                                                            data-id="{{ $ot->id }}"><i class="ti ti-trash"></i></a>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -292,6 +295,10 @@
                                     id="clockInFileAttachment">
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">Reason <span class="text-danger">*</label>
+                                <textarea class="form-control" name="reason" id="clockInReason" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Offset Date (optional)</label>
                                 <input type="date" class="form-control" name="offset_date" id="clockInOffsetDate">
                             </div>
@@ -304,7 +311,7 @@
                 </div>
             </div>
         </div>
-@include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
     <!-- /Page Wrapper -->
@@ -314,8 +321,8 @@
 @endsection
 
 @push('scripts')
-<script>
-    if ($('.bookingrange-filtered').length > 0) {
+    <script>
+        if ($('.bookingrange-filtered').length > 0) {
             var start = moment().subtract(29, 'days');
             var end = moment();
 
@@ -337,52 +344,67 @@
             }, booking_range);
 
             booking_range(start, end);
-    }
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
-        filter();
-    });
-
-    function filter() {
-        const dateRange = $('#dateRange_filter').val();
-        const status = $('#status_filter').val();
-
-        $.ajax({
-            url: '{{ route('overtime-employee-filter') }}',
-            type: 'GET',
-            data: {
-                dateRange,
-                status,
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    $('#overtimeEmployeeTable').DataTable().destroy();
-                    $('#overtimeEmployeeTableBody').html(response.html);
-                    $('#overtimeEmployeeTable').DataTable();
-                    $('#pendingRequests').text(response.pendingRequests);
-                    $('#approvedRequests').text(response.approvedRequests);
-                    $('#rejectedRequests').text(response.rejectedRequests);
-                } else {
-                    toastr.error(response.message || 'Something went wrong.');
-                }
-            },
-            error: function(xhr) {
-                let message = 'An unexpected error occurred.';
-                if (xhr.status === 403) {
-                    message = 'You are not authorized to perform this action.';
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                toastr.error(message);
-            }
+        }
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
         });
-    }
 
+        function filter() {
+            const dateRange = $('#dateRange_filter').val();
+            const status = $('#status_filter').val();
+
+            $.ajax({
+                url: '{{ route('overtime-employee-filter') }}',
+                type: 'GET',
+                data: {
+                    dateRange,
+                    status,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#overtimeEmployeeTable').DataTable().destroy();
+                        $('#overtimeEmployeeTableBody').html(response.html);
+                        $('#overtimeEmployeeTable').DataTable();
+                        $('#pendingRequests').text(response.pendingRequests);
+                        $('#approvedRequests').text(response.approvedRequests);
+                        $('#rejectedRequests').text(response.rejectedRequests);
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
     </script>
 
     {{-- Manual Overtime (Create/Store) AJAX Form Submission --}}
     <script>
         $(document).ready(function() {
-            //  Start time and end time computation
+            // Clear error messages when modal is closed
+            $('#add_employee_overtime').on('hidden.bs.modal', function() {
+                $('#employeeOvertimeManualForm')[0].reset();
+                $('.invalid-feedback').remove();
+                $('.form-control, .form-select').removeClass('is-invalid');
+                $('#employeeOvertimeTotalOtMinutes').val('');
+                $('#employeeOvertimeTotalOtMinutesHidden').val('');
+            });
+
+            // Clear individual field errors on input
+            $('#employeeOvertimeManualForm input, #employeeOvertimeManualForm select').on('input change',
+                function() {
+                    $(this).removeClass('is-invalid');
+                    $(this).siblings('.invalid-feedback').remove();
+                });
+
+            // Start time and end time computation
             function formatMinutes(mins) {
                 if (isNaN(mins) || mins <= 0) return '';
                 var hr = Math.floor(mins / 60);
@@ -407,9 +429,19 @@
 
                         $('#employeeOvertimeTotalOtMinutes').val(formatMinutes(diffMins));
                         $('#employeeOvertimeTotalOtMinutesHidden').val(diffMins);
+
+                        // Clear any end time errors if valid
+                        $('#employeeOvertimeDateOtOut').removeClass('is-invalid');
+                        $('#employeeOvertimeDateOtOut').siblings('.invalid-feedback').remove();
                     } else {
                         $('#employeeOvertimeTotalOtMinutes').val('');
                         $('#employeeOvertimeTotalOtMinutesHidden').val('');
+
+                        // Show error for invalid end time
+                        $('#employeeOvertimeDateOtOut').addClass('is-invalid');
+                        $('#employeeOvertimeDateOtOut').siblings('.invalid-feedback').remove();
+                        $('#employeeOvertimeDateOtOut').after(
+                            '<div class="invalid-feedback d-block">End time must be after start time</div>');
                     }
                 } else {
                     $('#employeeOvertimeTotalOtMinutes').val('');
@@ -419,14 +451,66 @@
 
             $('#employeeOvertimeDateOtIn, #employeeOvertimeDateOtOut').on('change input', computeOvertimeMinutes);
 
-            // Handle form submission
+            // Handle form submission with better error handling
             $('#employeeOvertimeManualForm').on('submit', function(e) {
                 e.preventDefault();
 
+                // Clear previous errors
+                $('.invalid-feedback').remove();
+                $('.form-control, .form-select').removeClass('is-invalid');
+
+                // Client-side validation
+                let hasError = false;
+                const overtimeDate = $('#employeeOvertimeDate').val();
+                const startTime = $('#employeeOvertimeDateOtIn').val();
+                const endTime = $('#employeeOvertimeDateOtOut').val();
+                const totalMinutes = $('#employeeOvertimeTotalOtMinutesHidden').val();
+
+                if (!overtimeDate) {
+                    $('#employeeOvertimeDate').addClass('is-invalid');
+                    $('#employeeOvertimeDate').after(
+                        '<div class="invalid-feedback d-block">Please select an overtime date</div>');
+                    hasError = true;
+                }
+
+                if (!startTime) {
+                    $('#employeeOvertimeDateOtIn').addClass('is-invalid');
+                    $('#employeeOvertimeDateOtIn').after(
+                        '<div class="invalid-feedback d-block">Please select a start time</div>');
+                    hasError = true;
+                }
+
+                if (!endTime) {
+                    $('#employeeOvertimeDateOtOut').addClass('is-invalid');
+                    $('#employeeOvertimeDateOtOut').after(
+                        '<div class="invalid-feedback d-block">Please select an end time</div>');
+                    hasError = true;
+                }
+
+                if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
+                    $('#employeeOvertimeDateOtOut').addClass('is-invalid');
+                    $('#employeeOvertimeDateOtOut').after(
+                        '<div class="invalid-feedback d-block">End time must be after start time</div>');
+                    hasError = true;
+                }
+
+                if (!totalMinutes || totalMinutes <= 0) {
+                    toastr.error('Overtime duration must be greater than 0 minutes');
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    return false;
+                }
+
                 var form = $(this)[0];
                 var formData = new FormData(form);
-
                 formData.append('_token', '{{ csrf_token() }}');
+
+                // Disable submit button to prevent double submission
+                const $submitBtn = $(this).find('button[type="submit"]');
+                $submitBtn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...');
 
                 $.ajax({
                     type: 'POST',
@@ -436,20 +520,56 @@
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
-                            toastr.success('Overtime added successfully.');
+                            toastr.success('Overtime request submitted successfully!');
                             $('#add_employee_overtime').modal('hide');
-                            filter() ;
+                            filter();
                         } else {
-                            toastr.error('Error: ' + (response.message ||
-                                'Unable to add overtime.'));
+                            toastr.error(response.message ||
+                                'Unable to submit overtime request');
                         }
                     },
                     error: function(xhr) {
-                        let msg = 'An error occurred while processing your request.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            msg = xhr.responseJSON.message;
+                        if (xhr.status === 422) {
+                            // Validation errors from server
+                            const errors = xhr.responseJSON.errors;
+
+                            // Map backend field names to frontend field IDs
+                            const fieldMapping = {
+                                'overtime_date': '#employeeOvertimeDate',
+                                'date_ot_in': '#employeeOvertimeDateOtIn',
+                                'date_ot_out': '#employeeOvertimeDateOtOut',
+                                'total_ot_minutes': '#employeeOvertimeTotalOtMinutesHidden',
+                                'file_attachment': '#employeeOvertimeFileAttachment',
+                                'offset_date': '#employeeOvertimeOffsetDate'
+                            };
+
+                            // Display each validation error below its field
+                            $.each(errors, function(field, messages) {
+                                const $field = $(fieldMapping[field]);
+                                if ($field.length) {
+                                    $field.addClass('is-invalid');
+                                    $field.after(
+                                        `<div class="invalid-feedback d-block">${messages[0]}</div>`
+                                    );
+                                }
+                            });
+
+                            toastr.error('Please correct the errors in the form');
+                        } else {
+                            let msg = 'An error occurred while processing your request';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                msg = xhr.responseJSON.message;
+                            } else if (xhr.status === 403) {
+                                msg = 'You do not have permission to perform this action';
+                            } else if (xhr.status === 500) {
+                                msg = 'Server error. Please try again later';
+                            }
+                            toastr.error(msg);
                         }
-                        toastr.error(msg);
+                    },
+                    complete: function() {
+                        // Re-enable submit button
+                        $submitBtn.prop('disabled', false).html('Submit');
                     }
                 });
             });
@@ -459,21 +579,43 @@
     {{-- Manual Overtime (Edit) AJAX Form Submission --}}
     <script>
         $(document).ready(function() {
+            // Clear errors when modal is closed
+            $('#edit_employee_overtime').on('hidden.bs.modal', function() {
+                $('.invalid-feedback').remove();
+                $('.form-control, .form-select').removeClass('is-invalid');
+                // optionally reset the form fields
+                $('#editEmployeeOvertimeManualForm')[0].reset();
+                $('#editEmployeeOvertimeTotalOtMinutes').val('');
+                $('#editEmployeeOvertimeTotalOtMinutesHidden').val('');
+                $('#currentOvertimeAttachment').html('');
+            });
+
+            // Clear individual field errors on input (include textarea)
+            $('#editEmployeeOvertimeManualForm input, #editEmployeeOvertimeManualForm select, #editEmployeeOvertimeManualForm textarea')
+                .on('input change', function() {
+                    $(this).removeClass('is-invalid');
+                    $(this).siblings('.invalid-feedback').remove();
+                });
+
             // Populate modal when clicking edit
-           $(document).on('click', 'a[data-bs-target="#edit_employee_overtime"]', function () {
+            $(document).on('click', 'a[data-bs-target="#edit_employee_overtime"]', function() {
+                // Clear previous errors
+                $('.invalid-feedback').remove();
+                $('.form-control, .form-select').removeClass('is-invalid');
+
                 const id = $(this).data('id');
-                $('#editEmployeeOvertimeManualForm').data('id', id); // store id on the form
+                $('#editEmployeeOvertimeManualForm').data('id', id);
 
                 // Fix for date input
                 let overtimeDate = $(this).data('overtime-date');
                 if (overtimeDate) {
-                    overtimeDate = overtimeDate.toString().substring(0, 10); // ensures correct format
+                    overtimeDate = overtimeDate.toString().substring(0, 10);
                     $('#editEmployeeOvertimeDate').val(overtimeDate);
                 } else {
                     $('#editEmployeeOvertimeDate').val('');
                 }
 
-                // (do the same for offset_date if needed)
+                // Fix for offset_date
                 let offsetDate = $(this).data('offset-date');
                 if (offsetDate) {
                     offsetDate = offsetDate.toString().substring(0, 10);
@@ -485,26 +627,25 @@
                 $('#editEmployeeOvertimeDateOtIn').val($(this).data('ot-in'));
                 $('#editEmployeeOvertimeDateOtOut').val($(this).data('ot-out'));
 
+                // Populate reason field
+                let reason = $(this).data('reason');
+                $('#editEmployeeOvertimeReason').val(reason || '');
+
                 // Calculate & set readable total ot mins
                 let mins = parseInt($(this).data('total-ot')) || 0;
                 $('#editEmployeeOvertimeTotalOtMinutes').val(formatMinutes(mins));
                 $('#editEmployeeOvertimeTotalOtMinutesHidden').val(mins);
 
-                $('#editEmployeeOvertimeOffsetDate').val($(this).data('offset-date') || '');
-
                 // Attachment logic
                 let attachment = $(this).data('file-attachment');
                 let displayHtml = '';
                 if (attachment && attachment !== 'null' && attachment !== '') {
-                    // Adjust path if needed to match your public disk setup
                     let url = `/storage/${attachment}`;
-                    let filename = attachment.split('/').pop();
                     displayHtml = `<a href="${url}" target="_blank" class="text-primary">
-            <i class="ti ti-file"></i> View Current Attachment
-        </a>`;
+                    <i class="ti ti-file"></i> View Current Attachment
+                </a>`;
                 }
                 $('#currentOvertimeAttachment').html(displayHtml);
-
                 $('#employeeOvertimeFileAttachment').val('');
             });
 
@@ -522,34 +663,109 @@
             function computeOvertimeMinutesEdit() {
                 var start = $('#editEmployeeOvertimeDateOtIn').val();
                 var end = $('#editEmployeeOvertimeDateOtOut').val();
+
                 if (start && end) {
                     var startTime = new Date(start);
                     var endTime = new Date(end);
+
                     if (endTime > startTime) {
                         var diffMs = endTime - startTime;
                         var diffMins = Math.floor(diffMs / 1000 / 60);
                         $('#editEmployeeOvertimeTotalOtMinutes').val(formatMinutes(diffMins));
                         $('#editEmployeeOvertimeTotalOtMinutesHidden').val(diffMins);
+
+                        // Clear errors
+                        $('#editEmployeeOvertimeDateOtOut').removeClass('is-invalid');
+                        $('#editEmployeeOvertimeDateOtOut').siblings('.invalid-feedback').remove();
                     } else {
                         $('#editEmployeeOvertimeTotalOtMinutes').val('');
                         $('#editEmployeeOvertimeTotalOtMinutesHidden').val('');
+
+                        // Show error
+                        $('#editEmployeeOvertimeDateOtOut').addClass('is-invalid');
+                        $('#editEmployeeOvertimeDateOtOut').siblings('.invalid-feedback').remove();
+                        $('#editEmployeeOvertimeDateOtOut').after(
+                            '<div class="invalid-feedback d-block">End time must be after start time</div>');
                     }
                 } else {
                     $('#editEmployeeOvertimeTotalOtMinutes').val('');
                     $('#editEmployeeOvertimeTotalOtMinutesHidden').val('');
                 }
             }
+
             $('#editEmployeeOvertimeDateOtIn, #editEmployeeOvertimeDateOtOut').on('change input',
                 computeOvertimeMinutesEdit);
 
             // Submit update AJAX
             $('#editEmployeeOvertimeManualForm').on('submit', function(e) {
                 e.preventDefault();
+
+                // Clear previous errors
+                $('.invalid-feedback').remove();
+                $('.form-control, .form-select').removeClass('is-invalid');
+
+                // Client-side validation
+                let hasError = false;
+                const overtimeDate = $('#editEmployeeOvertimeDate').val();
+                const startTime = $('#editEmployeeOvertimeDateOtIn').val();
+                const endTime = $('#editEmployeeOvertimeDateOtOut').val();
+                const totalMinutes = $('#editEmployeeOvertimeTotalOtMinutesHidden').val();
+                const reason = $('#editEmployeeOvertimeReason').val();
+
+                if (!overtimeDate) {
+                    $('#editEmployeeOvertimeDate').addClass('is-invalid');
+                    $('#editEmployeeOvertimeDate').after(
+                        '<div class="invalid-feedback d-block">Please select an overtime date</div>');
+                    hasError = true;
+                }
+
+                if (!startTime) {
+                    $('#editEmployeeOvertimeDateOtIn').addClass('is-invalid');
+                    $('#editEmployeeOvertimeDateOtIn').after(
+                        '<div class="invalid-feedback d-block">Please select a start time</div>');
+                    hasError = true;
+                }
+
+                if (!endTime) {
+                    $('#editEmployeeOvertimeDateOtOut').addClass('is-invalid');
+                    $('#editEmployeeOvertimeDateOtOut').after(
+                        '<div class="invalid-feedback d-block">Please select an end time</div>');
+                    hasError = true;
+                }
+
+                if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
+                    $('#editEmployeeOvertimeDateOtOut').addClass('is-invalid');
+                    $('#editEmployeeOvertimeDateOtOut').after(
+                        '<div class="invalid-feedback d-block">End time must be after start time</div>');
+                    hasError = true;
+                }
+
+                if (!totalMinutes || totalMinutes <= 0) {
+                    toastr.error('Overtime duration must be greater than 0 minutes');
+                    hasError = true;
+                }
+
+                if (!reason || reason.trim() === '') {
+                    $('#editEmployeeOvertimeReason').addClass('is-invalid');
+                    $('#editEmployeeOvertimeReason').after(
+                        '<div class="invalid-feedback d-block">Please provide a reason</div>');
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    return false;
+                }
+
                 const id = $(this).data('id');
                 var form = $(this)[0];
                 var formData = new FormData(form);
                 formData.append('_token', '{{ csrf_token() }}');
                 formData.set('total_ot_minutes', $('#editEmployeeOvertimeTotalOtMinutesHidden').val());
+
+                // Disable submit button
+                const $submitBtn = $(this).find('button[type="submit"]');
+                $submitBtn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-2"></span>Updating...');
 
                 $.ajax({
                     type: 'POST',
@@ -559,20 +775,52 @@
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
-                            toastr.success('Overtime updated successfully.');
+                            toastr.success('Overtime updated successfully!');
                             $('#edit_employee_overtime').modal('hide');
                             filter();
                         } else {
-                            toastr.error('Error: ' + (response.message ||
-                                'Unable to update overtime.'));
+                            toastr.error(response.message || 'Unable to update overtime');
                         }
                     },
                     error: function(xhr) {
-                        let msg = 'An error occurred while processing your request.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            msg = xhr.responseJSON.message;
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON.errors;
+
+                            const fieldMapping = {
+                                'overtime_date': '#editEmployeeOvertimeDate',
+                                'date_ot_in': '#editEmployeeOvertimeDateOtIn',
+                                'date_ot_out': '#editEmployeeOvertimeDateOtOut',
+                                'total_ot_minutes': '#editEmployeeOvertimeTotalOtMinutesHidden',
+                                'file_attachment': '#employeeOvertimeFileAttachment',
+                                'offset_date': '#editEmployeeOvertimeOffsetDate',
+                                'reason': '#editEmployeeOvertimeReason'
+                            };
+
+                            $.each(errors, function(field, messages) {
+                                const $field = $(fieldMapping[field]);
+                                if ($field.length) {
+                                    $field.addClass('is-invalid');
+                                    $field.after(
+                                        `<div class="invalid-feedback d-block">${messages[0]}</div>`
+                                        );
+                                }
+                            });
+
+                            toastr.error('Please correct the errors in the form');
+                        } else {
+                            let msg = 'An error occurred while processing your request';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                msg = xhr.responseJSON.message;
+                            } else if (xhr.status === 403) {
+                                msg = 'You do not have permission to perform this action';
+                            } else if (xhr.status === 500) {
+                                msg = 'Server error. Please try again later';
+                            }
+                            toastr.error(msg);
                         }
-                        toastr.error(msg);
+                    },
+                    complete: function() {
+                        $submitBtn.prop('disabled', false).html('Update');
                     }
                 });
             });
@@ -585,7 +833,7 @@
 
         $(document).ready(function() {
             // Store the ID when clicking delete
-            $(document).on('click', 'a[data-bs-target="#delete_employee_overtime"]', function () {
+            $(document).on('click', 'a[data-bs-target="#delete_employee_overtime"]', function() {
                 overtimeDeleteId = $(this).data('id');
             });
 
@@ -631,7 +879,7 @@
                 $('#clockInOffsetDate').val('');
                 $('#clockInOvertimeModal').modal('show');
             });
-            $('#employeeOvertimeDateOtOut').on('change', function () {
+            $('#employeeOvertimeDateOtOut').on('change', function() {
                 let start = new Date($('#employeeOvertimeDateOtIn').val());
                 let end = new Date($(this).val());
 

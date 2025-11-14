@@ -167,6 +167,7 @@ class EmployeeOvertimeController extends Controller
             'total_ot_minutes'   => 'nullable|numeric',
             'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120', // max 5MB
             'offset_date'        => 'nullable|date',
+            'reason'             => 'required|string|max:500',
         ]);
 
         // Check if an overtime exists for this user & date
@@ -194,6 +195,7 @@ class EmployeeOvertimeController extends Controller
             'date_ot_out'       => $request->date_ot_out,
             'total_ot_minutes'  => $request->total_ot_minutes,
             'file_attachment'   => $filePath,
+            'reason'            => $request->reason,
             'offset_date'       => $request->offset_date,
             'status'            => 'pending',
             'ot_login_type'    => 'manual',
@@ -247,6 +249,7 @@ class EmployeeOvertimeController extends Controller
             'total_ot_minutes'   => 'required|numeric',
             'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'offset_date'        => 'nullable|date',
+            'reason'             => 'required|string|max:500',
         ]);
 
         $overtime = Overtime::findOrFail($id);
@@ -285,6 +288,7 @@ class EmployeeOvertimeController extends Controller
         $overtime->date_ot_out = $request->date_ot_out;
         $overtime->total_ot_minutes = $request->total_ot_minutes;
         $overtime->offset_date = $request->offset_date;
+        $overtime->reason = $request->reason;
 
         $overtime->save();
 
@@ -375,6 +379,7 @@ class EmployeeOvertimeController extends Controller
         $request->validate([
             'file_attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'offset_date'     => 'nullable|date',
+            'reason'          => 'required|string|max:500',
         ]);
 
         // Check if an overtime exists for this user & date
@@ -437,6 +442,7 @@ class EmployeeOvertimeController extends Controller
             'status'            => 'pending',
             'ot_login_type'     => 'OT Buttons',
             'file_attachment'   => $filePath,
+            'reason'           => $request->reason,
             'offset_date'      => $request->offset_date,
             'is_holiday'       => $isHoliday,
             'holiday_id'       => $holidayId,
