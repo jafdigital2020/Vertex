@@ -674,7 +674,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Return Date</label>
-                                    <input type="text" class="form-control" :value="new Date().toLocaleDateString()" readonly>
+                                    <input type="text" class="form-control" value="{{ \Carbon\Carbon::now()->toDateString() }}" readonly> 
                                     <small class="text-muted">Employee will be marked as returned today</small>
                                 </div>
 
