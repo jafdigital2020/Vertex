@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
         $tenantId = $this->authUser()->tenant_id ?? null;
         $usersQuery = User::where('tenant_id', $tenantId)
-            ->with(['employmentDetail', 'personalInformation']);
+            ->with(['employmentDetail', 'employmentDetail.designation', 'personalInformation']);
         $branches = Branch::where('tenant_id', $tenantId)->get();
 
         $totalUsers = (clone $usersQuery)->count();
@@ -53,7 +53,7 @@ class DashboardController extends Controller
             })
             ->count();
 
-        // Total Users Percentage
+        // Total Users Percentage∏
         $totalUserPercentage = 0;
         if ($totalUsers > 0) {
             $totalUserPercentage = ($totalActiveUsers / $totalUsers) * 100;
