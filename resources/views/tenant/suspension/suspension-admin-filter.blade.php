@@ -1,4 +1,4 @@
-  @php
+   @php
                                                 function getStatusColor($status) {
                                                     switch ($status) {
                                                         case 'pending': 
@@ -50,8 +50,7 @@
                                                                 </button>
                                                             @endif
 
-                                                            @switch($sus->status)
-                                                                @case('awaiting_reply')
+                                                            @switch($sus->status)  
                                                                 @case('under_investigation')
                                                                     <button class="btn btn-sm btn-info"
                                                                         onclick="openInvestigationModal({{ $sus->id ?? $sus->employee->id }})"
@@ -78,25 +77,21 @@
                                                                             <i class="ti ti-file-check"></i>
                                                                         </button>
                                                                     @endif
-
+                                                                    @if($sus->suspension_start_date === null && $sus->suspension_end_date === null)
                                                                     <button class="btn btn-sm btn-danger"
                                                                         onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
                                                                         title="Implement Suspension">
                                                                         <i class="ti ti-ban"></i>
                                                                     </button>
-
+                                                                    @endif
+                                                                    @if($sus->suspension_start_date !== null && $sus->suspension_end_date !== null)
                                                                     <button class="btn btn-sm btn-secondary"
                                                                         onclick="completeSuspension({{ $sus->id ?? $sus->employee->id }})"
                                                                         title="Complete Suspension">
                                                                         <i class="ti ti-check"></i>
                                                                     </button>
-                                                                    @break
-
-                                                                @case('completed')
-                                                                    <button class="btn btn-sm btn-secondary" disabled title="Completed">
-                                                                        <i class="ti ti-check"></i>
-                                                                    </button>
-                                                                    @break
+                                                                    @endif
+                                                                    @break  
                                                             @endswitch
 
                                                         </div>

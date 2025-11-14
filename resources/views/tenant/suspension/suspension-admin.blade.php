@@ -155,8 +155,7 @@
                                                                 </button>
                                                             @endif
 
-                                                            @switch($sus->status)
-                                                                @case('awaiting_reply')
+                                                            @switch($sus->status)  
                                                                 @case('under_investigation')
                                                                     <button class="btn btn-sm btn-info"
                                                                         onclick="openInvestigationModal({{ $sus->id ?? $sus->employee->id }})"
@@ -183,25 +182,21 @@
                                                                             <i class="ti ti-file-check"></i>
                                                                         </button>
                                                                     @endif
-
+                                                                    @if($sus->suspension_start_date === null && $sus->suspension_end_date === null)
                                                                     <button class="btn btn-sm btn-danger"
                                                                         onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
                                                                         title="Implement Suspension">
                                                                         <i class="ti ti-ban"></i>
                                                                     </button>
-
+                                                                    @endif
+                                                                    @if($sus->suspension_start_date !== null && $sus->suspension_end_date !== null)
                                                                     <button class="btn btn-sm btn-secondary"
                                                                         onclick="completeSuspension({{ $sus->id ?? $sus->employee->id }})"
                                                                         title="Complete Suspension">
                                                                         <i class="ti ti-check"></i>
                                                                     </button>
-                                                                    @break
-
-                                                                @case('completed')
-                                                                    <button class="btn btn-sm btn-secondary" disabled title="Completed">
-                                                                        <i class="ti ti-check"></i>
-                                                                    </button>
-                                                                    @break
+                                                                    @endif
+                                                                    @break  
                                                             @endswitch
 
                                                         </div>
@@ -334,7 +329,7 @@
                         <form id="investigationForm">
                             @csrf
                             <div class="modal-body">
-                                <input type="text" id="investigation_suspension_id" name="suspension_id">
+                                <input type="hidden" id="investigation_suspension_id" name="suspension_id">
 
                                 <div class="mb-3">
                                     <label for="investigation_notes" class="form-label">Investigation Notes</label>
@@ -367,8 +362,7 @@
                         <form id="issueDamForm" enctype="multipart/form-data">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="dam_suspension_id" name="suspension_id">
-
+                                <input type="hidden" id="dam_suspension_id" name="suspension_id"> 
                                 <div class="mb-3">
                                     <label for="dam_file" class="form-label">Upload DAM File <span class="text-danger">*</span></label>
                                     <input type="file" name="dam_file" id="dam_file" class="form-control" accept=".pdf,.doc,.docx"
@@ -741,35 +735,37 @@
                     }
             </script>
             <script>
-                (function () {
-                    const url = "{{ route('suspension-admin') }}";
- 
-                    async function loadEmployees() { 
-                        const status = document.getElementById('suspension-status')?.value || '';
+                
+                $('#branch').on('change', function () {
+                    let branchIds = $(this).val();  
 
-                        try {
-                            const res = await fetch(`${url}?status=${status}`, {
-                                method: 'GET',
-                                headers: { 'Accept': 'application/json' },
-                                credentials: 'same-origin'
-                            });
+                    $.ajax({
+                        url: "{{ route('suspension.employees-by-branch') }}",
+                        type: "GET",
+                        data: {
+                            branch_id: Array.isArray(branchIds) ? branchIds.join(',') : branchIds
+                        },
+                        beforeSend: function () {
+                            $('#employee').html('<option>Loading...</option>');
+                        },
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                $('#employee').empty();
+                                $('#employee').append('<option value="">Select employee</option>'); 
+                                response.employees.forEach(function (emp) {
+                                    $('#employee').append(
+                                        `<option value="${emp.id}">
+                                            ${emp.name} (${emp.employee_id ?? ''})
+                                        </option>`
+                                    );
+                                });
 
-                            if (!res.ok) throw new Error('Failed to fetch employees: ' + res.status);
-                            const data = await res.json();
-
-                            if (data.status === 'success' && Array.isArray(data.employees)) {
-                                renderTable(data.employees);
-                            } else {
-                                throw new Error('Unexpected response from server.');
+                                $('#employee').trigger('change'); 
                             }
-                        } catch (err) {
-                          
-                        } finally {
-                            
                         }
-                    }
- 
-                })();
+                    });
+                });
+
 
                 // File Suspension Report Submission
                 document.addEventListener('DOMContentLoaded', () => {
@@ -785,7 +781,7 @@
                         const formData = new FormData(fileForm);
 
                         try {
-                                      const res = await fetch("{{ route('api.suspensionFileReport') }}", {
+                                const res = await fetch("{{ route('api.suspensionFileReport') }}", {
                                 method: 'POST',
                                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                                 body: formData
@@ -794,191 +790,18 @@
                             const data = await res.json();
 
                             if (data.status === 'success') {
-                                successBox.textContent = data.message;
-                                successBox.classList.remove('d-none');
+                                toastr.success('Suspension filed successfully','Success');
                                 fileForm.reset(); 
                                 document.querySelector('#fileSuspensionModal .btn-close').click();
                                 filter(); 
                             } else {
-                                throw new Error(data.message || 'Something went wrong.');
+                                   toastr.error(data.message || 'Something went wrong.','Error');
                             }
                         } catch (err) {
-                            errorBox.textContent = err.message;
-                            errorBox.classList.remove('d-none');
+                             toastr.error(err.message || 'Something went wrong.','Error');
                         }
                     });
-                });
-
-
-                document.addEventListener('DOMContentLoaded', () => {
-                        const branchSelect = document.getElementById('branch');
-                        const employeeSelect = document.getElementById('employee');
-                        const employeeCountEl = document.getElementById('employee-count');
-                        const employeeApiUrl = "{{ route('suspension.employees-by-branch') }}";
-
-                        // Initialize Branch Select2
-                        const $branchSelect = $('#branch').select2({
-                            theme: 'bootstrap-5',
-                            placeholder: 'Select branch(es)',
-                            allowClear: true,
-                            width: '100%',
-                            dropdownParent: $('#fileSuspensionModal'),
-                            closeOnSelect: false,
-                            language: {
-                                noResults: function() {
-                                    return "No branches found";
-                                }
-                            },
-                            templateResult: function(branch) {
-                                if (!branch.id) {
-                                    return branch.text;
-                                }
-                                if (branch.id === 'all') {
-                                    return $(`<span><i class="ti ti-map-pins me-2"></i><strong>${branch.text}</strong></span>`);
-                                }
-                                return $(`<span><i class="ti ti-building me-2"></i>${branch.text}</span>`);
-                            }
-                        });
-
-                        // Initialize Select2 with modern styling
-                        const $employeeSelect = $('#employee').select2({
-                            theme: 'bootstrap-5',
-                            placeholder: 'Select branch(es) first',
-                            allowClear: true,
-                            width: '100%',
-                            dropdownParent: $('#fileSuspensionModal'),
-                            language: {
-                                noResults: function() {
-                                    return "No employees found - try selecting different branch(es)";
-                                },
-                                searching: function() {
-                                    return "Searching employees...";
-                                }
-                            },
-                            templateResult: formatEmployeeOption,
-                            templateSelection: formatEmployeeSelection
-                        });
-
-                        // Format employee option with icons and styling
-                        function formatEmployeeOption(employee) {
-                            if (!employee.id) {
-                                return employee.text;
-                            }
-                            
-                            return $(`
-                                <div class="d-flex align-items-center py-1">
-                                    <div class="avatar avatar-xs bg-primary-transparent rounded-circle me-2">
-                                        <i class="ti ti-user fs-6"></i>
-                                    </div>
-                                    <div class="fw-semibold">${employee.text}</div>
-                                </div>
-                            `);
-                        }
-
-                        // Format selected employee (just the name)
-                        function formatEmployeeSelection(employee) {
-                            return employee.text;
-                        }
-
-                        // Use Select2 change event instead of native
-                        $branchSelect.on('change', async function() {
-                            // Get all selected branch values from Select2
-                            const selectedBranches = $(this).val() || [];
-                            
-                            // Clear Select2 and show loading
-                            $employeeSelect.empty().trigger('change');
-                            $employeeSelect.append(new Option('Loading employees...', '', false, false)).trigger('change');
-                            $employeeSelect.prop('disabled', true);
-                            
-                            if (employeeCountEl) employeeCountEl.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Loading...';
-
-                            if (selectedBranches.length === 0) {
-                                $employeeSelect.empty().trigger('change');
-                                $employeeSelect.append(new Option('Select branch(es) first', '', false, false)).trigger('change');
-                                $employeeSelect.prop('disabled', false);
-                                if (employeeCountEl) employeeCountEl.textContent = '';
-                                return;
-                            }
-
-                            // Check if "All Branches" is selected
-                            const isAllBranches = selectedBranches.includes('all');
-                            const branchIds = isAllBranches ? 'all' : selectedBranches.join(',');
-
-                            try {
-                                const res = await fetch(`${employeeApiUrl}?branch_id=${branchIds}`);
-                                const data = await res.json();
-
-                                if (data.status === 'success') {
-                                    $employeeSelect.empty().trigger('change');
-                                    $employeeSelect.append(new Option('Select Employee', '', false, false)).trigger('change');
-                                    
-                                    if (data.employees && data.employees.length > 0) {
-                                        data.employees.forEach(emp => {
-                                            const optionText = emp.name; // Just the full name
-                                            const option = new Option(optionText, emp.id, false, false);
-                                            $employeeSelect.append(option);
-                                        });
-                                        $employeeSelect.trigger('change');
-                                        
-                                        if (employeeCountEl) {
-                                            employeeCountEl.innerHTML = `<i class="ti ti-check-circle text-success me-1"></i>${data.employees.length} employee(s) available`;
-                                            employeeCountEl.className = 'text-success';
-                                        }
-                                    } else {
-                                        $employeeSelect.empty().trigger('change');
-                                        $employeeSelect.append(new Option('No employees found', '', false, false)).trigger('change');
-                                        
-                                        if (employeeCountEl) {
-                                            employeeCountEl.innerHTML = '<i class="ti ti-alert-circle text-warning me-1"></i>No employees found in selected branch(es)';
-                                            employeeCountEl.className = 'text-warning';
-                                        }
-                                    }
-                                } else {
-                                    $employeeSelect.empty().trigger('change');
-                                    $employeeSelect.append(new Option('No employees found', '', false, false)).trigger('change');
-                                }
-                            } catch (err) {
-                                $employeeSelect.empty().trigger('change');
-                                $employeeSelect.append(new Option('Error loading employees', '', false, false)).trigger('change');
-                                
-                                if (employeeCountEl) {
-                                    employeeCountEl.innerHTML = '<i class="ti ti-alert-triangle text-danger me-1"></i>Error loading employees';
-                                    employeeCountEl.className = 'text-danger';
-                                }
-                            } finally {
-                                $employeeSelect.prop('disabled', false);
-                            }
-                        });
-
-                        // Reset Select2 when modal is closed
-                        $('#fileSuspensionModal').on('hidden.bs.modal', function () {
-                            $branchSelect.val(null).trigger('change');
-                            $employeeSelect.val(null).trigger('change');
-                            if (employeeCountEl) employeeCountEl.textContent = '';
-                        });
-
-                        // Re-initialize Select2 when modal is opened to ensure proper rendering
-                        $('#fileSuspensionModal').on('shown.bs.modal', function () {
-                            $branchSelect.select2({
-                                theme: 'bootstrap-5',
-                                placeholder: 'Select branch(es)',
-                                allowClear: true,
-                                width: '100%',
-                                dropdownParent: $('#fileSuspensionModal'),
-                                closeOnSelect: false
-                            });
-                            
-                            $employeeSelect.select2({
-                                theme: 'bootstrap-5',
-                                placeholder: 'Select branch(es) first',
-                                allowClear: true,
-                                width: '100%',
-                                dropdownParent: $('#fileSuspensionModal')
-                            });
-                        });
-                    });
-
-
+                }); 
                     // NOWE
 
                     // ✅ Issue NOWE modal + submission logic
@@ -1119,17 +942,15 @@
                             contentType: false,
                             success: function (data) {
                                 if (data.status === 'success') {
-                                    $investigationSuccess.text(data.message || 'Investigation recorded successfully.').removeClass('d-none');
-                                    setTimeout(() => {
-                                        investigationModal.hide();
-                                        location.reload();
-                                    }, 1200);
+                                    toastr.success(data.message || 'Investigation recorded successfully.','Success'); 
+                                    investigationModal.hide();
+                                    filter(); 
                                 } else {
-                                    $investigationError.text(data.message || 'Error submitting investigation.').removeClass('d-none');
+                                    toastr.error(data.message || 'Error submitting investigation.','Error');
                                 }
                             },
                             error: function (xhr) {
-                                $investigationError.text(xhr.responseJSON?.message || `Error (${xhr.status}) submitting investigation.`).removeClass('d-none');
+                                toastr.error(xhr.responseJSON?.message || `Error (${xhr.status}) submitting investigation.`,'Error');
                             }
                         });
                     });
@@ -1186,10 +1007,11 @@
                         submitDam(`${apiSuspensionBase}/${id}/issue-dam`)
                         .done(function (data) {
                             if (data.status === 'success') {
-                                $damSuccess.text(data.message || 'DAM issued successfully.').removeClass('d-none');
-                                setTimeout(() => { damModal.hide(); location.reload(); }, 1500);
+                                 toastr.success(data.message || 'DAM issued successfully.','Success');
+                                 damModal.hide();  
+                                 filter();
                             } else {
-                                $damError.text(data.message || 'Error issuing DAM.').removeClass('d-none');
+                                 toastr.error(data.message || 'Error issuing DAM.','Error');
                             }
                         })
                         .fail(function (xhr) {
@@ -1202,20 +1024,22 @@
                                     // Retry DAM submission
                                     submitDam(`${apiSuspensionBase}/${first.id}/issue-dam`).done(function (retryData) {
                                         if (retryData.status === 'success') {
-                                            $damSuccess.text(retryData.message || 'DAM issued successfully.').removeClass('d-none');
-                                            setTimeout(() => { damModal.hide(); location.reload(); }, 1500);
+                                            toastr.success(retryData.message || 'DAM issued successfully.','Success');
+                                            damModal.hide(); 
+                                            filter();
+
                                         } else {
-                                            $damError.text(retryData.message || 'Error issuing DAM.').removeClass('d-none');
+                                            toastr.error(retryData.message || 'Error issuing DAM.','Error');
                                         }
                                     }).fail(function () {
-                                        $damError.text('Error issuing DAM on retry.').removeClass('d-none');
+                                        toastr.error('Error issuing DAM on retry.','Error');
                                     });
                                 })
                                 .fail(function () {
-                                    $damError.text('No suspension found for given employee.').removeClass('d-none');
+                                    toastr.error('No suspension found for given employee.','Error');
                                 });
                             } else {
-                                $damError.text(xhr.responseJSON?.message || `Error (${xhr.status}) issuing DAM.`).removeClass('d-none');
+                                toastr.error(xhr.responseJSON?.message || `Error (${xhr.status}) issuing DAM.`,'Error');
                             }
                         });
                     });
@@ -1456,18 +1280,15 @@
                             }
 
                             if (res.ok && data.status === 'success') {
-                                implementSuccess.textContent = data.message || 'Suspension implemented successfully.';
-                                implementSuccess.classList.remove('d-none');
-                                setTimeout(() => {
-                                    implementModal.hide();
-                                    location.reload();
-                                }, 1500);
+                                toastr.success(data.message || 'Suspension implemented successfully.','Success'); 
+                                implementModal.hide();
+                                filter();
                             } else {
                                 throw new Error(data.message || `Server error (${res.status}).`);
                             }
                         } catch (err) {
-                            implementError.textContent = err.message || 'Error implementing suspension.';
-                            implementError.classList.remove('d-none');
+                            toastr.error(err.message || 'Error implementing suspension.','Error');
+                            
                         }
                     });
                 });
