@@ -48,7 +48,7 @@ jobs:
   laravel-tests:
     name: Build Logs
     runs-on: ubuntu-latest
- 
+
     services:
       mysql:
         image: mysql:8.0
@@ -62,12 +62,12 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
- 
+
     steps:
       # 🚀 NOTIFY START
       - name: 🚀 Notify Provisioning Started
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -76,14 +76,14 @@ jobs:
               "message": "GitHub Actions workflow started - Setting up build environment",
               "logs": "Workflow triggered at $(date) with inputs: system=${{ github.event.inputs.system }}, plan=${{ github.event.inputs.plan }}, domain=${{ github.event.inputs.domain_name }}"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Checkout code
         uses: actions/checkout@v3
- 
+
       # 📋 NOTIFY BUILD STEP
       - name: 📋 Notify Build Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -92,19 +92,19 @@ jobs:
               "message": "Setting up PHP environment and installing dependencies",
               "logs": "Starting PHP 8.2 setup and Composer installation at $(date)"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
           extensions: mbstring, bcmath, mysql
           coverage: none
- 
+
       - name: Install Composer dependencies
         run: |
           echo "Installing Composer dependencies..."
           composer install --prefer-dist --no-progress --no-suggest
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -113,7 +113,7 @@ jobs:
               "message": "Dependencies installed successfully",
               "logs": "Composer dependencies installed at $(date)"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Set up environment
         env:
           HITPAY_API_KEY: ${{ secrets.HITPAY_API_KEY }}
@@ -123,7 +123,7 @@ jobs:
         run: |
           echo "${{ secrets.ENV }}" > .env
           php artisan key:generate
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -132,14 +132,14 @@ jobs:
               "message": "Environment configuration completed",
               "logs": "Laravel environment configured and app key generated at $(date)"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Wait for MySQL to be ready
         run: sleep 15
- 
-      # 🗄️ NOTIFY DATABASE STEP  
+
+      # 🗄️ NOTIFY DATABASE STEP
       - name: 🗄️ Notify Database Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -148,7 +148,7 @@ jobs:
               "message": "Running database migrations and tests",
               "logs": "Database setup started at $(date) - waiting for MySQL service"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Run migrations
         env:
           DB_CONNECTION: mysql
@@ -159,7 +159,7 @@ jobs:
           DB_PASSWORD: root
         run: |
           php artisan migrate --force
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -168,20 +168,20 @@ jobs:
               "message": "Database migrations completed successfully",
               "logs": "Laravel migrations executed successfully at $(date)"
             }' || echo "Callback failed - continuing..."
- 
+
   deploy:
     name: Deployment Summary
     needs: laravel-tests
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
- 
+
       # 🌐 NOTIFY INFRASTRUCTURE STEP
       - name: 🌐 Notify Infrastructure Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -190,13 +190,13 @@ jobs:
               "message": "Creating DNS records and server infrastructure",
               "logs": "Infrastructure setup started at $(date) - configuring DNS and networking"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Create DNS record via Cloudflare API
         run: |
           SUBDOMAIN=$(echo "${{ github.event.inputs.domain_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
           ROOT_DOMAIN=timora.ph
           FULL_DOMAIN="$SUBDOMAIN.$ROOT_DOMAIN"
- 
+
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" \
@@ -207,11 +207,11 @@ jobs:
               "ttl": 120,
               "proxied": true
             }'
- 
+
           echo "✅ DNS record created: $FULL_DOMAIN"
           echo "SUBDOMAIN=$FULL_DOMAIN" >> $GITHUB_ENV
-          
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -220,11 +220,11 @@ jobs:
               "message": "DNS record created for '"$FULL_DOMAIN"'",
               "logs": "Cloudflare DNS A record created successfully at $(date) - Domain: '"$FULL_DOMAIN"'"
             }' || echo "Callback failed - continuing..."
- 
+
       # 🔧 NOTIFY SERVER SETUP
       - name: 🔧 Notify Server Setup Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -233,7 +233,7 @@ jobs:
               "message": "Configuring server and creating site directory",
               "logs": "Server setup started at $(date) - creating site user and directories"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Add site via clpctl
         uses: appleboy/ssh-action@master
         with:
@@ -246,10 +246,10 @@ jobs:
             echo "Creating site for domain: $DOMAIN_NAME with user: $SITE_USER"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
             echo "Site creation completed successfully"
- 
+
       - name: Notify server setup completed
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -258,11 +258,11 @@ jobs:
               "message": "Server site configuration completed",
               "logs": "ClpCtl site creation completed successfully at $(date) - User: ${{ github.event.inputs.username }}"
             }' || echo "Callback failed - continuing..."
- 
+
       # 📁 NOTIFY DEPLOYMENT PHASE
       - name: 📁 Notify Deployment Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -271,7 +271,7 @@ jobs:
               "message": "Deploying application files and configuring database",
               "logs": "File deployment started at $(date) - copying application files to server"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Copy files via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -280,10 +280,10 @@ jobs:
           password: ${{ secrets.VPS_PASS }}
           source: "."
           target: "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
- 
+
       - name: Notify file deployment completed
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -292,11 +292,11 @@ jobs:
               "message": "Application files deployed successfully",
               "logs": "SCP file transfer completed at $(date) - All application files copied to server"
             }' || echo "Callback failed - continuing..."
- 
+
       # 🔧 NOTIFY FINAL CONFIGURATION
       - name: 🔧 Notify Final Configuration
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -305,7 +305,7 @@ jobs:
               "message": "Finalizing configuration and starting services",
               "logs": "Final configuration started at $(date) - setting up database, cron jobs, and workers"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Run post-deploy commands via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -316,31 +316,31 @@ jobs:
             DB_NAME=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
             DB_USER=$(echo "${{ github.event.inputs.username }}" | tr -d ' ._' | tr -cd '[:alnum:]')dev
             DB_PASS=JAF2025
- 
+
             # Create database and user using clpctl
             clpctl db:add --domainName="${{ env.SUBDOMAIN }}" --databaseName="$DB_NAME" --databaseUserName="$DB_USER" --databaseUserPassword="$DB_PASS"
- 
+
             cd "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
             cp .env.testing .env
             composer install --no-dev
- 
+
             # Update .env with new DB credentials before running artisan commands
             ENV_PATH="/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/.env"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=root/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}/" "$ENV_PATH"
- 
+
             # Update APP_URL with dynamic subdomain (all lowercase)
             SUBDOMAIN_LOWER=$(echo "${{ github.event.inputs.domain_name }}" | tr '[:upper:]' '[:lower:]')
             APP_URL="https://${SUBDOMAIN_LOWER}.timora.ph"
             sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" "$ENV_PATH"
- 
+
             # Update HitPay credentials
             sed -i "s|^HITPAY_API_KEY=.*|HITPAY_API_KEY=${{ secrets.HITPAY_API_KEY }}|" "$ENV_PATH"
             sed -i "s|^HITPAY_SALT=.*|HITPAY_SALT=${{ secrets.HITPAY_SALT }}|" "$ENV_PATH"
             sed -i "s|^HITPAY_BASE_URL=.*|HITPAY_BASE_URL=${{ secrets.HITPAY_BASE_URL }}|" "$ENV_PATH"
             sed -i "s|^HITPAY_WEBHOOK_URL=.*|HITPAY_WEBHOOK_URL=${APP_URL}/hitpay/webhook|" "$ENV_PATH"
- 
+
             # add worker config
             WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.username }}-timora-worker.conf"
             cat <<EOF | sudo tee "$WORKER_CONF"
@@ -356,7 +356,7 @@ jobs:
             stderr_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
             stopwaitsecs=3600
             EOF
- 
+
             # add email queue worker config
             EMAIL_WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.username }}-timora-email-worker.conf"
             cat <<EOF | sudo tee "$EMAIL_WORKER_CONF"
@@ -372,19 +372,19 @@ jobs:
             stderr_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker_error.log
             stopwaitsecs=3600
             EOF
- 
+
             ( crontab -l 2>/dev/null; echo "* * * * * /usr/bin/php8.2 /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/artisan schedule:run >> /dev/null 2>&1" ) | crontab -
- 
+
             sudo supervisorctl reread
             sudo supervisorctl update
             sudo supervisorctl restart "${{ github.event.inputs.user_name }}-timora-worker"
- 
+
             # Update env variables for database
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
- 
+
             # Update GlobalUserTableSeeder.php with dynamic email, username, and plain password for Hash::make
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             COMPANY_ADMIN="${{ github.event.inputs.username }}"
@@ -393,22 +393,22 @@ jobs:
             sed -i "0,/'username' => '[^']*'/s//'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "0,/'email' => '[^']*'/s//'email' => '$EMAIL'/" "$SEEDER_PATH"
             sed -i "0,/Hash::make([^)]*)/s//Hash::make('$PLAIN_PASSWORD')/" "$SEEDER_PATH"
- 
+
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
             COMPANY_NAME="${{ github.event.inputs.company_name }}"
             COMPANY_CODE_UPPER=$(echo "${{ github.event.inputs.company_code }}" | tr '[:lower:]' '[:upper:]')
             sed -i "s/'tenant_name' => '[^']*'/'tenant_name' => '$COMPANY_NAME'/" "$TENANT_SEEDER_PATH"
             sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_CODE_UPPER'/" "$TENANT_SEEDER_PATH"
- 
+
             # Update SubscriptionsTableSeeder.php with dynamic plan details
             SELECTED_PLAN="${{ github.event.inputs.plan }}"
             BILLING_CYCLE="${{ github.event.inputs.billing_cycle }}"
             AMOUNT="${{ github.event.inputs.amount }}"
- 
+
             # Get the plan ID by querying the database after seeding
             SUBS_SEEDER_PATH="database/seeders/SubscriptionsTableSeeder.php"
-            
+
             # For now, we'll calculate the plan ID based on the pattern:
             # Starter monthly=1, Core monthly=2, Pro monthly=3, Elite monthly=4
             # Starter yearly=5, Core yearly=6, Pro yearly=7, Elite yearly=8
@@ -431,32 +431,32 @@ jobs:
             else
               PLAN_ID=1 # default Starter monthly
             fi
- 
+
             # Update SubscriptionsTableSeeder with the matching plan_id
             sed -i "s/'plan_id' => [0-9]\+/'plan_id' => $PLAN_ID/" "$SUBS_SEEDER_PATH"
             sed -i "s/'billing_cycle' => 'monthly'/'billing_cycle' => '$BILLING_CYCLE'/" "$SUBS_SEEDER_PATH"
             sed -i "s/'amount_paid' => [0-9.]\+/'amount_paid' => $AMOUNT/" "$SUBS_SEEDER_PATH"
- 
+
             # Extract plan-specific values from PlanSeeder.php so subscription seeder
             # will reflect the selected plan's defaults (base licenses, implementation_fee)
             PLAN_SEEDER="database/seeders/PlanSeeder.php"
- 
+
             # Get the Nth occurrence of base_license_count and implementation_fee from PlanSeeder
             BASE_LICENSE=$(grep -n "'base_license_count'" "$PLAN_SEEDER" | sed -n "${PLAN_ID}p" | sed -E "s/.*'base_license_count' => ([0-9]+).*/\1/")
             IMPLEMENTATION_FEE=$(grep -n "'implementation_fee'" "$PLAN_SEEDER" | sed -n "${PLAN_ID}p" | sed -E "s/.*'implementation_fee' => ([0-9.]+).*/\1/")
- 
+
             # Fallback defaults if grep fails
             BASE_LICENSE=${BASE_LICENSE:-1}
             IMPLEMENTATION_FEE=${IMPLEMENTATION_FEE:-0}
- 
+
             # Replace values in SubscriptionsTableSeeder.php so the seeded subscription uses
             # the selected plan's base license count and implementation fee
             sed -i "s/'active_license' => [0-9]\+/'active_license' => $BASE_LICENSE/" "$SUBS_SEEDER_PATH"
             sed -i "s/'implementation_fee' => [0-9.]\\+/'implementation_fee' => $IMPLEMENTATION_FEE/" "$SUBS_SEEDER_PATH"
- 
+
             # Keep implementation_fee_paid as 0 by default and set subscription dates/status
             sed -i "s/'implementation_fee_paid' => [0-9.]\\+/'implementation_fee_paid' => 0/" "$SUBS_SEEDER_PATH"
- 
+
             # Compute dynamic dates based on billing cycle:
             # - monthly: next renewal = today + 1 month
             # - yearly: next renewal = today + 1 year
@@ -465,20 +465,20 @@ jobs:
             else
               NEXT_RENEWAL_DATE=$(date -d "+1 year" '+%Y-%m-%d')
             fi
- 
+
             # subscription_end is the day before next_renewal_date
             SUBS_END=$(date -d "$NEXT_RENEWAL_DATE -1 day" '+%Y-%m-%d')
- 
+
             sed -i "s/'subscription_end' => '[^']*'/'subscription_end' => '$SUBS_END'/'" "$SUBS_SEEDER_PATH"
             sed -i "s/'next_renewal_date' => '[^']*'/'next_renewal_date' => '$NEXT_RENEWAL_DATE'/'" "$SUBS_SEEDER_PATH"
             sed -i "s/'status' => '[^']*'/'status' => 'active'/'" "$SUBS_SEEDER_PATH"
- 
+
             # Update InvoicesTableSeeder.php to align with subscription seeder
             # The invoice seeder will automatically read from the subscription, but we ensure
             # the billing cycle variable matches what will be seeded
             INVOICE_SEEDER_PATH="database/seeders/InvoicesTableSeeder.php"
             sed -i "s/\$billingCycle = 'monthly';/\$billingCycle = '$BILLING_CYCLE';/" "$INVOICE_SEEDER_PATH"
- 
+
             # Fresh migrate and seed the database
             php artisan key:generate
             php artisan config:clear
@@ -487,28 +487,28 @@ jobs:
             php artisan migrate:fresh --seed --force
             php artisan storage:link
             chmod -R guo+w storage
- 
+
             git config --global --add safe.directory "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
- 
+
             sudo chown -R ${{ github.event.inputs.username }}:${{ github.event.inputs.username }} /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN}}
- 
+
       - name: Assigning Custom Domains
         run: |
           echo ""
           echo "🔗 Visit your app: https://${{ env.SUBDOMAIN }}"
           echo ""
- 
+
       - name: Add deployed URL and build logs to workflow summary
         run: |
           echo "### ✅ App Deployed Successfully" >> $GITHUB_STEP_SUMMARY
           echo "🔗 [https://${{ env.SUBDOMAIN }}](https://${{ env.SUBDOMAIN }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
- 
+
       # ✅ NOTIFY SUCCESS
       - name: ✅ Notify Success
         if: success()
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -517,12 +517,12 @@ jobs:
               "message": "Deployment completed successfully! Portal is live at https://${{ env.SUBDOMAIN }}",
               "logs": "Full deployment completed successfully at $(date) - Portal accessible at https://${{ env.SUBDOMAIN }}"
             }' || echo "Success callback failed"
- 
+
       # ❌ NOTIFY FAILURE
       - name: ❌ Notify Failure
         if: failure()
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST https://api-wizard.timora.ph/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
