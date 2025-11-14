@@ -2,7 +2,7 @@ name: Cloud Panel Deployment Workflow V2
 
 on:
   repository_dispatch:
-    types: [provision-timora]
+    types: [provision-timora] # ✅ CHANGED: Added repository_dispatch trigger
   workflow_dispatch:
     inputs:
       system:
@@ -610,3 +610,4 @@ jobs:
                 "repository": "${{ github.repository }}",
                 "timestamp": "${{ github.event.head_commit.timestamp }}"
               }
+            }' || echo "Failure callback failed"
