@@ -153,7 +153,7 @@ class OvertimeController extends Controller
             $status
         );
 
-        $overtimes = $filteredQuery->get();
+        $overtimes = $filteredQuery->with(['user.personalInformation', 'user.employmentDetail'])->get();
 
         // Stats: last 30 days (same logic)
         $thirtyDaysAgo = Carbon::today()->subDays(29)->toDateString();
