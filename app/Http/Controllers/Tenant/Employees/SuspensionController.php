@@ -283,12 +283,51 @@ class SuspensionController extends Controller
         ]);
     }
 
+        public function empfilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(61);
+
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+  
+        $status = $request->input('status');
+ 
+        $query =  Suspension::with([
+            'employee.personalInformation',
+            'employee.employmentDetail.branch',
+            'employee.employmentDetail.department',
+            'employee.employmentDetail.designation',
+        ])
+        ->where('user_id', $authUser->id) 
+        ->latest(); 
+           
+        if (!is_null($status)) {
+            $query->where('status', $status);
+        }
+ 
+        $suspension = $query->get(); 
+   
+
+        $html = view('tenant.suspension.suspension-employee-filter', [
+            'suspensions' => $suspension,
+            'permission' => $permission
+        ])->render();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
+
+
     public function suspensionEmployeeListIndex(Request $request)
     {
         $authUser = $this->authUser(); 
         $permission = PermissionHelper::get(61);
-
-        $status = $request->input('status');  
+ 
         
         $suspensions = Suspension::with([
             'employee.personalInformation',
@@ -296,10 +335,7 @@ class SuspensionController extends Controller
             'employee.employmentDetail.department',
             'employee.employmentDetail.designation',
         ])
-        ->where('user_id', $authUser->id)
-        ->when($status, function ($query) use ($status) {
-            $query->where('status', $status);
-        })
+        ->where('user_id', $authUser->id) 
         ->latest()
         ->get();
 

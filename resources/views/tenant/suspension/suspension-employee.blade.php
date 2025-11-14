@@ -28,7 +28,7 @@
                             <h5 class="mb-0">Suspension List</h5>
                               <div class="d-flex align-items-center flex-wrap row-gap-2"> 
                                <div class="form-group me-2" style="max-width:200px;">
-                                <select id="suspension-status" class="form-select select2" style="max-width:200px;">
+                                <select id="suspension-status" class="form-select select2" style="max-width:200px;" oninput="filter()">
                                     <option value="">All Status</option>
                                     <option value="pending">Pending</option>
                                     <option value="awaiting_reply">Awaiting Reply</option>
@@ -57,7 +57,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="suspension-tbody"> 
-                                        @forelse ($suspensions as $index => $s)
+                                        @foreach ($suspensions as $index => $s)
                                             <tr>
                                                 <td class="text-center">{{ $index + 1 }}</td>
                                                 <td>{{ $s->offense_details ?? '—' }}</td>
@@ -99,12 +99,8 @@
                                                         </button>
                                                     @endif
                                                 </td>
-                                            </tr>
-                                            @empty
-                                            <tr>
-                                                <td colspan="8" class="text-center">No suspensions found.</td>
-                                            </tr>
-                                            @endforelse 
+                                            </tr> 
+                                            @endforeach
                                     </tbody>
                                 </table>
                             </div>
@@ -402,6 +398,37 @@
     <!-- Scripts -->
 
     @push('scripts')
+    <script> 
+    function filter() {  
+        const status = $('#suspension-status').val(); 
+        $.ajax({
+                url: '{{ route('suspension-employee-filter') }}',
+                type: 'GET',
+                data: { 
+                    status,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#suspension-table').DataTable().destroy();
+                        $('#suspension-tbody').html(response.html);
+                        $('#suspension-table').DataTable();
+                        
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+</script>
 
     <script> 
         const url = "{{ route('suspension-employee-list') }}"; 
@@ -438,18 +465,14 @@
 
                     const data = await res.json();
                     if (data.status === 'success') {
-                        successBox.textContent = data.message || 'Reply submitted successfully.';
-                        successBox.classList.remove('d-none');
-                        setTimeout(() => {
-                            replyModal.hide();
-                            location.reload();
-                        }, 1500);
+                        toastr.success('Reply submitted successfully','Success'); 
+                        replyModal.hide(); 
+                        filter();
                     } else {
                         throw new Error(data.message || 'Submission failed.');
                     }
-                } catch (err) {
-                    errorBox.textContent = err.message;
-                    errorBox.classList.remove('d-none');
+                } catch (err) { 
+                    toastr.error( err.message || 'Failed to load suspension details.'); 
                 }
             });
         });
