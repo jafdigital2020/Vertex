@@ -19,7 +19,7 @@ class SubModuleTableSeeder6 extends Seeder
             [
                 'id' => 60,
                 'sub_module_name' => 'Suspensions',
-                'module_id' => 4,
+                'module_id' => 19,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ],

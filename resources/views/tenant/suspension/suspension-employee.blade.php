@@ -14,7 +14,7 @@
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">Suspension</li>
-                            <li class="breadcrumb-item active" aria-current="page">My Suspension Records</li>
+                            <li class="breadcrumb-item active" aria-current="page">Employee Suspension</li>
                         </ol>
                     </nav>
                 </div>
@@ -90,7 +90,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-center">
-                                                    <button class="btn btn-sm btn-info" onclick="viewSuspensionDetails({{ $s->id }})" title="View Details">
+                                                    <button class="btn btn-sm btn-info view-suspension" data-id="{{ $s->id }}" title="View Details">
                                                         <i class="ti ti-eye"></i>
                                                     </button>
                                                     @if( $s->status === 'awaiting_reply')
@@ -400,11 +400,11 @@
     </style>
 
     <!-- Scripts -->
-    <script>
-        
-            const url = "{{ route('suspension-employee-list') }}";
-  
 
+    @push('scripts')
+
+    <script> 
+        const url = "{{ route('suspension-employee-list') }}"; 
         // Reply Suspension Modal
         document.addEventListener('DOMContentLoaded', () => {
             const replyModal = new bootstrap.Modal(document.getElementById('replySuspensionModal'));
@@ -455,195 +455,162 @@
         });
 
         // View Suspension Info Modal
-        document.addEventListener('DOMContentLoaded', () => {
-            const apiSuspensionBase = "{{ url('/api/suspension') }}";
-            const viewModal = new bootstrap.Modal(document.getElementById('viewSuspensionInfoModal'));
-            const viewLoading = document.getElementById('view-info-loading');
-            const viewError = document.getElementById('view-info-error');
-            const viewContent = document.getElementById('view-info-content');
+        $(document).ready(function () {
 
-            window.openViewInfoModal = function (suspensionId) {
-                viewLoading.classList.remove('d-none');
-                viewError.classList.add('d-none');
-                viewContent.classList.add('d-none');
+        const apiSuspensionBase = "{{ url('/api/suspension') }}";
+        const viewModal = $('#viewSuspensionInfoModal'); 
+        const $viewLoading = $('#view-info-loading');
+        const $viewContent = $('#view-info-content');
+   
+        $(document).on('click', '.view-suspension', function (e) { 
+            e.preventDefault(); 
+            const $btn = $(this);
+            const suspensionId = $btn.data('id');  
+            fetchSuspensionDetails(suspensionId);
+            viewModal.modal('show');
                 
-                if (!suspensionId) {
-                    viewError.textContent = 'Invalid suspension id.';
-                    viewError.classList.remove('d-none');
-                    viewLoading.classList.add('d-none');
-                    return;
-                }
-                
-                viewModal.show();
-                fetchSuspensionDetails(suspensionId);
-            };
+        }); 
 
-            async function fetchSuspensionDetails(suspensionId) {
-                try {
-                    const res = await fetch(`${apiSuspensionBase}/${suspensionId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        credentials: 'same-origin'
-                    });
 
-                    if (!res.ok) {
-                        throw new Error(`Failed to fetch suspension details (${res.status})`);
-                    }
 
-                    const data = await res.json();
-                    
+        function fetchSuspensionDetails(suspensionId) {
+            $.ajax({
+                url: `${apiSuspensionBase}/${suspensionId}`,
+                method: 'GET',
+                headers: { 
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                success: function (data) {
                     if (data.status === 'success' && data.suspension) {
                         displaySuspensionDetails(data.suspension);
                     } else {
-                        throw new Error(data.message || 'Failed to load suspension details.');
+                        toastr.error(data.message || 'Failed to load suspension details.');
+                        $viewLoading.addClass('d-none');
                     }
-                } catch (err) {
-                    viewError.textContent = err.message || 'Error loading suspension details.';
-                    viewError.classList.remove('d-none');
-                    viewLoading.classList.add('d-none');
+                },
+                error: function (xhr) {
+                    toastr.error(xhr.responseJSON?.message || `Error fetching suspension details (${xhr.status}).`);
+                    $viewLoading.addClass('d-none');
                 }
-            }
+            });
+        }
 
-            function displaySuspensionDetails(suspension) {
-                // Update Progress Flow
-                updateProgressFlow(suspension.status);
+        function displaySuspensionDetails(suspension) {
+            updateProgressFlow(suspension.status);
+ 
+            $('#view-offense-details').text(suspension.offense_details || 'No details provided.');
+ 
+            const status = suspension.status || 'N/A';
+            $('#view-status').text(status.replace('_', ' ').toUpperCase())
+                .attr('class', 'badge bg-' + getStatusColorForView(status));
 
-                // Offense Details
-                document.getElementById('view-offense-details').textContent = suspension.offense_details || 'No details provided.';
+            $('#view-type').text(suspension.suspension_type ? suspension.suspension_type.replace('_',' ').toUpperCase() : 'N/A');
+            $('#view-filed-date').text(suspension.created_at || 'N/A');
+            $('#view-start-date').text(suspension.suspension_start_date || 'N/A');
+            $('#view-end-date').text(suspension.suspension_end_date || 'N/A');
+            $('#view-duration').text(suspension.suspension_days ? suspension.suspension_days + ' day(s)' : 'N/A');
+ 
+            const $replyCard = $('#view-reply-card');
+            if (suspension.employee_reply) {
+                const reply = suspension.employee_reply;
 
-                // Suspension Information
-                const statusBadge = document.getElementById('view-status');
-                const status = suspension.status || 'N/A';
-                statusBadge.textContent = status.replace('_', ' ').toUpperCase();
-                statusBadge.className = 'badge bg-' + getStatusColorForView(status);
-
-                document.getElementById('view-type').textContent = suspension.suspension_type ? 
-                    suspension.suspension_type.replace('_', ' ').toUpperCase() : 'N/A';
-                document.getElementById('view-filed-date').textContent = suspension.created_at || 'N/A';
-                document.getElementById('view-start-date').textContent = suspension.suspension_start_date || 'N/A';
-                document.getElementById('view-end-date').textContent = suspension.suspension_end_date || 'N/A';
-                document.getElementById('view-duration').textContent = suspension.suspension_days ? 
-                    `${suspension.suspension_days} day(s)` : 'N/A';
-
-                // Employee Reply (show card only if available)
-                const replyCard = document.getElementById('view-reply-card');
-                if (suspension.employee_reply) {
-                    const reply = suspension.employee_reply;
-                    
-                    // Show reply text if available
-                    const replyTextSection = document.getElementById('view-reply-text-section');
-                    if (reply.description && reply.description.trim() !== '') {
-                        document.getElementById('view-reply-text').textContent = reply.description;
-                        replyTextSection.style.display = 'block';
-                    } else {
-                        replyTextSection.style.display = 'none';
-                    }
-                    
-                    // Show reply date
-                    document.getElementById('view-reply-date').textContent = reply.action_date || 'N/A';
-                    
-                    // Show file download if available
-                    const replyFileDiv = document.getElementById('view-reply-file');
-                    if (reply.file_path) {
-                        const fileLink = document.getElementById('view-reply-file-link');
-                        fileLink.href = `/storage/${reply.file_path}`;
-                        replyFileDiv.style.display = 'block';
-                    } else {
-                        replyFileDiv.style.display = 'none';
-                    }
-                    
-                    replyCard.style.display = 'block';
+                if (reply.description && reply.description.trim() !== '') {
+                    $('#view-reply-text').text(reply.description);
+                    $('#view-reply-text-section').show();
                 } else {
-                    replyCard.style.display = 'none';
+                    $('#view-reply-text-section').hide();
                 }
 
-                // Attachments
-                const attachmentsCard = document.getElementById('view-attachments-card');
-                const attachmentsList = document.getElementById('view-attachments-list');
-                attachmentsList.innerHTML = '';
+                $('#view-reply-date').text(reply.action_date || 'N/A');
 
-                const attachments = [];
-                if (suspension.information_report_file) {
-                    attachments.push({ name: 'Information Report', url: suspension.information_report_file });
-                }
-                if (suspension.nowe_file) {
-                    attachments.push({ name: 'NOWE Document', url: suspension.nowe_file });
-                }
-                if (suspension.dam_file) {
-                    attachments.push({ name: 'DAM Document', url: suspension.dam_file });
-                }
-
-                if (attachments.length > 0) {
-                    attachments.forEach(att => {
-                        const link = document.createElement('a');
-                        link.href = `/storage/${att.url}`;
-                        link.target = '_blank';
-                        link.className = 'btn btn-sm btn-outline-primary me-2 mb-2';
-                        link.innerHTML = `<i class="ti ti-download me-1"></i>${att.name}`;
-                        attachmentsList.appendChild(link);
-                    });
-                    attachmentsCard.style.display = 'block';
+                if (reply.file_path) {
+                    $('#view-reply-file-link').attr('href', '/storage/' + reply.file_path);
+                    $('#view-reply-file').show();
                 } else {
-                    attachmentsCard.style.display = 'none';
+                    $('#view-reply-file').hide();
                 }
 
-                viewLoading.classList.add('d-none');
-                viewContent.classList.remove('d-none');
+                $replyCard.show();
+            } else {
+                $replyCard.hide();
             }
 
-            function updateProgressFlow(status) {
-                // Reset all steps
-                document.querySelectorAll('.timeline-step').forEach(step => {
-                    step.classList.remove('active', 'completed');
+            // Attachments
+            const $attachmentsCard = $('#view-attachments-card');
+            const $attachmentsList = $('#view-attachments-list').empty();
+
+            const attachments = [];
+            if (suspension.information_report_file) attachments.push({ name: 'Information Report', url: suspension.information_report_file });
+            if (suspension.nowe_file) attachments.push({ name: 'NOWE Document', url: suspension.nowe_file });
+            if (suspension.dam_file) attachments.push({ name: 'DAM Document', url: suspension.dam_file });
+
+            if (attachments.length > 0) {
+                attachments.forEach(att => {
+                    const link = $('<a>')
+                        .attr({ href: '/storage/' + att.url, target: '_blank' })
+                        .addClass('btn btn-sm btn-outline-primary me-2 mb-2')
+                        .html(`<i class="ti ti-download me-1"></i>${att.name}`);
+                    $attachmentsList.append(link);
                 });
+                $attachmentsCard.show();
+            } else {
+                $attachmentsCard.hide();
+            }
 
-                const statusFlow = {
-                    'pending': ['step-pending'],
-                    'awaiting_reply': ['step-pending', 'step-nowe'],
-                    'under_investigation': ['step-pending', 'step-nowe', 'step-investigation'],
-                    'for_dam_issuance': ['step-pending', 'step-nowe', 'step-investigation'],
-                    'suspended': ['step-pending', 'step-nowe', 'step-investigation', 'step-dam', 'step-suspended'],
-                    'completed': ['step-pending', 'step-nowe', 'step-investigation', 'step-dam', 'step-suspended', 'step-completed']
-                };
+            $viewLoading.addClass('d-none');
+            $viewContent.removeClass('d-none');
+        }
 
-                const currentStepMap = {
-                    'pending': 'step-pending',
-                    'awaiting_reply': 'step-nowe',
-                    'under_investigation': 'step-investigation',
-                    'for_dam_issuance': 'step-dam',
-                    'suspended': 'step-suspended',
-                    'completed': 'step-completed'
-                };
+        function updateProgressFlow(status) {
+            $('.timeline-step').removeClass('active completed');
 
-                const completedSteps = statusFlow[status] || [];
-                const currentStep = currentStepMap[status];
+            const statusFlow = {
+                'pending': ['step-pending'],
+                'awaiting_reply': ['step-pending','step-nowe'],
+                'under_investigation': ['step-pending','step-nowe','step-investigation'],
+                'for_dam_issuance': ['step-pending','step-nowe','step-investigation'],
+                'suspended': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended'],
+                'completed': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended','step-completed']
+            };
 
-                completedSteps.forEach((stepId, index) => {
-                    const stepEl = document.getElementById(stepId);
-                    if (stepEl) {
-                        if (stepId === currentStep && status !== 'completed') {
-                            stepEl.classList.add('active');
-                        } else {
-                            stepEl.classList.add('completed');
-                        }
+            const currentStepMap = {
+                'pending': 'step-pending',
+                'awaiting_reply': 'step-nowe',
+                'under_investigation': 'step-investigation',
+                'for_dam_issuance': 'step-dam',
+                'suspended': 'step-suspended',
+                'completed': 'step-completed'
+            };
+
+            const completedSteps = statusFlow[status] || [];
+            const currentStep = currentStepMap[status];
+
+            completedSteps.forEach(stepId => {
+                const $stepEl = $('#' + stepId);
+                if ($stepEl.length) {
+                    if (stepId === currentStep && status !== 'completed') {
+                        $stepEl.addClass('active');
+                    } else {
+                        $stepEl.addClass('completed');
                     }
-                });
-            }
-
-            function getStatusColorForView(status) {
-                switch (status) {
-                    case 'pending': return 'warning';
-                    case 'awaiting_reply': return 'info';
-                    case 'under_investigation': return 'primary';
-                    case 'for_dam_issuance': return 'secondary';
-                    case 'suspended': return 'danger';
-                    case 'completed': return 'success';
-                    default: return 'secondary';
                 }
+            });
+        }
+
+        function getStatusColorForView(status) {
+            switch (status) {
+                case 'pending': return 'warning';
+                case 'awaiting_reply': return 'info';
+                case 'under_investigation': return 'primary';
+                case 'for_dam_issuance': return 'secondary';
+                case 'suspended': return 'danger';
+                case 'completed': return 'success';
+                default: return 'secondary';
             }
-        });
+        }
+    });
+
     </script>
+    @endpush
 @endsection

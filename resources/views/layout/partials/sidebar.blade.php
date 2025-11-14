@@ -322,7 +322,7 @@
                                     </ul>
                                 </li>
                             @endif
-                            @if (in_array(4, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            @if (in_array(19, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('suspension', 'suspension/employee', 'suspension/admin') ? 'active subdrop' : '' }}">
