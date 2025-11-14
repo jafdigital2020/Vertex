@@ -270,7 +270,7 @@ class SuspensionController extends Controller
             ->whereHas('employee.employmentDetail', function ($query) {
                 $query->where('status', 1); 
             }) 
-            ->get();
+            ->latest()->get();
   
  
         return view('tenant.suspension.suspension-admin', [
@@ -285,47 +285,46 @@ class SuspensionController extends Controller
 
     public function suspensionEmployeeListIndex(Request $request)
     {
-        $authUser = $this->authUser(); // Logged-in user
-        $permission = PermissionHelper::get(60);
+        $authUser = $this->authUser(); 
+        $permission = PermissionHelper::get(61);
 
-        $status = $request->input('status'); // Optional filter: pending, implemented, etc.
-
-        // Fetch suspensions for the authenticated user
+        $status = $request->input('status');  
+        
         $suspensions = Suspension::with([
             'employee.personalInformation',
             'employee.employmentDetail.branch',
             'employee.employmentDetail.department',
             'employee.employmentDetail.designation',
         ])
-            ->where('user_id', $authUser->id)
-            ->when($status, function ($query) use ($status) {
-                $query->where('status', $status);
-            })
-            ->latest()
-            ->get();
+        ->where('user_id', $authUser->id)
+        ->when($status, function ($query) use ($status) {
+            $query->where('status', $status);
+        })
+        ->latest()
+        ->get();
 
-        // If frontend calls via AJAX or fetch()
-        if ($request->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'suspensions' => $suspensions->map(function ($s) {
-                    return [
-                        'id' => $s->id,
-                        'offense_details' => $s->offense_details,
-                        'status' => $s->status,
-                        'suspension_type' => $s->suspension_type,
-                        'start_date' => $s->suspension_start_date,
-                        'end_date' => $s->suspension_end_date,
-                        'information_report_file' => $s->information_report_file,
-                        'employee_name' => optional($s->employee->personalInformation)->first_name . ' ' . optional($s->employee->personalInformation)->last_name,
-                        'employee_id' => optional($s->employee->employmentDetail)->employee_id,
-                        'branch' => optional($s->employee->employmentDetail->branch)->name,
-                        'department' => optional($s->employee->employmentDetail->department)->department_name,
-                        'designation' => optional($s->employee->employmentDetail->designation)->designation_name,
-                    ];
-                }),
-            ]);
-        }
+        // // If frontend calls via AJAX or fetch()
+        // if ($request->wantsJson()) {
+        //     return response()->json([
+        //         'status' => 'success',
+        //         'suspensions' => $suspensions->map(function ($s) {
+        //             return [
+        //                 'id' => $s->id,
+        //                 'offense_details' => $s->offense_details,
+        //                 'status' => $s->status,
+        //                 'suspension_type' => $s->suspension_type,
+        //                 'start_date' => $s->suspension_start_date,
+        //                 'end_date' => $s->suspension_end_date,
+        //                 'information_report_file' => $s->information_report_file,
+        //                 'employee_name' => optional($s->employee->personalInformation)->first_name . ' ' . optional($s->employee->personalInformation)->last_name,
+        //                 'employee_id' => optional($s->employee->employmentDetail)->employee_id,
+        //                 'branch' => optional($s->employee->employmentDetail->branch)->name,
+        //                 'department' => optional($s->employee->employmentDetail->department)->department_name,
+        //                 'designation' => optional($s->employee->employmentDetail->designation)->designation_name,
+        //             ];
+        //         }),
+        //     ]);
+        // }
 
         // For non-AJAX view load
         return view('tenant.suspension.suspension-employee', [

@@ -91,14 +91,14 @@
                                         <thead>
                                             <tr>
                                                 <th>#</th>
-                                                <th>Name</th> 
-                                                <th>Branch</th>
-                                                <th>Department</th>
-                                                <th>Designation</th>
-                                                <th>Status</th>
-                                                <th>Type</th>
-                                                <th>Start Date</th>
-                                                <th>End Date</th>
+                                                <th >Name</th> 
+                                                <th class="text-center">Branch</th>
+                                                <th class="text-center">Department</th>
+                                                <th class="text-center">Designation</th>
+                                                <th class="text-center">Status</th>
+                                                <th class="text-center">Type</th>
+                                                <th class="text-center">Start Date</th>
+                                                <th class="text-center">End Date</th>
                                                 <th class="text-center">Actions</th>
                                             </tr>
                                         </thead>
@@ -121,39 +121,40 @@
                                                     <tr>    
                                                         <td>{{ $idx + 1 }}</td>
                                                         <td>{{  $sus->employee->personalInformation->first_name ?? '' }}  {{   $sus->employee->personalInformation->last_name ?? '' }}</td> 
-                                                        <td>{{ $sus->employee->employmentDetail->employee_id ?? '' }}</td>
-                                                        <td>{{ $sus->employee->employmentDetail->department->department_name ?? '' }}</td>
-                                                        <td>{{ $sus->employee->employmentDetail->designation->designation_name ?? '' }}</td>
-                                                        <td>
+                                                        <td class="text-center">{{ $sus->employee->employmentDetail->employee_id ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->employee->employmentDetail->department->department_name ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->employee->employmentDetail->designation->designation_name ?? '' }}</td>
+                                                        <td class="text-center">
                                                             <span class="badge bg-{{ getStatusColor($sus->status) }}">
                                                                 {{ $sus->status ?? '' }}
                                                             </span>
                                                         </td>
-                                                        <td>{{ $sus->suspension_type ?? '' }}</td>
-                                                        <td>{{ $sus->suspension_start_date ?? '' }}</td>
-                                                        <td>{{ $sus->suspension_end_date ?? '' }}</td>
-                                                        <td class="text-center">
-                                                            <div > 
-                                                                <button class="btn btn-sm btn-primary edit-suspension"
+                                                        <td class="text-center">{{ $sus->suspension_type ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->suspension_start_date ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->suspension_end_date ?? '' }}</td>  
+                                                    <td class="text-center">
+                                                        <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
+
+                                                            <button class="btn btn-sm btn-primary edit-suspension"
+                                                                data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                title="Edit Suspension">
+                                                                <i class="ti ti-edit"></i>
+                                                            </button>
+
+                                                            @if ($sus->status === 'pending')
+                                                                <button class="btn btn-sm btn-warning issue-nowe"
                                                                     data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                    title="Edit Suspension">
-                                                                    <i class="ti ti-edit"></i>
+                                                                    title="Issue NOWE">
+                                                                    <i class="ti ti-mail"></i>
                                                                 </button>
- 
-                                                                @if ($sus->status === 'pending')
-                                                                    <button class="btn btn-sm btn-warning issue-nowe"
-                                                                        data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                        title="Issue NOWE">
-                                                                        <i class="ti ti-mail"></i>
-                                                                    </button>
-                                                                @else
-                                                                    <button class="btn btn-sm btn-secondary view-suspension"
-                                                                        data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                        title="View Suspension Details">
-                                                                        <i class="ti ti-eye"></i>
-                                                                    </button>
-                                                                @endif
-                                                            </div> 
+                                                            @else
+                                                                <button class="btn btn-sm btn-secondary view-suspension"
+                                                                    data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                    title="View Suspension Details">
+                                                                    <i class="ti ti-eye"></i>
+                                                                </button>
+                                                            @endif
+
                                                             @switch($sus->status)
                                                                 @case('awaiting_reply')
                                                                 @case('under_investigation')
@@ -177,18 +178,20 @@
                                                                 @case('suspended')
                                                                     @if (!$sus->dam_file)
                                                                         <button class="btn btn-sm btn-success"
-                                                                            onclick="openDamModal({{$sus->id ?? $sus->employee->id }})"
+                                                                            onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
                                                                             title="Issue DAM">
                                                                             <i class="ti ti-file-check"></i>
                                                                         </button>
                                                                     @endif
-                                                                    <button class="btn btn-sm btn-danger ms-1"
-                                                                        onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id  }})"
+
+                                                                    <button class="btn btn-sm btn-danger"
+                                                                        onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
                                                                         title="Implement Suspension">
                                                                         <i class="ti ti-ban"></i>
                                                                     </button>
-                                                                    <button class="btn btn-sm btn-secondary ms-1"
-                                                                        onclick="completeSuspension({{ $sus->id ?? $sus->employee->id  }})"
+
+                                                                    <button class="btn btn-sm btn-secondary"
+                                                                        onclick="completeSuspension({{ $sus->id ?? $sus->employee->id }})"
                                                                         title="Complete Suspension">
                                                                         <i class="ti ti-check"></i>
                                                                     </button>
@@ -200,7 +203,9 @@
                                                                     </button>
                                                                     @break
                                                             @endswitch
-                                                        </td>
+
+                                                        </div>
+                                                    </td>  
                                                     </tr> 
                                                 @endforeach
                                         </tbody>
@@ -294,8 +299,7 @@
                         <form id="issueNoweForm" enctype="multipart/form-data">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="nowe_suspension_id" name="suspension_id">
-
+                                <input type="hidden" id="nowe_suspension_id" name="suspension_id"> 
                                 <div class="mb-3">
                                     <label for="nowe_file" class="form-label">Upload NOWE Document</label>
                                     <input type="file" name="nowe_file" id="nowe_file" class="form-control" accept=".pdf,.doc,.docx"
@@ -330,7 +334,7 @@
                         <form id="investigationForm">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="investigation_suspension_id" name="suspension_id">
+                                <input type="text" id="investigation_suspension_id" name="suspension_id">
 
                                 <div class="mb-3">
                                     <label for="investigation_notes" class="form-label">Investigation Notes</label>
@@ -978,498 +982,366 @@
                     // NOWE
 
                     // ✅ Issue NOWE modal + submission logic
-                        document.addEventListener('DOMContentLoaded', () => {
-                            const issueNoweModal = new bootstrap.Modal(document.getElementById('issueNoweModal'));
-                            const noweForm = document.getElementById('issueNoweForm');
-                            const noweError = document.getElementById('nowe-error');
-                            const noweSuccess = document.getElementById('nowe-success');
-                            const noweFile = document.getElementById('nowe_file');
-                            const noweSuspensionId = document.getElementById('nowe_suspension_id');
+                      $(document).ready(function () {
 
-                            // Expect a suspension id (not employee id)
-                            window.openNoweModal = function (suspensionId) {
-                                noweForm.reset();
-                                noweError.classList.add('d-none');
-                                noweSuccess.classList.add('d-none');
-
-                                // Basic validation of the incoming id
-                                if (!suspensionId) {
-                                    noweError.textContent = "Invalid suspension id.";
-                                    noweError.classList.remove('d-none');
-                                    return;
-                                }
-
-                                noweSuspensionId.value = suspensionId;
-                                issueNoweModal.show();
-                            };
-
-                            // Form submit handler
-                            noweForm.addEventListener('submit', async (e) => {
-                                e.preventDefault();
-                                noweError.classList.add('d-none');
-                                noweSuccess.classList.add('d-none');
-
-                                const suspensionId = noweSuspensionId.value;
-                                if (!suspensionId) {
-                                    noweError.textContent = "Invalid suspension record.";
-                                    noweError.classList.remove('d-none');
-                                    return;
-                                }
-
-                                if (!noweFile.files || noweFile.files.length === 0) {
-                                    noweError.textContent = "Please select a NOWE file to upload.";
-                                    noweError.classList.remove('d-none');
-                                    return;
-                                }
-
-                                const file = noweFile.files[0];
-                                // Optional: enforce 2MB size limit (same hint shown in form)
-                                const MAX_SIZE = 2 * 1024 * 1024;
-                                if (file.size > MAX_SIZE) {
-                                    noweError.textContent = "File is too large. Maximum allowed size is 2MB.";
-                                    noweError.classList.remove('d-none');
-                                    return;
-                                }
-
-                                const formData = new FormData();
-                                formData.append('nowe_file', file);
-
-                                try {
-                                    const res = await fetch(`{{ url('/api/suspension') }}/${suspensionId}/issue-nowe`, {
-                                        method: 'POST',
-                                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                                        body: formData
-                                    });
-
-                                    // handle non-JSON or error status
-                                    const text = await res.text();
-                                    let data;
-                                    try { data = JSON.parse(text); } catch (_) {
-                                        throw new Error('Unexpected server response.');
-                                    }
-
-                                    if (data.status === 'success') {
-                                        noweSuccess.textContent = data.message || 'NOWE issued successfully.';
-                                        noweSuccess.classList.remove('d-none');
-
-                                        setTimeout(() => {
-                                            issueNoweModal.hide();
-                                            location.reload();
-                                        }, 1500);
-                                    } else {
-                                        throw new Error(data.message || 'Something went wrong.');
-                                    }
-                                } catch (err) {
-                                    noweError.textContent = err.message || 'An error occurred while issuing NOWE.';
-                                    noweError.classList.remove('d-none');
-                                }
-                            });
+                        const issueNoweModal =  $('#issueNoweModal');
+                        const noweForm = $('#issueNoweForm');
+                        const noweError = $('#nowe-error');
+                        const noweSuccess = $('#nowe-success');
+                        const noweFile = $('#nowe_file');
+                        const noweSuspensionId = $('#nowe_suspension_id');
+   
+                        $(document).on('click', '.issue-nowe', function (e) { 
+                                e.preventDefault(); 
+                                const $btn = $(this);
+                                const suspensionId = $btn.data('id'); 
+                                $(noweSuspensionId).val(suspensionId);
+                                issueNoweModal.modal('show');
+                                
                         });
+ 
+                        noweForm.on('submit', function (e) {
+                            e.preventDefault();
+  
+                            const suspensionId = noweSuspensionId.val();
+                            if (!suspensionId) { 
+                                toast.error('Undefined suspension id','Error');
+                                return;
+                            }
 
+                            if (!noweFile[0].files || noweFile[0].files.length === 0) { 
+                                toast.error('Please select a NOWE file to upload.','Error');
+                                return;
+                            }
 
-            </script>
+                            const file = noweFile[0].files[0];
+                            const MAX_SIZE = 2 * 1024 * 1024;
 
+                            if (file.size > MAX_SIZE) {
+                                toast.error('File is too large. Maximum allowed size is 2MB.','Error'); 
+                                return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('nowe_file', file);
+
+                            $.ajax({
+                                url: `{{ url('/api/suspension') }}/${suspensionId}/issue-nowe`,
+                                type: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+
+                                success: function (data) {
+                                    if (data.status === "success") { 
+                                        toastr.success('NOWE issued successfully','Success');
+                                        issueNoweModal.hide(); 
+                                        $('body').removeClass('modal-open');
+                                        $('.modal-backdrop').remove();
+                                        filter(); 
+                                    } else {
+                                       toastr.error('Something went wrong','Error'); 
+                                    }
+                                },
+
+                                error: function (xhr) {
+                                    let msg = "An error occurred while issuing NOWE.";
+
+                                    if (xhr.responseText) {
+                                        try {
+                                            const json = JSON.parse(xhr.responseText);
+                                            msg = json.message || msg;
+                                        } catch (e) {}
+                                      }
+                                         toastr.error(msg,'Error'); 
+                                }
+                            });  
+                        }); 
+                    });  
+            </script> 
             <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    // base API url for suspension endpoints
-                    const apiSuspensionBase = "{{ url('/api/suspension') }}";
-
-                    // Investigation Modal
-                    const investigationModal = new bootstrap.Modal(document.getElementById('InvestigationReportModal'));
-                    const investigationForm = document.getElementById('investigationForm');
-                    const investigationError = document.getElementById('investigation-error');
-                    const investigationSuccess = document.getElementById('investigation-success');
-                    const investigationSuspensionId = document.getElementById('investigation_suspension_id');
-
-                    // ✅ Function to open modal
+                $(document).ready(function () {
+                    const apiSuspensionBase = "{{ url('/api/suspension') }}"; 
+                    const $investigationModal = $('#InvestigationReportModal');
+                    const investigationModal = new bootstrap.Modal($investigationModal[0]);
+                    const $investigationForm = $('#investigationForm');
+                    const $investigationError = $('#investigation-error');
+                    const $investigationSuccess = $('#investigation-success');
+                    const $investigationSuspensionId = $('#investigation_suspension_id');
+ 
                     window.openInvestigationModal = function (suspensionId) {
-                        investigationForm.reset();
-                        investigationError.classList.add('d-none');
-                        investigationSuccess.classList.add('d-none');
+                        $investigationForm[0].reset();
+                        $investigationError.addClass('d-none');
+                        $investigationSuccess.addClass('d-none');
 
                         if (!suspensionId) {
-                            investigationError.textContent = 'Invalid suspension id.';
-                            investigationError.classList.remove('d-none');
+                            $investigationError.text('Invalid suspension id.').removeClass('d-none');
                             return;
                         }
 
-                        investigationSuspensionId.value = suspensionId;
+                        $investigationSuspensionId.val(suspensionId);
                         investigationModal.show();
                     };
-
-                    // ✅ Handle submission — aligned with controller route: POST /suspension/{id}/investigate
-                    investigationForm.addEventListener('submit', async (e) => {
+ 
+                    $investigationForm.on('submit', function (e) {
                         e.preventDefault();
-                        investigationError.classList.add('d-none');
-                        investigationSuccess.classList.add('d-none');
+                        $investigationError.addClass('d-none');
+                        $investigationSuccess.addClass('d-none');
 
-                        const id = investigationSuspensionId.value;
-                        const notesEl = document.getElementById('investigation_notes');
-                        const notes = notesEl ? notesEl.value.trim() : '';
+                        const id = $investigationSuspensionId.val();
+                        const notes = $('#investigation_notes').val()?.trim() || '';
 
                         if (!id) {
-                            investigationError.textContent = 'Invalid suspension record.';
-                            investigationError.classList.remove('d-none');
+                            $investigationError.text('Invalid suspension record.').removeClass('d-none');
                             return;
                         }
 
                         if (!notes) {
-                            investigationError.textContent = 'Please provide investigation notes.';
-                            investigationError.classList.remove('d-none');
+                            $investigationError.text('Please provide investigation notes.').removeClass('d-none');
                             return;
                         }
 
                         if (notes.length > 2000) {
-                            investigationError.textContent = 'Investigation notes must not exceed 2000 characters.';
-                            investigationError.classList.remove('d-none');
+                            $investigationError.text('Investigation notes must not exceed 2000 characters.').removeClass('d-none');
                             return;
                         }
 
                         const formData = new FormData();
                         formData.append('investigation_notes', notes);
 
-                        try {
-                            const res = await fetch(`${apiSuspensionBase}/${id}/investigate`, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
-                                },
-                                body: formData,
-                                credentials: 'same-origin'
-                            });
-
-                            const text = await res.text();
-                            let data;
-                            try { data = JSON.parse(text); } catch (_) {
-                                throw new Error('Unexpected server response.');
+                        $.ajax({
+                            url: `${apiSuspensionBase}/${id}/investigate`,
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function (data) {
+                                if (data.status === 'success') {
+                                    $investigationSuccess.text(data.message || 'Investigation recorded successfully.').removeClass('d-none');
+                                    setTimeout(() => {
+                                        investigationModal.hide();
+                                        location.reload();
+                                    }, 1200);
+                                } else {
+                                    $investigationError.text(data.message || 'Error submitting investigation.').removeClass('d-none');
+                                }
+                            },
+                            error: function (xhr) {
+                                $investigationError.text(xhr.responseJSON?.message || `Error (${xhr.status}) submitting investigation.`).removeClass('d-none');
                             }
-
-                            if (res.ok && data.status === 'success') {
-                                investigationSuccess.textContent = data.message || 'Investigation recorded successfully.';
-                                investigationSuccess.classList.remove('d-none');
-                                setTimeout(() => {
-                                    investigationModal.hide();
-                                    location.reload();
-                                }, 1200);
-                            } else {
-                                throw new Error(data.message || `Server error (${res.status}).`);
-                            }
-                        } catch (err) {
-                            investigationError.textContent = err.message || 'Error submitting investigation.';
-                            investigationError.classList.remove('d-none');
-                        }
+                        });
                     });
-
-                    // DAM Modal
-                    const damModal = new bootstrap.Modal(document.getElementById('IssueDamModal'));
-                    const damForm = document.getElementById('issueDamForm');
-                    const damError = document.getElementById('dam-error');
-                    const damSuccess = document.getElementById('dam-success');
-                    const damSuspensionId = document.getElementById('dam_suspension_id');
-
-                    // ✅ Updated to use suspension_id (not user_id)
+ 
+                    const $damModal = $('#IssueDamModal');
+                    const damModal = new bootstrap.Modal($damModal[0]);
+                    const $damForm = $('#issueDamForm');
+                    const $damError = $('#dam-error');
+                    const $damSuccess = $('#dam-success');
+                    const $damSuspensionId = $('#dam_suspension_id');
+ 
                     window.openDamModal = function (suspensionId) {
-                        damForm.reset();
-                        damError.classList.add('d-none');
-                        damSuccess.classList.add('d-none');
-                        
+                        $damForm[0].reset();
+                        $damError.addClass('d-none');
+                        $damSuccess.addClass('d-none');
+
                         if (!suspensionId) {
-                            damError.textContent = 'Invalid suspension id.';
-                            damError.classList.remove('d-none');
+                            $damError.text('Invalid suspension id.').removeClass('d-none');
                             return;
                         }
-                        
-                        damSuspensionId.value = suspensionId;
+
+                        $damSuspensionId.val(suspensionId);
                         damModal.show();
                     };
-
-                    damForm.addEventListener('submit', async (e) => {
+ 
+                    $damForm.on('submit', function (e) {
                         e.preventDefault();
-                        damError.classList.add('d-none');
-                        damSuccess.classList.add('d-none');
+                        $damError.addClass('d-none');
+                        $damSuccess.addClass('d-none');
 
-                        const id = damSuspensionId.value;
-                        const fileInput = document.getElementById('dam_file');
-                        const file = fileInput.files[0];
-                        const suspensionType = document.querySelector('input[name="suspension_type"]:checked');
-                        
-                        if (!id) {
-                            damError.textContent = 'Invalid suspension record.';
-                            damError.classList.remove('d-none');
-                            return;
-                        }
-                        
-                        if (!file) {
-                            damError.textContent = 'Please upload a DAM file.';
-                            damError.classList.remove('d-none');
-                            return;
-                        }
+                        const id = $damSuspensionId.val();
+                        const file = $('#dam_file')[0].files[0];
+                        const suspensionType = $('input[name="suspension_type"]:checked').val();
 
-                        if (!suspensionType) {
-                            damError.textContent = 'Please select suspension type (with pay or without pay).';
-                            damError.classList.remove('d-none');
-                            return;
-                        }
-
-                        const MAX_SIZE = 2 * 1024 * 1024;
-                        if (file.size > MAX_SIZE) {
-                            damError.textContent = 'File exceeds 2MB limit.';
-                            damError.classList.remove('d-none');
-                            return;
-                        }
+                        if (!id) { $damError.text('Invalid suspension record.').removeClass('d-none'); return; }
+                        if (!file) { $damError.text('Please upload a DAM file.').removeClass('d-none'); return; }
+                        if (!suspensionType) { $damError.text('Please select suspension type.').removeClass('d-none'); return; }
+                        if (file.size > 2 * 1024 * 1024) { $damError.text('File exceeds 2MB limit.').removeClass('d-none'); return; }
 
                         const formData = new FormData();
                         formData.append('dam_file', file);
-                        formData.append('suspension_type', suspensionType.value);
+                        formData.append('suspension_type', suspensionType);
 
-                        try {
-                            // First attempt: assume `id` is a suspension id
-                            const res = await fetch(`${apiSuspensionBase}/${id}/issue-dam`, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
-                                },
-                                body: formData,
-                                credentials: 'same-origin'
-                            });
+                        const submitDam = (url) => $.ajax({
+                            url: url,
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                        });
 
-                            const text = await res.text();
-                            let data;
-                            try { data = JSON.parse(text); } catch (_) {
-                                throw new Error('Unexpected server response.');
+                        // Try primary submission
+                        submitDam(`${apiSuspensionBase}/${id}/issue-dam`)
+                        .done(function (data) {
+                            if (data.status === 'success') {
+                                $damSuccess.text(data.message || 'DAM issued successfully.').removeClass('d-none');
+                                setTimeout(() => { damModal.hide(); location.reload(); }, 1500);
+                            } else {
+                                $damError.text(data.message || 'Error issuing DAM.').removeClass('d-none');
                             }
-
-                            if (res.ok && data.status === 'success') {
-                                damSuccess.textContent = data.message || 'DAM issued successfully.';
-                                damSuccess.classList.remove('d-none');
-                                setTimeout(() => {
-                                    damModal.hide();
-                                    location.reload();
-                                }, 1500);
-                                return;
-                            }
-
-                            // If server says suspension not found, attempt fallback:
-                            if (res.status === 404 || (data && /not found/i.test(data.message || ''))) {
-                                // Try to resolve a suspension id for the provided value (maybe an employee id was passed)
-                                try {
-                                    const lookupRes = await fetch(`${apiSuspensionBase}?employee_id=${encodeURIComponent(id)}&status=for_dam_issuance`, {
-                                        method: 'GET',
-                                        headers: { 'Accept': 'application/json' },
-                                        credentials: 'same-origin'
+                        })
+                        .fail(function (xhr) {
+                            if (xhr.status === 404 || /not found/i.test(xhr.responseJSON?.message || '')) {
+                                // Fallback: lookup suspension by employee id
+                                $.getJSON(`${apiSuspensionBase}?employee_id=${encodeURIComponent(id)}&status=for_dam_issuance`)
+                                .done(function (lookupData) {
+                                    const first = (lookupData.suspensions || lookupData.data || lookupData)[0];
+                                    if (!first?.id) { $damError.text('Suspension case not found for this employee.').removeClass('d-none'); return; }
+                                    // Retry DAM submission
+                                    submitDam(`${apiSuspensionBase}/${first.id}/issue-dam`).done(function (retryData) {
+                                        if (retryData.status === 'success') {
+                                            $damSuccess.text(retryData.message || 'DAM issued successfully.').removeClass('d-none');
+                                            setTimeout(() => { damModal.hide(); location.reload(); }, 1500);
+                                        } else {
+                                            $damError.text(retryData.message || 'Error issuing DAM.').removeClass('d-none');
+                                        }
+                                    }).fail(function () {
+                                        $damError.text('Error issuing DAM on retry.').removeClass('d-none');
                                     });
-
-                                    if (!lookupRes.ok) throw new Error('No suspension found for given employee.');
-
-                                    const lookupData = await lookupRes.json();
-                                    // Expecting an array in lookupData.suspensions or lookupData.data or lookupData (best-effort)
-                                    const arr = lookupData.suspensions || lookupData.data || lookupData;
-                                    const first = Array.isArray(arr) && arr.length ? arr[0] : null;
-
-                                    if (!first || !first.id) {
-                                        throw new Error('Suspension case not found for this employee.');
-                                    }
-
-                                    // Retry using the found suspension id
-                                    const retryRes = await fetch(`${apiSuspensionBase}/${first.id}/issue-dam`, {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                            'Accept': 'application/json'
-                                        },
-                                        body: formData,
-                                        credentials: 'same-origin'
-                                    });
-
-                                    const retryText = await retryRes.text();
-                                    let retryData;
-                                    try { retryData = JSON.parse(retryText); } catch (_) {
-                                        throw new Error('Unexpected server response on retry.');
-                                    }
-
-                                    if (retryRes.ok && retryData.status === 'success') {
-                                        damSuccess.textContent = retryData.message || 'DAM issued successfully.';
-                                        damSuccess.classList.remove('d-none');
-                                        setTimeout(() => {
-                                            damModal.hide();
-                                            location.reload();
-                                        }, 1500);
-                                        return;
-                                    }
-
-                                    throw new Error(retryData.message || `Server error (${retryRes.status}).`);
-                                } catch (lookupErr) {
-                                    throw lookupErr;
-                                }
+                                })
+                                .fail(function () {
+                                    $damError.text('No suspension found for given employee.').removeClass('d-none');
+                                });
+                            } else {
+                                $damError.text(xhr.responseJSON?.message || `Error (${xhr.status}) issuing DAM.`).removeClass('d-none');
                             }
-
-                            // Other errors
-                            throw new Error(data.message || `Server error (${res.status}).`);
-                        } catch (err) {
-                            damError.textContent = err.message || 'Error issuing DAM.';
-                            damError.classList.remove('d-none');
-                        }
+                        });
                     });
                 });
+
             </script>
 
             <script>
-                // View Suspension Info Modal
-                document.addEventListener('DOMContentLoaded', () => {
+               // View Suspension Info Modal
+                $(document).ready(function () {
                     const apiSuspensionBase = "{{ url('/api/suspension') }}";
-                    const viewModal = new bootstrap.Modal(document.getElementById('viewSuspensionModal'));
-                    const viewLoading = document.getElementById('view-suspension-loading');
-                    const viewError = document.getElementById('view-suspension-error');
-                    const viewContent = document.getElementById('view-suspension-content');
-
-                    // Open view modal function
-                    window.viewSuspensionDetails = function (suspensionId) {
-                        // Reset states
-                        viewLoading.classList.remove('d-none');
-                        viewError.classList.add('d-none');
-                        viewContent.classList.add('d-none');
-                        
-                        if (!suspensionId) {
-                            viewError.textContent = 'Invalid suspension id.';
-                            viewError.classList.remove('d-none');
-                            viewLoading.classList.add('d-none');
-                            return;
-                        }
-                        
-                        viewModal.show();
+                    const viewModal = $('#viewSuspensionModal');
+                    const $viewLoading = $('#view-suspension-loading');
+                    const $viewError = $('#view-suspension-error');
+                    const $viewContent = $('#view-suspension-content');
+    
+ 
+                    $(document).on('click', '.view-suspension', function (e) { 
+                        e.preventDefault(); 
+                        const $btn = $(this);
+                        const suspensionId = $btn.data('id');  
                         fetchSuspensionDetails(suspensionId);
-                    };
-
-                    async function fetchSuspensionDetails(suspensionId) {
-                        try {
-                            const res = await fetch(`${apiSuspensionBase}/${suspensionId}`, {
-                                method: 'GET',
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                credentials: 'same-origin'
-                            });
-
-                            if (!res.ok) {
-                                throw new Error(`Failed to fetch suspension details (${res.status})`);
-                            }
-
-                            const data = await res.json();
+                        viewModal.modal('show');
                             
-                            if (data.status === 'success' && data.suspension) {
-                                displaySuspensionDetails(data.suspension);
-                            } else {
-                                throw new Error(data.message || 'Failed to load suspension details.');
+                    }); 
+
+                    function fetchSuspensionDetails(suspensionId) {
+                        $.ajax({
+                            url: `${apiSuspensionBase}/${suspensionId}`,
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function (data) {
+                                if (data.status === 'success' && data.suspension) {
+                                    displaySuspensionDetails(data.suspension);
+                                } else { 
+                                    toastr.error('Failed to load suspension details','Error');
+                                }
+                            },
+                            error: function (xhr, status, error) { 
+                                toastr.error(`Error fetching suspension details (${xhr.status}): ${error}`,'Error');
                             }
-                        } catch (err) {
-                            viewError.textContent = err.message || 'Error loading suspension details.';
-                            viewError.classList.remove('d-none');
-                            viewLoading.classList.add('d-none');
-                        }
-                    }
+                        });
+                    } 
 
                     function displaySuspensionDetails(suspension) {
                         // Employee Information
-                        document.getElementById('view_employee_name').textContent = suspension.employee_name || 'N/A';
-                        document.getElementById('view_employee_id').textContent = suspension.employee_id || 'N/A';
-                        document.getElementById('view_branch').textContent = suspension.branch || 'N/A';
-                        document.getElementById('view_department').textContent = suspension.department || 'N/A';
-                        document.getElementById('view_designation').textContent = suspension.designation || 'N/A';
+                        $('#view_employee_name').text(suspension.employee_name || 'N/A');
+                        $('#view_employee_id').text(suspension.employee_id || 'N/A');
+                        $('#view_branch').text(suspension.branch || 'N/A');
+                        $('#view_department').text(suspension.department || 'N/A');
+                        $('#view_designation').text(suspension.designation || 'N/A');
 
                         // Suspension Information
-                        const statusBadge = document.getElementById('view_status');
+                        const statusBadge = $('#view_status');
                         const status = suspension.status || 'N/A';
-                        statusBadge.textContent = status;
-                        statusBadge.className = 'badge bg-' + getStatusColor(status);
+                        statusBadge.text(status).attr('class', 'badge bg-' + getStatusColor(status));
 
-                        document.getElementById('view_type').textContent = suspension.suspension_type ? 
-                            suspension.suspension_type.replace('_', ' ').toUpperCase() : 'N/A';
-                        document.getElementById('view_filed_date').textContent = suspension.created_at ? 
-                            new Date(suspension.created_at).toLocaleDateString() : 'N/A';
-                        document.getElementById('view_start_date').textContent = suspension.suspension_start_date || 'N/A';
-                        document.getElementById('view_end_date').textContent = suspension.suspension_end_date || 'N/A';
-                        document.getElementById('view_duration').textContent = suspension.suspension_days ? 
-                            `${suspension.suspension_days} day(s)` : 'N/A';
+                        $('#view_type').text(suspension.suspension_type ? suspension.suspension_type.replace('_', ' ').toUpperCase() : 'N/A');
+                        $('#view_filed_date').text(suspension.created_at ? new Date(suspension.created_at).toLocaleDateString() : 'N/A');
+                        $('#view_start_date').text(suspension.suspension_start_date || 'N/A');
+                        $('#view_end_date').text(suspension.suspension_end_date || 'N/A');
+                        $('#view_duration').text(suspension.suspension_days ? `${suspension.suspension_days} day(s)` : 'N/A');
 
                         // Offense Details
-                        document.getElementById('view_offense_details').textContent = suspension.offense_details || 'No details provided.';
-
-                        // Investigation Notes (show card only if available)
-                        const investigationCard = document.getElementById('view_investigation_card');
+                        $('#view_offense_details').text(suspension.offense_details || 'No details provided.'); 
+                        // Investigation Notes
                         if (suspension.investigation_notes) {
-                            document.getElementById('view_investigation_notes').textContent = suspension.investigation_notes;
-                            investigationCard.style.display = 'block';
+                            $('#view_investigation_notes').text(suspension.investigation_notes);
+                            $('#view_investigation_card').show();
                         } else {
-                            investigationCard.style.display = 'none';
+                            $('#view_investigation_card').hide();
                         }
 
-                        // Implementation Remarks (show card only if available)
-                        const implementationCard = document.getElementById('view_implementation_card');
+                        // Implementation Remarks
                         if (suspension.implementation_remarks) {
-                            document.getElementById('view_implementation_remarks').textContent = suspension.implementation_remarks;
-                            implementationCard.style.display = 'block';
+                            $('#view_implementation_remarks').text(suspension.implementation_remarks);
+                            $('#view_implementation_card').show();
                         } else {
-                            implementationCard.style.display = 'none';
+                            $('#view_implementation_card').hide();
                         }
 
-                        // Employee Reply (show card only if available)
-                        const employeeReplyCard = document.getElementById('view_employee_reply_card');
+                        // Employee Reply
                         if (suspension.employee_reply) {
                             const reply = suspension.employee_reply;
-                            document.getElementById('view_employee_reply_text').textContent = reply.description || 'No reply text provided.';
-                            document.getElementById('view_employee_reply_date').textContent = reply.action_date || 'N/A';
-                            
-                            // Show file download if available
-                            const replyFileDiv = document.getElementById('view_employee_reply_file');
+                            $('#view_employee_reply_text').text(reply.description || 'No reply text provided.');
+                            $('#view_employee_reply_date').text(reply.action_date || 'N/A');
+
                             if (reply.file_path) {
-                                const fileLink = document.getElementById('view_employee_reply_file_link');
-                                fileLink.href = `/storage/${reply.file_path}`;
-                                replyFileDiv.style.display = 'block';
+                                $('#view_employee_reply_file_link').attr('href', `/storage/${reply.file_path}`);
+                                $('#view_employee_reply_file').show();
                             } else {
-                                replyFileDiv.style.display = 'none';
+                                $('#view_employee_reply_file').hide();
                             }
-                            
-                            employeeReplyCard.style.display = 'block';
+
+                            $('#view_employee_reply_card').show();
                         } else {
-                            employeeReplyCard.style.display = 'none';
+                            $('#view_employee_reply_card').hide();
                         }
 
                         // Attachments
-                        const attachmentsCard = document.getElementById('view_attachments_card');
-                        const attachmentsList = document.getElementById('view_attachments_list');
-                        attachmentsList.innerHTML = '';
-
                         const attachments = [];
-                        if (suspension.information_report_file) {
-                            attachments.push({ name: 'Information Report', url: suspension.information_report_file });
-                        }
-                        if (suspension.nowe_file) {
-                            attachments.push({ name: 'NOWE Document', url: suspension.nowe_file });
-                        }
-                        if (suspension.dam_file) {
-                            attachments.push({ name: 'DAM Document', url: suspension.dam_file });
-                        }
+                        if (suspension.information_report_file) attachments.push({ name: 'Information Report', url: suspension.information_report_file });
+                        if (suspension.nowe_file) attachments.push({ name: 'NOWE Document', url: suspension.nowe_file });
+                        if (suspension.dam_file) attachments.push({ name: 'DAM Document', url: suspension.dam_file });
+
+                        const $attachmentsList = $('#view_attachments_list');
+                        $attachmentsList.empty();
 
                         if (attachments.length > 0) {
                             attachments.forEach(att => {
-                                const link = document.createElement('a');
-                                link.href = `/storage/${att.url}`;
-                                link.target = '_blank';
-                                link.className = 'btn btn-sm btn-outline-primary me-2 mb-2';
-                                link.innerHTML = `<i class="ti ti-download me-1"></i>${att.name}`;
-                                attachmentsList.appendChild(link);
+                                const link = `<a href="/storage/${att.url}" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
+                                                <i class="ti ti-download me-1"></i>${att.name}
+                                            </a>`;
+                                $attachmentsList.append(link);
                             });
-                            attachmentsCard.style.display = 'block';
+                            $('#view_attachments_card').show();
                         } else {
-                            attachmentsCard.style.display = 'none';
+                            $('#view_attachments_card').hide();
                         }
 
                         // Show content, hide loading
-                        viewLoading.classList.add('d-none');
-                        viewContent.classList.remove('d-none');
+                        $viewLoading.addClass('d-none');
+                        $viewContent.removeClass('d-none');
                     }
 
                     function getStatusColor(status) {
@@ -1484,6 +1356,7 @@
                         }
                     }
                 });
+
             </script>
 
             <script>

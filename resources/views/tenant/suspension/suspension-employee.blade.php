@@ -24,44 +24,87 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                            <h5 class="d-flex align-items-center mb-0">Suspension List</h5>
-                            <select id="suspension-status" class="form-select form-select-sm w-auto">
-                                <option value="">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="awaiting_reply">Awaiting Reply</option>
-                                <option value="under_investigation">Under Investigation</option>
-                                <option value="for_dam_issuance">For DAM Issuance</option>
-                                <option value="suspended">Suspended</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-
-                        <div class="card-body p-3">
-                            <div id="suspension-loading" class="text-center py-4">
-                                <div class="spinner-border" role="status">
-                                    <span class="visually-hidden">Loading...</span>
+                         <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                            <h5 class="mb-0">Suspension List</h5>
+                              <div class="d-flex align-items-center flex-wrap row-gap-2"> 
+                               <div class="form-group me-2" style="max-width:200px;">
+                                <select id="suspension-status" class="form-select select2" style="max-width:200px;">
+                                    <option value="">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="awaiting_reply">Awaiting Reply</option>
+                                    <option value="under_investigation">Under Investigation</option>
+                                    <option value="for_dam_issuance">For DAM Issuance</option>
+                                    <option value="suspended">Suspended</option>
+                                    <option value="completed">Completed</option>
+                                </select>
                                 </div>
                             </div>
-
-                            <div id="suspension-error" class="alert alert-danger d-none" role="alert"></div>
-
-                            <div class="table-responsive d-none" id="suspension-table-wrap">
-                                <table class="table table-striped align-middle" id="suspension-table">
+                        </div> 
+                        <div class="card-body p-3"> 
+                            <div id="suspension-error" class="alert alert-danger d-none" role="alert"></div> 
+                            <div class="table-responsive" id="suspension-table-wrap">
+                                <table class="table table-striped align-middle datatable" id="suspension-table">
                                     <thead>
                                         <tr>
                                             <th>#</th>
                                             <th>Offense Details</th>
-                                            <th>Status</th>
-                                            <th>Type</th>
-                                            <th>Start Date</th>
-                                            <th>End Date</th>
-                                            <th>Report File</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center">Type</th>
+                                            <th class="text-center">Start Date</th>
+                                            <th class="text-center">End Date</th>
+                                            <th class="text-center">Report File</th>
                                             <th class="text-center">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="suspension-tbody">
-                                        <!-- rows injected here -->
+                                    <tbody id="suspension-tbody"> 
+                                        @forelse ($suspensions as $index => $s)
+                                            <tr>
+                                                <td class="text-center">{{ $index + 1 }}</td>
+                                                <td>{{ $s->offense_details ?? '—' }}</td>
+                                                @php
+                                                    switch($s->status) {
+                                                        case 'pending': $statusColor = 'warning'; break;
+                                                        case 'awaiting_reply': $statusColor = 'info'; break;
+                                                        case 'under_investigation': $statusColor = 'primary'; break;
+                                                        case 'for_dam_issuance': $statusColor = 'secondary'; break;
+                                                        case 'suspended': $statusColor = 'danger'; break;
+                                                        case 'completed': $statusColor = 'success'; break;
+                                                        default: $statusColor = 'secondary';
+                                                    }
+                                                @endphp
+                                                <td class="text-center">
+                                                    <span class="badge bg-{{ $statusColor }}">
+                                                        {{ ucfirst(str_replace('_', ' ', $s->status)) }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">{{ $s->suspension_type ? strtoupper(str_replace('_', ' ', $s->suspension_type)) : '' }}</td>
+                                                <td class="text-center">{{ $s->suspension_start_date ?? '' }}</td>
+                                                <td class="text-center">{{ $s->suspension_end_date ?? '' }}</td>
+                                                <td class="text-center">
+                                                    @if($s->information_report_file)
+                                                        <a href="{{ asset('storage/' . $s->information_report_file) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                            <i class="ti ti-download me-1"></i>View
+                                                        </a>
+                                                    @else
+                                                        —
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-info" onclick="viewSuspensionDetails({{ $s->id }})" title="View Details">
+                                                        <i class="ti ti-eye"></i>
+                                                    </button>
+                                                    @if( $s->status === 'awaiting_reply')
+                                                        <button class="btn btn-sm btn-success ms-1" onclick="openReplySuspensionModal({{ $s->id }})" title="Submit Reply">
+                                                            <i class="ti ti-message"></i>
+                                                        </button>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @empty
+                                            <tr>
+                                                <td colspan="8" class="text-center">No suspensions found.</td>
+                                            </tr>
+                                            @endforelse 
                                     </tbody>
                                 </table>
                             </div>
@@ -358,111 +401,9 @@
 
     <!-- Scripts -->
     <script>
-        (function () {
+        
             const url = "{{ route('suspension-employee-list') }}";
-
-            function showLoading(show) {
-                document.getElementById('suspension-loading').classList.toggle('d-none', !show);
-            }
-
-            function showError(message) {
-                const el = document.getElementById('suspension-error');
-                el.textContent = message;
-                el.classList.remove('d-none');
-            }
-
-            function hideError() {
-                document.getElementById('suspension-error').classList.add('d-none');
-            }
-
-            function getStatusColor(status) {
-                switch (status) {
-                    case 'pending': return 'warning';
-                    case 'awaiting_reply': return 'info';
-                    case 'suspended': return 'danger';
-                    case 'completed': return 'success';
-                    default: return 'secondary';
-                }
-            }
-
-            function renderTable(suspensions) {
-                const wrap = document.getElementById('suspension-table-wrap');
-                const tbody = document.getElementById('suspension-tbody');
-                tbody.innerHTML = '';
-
-                if (!suspensions || suspensions.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">No suspensions found.</td></tr>';
-                } else {
-                    suspensions.forEach((s, idx) => {
-                        const canReply = s.status === 'awaiting_reply' || s.status === 'pending';
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                        <td>${idx + 1}</td>
-                        <td>${s.offense_details ?? ''}</td>
-                        <td><span class="badge bg-${getStatusColor(s.status)}">${s.status ?? ''}</span></td>
-                        <td>${s.suspension_type ?? ''}</td>
-                        <td>${s.start_date ?? ''}</td>
-                        <td>${s.end_date ?? ''}</td>
-                        <td>${s.information_report_file
-                                ? `<a href="/storage/${s.information_report_file}" target="_blank">View</a>`
-                                : '—'}</td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-outline-info view-info" data-id="${s.id}" title="View Details">
-                                <i class="ti ti-eye"></i>
-                            </button>
-                            ${canReply
-                                ? `<button class="btn btn-sm btn-outline-success reply-suspension ms-1" data-id="${s.id}" title="Submit Reply">
-                                       <i class="ti ti-message"></i>
-                                   </button>`
-                                : ''
-                            }
-                        </td>`;
-                        tbody.appendChild(tr);
-                    });
-                }
-                wrap.classList.remove('d-none');
-
-                document.querySelectorAll('.view-info').forEach(btn => {
-                    btn.addEventListener('click', () => openViewInfoModal(btn.dataset.id));
-                });
-
-                document.querySelectorAll('.reply-suspension').forEach(btn => {
-                    btn.addEventListener('click', () => openReplySuspensionModal(btn.dataset.id));
-                });
-            }
-
-            async function loadSuspensions() {
-                showLoading(true);
-                hideError();
-                const status = document.getElementById('suspension-status')?.value || '';
-
-                try {
-                    const res = await fetch(`${url}?status=${status}`, {
-                        method: 'GET',
-                        headers: { 'Accept': 'application/json' },
-                        credentials: 'same-origin'
-                    });
-
-                    if (!res.ok) throw new Error('Failed to fetch suspensions: ' + res.status);
-                    const data = await res.json();
-
-                    if (data.status === 'success' && Array.isArray(data.suspensions)) {
-                        renderTable(data.suspensions);
-                    } else {
-                        throw new Error('Unexpected response from server.');
-                    }
-                } catch (err) {
-                    showError(err.message || 'Error while loading suspensions.');
-                } finally {
-                    showLoading(false);
-                }
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                loadSuspensions();
-                document.getElementById('suspension-status')?.addEventListener('change', loadSuspensions);
-            });
-        })();
+  
 
         // Reply Suspension Modal
         document.addEventListener('DOMContentLoaded', () => {

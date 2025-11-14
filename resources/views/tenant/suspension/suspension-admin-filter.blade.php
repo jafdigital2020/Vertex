@@ -1,4 +1,4 @@
- @php
+  @php
                                                 function getStatusColor($status) {
                                                     switch ($status) {
                                                         case 'pending': 
@@ -16,39 +16,40 @@
                                                     <tr>    
                                                         <td>{{ $idx + 1 }}</td>
                                                         <td>{{  $sus->employee->personalInformation->first_name ?? '' }}  {{   $sus->employee->personalInformation->last_name ?? '' }}</td> 
-                                                        <td>{{ $sus->employee->employmentDetail->employee_id ?? '' }}</td>
-                                                        <td>{{ $sus->employee->employmentDetail->department->department_name ?? '' }}</td>
-                                                        <td>{{ $sus->employee->employmentDetail->designation->designation_name ?? '' }}</td>
-                                                        <td>
+                                                        <td class="text-center">{{ $sus->employee->employmentDetail->employee_id ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->employee->employmentDetail->department->department_name ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->employee->employmentDetail->designation->designation_name ?? '' }}</td>
+                                                        <td class="text-center">
                                                             <span class="badge bg-{{ getStatusColor($sus->status) }}">
                                                                 {{ $sus->status ?? '' }}
                                                             </span>
                                                         </td>
-                                                        <td>{{ $sus->suspension_type ?? '' }}</td>
-                                                        <td>{{ $sus->suspension_start_date ?? '' }}</td>
-                                                        <td>{{ $sus->suspension_end_date ?? '' }}</td>
-                                                        <td class="text-center">
-                                                            <div > 
-                                                                <button class="btn btn-sm btn-primary edit-suspension"
+                                                        <td class="text-center">{{ $sus->suspension_type ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->suspension_start_date ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->suspension_end_date ?? '' }}</td>  
+                                                    <td class="text-center">
+                                                        <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
+
+                                                            <button class="btn btn-sm btn-primary edit-suspension"
+                                                                data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                title="Edit Suspension">
+                                                                <i class="ti ti-edit"></i>
+                                                            </button>
+
+                                                            @if ($sus->status === 'pending')
+                                                                <button class="btn btn-sm btn-warning issue-nowe"
                                                                     data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                    title="Edit Suspension">
-                                                                    <i class="ti ti-edit"></i>
+                                                                    title="Issue NOWE">
+                                                                    <i class="ti ti-mail"></i>
                                                                 </button>
- 
-                                                                @if ($sus->status === 'pending')
-                                                                    <button class="btn btn-sm btn-warning issue-nowe"
-                                                                        data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                        title="Issue NOWE">
-                                                                        <i class="ti ti-mail"></i>
-                                                                    </button>
-                                                                @else
-                                                                    <button class="btn btn-sm btn-secondary view-suspension"
-                                                                        data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                        title="View Suspension Details">
-                                                                        <i class="ti ti-eye"></i>
-                                                                    </button>
-                                                                @endif
-                                                            </div> 
+                                                            @else
+                                                                <button class="btn btn-sm btn-secondary view-suspension"
+                                                                    data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                    title="View Suspension Details">
+                                                                    <i class="ti ti-eye"></i>
+                                                                </button>
+                                                            @endif
+
                                                             @switch($sus->status)
                                                                 @case('awaiting_reply')
                                                                 @case('under_investigation')
@@ -72,18 +73,20 @@
                                                                 @case('suspended')
                                                                     @if (!$sus->dam_file)
                                                                         <button class="btn btn-sm btn-success"
-                                                                            onclick="openDamModal({{$sus->id ?? $sus->employee->id }})"
+                                                                            onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
                                                                             title="Issue DAM">
                                                                             <i class="ti ti-file-check"></i>
                                                                         </button>
                                                                     @endif
-                                                                    <button class="btn btn-sm btn-danger ms-1"
-                                                                        onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id  }})"
+
+                                                                    <button class="btn btn-sm btn-danger"
+                                                                        onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
                                                                         title="Implement Suspension">
                                                                         <i class="ti ti-ban"></i>
                                                                     </button>
-                                                                    <button class="btn btn-sm btn-secondary ms-1"
-                                                                        onclick="completeSuspension({{ $sus->id ?? $sus->employee->id  }})"
+
+                                                                    <button class="btn btn-sm btn-secondary"
+                                                                        onclick="completeSuspension({{ $sus->id ?? $sus->employee->id }})"
                                                                         title="Complete Suspension">
                                                                         <i class="ti ti-check"></i>
                                                                     </button>
@@ -95,6 +98,8 @@
                                                                     </button>
                                                                     @break
                                                             @endswitch
-                                                        </td>
+
+                                                        </div>
+                                                    </td>  
                                                     </tr> 
                                                 @endforeach
