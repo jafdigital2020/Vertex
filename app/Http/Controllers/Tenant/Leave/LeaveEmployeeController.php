@@ -146,6 +146,7 @@ class LeaveEmployeeController extends Controller
 
         $leaveRequests = LeaveRequest::with([
             'leaveType',
+            'leaveType.leaveRequest.user.personalInformation',
             'latestApproval.approver.personalInformation',
             'latestApproval.approver.employmentDetail.department',
         ])

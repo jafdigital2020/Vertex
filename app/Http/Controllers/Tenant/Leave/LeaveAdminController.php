@@ -148,13 +148,12 @@ class LeaveAdminController extends Controller
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
-
-
         $leaveRequests = $accessData['leaveRequests']
             ->where('tenant_id', $tenantId)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
+            ->with(['user.personalInformation', 'user.employmentDetail'])
             ->get();
 
         // total Approved leave for this year
