@@ -1598,7 +1598,6 @@ class AttendanceEmployeeController extends Controller
     // Request Attendance Index
     public function requestAttendanceIndex(Request $request)
     {
-
         $authUser = $this->authUser();
         $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
         $tenantId = $authUser->tenant_id ?? null;
@@ -1617,6 +1616,7 @@ class AttendanceEmployeeController extends Controller
             ])
             ->orderBy('request_date', 'desc')
             ->with([
+                'user.personalInformation',
                 'latestApproval.attendanceApprover.personalInformation',
                 'latestApproval.attendanceApprover.employmentDetail.department'
             ])
