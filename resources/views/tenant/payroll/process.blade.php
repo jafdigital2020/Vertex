@@ -1110,7 +1110,7 @@
                                             <span class="input-group-text bg-light">₱</span>
                                             <input type="number"
                                                 class="form-control form-control-sm text-end fw-bold text-primary"
-                                                id="gross_pay" name="gross_pay" step="0.01" readonly>
+                                                id="gross_pay" name="gross_pay" step="0.01">
                                         </div>
                                     </div>
                                 </div>
@@ -1121,7 +1121,7 @@
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-success bg-opacity-10 text-success">₱</span>
                                             <input type="number" class="form-control text-end text-success fw-bold"
-                                                id="total_earnings" name="total_earnings" step="0.01" readonly>
+                                                id="total_earnings" name="total_earnings" step="0.01">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -1130,7 +1130,7 @@
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-danger bg-opacity-10 text-danger">₱</span>
                                             <input type="number" class="form-control text-end text-danger fw-bold"
-                                                id="total_deduction" name="total_deductions" step="0.01" readonly>
+                                                id="total_deduction" name="total_deductions" step="0.01">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -1138,7 +1138,7 @@
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-primary bg-opacity-10 text-white">₱</span>
                                             <input type="number" class="form-control text-end text-primary fw-bold"
-                                                id="net_salary" name="net_salary" step="0.01" readonly>
+                                                id="net_salary" name="net_salary" step="0.01">
                                         </div>
                                     </div>
                                 </div>
