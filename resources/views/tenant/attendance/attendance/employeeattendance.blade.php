@@ -500,7 +500,24 @@
                                             <td>
                                                 {{ $att->attendance_date->format('Y-m-d') }}
                                             </td>
-                                            <td>{{ $att->shift->name ?? '-' }}</td>
+                                            <td>
+                                                @if ($att->is_rest_day)
+                                                    <span
+                                                        class="badge badge-info-transparent d-inline-flex align-items-center">
+                                                        <i class="ti ti-calendar-off me-1"></i>Rest Day
+                                                    </span>
+                                                @elseif ($att->is_holiday)
+                                                    <span
+                                                        class="badge badge-warning-transparent d-inline-flex align-items-center">
+                                                        <i class="ti ti-confetti me-1"></i>Holiday
+                                                        @if ($att->shift)
+                                                            <span class="ms-1">({{ $att->shift->name }})</span>
+                                                        @endif
+                                                    </span>
+                                                @else
+                                                    {{ $att->shift->name ?? '-' }}
+                                                @endif
+                                            </td>
                                             <td>{{ $att->time_only }}</td>
                                             <td>
                                                 <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
@@ -544,8 +561,9 @@
                                                         <button type="button"
                                                             class="btn btn-sm btn-outline-primary dropdown-toggle"
                                                             data-bs-toggle="dropdown" data-bs-boundary="viewport"
-                                                            data-bs-container="body">
-                                                            View Photo
+                                                            data-bs-container="body" title="View Photo"
+                                                            aria-expanded="false">
+                                                            <i class="ti ti-camera fs-15"></i>
                                                         </button>
                                                         <ul class="dropdown-menu"
                                                             style="z-index: 9999; overflow: visible;">
@@ -574,8 +592,9 @@
                                                     <div class="btn-group" style="position: static; overflow: visible;">
                                                         <button type="button"
                                                             class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                            data-bs-toggle="dropdown">
-                                                            View Location
+                                                            data-bs-toggle="dropdown" aria-haspopup="true"
+                                                            aria-expanded="false" title="View Location">
+                                                            <i class="ti ti-map-pin fs-15"></i>
                                                         </button>
                                                         <ul class="dropdown-menu"
                                                             style="z-index: 9999; overflow: visible;">
@@ -607,8 +626,9 @@
                                                         <button type="button"
                                                             class="btn btn-sm btn-outline-primary dropdown-toggle"
                                                             data-bs-toggle="dropdown" data-bs-boundary="viewport"
-                                                            data-bs-container="body">
-                                                            View Device
+                                                            data-bs-container="body" title="View Device"
+                                                            aria-label="View Device">
+                                                            <i class="ti ti-device-mobile fs-15"></i>
                                                         </button>
                                                         <ul class="dropdown-menu"
                                                             style="z-index: 9999; overflow: visible;">
@@ -740,6 +760,7 @@
         const hasShift = {{ $hasShift ? 'true' : 'false' }};
         const isFlexible = {{ $isFlexible ? 'true' : 'false' }};
         const isRestDay = {{ $isRestDay ? 'true' : 'false' }};
+        const isRestDayAllowed = {{ $settings->rest_day_time_in_allowed ? 'true' : 'false' }};
         const subBlocked = {{ $subBlocked ? 'true' : 'false' }};
         const subBlockMessage = {!! json_encode($subBlockMessage) !!};
         const allowedMinutesBeforeClockIn = {{ $nextAssignment?->shift?->allowed_minutes_before_clock_in ?? 0 }};
@@ -1009,13 +1030,16 @@
                 clockInButton.disabled = true;
 
                 try {
-                    if (isRestDay) {
-                        toastr.error('You cannot clock in on a rest day.');
+
+                    if (isRestDay && !isRestDayAllowed) {
+                        toastr.error(
+                            'Clock-in on rest days is not allowed. Please contact your administrator.'
+                        );
                         clockInButton.disabled = false;
                         return;
                     }
 
-                    if (!hasShift) {
+                    if (!hasShift && !isRestDay) {
                         toastr.error('No active shift today.');
                         clockInButton.disabled = false;
                         return;
@@ -1030,7 +1054,8 @@
                     }
 
                     // 2) Late reason? (skip if flexible)
-                    if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
+                    if (!isFlexible && !isRestDay && lateReasonOn && computeLateMinutes() >
+                        graceMinutes) {
                         lateModal.show();
                         clockInButton.disabled = false;
                         return;
@@ -1068,7 +1093,8 @@
             confirmClockIn.addEventListener('click', async () => {
                 try {
                     // Late reason? (skip if flexible)
-                    if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
+                    if (!isFlexible && !isRestDay && lateReasonOn && computeLateMinutes() >
+                        graceMinutes) {
                         const onHidden = () => {
                             lateModal.show();
                             cameraModalEl.removeEventListener('hidden.bs.modal', onHidden);

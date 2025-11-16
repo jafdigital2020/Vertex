@@ -138,12 +138,6 @@ class AttendanceEmployeeController extends Controller
             ->latest('date_time_in')
             ->first();
 
-        // $attendances = Attendance::where('user_id',  $authUserId)
-        //     ->where('attendance_date', Carbon::today()->toDateString())
-        //     ->with('shift')
-        //     ->orderBy('attendance_date', 'desc')
-        //     ->get();
-
         $latestAttendance = Attendance::where('user_id',  $authUserId)
             ->latest('date_time_in')
             ->first();
@@ -223,7 +217,6 @@ class AttendanceEmployeeController extends Controller
             return $attendance->total_late_minutes ?? 0;
         });
 
-        // Fix: Use $totalMonthlyLateMinutes for formatting, not $totalMonthlyLateHours
         $totalMonthlyLateHours = round($totalMonthlyLateMinutes / 60, 2);
 
         // Undertime Minutes for this month
@@ -260,15 +253,15 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyLateHoursFormatted = $formatMinutes($totalMonthlyLateMinutes);
         $totalMonthlyUndertimeHoursFormatted = $formatMinutes($totalMonthlyUndertimeMinutes);
 
-
+        // ✅ UPDATED: Get shift assignments including rest days
         $assignments = ShiftAssignment::with('shift')
             ->where('user_id', $authUser->id)
             ->get()
 
-            // ✅ ADD: Filter out assignments without shifts first
-            ->filter(function ($assignment) {
-                return $assignment->shift !== null;
-            })
+            // ✅ REMOVED: Don't filter out rest days without shifts
+            // ->filter(function ($assignment) {
+            //     return $assignment->shift !== null;
+            // })
 
             // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
@@ -298,9 +291,14 @@ class AttendanceEmployeeController extends Controller
 
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
+                // ✅ UPDATED: Skip time validation for rest days
+                if ($assignment->is_rest_day) {
+                    return true;
+                }
+
                 $shift = $assignment->shift;
 
-                // ✅ FIXED: Add null check
+                // ✅ Keep null check for regular shifts only
                 if (!$shift) {
                     return false;
                 }
@@ -327,21 +325,34 @@ class AttendanceEmployeeController extends Controller
             })
 
             // 3️⃣ Sort by shift start time
-            ->sortBy(fn($a) => $a->shift->start_time ?? '99:99:99');
+            ->sortBy(function ($assignment) {
+                // ✅ UPDATED: Prioritize rest days
+                if ($assignment->is_rest_day) {
+                    return '00:00:00';
+                }
+                return $assignment->shift ? ($assignment->shift->start_time ?? '99:99:99') : '99:99:99';
+            });
 
-        $hasShift = $assignments->isNotEmpty();
-
-        // Check if today is a rest day
-        $isRestDay = false;
+        // ✅ UPDATED: Detect rest day and regular assignments
         $restDayAssignment = $assignments->firstWhere('is_rest_day', true);
-        if ($restDayAssignment) {
-            $isRestDay = true;
-        }
+        $regularAssignment = $assignments->firstWhere('is_rest_day', false);
 
+        // ✅ UPDATED: Set flags
+        $isRestDay = $restDayAssignment !== null;
+
+        // ✅ UPDATED: Allow hasShift to be true if rest day is allowed
+        $hasShift = $regularAssignment !== null || ($restDayAssignment && $settings->rest_day_time_in_allowed);
+
+        // ✅ UPDATED: Get next assignment (prioritize rest day if allowed)
         $nextAssignment = $assignments->first(function ($assignment) use ($authUser, $today) {
-            // ✅ FIX: Check if shift exists before checking attendance
+            // ✅ Allow rest day assignments
+            if ($assignment->is_rest_day) {
+                return true; // Always return rest day if it exists
+            }
+
+            // ✅ For regular shifts, check if shift exists before checking attendance
             if (!$assignment->shift) {
-                return false; // Skip assignments with missing shifts
+                return false;
             }
 
             return !Attendance::where('user_id', $authUser->id)
@@ -368,14 +379,14 @@ class AttendanceEmployeeController extends Controller
 
         $assignmentForBreakManagement = $nextAssignment ?? $currentActiveAssignment;
 
-        // Grace Period getter - safe access
-        $gracePeriod = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+        // ✅ UPDATED: Grace Period getter - safe access (return 0 for rest days)
+        $gracePeriod = ($assignmentForBreakManagement && !$assignmentForBreakManagement->is_rest_day && $assignmentForBreakManagement->shift)
             ? ($assignmentForBreakManagement->shift->grace_period ?? 0)
             : 0;
 
-        // Check if its Flexible Shift - safe access
-        $isFlexible = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
-            ? ($assignmentForBreakManagement->shift->is_flexible ?? false)
+        // ✅ UPDATED: Check if its Flexible Shift - treat rest days as flexible
+        $isFlexible = $assignmentForBreakManagement
+            ? ($assignmentForBreakManagement->is_rest_day || ($assignmentForBreakManagement->shift && $assignmentForBreakManagement->shift->is_flexible))
             : false;
 
         // API response
@@ -436,8 +447,8 @@ class AttendanceEmployeeController extends Controller
                 'subBlocked' => $subBlocked,
                 'subBlockMessage' => $subBlockMessage,
                 'currentActiveAssignment' => $currentActiveAssignment,
-                'allowedMinutesBeforeClockIn' => $nextAssignment?->shift?->allowed_minutes_before_clock_in ?? 0,
-                'shiftName' => $nextAssignment?->shift?->name ?? 'Current Shift',
+                'allowedMinutesBeforeClockIn' => $nextAssignment && !$nextAssignment->is_rest_day && $nextAssignment->shift ? ($nextAssignment->shift->allowed_minutes_before_clock_in ?? 0) : 0,
+                'shiftName' => $nextAssignment ? ($nextAssignment->is_rest_day ? 'Rest Day' : ($nextAssignment->shift->name ?? 'Current Shift')) : 'Current Shift',
             ]
         );
     }
@@ -481,35 +492,47 @@ class AttendanceEmployeeController extends Controller
         $assignments = ShiftAssignment::with('shift')
             ->where('user_id', $user->id)
             ->get()
-
-            // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
-                // ✅ FIX: Check if shift exists before proceeding
+                // ✅ FIX: Allow rest day assignments
+                if ($assignment->is_rest_day) {
+                    // Check if rest day is valid for today
+                    if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
+                        return false;
+                    }
+
+                    if ($assignment->type === 'recurring') {
+                        $start = Carbon::parse($assignment->start_date);
+                        $end = $assignment->end_date ? Carbon::parse($assignment->end_date) : now();
+                        return $start->lte($today) && $end->gte($today) && in_array($todayDay, $assignment->days_of_week);
+                    }
+
+                    if ($assignment->type === 'custom') {
+                        return in_array($today, $assignment->custom_dates ?? []);
+                    }
+
+                    return false;
+                }
+
+                // Regular shift validation
                 if (!$assignment->shift) {
                     Log::warning('ShiftAssignment has no related shift during clock-in', [
                         'assignment_id' => $assignment->id,
                         'user_id' => $assignment->user_id,
                         'shift_id' => $assignment->shift_id
                     ]);
-                    return false; // Skip assignments with missing shifts
+                    return false;
                 }
 
-                // skip excluded dates
                 if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
                     return false;
                 }
 
-                // recurring
                 if ($assignment->type === 'recurring') {
                     $start = Carbon::parse($assignment->start_date);
-                    $end   = $assignment->end_date
-                        ? Carbon::parse($assignment->end_date)
-                        : now();
-                    return $start->lte($today)
-                        && $end->gte($today)
-                        && in_array($todayDay, $assignment->days_of_week);
+                    $end = $assignment->end_date ? Carbon::parse($assignment->end_date) : now();
+                    return $start->lte($today) && $end->gte($today) && in_array($todayDay, $assignment->days_of_week);
                 }
-                // custom
+
                 if ($assignment->type === 'custom') {
                     return in_array($today, $assignment->custom_dates ?? []);
                 }
@@ -519,37 +542,39 @@ class AttendanceEmployeeController extends Controller
 
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
-                $shift = $assignment->shift;
-
-                // ✅ FIX: Additional safety check for shift existence
-                if (!$shift) {
-                    return false; // Skip if shift doesn't exist
+                // ✅ Skip time filter for rest days
+                if ($assignment->is_rest_day) {
+                    return true;
                 }
 
-                // If flexible, always allow
+                $shift = $assignment->shift;
+                if (!$shift) {
+                    return false;
+                }
+
                 if ($shift->is_flexible) {
                     return true;
                 }
 
                 if (!$shift->start_time || !$shift->end_time) {
-                    return true; // if missing times, skip this filter
+                    return true;
                 }
 
                 $start = Carbon::parse("{$today} {$shift->start_time}");
                 $end = Carbon::parse("{$today} {$shift->end_time}");
 
-                // Handle night shifts that cross midnight
                 if ($end->lte($start)) {
-                    $end->addDay(); // Move end time to next day
+                    $end->addDay();
                 }
 
-                // keep only if now is before or equal end time
                 return $now->lte($end);
             })
 
             //  Sort by shift start time (flexible shifts will have null, so sort last)
             ->sortBy(function ($assignment) {
-                // ✅ FIX: Safe access to shift properties
+                if ($assignment->is_rest_day) {
+                    return '00:00:00'; // Prioritize rest days
+                }
                 return $assignment->shift ? ($assignment->shift->start_time ?? '99:99:99') : '99:99:99';
             });
 
@@ -559,8 +584,9 @@ class AttendanceEmployeeController extends Controller
 
         // Check if it's a rest day today (even if shift matches)
         $restDayAssignment = $assignments->firstWhere('is_rest_day', true);
-        if ($restDayAssignment) {
-            return response()->json(['message' => 'Today is marked as a rest day.'], 403);
+
+        if ($restDayAssignment && !$settings->rest_day_time_in_allowed) {
+            return response()->json(['message' => 'Clock-in on rest days is not allowed. Please contact your administrator.'], 403);
         }
 
         // Check existing attendance for today
@@ -573,108 +599,121 @@ class AttendanceEmployeeController extends Controller
             return response()->json(['message' => 'You already clocked in your current shift and haven\'t clocked out.'], 403);
         }
 
-        // Find the next available shift assignment
-        $nextAssignment = $assignments->first(function ($assignment) use ($user, $today) {
-            $alreadyClocked = Attendance::where('user_id', $user->id)
-                ->where('shift_id', $assignment->shift_id)
-                ->where('shift_assignment_id', $assignment->id)
-                ->where('attendance_date', $today)
-                ->exists();
+        // ✅ Prioritize rest day if settings allow
+        if ($restDayAssignment && $settings->rest_day_time_in_allowed) {
+            $nextAssignment = $restDayAssignment;
+        } else {
+            // Find the next available shift assignment
+            $nextAssignment = $assignments->first(function ($assignment) use ($user, $today) {
+                if ($assignment->is_rest_day) {
+                    return false; // Skip rest days if not prioritized
+                }
 
-            return !$alreadyClocked;
-        });
+                $alreadyClocked = Attendance::where('user_id', $user->id)
+                    ->where('shift_id', $assignment->shift_id)
+                    ->where('shift_assignment_id', $assignment->id)
+                    ->where('attendance_date', $today)
+                    ->exists();
 
-        // ADDITION: Check if already time in for this shift
-        if ($nextAssignment) {
-            $alreadyTimeIn = Attendance::where('user_id', $user->id)
-                ->where('shift_id', $nextAssignment->shift_id)
-                ->where('shift_assignment_id', $nextAssignment->id)
-                ->where('attendance_date', $today)
-                ->exists();
-
-            if ($alreadyTimeIn) {
-                return response()->json(['message' => 'You have already time in for this shift.'], 403);
-            }
+                return !$alreadyClocked;
+            });
         }
 
         if (!$nextAssignment) {
             return response()->json(['message' => 'All shifts already clocked in today.'], 403);
         }
 
-        if (!$nextAssignment->shift) {
-            return response()->json([
-                'message' => 'Shift configuration not found for this assignment.'
-            ], 403);
-        }
-
-        $shift = $nextAssignment->shift;
-        $isFlexible = $shift && $shift->is_flexible;
-
-        if (!$isFlexible && $shift->start_time && $shift->allowed_minutes_before_clock_in !== null) {
-            $allowedMinutesBefore = (int) $shift->allowed_minutes_before_clock_in;
-
-            // If allowed_minutes_before_clock_in is 0, no restriction (can clock in anytime)
-            if ($allowedMinutesBefore > 0) {
-                $shiftStart = Carbon::parse("{$today} {$shift->start_time}");
-                $earliestAllowedTime = $shiftStart->copy()->subMinutes($allowedMinutesBefore);
-
-                if ($now->lessThan($earliestAllowedTime)) {
-                    $timeUntilAllowed = $now->diffInMinutes($earliestAllowedTime);
-                    $allowedTime = $earliestAllowedTime->format('g:i A');
-
-                    return response()->json([
-                        'message' => "You can only clock in starting at {$allowedTime}.",
-                        'earliest_allowed_time' => $allowedTime,
-                        'minutes_until_allowed' => $timeUntilAllowed
-                    ], 403);
-                }
-            }
-        }
-
-        // Grace Period & Late Computation
-        $graceMin    = $isFlexible ? 0 : ($shift->grace_period ?? 0);
-        $shiftStart  = $isFlexible || !$shift->start_time ? null : Carbon::parse("{$today} {$shift->start_time}");
-        $lateMinutes = 0;
-
-        if (!$isFlexible && $shiftStart && $now->greaterThan($shiftStart)) {
-            $lateMinutes = floor($shiftStart->diffInMinutes($now, false));
-        }
-
-        if ($isFlexible) {
+        // ✅ Handle rest day clock-in differently
+        if ($nextAssignment->is_rest_day) {
+            // Rest day logic - no shift validation needed
+            $shift = null;
+            $isFlexible = true; // Treat rest days as flexible
+            $graceMin = 0;
+            $shiftStart = null;
+            $lateMinutes = 0;
             $status = 'present';
             $totalLateMinutes = 0;
-        } else {
-            if ($lateMinutes > $graceMin) {
-                $status            = 'late';
-                $totalLateMinutes  = $lateMinutes;
-            } else {
-                $status            = 'present';
-                $totalLateMinutes  = 0;
-            }
-        }
+            $lateReason = null; // No late reason for rest days
 
-        // Late Status Box (Late Reason)
-        $lateReason = null;
-        if ($settings->enable_late_status_box && $status === 'late') {
-            if (! $request->filled('late_status_reason')) {
+            Log::info('Rest day clock-in', [
+                'user_id' => $user->id,
+                'assignment_id' => $nextAssignment->id,
+                'date' => $today
+            ]);
+        } else {
+            // Regular shift logic
+            if (!$nextAssignment->shift) {
                 return response()->json([
-                    'message' => 'Please provide a reason for being late.'
-                ], 422);
+                    'message' => 'Shift configuration not found for this assignment.'
+                ], 403);
             }
-            $lateReason = $request->input('late_status_reason');
+
+            $shift = $nextAssignment->shift;
+            $isFlexible = $shift && $shift->is_flexible;
+
+            if (!$isFlexible && $shift->start_time && $shift->allowed_minutes_before_clock_in !== null) {
+                $allowedMinutesBefore = (int) $shift->allowed_minutes_before_clock_in;
+
+                if ($allowedMinutesBefore > 0) {
+                    $shiftStart = Carbon::parse("{$today} {$shift->start_time}");
+                    $earliestAllowedTime = $shiftStart->copy()->subMinutes($allowedMinutesBefore);
+
+                    if ($now->lessThan($earliestAllowedTime)) {
+                        $timeUntilAllowed = $now->diffInMinutes($earliestAllowedTime);
+                        $allowedTime = $earliestAllowedTime->format('g:i A');
+
+                        return response()->json([
+                            'message' => "You can only clock in starting at {$allowedTime}.",
+                            'earliest_allowed_time' => $allowedTime,
+                            'minutes_until_allowed' => $timeUntilAllowed
+                        ], 403);
+                    }
+                }
+            }
+
+            // Grace Period & Late Computation
+            $graceMin = $isFlexible ? 0 : ($shift->grace_period ?? 0);
+            $shiftStart = $isFlexible || !$shift->start_time ? null : Carbon::parse("{$today} {$shift->start_time}");
+            $lateMinutes = 0;
+
+            if (!$isFlexible && $shiftStart && $now->greaterThan($shiftStart)) {
+                $lateMinutes = floor($shiftStart->diffInMinutes($now, false));
+            }
+
+            if ($isFlexible) {
+                $status = 'present';
+                $totalLateMinutes = 0;
+            } else {
+                if ($lateMinutes > $graceMin) {
+                    $status            = 'late';
+                    $totalLateMinutes  = $lateMinutes;
+                } else {
+                    $status            = 'present';
+                    $totalLateMinutes  = 0;
+                }
+            }
+
+            // Late Status Box (Late Reason)
+            $lateReason = null;
+            if ($settings->enable_late_status_box && $status === 'late') {
+                if (!$request->filled('late_status_reason')) {
+                    return response()->json([
+                        'message' => 'Please provide a reason for being late.'
+                    ], 422);
+                }
+                $lateReason = $request->input('late_status_reason');
+            }
         }
 
         // Require Photo
         $photoPath = null;
         if ($settings->require_photo_capture) {
-            if (! $request->hasFile('time_in_photo')) {
+            if (!$request->hasFile('time_in_photo')) {
                 return response()->json([
                     'message' => 'Photo is required before clock-in.'
                 ], 422);
             }
-            $photoPath = $request
-                ->file('time_in_photo')
-                ->store('attendance_photos', 'public');
+            $photoPath = $request->file('time_in_photo')->store('attendance_photos', 'public');
         }
 
         // Geotagging Handling
@@ -833,33 +872,41 @@ class AttendanceEmployeeController extends Controller
 
         // Create Attendance
         $attendance = Attendance::create([
-            'user_id'             => $user->id,
-            'shift_id'            => $nextAssignment->shift_id,
+            'user_id' => $user->id,
+            'shift_id' => $nextAssignment->shift_id, // Will be null for rest days
             'shift_assignment_id' => $nextAssignment->id,
-            'geofence_id'         => $usedFenceId,
-            'attendance_date'     => $today,
-            'date_time_in'        => $now,
-            'status'              => $status,
-            'total_late_minutes'  => $totalLateMinutes,
-            'clock_in_method'     => $request->input('clock_in_method') === 'Timora Mobile App' ? 'Timora Mobile App' : $device,
-            'time_in_photo_path'  => $photoPath,
-            'time_in_latitude'    => $latitude,
-            'time_in_longitude'   => $longitude,
-            'late_status_box'     => $lateReason,
-            'is_holiday'          => $isHoliday,
-            'holiday_id'          => $holidayId,
+            'geofence_id' => $usedFenceId ?? null,
+            'attendance_date' => $today,
+            'date_time_in' => $now,
+            'status' => $status,
+            'total_late_minutes' => $totalLateMinutes,
+            'clock_in_method' => $request->input('clock_in_method') === 'Timora Mobile App' ? 'Timora Mobile App' : $device,
+            'time_in_photo_path' => $photoPath,
+            'time_in_latitude' => $latitude,
+            'time_in_longitude' => $longitude,
+            'late_status_box' => $lateReason,
+            'is_rest_day' => $nextAssignment->is_rest_day, // ✅ Set rest day flag
+            'is_holiday' => $isHoliday ?? false,
+            'holiday_id' => $holidayId ?? null,
         ]);
 
         // Shift Name
-        $shiftName = $shift->name ?? 'Unknown Shift';
+        $shiftName = $nextAssignment->is_rest_day
+            ? 'Rest Day'
+            : ($shift->name ?? 'Unknown Shift');
 
-        $message = $attendance->is_holiday
-            ? "Holiday Clock-In successful for “{$shiftName}”"
-            : "Clock-In successful for “{$shiftName}”";
+        if ($nextAssignment->is_rest_day) {
+            $message = 'Rest Day Clock-In successful. Your hours will be calculated based on your actual work time.';
+        } else {
+            // Use safe interpolation for the shift name
+            $message = $attendance->is_holiday
+                ? "Holiday Clock-In successful for {$shiftName}"
+                : "Clock-In successful for {$shiftName}";
+        }
 
         return response()->json([
             'message' => $message,
-            'data'    => $attendance,
+            'data' => $attendance,
         ]);
     }
 

@@ -373,14 +373,15 @@ class AttendanceAdminController extends Controller
 
         try {
             $data = $request->validate([
-                'attendance_date'    => 'required|date',
-                'date_time_in'       => 'required|date_format:H:i',
-                'date_time_out'      => 'required|date_format:H:i',
-                'total_late_minutes' => 'nullable|integer',
-                'total_work_minutes' => 'nullable|integer',
-                'total_night_diff_minutes' => 'nullable|integer',
-                'status'             => 'nullable|string',
+                'attendance_date'         => 'required|date',
+                'date_time_in'            => 'required|date_format:H:i',
+                'date_time_out'           => 'required|date_format:H:i',
+                'total_late_minutes'      => 'nullable|integer',
+                'total_work_minutes'      => 'nullable|integer',
+                'total_night_diff_minutes'=> 'nullable|integer',
                 'total_undertime_minutes' => 'nullable|integer',
+                'status'                  => 'nullable|string',
+                'is_rest_day'             => 'nullable|boolean',
             ]);
 
             $attendance = Attendance::findOrFail($id);

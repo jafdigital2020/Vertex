@@ -34114,6 +34114,18 @@
                                 </div>
                             </div>
                             <div class="col-md-12">
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <label class="form-label mb-0">Rest Day</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="isRestDaySwitch" name="is_rest_day">
+                                            <label class="form-check-label" for="isRestDaySwitch"></label>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Mark this attendance as rest day work</small>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
                                 <div class="mb-3 ">
                                     <label class="form-label">Status</label>
                                         <input type="text" class="form-control" name="status" id="attendanceStatus" readonly>

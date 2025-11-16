@@ -14,7 +14,22 @@
           <td>
               {{ $att->attendance_date->format('Y-m-d') }}
           </td>
-          <td>{{ $att->shift->name ?? '-' }}</td>
+          <td>
+              @if ($att->is_rest_day)
+                  <span class="badge badge-info-transparent d-inline-flex align-items-center">
+                      <i class="ti ti-calendar-off me-1"></i>Rest Day
+                  </span>
+              @elseif ($att->is_holiday)
+                  <span class="badge badge-warning-transparent d-inline-flex align-items-center">
+                      <i class="ti ti-confetti me-1"></i>Holiday
+                      @if ($att->shift)
+                          <span class="ms-1">({{ $att->shift->name }})</span>
+                      @endif
+                  </span>
+              @else
+                  {{ $att->shift->name ?? '-' }}
+              @endif
+          </td>
           <td>{{ $att->time_only }}</td>
           <td>
               <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
@@ -55,8 +70,9 @@
               @if ($att->time_in_photo_path || $att->time_out_photo_path)
                   <div class="btn-group" style="position: static; overflow: visible;">
                       <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
-                          data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-container="body">
-                          View Photo
+                          data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-container="body"
+                          title="View Photo" aria-expanded="false">
+                          <i class="ti ti-camera fs-15"></i>
                       </button>
                       <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
                           @if ($att->time_in_photo_path)
@@ -81,8 +97,8 @@
               @if (($att->time_in_latitude && $att->time_in_longitude) || ($att->time_out_latitude && $att->time_out_longitude))
                   <div class="btn-group" style="position: static; overflow: visible;">
                       <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
-                          data-bs-toggle="dropdown">
-                          View Location
+                          data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="View Location">
+                          <i class="ti ti-map-pin fs-15"></i>
                       </button>
                       <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
                           @if ($att->time_in_latitude && $att->time_in_longitude)
@@ -111,8 +127,9 @@
               @if ($att->clock_in_method || $att->clock_out_method)
                   <div class="btn-group" style="position: static; overflow: visible;">
                       <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
-                          data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-container="body">
-                          View Device
+                          data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-container="body"
+                          title="View Device" aria-label="View Device">
+                          <i class="ti ti-device-mobile fs-15"></i>
                       </button>
                       <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
                           @if ($att->clock_in_method)
