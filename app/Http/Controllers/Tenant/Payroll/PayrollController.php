@@ -2113,33 +2113,23 @@ class PayrollController extends Controller
     {
         // Preload user branch PhilHealth configuration and salary details
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
-        $philhealthTable = PhilhealthContribution::orderBy('min_salary', 'asc')->get();
+
+        // ✅ Order by max_salary DESC to get highest bracket first
+        $philhealthTable = PhilhealthContribution::orderBy('max_salary', 'desc')->get();
 
         $result = [];
         foreach ($userIds as $userId) {
-            Log::info('PhilHealth Contribution: Processing user', ['user_id' => $userId]);
 
             $user = $users[$userId] ?? null;
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
             $salaryDetail = $user ? $user->salaryDetail : null;
 
-            $philhealthType = $branch->philhealth_contribution_type ?? 'system'; // Default to system
+            $philhealthType = $branch->philhealth_contribution_type ?? 'system';
             $fixedPhilhealthAmount = $branch->fixed_philhealth_amount ?? 0;
 
-            Log::info('PhilHealth Contribution: Branch and SalaryDetail configuration', [
-                'user_id' => $userId,
-                'branch_philhealth_contribution_type' => $philhealthType,
-                'branch_fixed_philhealth_amount' => $fixedPhilhealthAmount,
-                'has_user' => !is_null($user),
-                'has_branch' => !is_null($branch),
-                'has_salary_detail' => !is_null($salaryDetail),
-                'salary_detail_philhealth_contribution' => $salaryDetail->philhealth_contribution ?? null,
-                'salary_detail_philhealth_override' => $salaryDetail->philhealth_contribution_override ?? null,
-            ]);
-
-            // ✅ SIMPLIFIED: Apply philhealthOption logic first
+            // ✅ Apply philhealthOption logic first
             if ($philhealthOption === 'no') {
-                Log::info('PhilHealth Contribution: No deduction selected', ['user_id' => $userId]);
+
                 $result[$userId] = [
                     'employer_total' => 0,
                     'employee_total' => 0,
@@ -2148,7 +2138,7 @@ class PayrollController extends Controller
                 continue;
             }
 
-            // ✅ Calculate monthly salary equivalent for system computation
+            // ✅ Calculate monthly salary equivalent
             $monthlySalaryEquivalent = 0;
             $stype = $salaryData->get($userId)['salary_type'] ?? 'monthly_fixed';
             $basicSalary = $salaryData->get($userId)['basic_salary'] ?? 0;
@@ -2172,44 +2162,61 @@ class PayrollController extends Controller
                 if ($workedDaysPerYear > 0) {
                     $monthlySalaryEquivalent = ($basicSalary * $workedDaysPerYear) / 12;
                 } else {
-                    $monthlySalaryEquivalent = $basicSalary * 22; // Fallback: 22 working days
+                    $monthlySalaryEquivalent = $basicSalary * 22;
                 }
             } elseif ($stype === 'hourly_rate') {
                 if ($workedDaysPerYear > 0) {
                     $dailyEquivalent = $basicSalary * 8;
                     $monthlySalaryEquivalent = ($dailyEquivalent * $workedDaysPerYear) / 12;
                 } else {
-                    $monthlySalaryEquivalent = $basicSalary * 8 * 22; // Fallback: 22 days, 8 hours
+                    $monthlySalaryEquivalent = $basicSalary * 8 * 22;
                 }
             }
 
-            Log::info('PhilHealth Contribution: Monthly salary equivalent calculated', [
-                'user_id' => $userId,
-                'salary_type' => $stype,
-                'basic_salary' => $basicSalary,
-                'worked_days_per_year' => $workedDaysPerYear,
-                'monthly_salary_equivalent' => $monthlySalaryEquivalent,
-            ]);
-
-            // ✅ Determine final PhilHealth amounts based on configuration
+            // ✅ Determine final PhilHealth amounts
             $finalPhilhealthEmployeeAmount = 0;
             $finalPhilhealthEmployerAmount = 0;
             $finalPhilhealthTotalAmount = 0;
+
+            // ✅ HELPER FUNCTION: Find PhilHealth bracket or use highest ceiling
+            $findPhilhealthContribution = function ($salary) use ($philhealthTable) {
+                // First, try to find exact bracket match
+                $contribution = $philhealthTable->first(function ($item) use ($salary) {
+                    return $salary >= $item->min_salary && $salary <= $item->max_salary;
+                });
+
+                // ✅ If no match found, check if salary exceeds highest ceiling
+                if (!$contribution) {
+                    $highestBracket = $philhealthTable->first(); // Already ordered DESC by max_salary
+
+                    if ($salary > $highestBracket->max_salary) {
+                        // ✅ Salary exceeds ceiling - use highest bracket
+                        Log::info('PhilHealth: Salary exceeds ceiling, using highest bracket', [
+                            'salary' => $salary,
+                            'highest_ceiling' => $highestBracket->max_salary,
+                            'employee_share' => $highestBracket->employee_share,
+                        ]);
+                        return $highestBracket;
+                    }
+
+                    // ✅ If salary is below minimum, use lowest bracket
+                    $lowestBracket = $philhealthTable->sortBy('min_salary')->first();
+                    if ($salary < $lowestBracket->min_salary) {
+
+                        return $lowestBracket;
+                    }
+                }
+
+                return $contribution;
+            };
 
             // Handle manual override logic for branch = manual
             if ($philhealthType === 'manual' && $salaryDetail) {
                 $userPhilhealthContributionType = $salaryDetail->philhealth_contribution ?? 'system';
 
                 if ($userPhilhealthContributionType === 'system') {
-                    // User chose system computation
-                    $philhealthContribution = $philhealthTable->first(function ($item) use ($monthlySalaryEquivalent) {
-                        return $monthlySalaryEquivalent >= $item->min_salary && $monthlySalaryEquivalent <= $item->max_salary;
-                    });
-
-                    // If no match and below minimum, use lowest bracket
-                    if (!$philhealthContribution && $monthlySalaryEquivalent < $philhealthTable->first()->min_salary) {
-                        $philhealthContribution = $philhealthTable->first();
-                    }
+                    // ✅ User chose system computation - use helper function
+                    $philhealthContribution = $findPhilhealthContribution($monthlySalaryEquivalent);
 
                     if ($philhealthContribution) {
                         $finalPhilhealthEmployeeAmount = $philhealthContribution->employee_share;
@@ -2217,58 +2224,28 @@ class PayrollController extends Controller
                         $finalPhilhealthTotalAmount = $philhealthContribution->monthly_premium;
                     }
 
-                    Log::info('PhilHealth Contribution: User chose system (branch=manual)', [
-                        'user_id' => $userId,
-                        'philhealth_contribution_found' => !is_null($philhealthContribution),
-                        'employee_share' => $finalPhilhealthEmployeeAmount,
-                        'employer_share' => $finalPhilhealthEmployerAmount,
-                        'monthly_premium' => $finalPhilhealthTotalAmount,
-                    ]);
                 } elseif ($userPhilhealthContributionType === 'manual') {
                     // User chose manual - use override amount
                     $finalPhilhealthEmployeeAmount = $salaryDetail->philhealth_contribution_override ?? 0;
-                    $finalPhilhealthEmployerAmount = $finalPhilhealthEmployeeAmount; // Equal split
+                    $finalPhilhealthEmployerAmount = $finalPhilhealthEmployeeAmount;
                     $finalPhilhealthTotalAmount = $finalPhilhealthEmployeeAmount * 2;
 
-                    Log::info('PhilHealth Contribution: User chose manual override', [
-                        'user_id' => $userId,
-                        'override_amount' => $finalPhilhealthEmployeeAmount,
-                    ]);
                 }
             } elseif ($philhealthType === 'fixed') {
                 // Branch uses fixed amount
                 $finalPhilhealthEmployeeAmount = $fixedPhilhealthAmount;
-                $finalPhilhealthEmployerAmount = $fixedPhilhealthAmount; // Equal split
+                $finalPhilhealthEmployerAmount = $fixedPhilhealthAmount;
                 $finalPhilhealthTotalAmount = $fixedPhilhealthAmount * 2;
 
-                Log::info('PhilHealth Contribution: Branch uses fixed amount', [
-                    'user_id' => $userId,
-                    'fixed_amount' => $fixedPhilhealthAmount,
-                ]);
             } else {
-                // Default: system computation
-                $philhealthContribution = $philhealthTable->first(function ($item) use ($monthlySalaryEquivalent) {
-                    return $monthlySalaryEquivalent >= $item->min_salary && $monthlySalaryEquivalent <= $item->max_salary;
-                });
-
-                // If no match and below minimum, use lowest bracket
-                if (!$philhealthContribution && $monthlySalaryEquivalent < $philhealthTable->first()->min_salary) {
-                    $philhealthContribution = $philhealthTable->first();
-                }
+                // ✅ Default: system computation - use helper function
+                $philhealthContribution = $findPhilhealthContribution($monthlySalaryEquivalent);
 
                 if ($philhealthContribution) {
                     $finalPhilhealthEmployeeAmount = $philhealthContribution->employee_share;
                     $finalPhilhealthEmployerAmount = $philhealthContribution->employer_share;
                     $finalPhilhealthTotalAmount = $philhealthContribution->monthly_premium;
                 }
-
-                Log::info('PhilHealth Contribution: Default system computation', [
-                    'user_id' => $userId,
-                    'philhealth_contribution_found' => !is_null($philhealthContribution),
-                    'employee_share' => $finalPhilhealthEmployeeAmount,
-                    'employer_share' => $finalPhilhealthEmployerAmount,
-                    'monthly_premium' => $finalPhilhealthTotalAmount,
-                ]);
             }
 
             // ✅ Apply philhealthOption scaling
@@ -2277,16 +2254,6 @@ class PayrollController extends Controller
                 $employeeTotal = round($finalPhilhealthEmployeeAmount / 2, 2);
                 $employerTotal = round($finalPhilhealthEmployerAmount / 2, 2);
                 $totalContribution = round($finalPhilhealthTotalAmount / 2, 2);
-
-                Log::info('PhilHealth Contribution: Semi-monthly (yes) calculation', [
-                    'user_id' => $userId,
-                    'original_employee' => $finalPhilhealthEmployeeAmount,
-                    'original_employer' => $finalPhilhealthEmployerAmount,
-                    'original_total' => $finalPhilhealthTotalAmount,
-                    'final_employee' => $employeeTotal,
-                    'final_employer' => $employerTotal,
-                    'final_total' => $totalContribution,
-                ]);
 
                 $result[$userId] = [
                     'employer_total' => $employerTotal,
@@ -2300,25 +2267,9 @@ class PayrollController extends Controller
                     'employee_total' => round($finalPhilhealthEmployeeAmount, 2),
                     'total_contribution' => round($finalPhilhealthTotalAmount, 2),
                 ];
-
-                Log::info('PhilHealth Contribution: Full monthly calculation', [
-                    'user_id' => $userId,
-                    'employer_total' => $finalPhilhealthEmployerAmount,
-                    'employee_total' => $finalPhilhealthEmployeeAmount,
-                    'total_contribution' => $finalPhilhealthTotalAmount,
-                ]);
             }
 
-            Log::info('PhilHealth Contribution: Final result for user', [
-                'user_id' => $userId,
-                'result' => $result[$userId],
-            ]);
         }
-
-        Log::info('PhilHealth Contribution: Calculation completed', [
-            'total_users_processed' => count($userIds),
-            'results' => $result,
-        ]);
 
         return $result;
     }
@@ -2358,7 +2309,6 @@ class PayrollController extends Controller
                 if ($userPagibigType === 'manual') {
                     // Use override amount from salary detail
                     $amount = $salaryDetail->pagibig_contribution_override ?? 200;
-
                 } else {
                     // User chose system - use 200
                     $amount = 200;
