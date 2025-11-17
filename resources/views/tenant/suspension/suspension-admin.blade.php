@@ -125,9 +125,15 @@
                                                         <td class="text-center">{{ $sus->employee->employmentDetail->department->department_name ?? '' }}</td>
                                                         <td class="text-center">{{ $sus->employee->employmentDetail->designation->designation_name ?? '' }}</td>
                                                         <td class="text-center">
-                                                            <span class="badge bg-{{ getStatusColor($sus->status) }}">
-                                                                {{ $sus->status ?? '' }}
-                                                            </span>
+                                                            @if($sus->status === 'suspended' && $sus->suspension_start_date === null && $sus->suspension_end_date === null)
+                                                                <span class="badge bg-secondary">
+                                                                    For Suspension
+                                                                </span>
+                                                            @else
+                                                                <span class="badge bg-{{ getStatusColor($sus->status) }}">
+                                                                    {{ $sus->status ?? '' }}
+                                                                </span>
+                                                            @endif
                                                         </td>
                                                         <td class="text-center">{{ $sus->suspension_type ?? '' }}</td>
                                                         <td class="text-center">{{ $sus->suspension_start_date ?? '' }}</td>
