@@ -128,13 +128,13 @@
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="flex-shrink-0">
                                             <div class="avatar avatar-md bg-secondary bg-opacity-10 rounded-2">
-                                                <i class="ti ti-users fs-16 text-secondary"></i>
+                                                <i class="ti ti-users fs-20 text-secondary"></i>
                                             </div>
                                         </div>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-light border-0" type="button"
                                                 data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical text-muted fs-12"></i>
+                                                <i class="ti ti-dots-vertical text-muted fs-20"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('employees') }}">View All</a>
@@ -143,10 +143,10 @@
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-2">
+                                    <div class="mb-2 mt-4">
                                         <h4 class="fw-bold mb-1 text-dark">{{ $totalActiveUsers }}</h4>
                                         <p class="text-muted mb-0 fs-12">
-                                            <span class="fw-medium">{{ $totalUsers }}</span> Total Employees
+                                            <span class="fw-medium"></span> Total Employees
                                         </p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between">
@@ -156,8 +156,8 @@
                                                 class="ti ti-trending-up me-1"></i>{{ number_format($totalUserPercentage, 1) }}%
                                         </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 3px;">
-                                        <div class="progress-bar bg-primary" style="width: {{ $totalUserPercentage }}%">
+                                    <div class="progress mt-2" style="height: 5px;">
+                                        <div class="progress-bar bg-success" style="width: {{ $totalUserPercentage }}%">
                                         </div>
                                     </div>
                                 </div>
@@ -171,13 +171,13 @@
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="flex-shrink-0">
                                             <div class="avatar avatar-md bg-success bg-opacity-10 rounded-2">
-                                                <i class="ti ti-check fs-16 text-success"></i>
+                                                <i class="ti ti-check fs-20 text-success"></i>
                                             </div>
                                         </div>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-light border-0" type="button"
                                                 data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical text-muted fs-12"></i>
+                                                <i class="ti ti-dots-vertical text-muted fs-20"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('attendance-admin') }}">View
@@ -186,7 +186,7 @@
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-2">
+                                    <div class="mb-2 mt-4">
                                         <h4 class="fw-bold mb-1 text-dark">{{ $presentTodayUsersCount }}</h4>
                                         <p class="text-muted mb-0 fs-12">Present Today</p>
                                     </div>
@@ -197,7 +197,7 @@
                                                 class="ti ti-trending-up me-1"></i>{{ number_format($presentTodayUsersPercentage, 1) }}%
                                         </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 3px;">
+                                    <div class="progress mt-2" style="height: 5px;">
                                         <div class="progress-bar bg-success"
                                             style="width: {{ $presentTodayUsersPercentage }}%"></div>
                                     </div>
@@ -212,13 +212,13 @@
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="flex-shrink-0">
                                             <div class="avatar avatar-md bg-warning bg-opacity-10 rounded-2">
-                                                <i class="ti ti-clock-edit fs-16 text-warning"></i>
+                                                <i class="ti ti-clock-edit fs-20 text-warning"></i>
                                             </div>
                                         </div>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-light border-0" type="button"
                                                 data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical text-muted fs-12"></i>
+                                                <i class="ti ti-dots-vertical text-muted fs-20"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('attendance-admin') }}">View
@@ -227,7 +227,7 @@
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-2">
+                                    <div class="mb-2 mt-4">
                                         <h4 class="fw-bold mb-1 text-dark">{{ $lateTodayUsersCount }}</h4>
                                         <p class="text-muted mb-0 fs-12">Late Arrivals</p>
                                     </div>
@@ -238,7 +238,7 @@
                                                 class="ti ti-clock me-1"></i>{{ number_format($lateTodayUsersPercentage, 1) }}%
                                         </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 3px;">
+                                    <div class="progress mt-2" style="height: 5px;">
                                         <div class="progress-bar bg-warning"
                                             style="width: {{ $lateTodayUsersPercentage }}%"></div>
                                     </div>
@@ -253,13 +253,13 @@
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="flex-shrink-0">
                                             <div class="avatar avatar-md bg-info bg-opacity-10 rounded-2">
-                                                <i class="ti ti-beach fs-16 text-info"></i>
+                                                <i class="ti ti-beach fs-20 text-info"></i>
                                             </div>
                                         </div>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-light border-0" type="button"
                                                 data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical text-muted fs-12"></i>
+                                                <i class="ti ti-dots-vertical text-muted fs-20"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('leave-admin') }}">View
@@ -269,7 +269,7 @@
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-2">
+                                    <div class="mb-2 mt-4">
                                         <h4 class="fw-bold mb-1 text-dark">{{ $leaveTodayUsers }}</h4>
                                         <p class="text-muted mb-0 fs-12">Employees on Leave</p>
                                     </div>
@@ -279,7 +279,7 @@
                                             <i class="ti ti-beach me-1"></i>On Leave
                                         </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 3px;">
+                                    <div class="progress mt-2" style="height: 5px;">
                                         <div class="progress-bar bg-info"
                                             style="width: {{ $totalUsers > 0 ? ($leaveTodayUsers / $totalUsers) * 100 : 0 }}%">
                                         </div>
@@ -298,8 +298,8 @@
                 <!-- Birthdays -->
                 <div class="col-xxl-4 col-xl-6 d-flex">
                     <div class="card flex-fill">
-                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap">
-                            <h5 class="mb-2">Birthdays</h5>
+                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-mustard">
+                            <h5 class="mb-2 text-white">Birthdays</h5>
                         </div>
                         <div class="card-body pb-1">
                             <h6 class="mb-2">Today</h6>
@@ -379,8 +379,8 @@
                 <!-- Attendance Overview -->
                 <div class="col-xxl-4 col-xl-6 d-flex">
                     <div class="card flex-fill">
-                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap">
-                            <h5 class="mb-2">Attendance</h5>
+                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-raspberry">
+                            <h5 class="mb-2 text-white">Attendance</h5>
                         </div>
                         <div class="card-body">
                             <div class="chartjs-wrapper-demo position-relative mb-4">
@@ -444,8 +444,8 @@
                 <!-- Clock-In/Out -->
                 <div class="col-xxl-4 col-xl-6 d-flex">
                     <div class="card flex-fill">
-                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap">
-                            <h5 class="mb-2">Clock-In/Out</h5>
+                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-coral">
+                            <h5 class="mb-2 text-white">Clock-In/Out</h5>
                         </div>
                         <div class="card-body">
                             <div>
@@ -1174,12 +1174,12 @@
                                     label: 'Salary (PHP)',
                                     data: monthlyNetPay,
                                     fill: false,
-                                    borderColor: '#0C4B5E',
-                                    backgroundColor: '#0C4B5E',
+                                    borderColor: '#12515D',
+                                    backgroundColor: '#12515D',
                                     tension: 0.3,
                                     pointRadius: 4,
                                     pointBackgroundColor: '#fff',
-                                    pointBorderColor: '#0C4B5E',
+                                    pointBorderColor: '#12515D',
                                     pointHoverRadius: 6,
                                 }]
                             },
@@ -1243,14 +1243,14 @@
                         datasets: [{
                             label: 'Overtime Pay',
                             data: overtimePay,
-                            borderColor: '#FF6384',
-                            backgroundColor: 'rgba(255,99,132,0.1)',
+                            borderColor: '#12515D',
+                            backgroundColor: '#12515D',
                             fill: true,
                             borderWidth: 2,
                             tension: 0.3,
                             pointRadius: 4,
                             pointBackgroundColor: '#fff',
-                            pointBorderColor: '#FF6384',
+                            pointBorderColor: '#12515D',
                             pointHoverRadius: 6,
                         }]
                     },
@@ -1280,10 +1280,7 @@
                                 grid: {
                                     color: '#eee'
                                 },
-                                title: {
-                                    display: true,
-                                    text: 'Amount (PHP)'
-                                },
+
                                 ticks: {
                                     callback: function(value) {
                                         return value.toLocaleString();
