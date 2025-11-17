@@ -167,7 +167,7 @@ class AttendanceRequestAdminController extends Controller
             // Refresh Data
             $req->refresh();
             $req->user->refresh();
-            $req->user->load('employmentDetail.branch', 'employmentDetail.department', 'employmentDetail.designation');
+            $req->user->load('personalInformation', 'employmentDetail.branch', 'employmentDetail.department', 'employmentDetail.designation');
 
             $branchId = optional($req->user->employmentDetail)->branch_id;
             $steps = RequestAttendanceApproval::stepsForBranch($branchId);

@@ -1176,7 +1176,6 @@ class AttendanceAdminController extends Controller
         }
     }
 
-
     public function bulkAction(Request $request)
     {
         $request->validate([
