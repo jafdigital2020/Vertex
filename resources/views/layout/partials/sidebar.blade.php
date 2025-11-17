@@ -88,7 +88,7 @@
                                 <li class="submenu">
 
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('index', 'employee-dashboard', 'deals-dashboard', 'leads-dashboard') ? 'active subdrop' : '' }}">
+                                        class="{{ Request::is('admin-dashboard', 'employee-dashboard', 'deals-dashboard', 'leads-dashboard') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-smart-home"></i>
                                         <span>Dashboard</span>
                                         <span class="badge badge-danger fs-10 fw-medium text-white p-1">Hot</span>
@@ -232,9 +232,12 @@
                                     </a>
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][14]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('attendance-admin') }}"
-                                                    class="{{ Request::is('attendance-admin', 'attendance-admin/bulk-attednance', 'attendance-admin/request-attendance') ? 'active' : '' }}">Attendance
-                                                    (Admin)</a></li>
+                                            <li>
+                                                <a href="{{ route('attendance-admin') }}"
+                                                   class="{{ Request::is('attendance-admin', 'attendance-admin/bulk-attednance', 'attendance-admin/request-attendance') ? 'active' : '' }}">
+                                                    Attendance (Admin)
+                                                </a>
+                                            </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][15]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('attendance-employee') }}"
