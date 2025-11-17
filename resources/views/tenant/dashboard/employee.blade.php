@@ -81,7 +81,7 @@
             <div class="row">
                 <div class="col-xl-4 d-flex">
                     <div class="card position-relative flex-fill">
-                        <div class="card-header bg-dark">
+                        <div class="card-header bg-primary">
                             <div class="d-flex align-items-center">
                                 @if ($authUser->personalInformation && $authUser->personalInformation->profile_picture)
                                     <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
@@ -323,7 +323,7 @@
                                 </div>
                                 <div class="col-sm-12">
                                     <div>
-                                        <a href="{{ route('leave-employees') }}" class="btn btn-dark w-100">Apply New
+                                        <a href="{{ route('leave-employees') }}" class="btn btn-primary w-100">Apply New
                                             Leave</a>
                                     </div>
                                 </div>
@@ -370,7 +370,7 @@
                 {{-- BDAY --}}
                 <div class="col-xl-5 d-flex">
                     <div class="flex-fill">
-                        <div class="card card-bg-5 bg-dark mb-3">
+                        <div class="card card-bg-5 bg-raspberry mb-3">
                             <div class="card-body">
                                 <div class="text-center">
                                     <h5 class="text-white mb-4">Team Birthday</h5>
@@ -421,7 +421,8 @@
                                 <a href="{{ url('holidays') }}" class="btn btn-white btn-sm px-3">View All</a>
                             </div>
                         </div>
-                        <div class="card bg-primary">
+                        {{-- Shift --}}
+                        <div class="card bg-coral">
                             <div class="card-body d-flex align-items-center justify-content-between p-3 flex-wrap gap-3"
                                 id="shift-widget">
                                 <div>
@@ -632,7 +633,7 @@
                         xaxis: {
                             categories: categories
                         },
-                        colors: ['#2563EB'], // Use your brand color
+                        colors: ['#12515D'],
                         plotOptions: {
                             bar: {
                                 borderRadius: 6,

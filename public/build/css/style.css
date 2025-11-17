@@ -137,12 +137,24 @@ ul .btn-primary:not(:disabled):not(.disabled).active:focus {
     background-color: #b53654 !important;
 }
 
+.bg-light-raspberry {
+    background-color: #d87a96 !important;
+}
+
 .bg-coral {
     background-color: #ed7464 !important;
 }
 
+.bg-light-coral {
+    background-color: #f9b8a8 !important;
+}
+
 .bg-mustard {
     background-color: #ffb400 !important;
+}
+
+.bg-light-mustard {
+    background-color: #ffd966 !important;
 }
 
 .bg-primary {
@@ -17337,10 +17349,10 @@ button.swal2-cancel {
 
 /* Modern smooth hover for submenu items */
 .sidebar .sidebar-menu>ul>li>ul>li>a {
-    transition: background-color .22s cubic-bezier(.4,0,.2,1),
-                color .18s cubic-bezier(.4,0,.2,1),
-                transform .18s cubic-bezier(.4,0,.2,1),
-                box-shadow .22s cubic-bezier(.4,0,.2,1);
+    transition: background-color .22s cubic-bezier(.4, 0, .2, 1),
+        color .18s cubic-bezier(.4, 0, .2, 1),
+        transform .18s cubic-bezier(.4, 0, .2, 1),
+        box-shadow .22s cubic-bezier(.4, 0, .2, 1);
     will-change: transform, background-color, box-shadow;
     border-radius: 6px;
 }
@@ -17348,7 +17360,7 @@ button.swal2-cancel {
 /* Hover / focus state */
 .sidebar .sidebar-menu>ul>li>ul>li>a:hover,
 .sidebar .sidebar-menu>ul>li>ul>li>a:focus {
-    background: linear-gradient(90deg,#12515D 0%, #0f4952 100%);
+    background: linear-gradient(90deg, #12515D 0%, #0f4952 100%);
     color: #fff;
     transform: translateX(6px);
     box-shadow: 0 8px 20px rgba(6, 72, 86, 0.12);
@@ -17366,6 +17378,7 @@ button.swal2-cancel {
 .sidebar .sidebar-menu>ul>li>ul>li>a .menu-arrow {
     transition: color .18s ease, opacity .18s ease, transform .18s ease;
 }
+
 .sidebar .sidebar-menu>ul>li>ul>li>a .menu-arrow::before {
     transition: border-color .18s ease;
 }
@@ -17376,6 +17389,7 @@ button.swal2-cancel {
     border-right-color: #fff !important;
     border-bottom-color: #fff !important;
 }
+
 .sidebar .sidebar-menu>ul>li>ul>li>a:hover .menu-arrow,
 .sidebar .sidebar-menu>ul>li>ul>li>a:focus .menu-arrow,
 .sidebar .sidebar-menu>ul>li>ul>li>a:hover .menu-arrow *,
@@ -17389,12 +17403,14 @@ button.swal2-cancel {
     transition: background-color .22s ease, color .18s ease;
     border-radius: 6px;
 }
+
 .sidebar .sidebar-menu>ul>li>ul>li.submenu>a:hover {
-    background: linear-gradient(90deg,#12515D 0%, #0f4952 100%);
+    background: linear-gradient(90deg, #12515D 0%, #0f4952 100%);
 }
 
 /* Respect users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
     .sidebar .sidebar-menu>ul>li>ul>li>a,
     .sidebar .sidebar-menu>ul>li>ul>li>a .menu-arrow,
     .sidebar .sidebar-menu>ul>li>ul>li>a .menu-arrow::before {

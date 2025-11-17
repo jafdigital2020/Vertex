@@ -520,6 +520,11 @@ class DashboardController extends Controller
         $allNotifications = $leaveRequests
             ->concat($overtimes)
             ->concat($officialBusinesses)
+            ->filter(function ($item) {
+                // Only include items where main_date is today or future
+                return Carbon::parse($item['main_date'])->isToday() ||
+                    Carbon::parse($item['main_date'])->isFuture();
+            })
             ->sortByDesc('date')
             ->values();
 

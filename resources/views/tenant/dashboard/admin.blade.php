@@ -306,7 +306,7 @@
                             {{-- Display users with birthdays today --}}
                             @if (count($birthdayTodayUsers) > 0)
                                 @foreach ($birthdayTodayUsers as $user)
-                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3">
+                                    <div class="bg-light-mustard p-2 border border-dashed rounded-top mb-3 text-muted">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div class="d-flex align-items-center">
                                                 <a href="javascript:void(0);" class="avatar">
@@ -330,7 +330,7 @@
                                     </div>
                                 @endforeach
                             @else
-                                <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-center">
+                                <div class="bg-light-mustard p-3 border border-dashed rounded-top mb-3 text-center text-muted w-100" style="width:100%; min-width:100%;">
                                     No Birthdays Today
                                 </div>
                             @endif
@@ -339,7 +339,7 @@
                             <h6 class="mb-2">Upcoming Birthdays</h6>
                             @if (count($nearestBirthdays) > 0)
                                 @foreach ($nearestBirthdays as $nearestBirthday)
-                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3">
+                                    <div class="bg-light-mustard p-2 border border-dashed rounded-top mb-3 text-muted">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div class="d-flex align-items-center">
                                                 <a href="javascript:void(0);" class="avatar">
@@ -366,7 +366,7 @@
                                     </div>
                                 @endforeach
                             @else
-                                <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-center">
+                                <div class="bg-light-mustard p-2 border border-dashed rounded-top mb-3 text-center text-muted w-100" style="width:100%; min-width:100%;">
                                     No Upcoming Birthdays
                                 </div>
                             @endif
@@ -390,6 +390,7 @@
                                     <h3 id="total-attendance-count">0</h3>
                                 </div>
                             </div>
+
                             <h6 class="mb-3">Status</h6>
                             <div class="d-flex align-items-center justify-content-between">
                                 <p class="f-13 mb-2"><i class="ti ti-circle-filled text-success me-1"></i>Present</p>
@@ -515,7 +516,7 @@
                                     </div>
                                 @endforeach
                             </div>
-                            <a href="{{ route('attendance-admin') }}" class="btn btn-light btn-md w-100">View All
+                            <a href="{{ route('attendance-admin') }}" class="btn btn-coral btn-md w-100">View All
                                 Attendance</a>
                         </div>
                     </div>
