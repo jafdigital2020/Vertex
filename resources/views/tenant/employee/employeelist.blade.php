@@ -71,34 +71,45 @@
             </div>
             <!-- /Breadcrumb -->
 
-            <div class="row">
-                <div class="col-lg-3 col-md-6 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-body d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center overflow-hidden">
-                                <div>
-                                    <span class="avatar avatar-lg bg-dark rounded-circle"><i class="ti ti-users"></i></span>
-                                </div>
-                                <div class="ms-2 overflow-hidden">
-                                    <p class="fs-12 fw-medium mb-1 text-truncate">Total Employee</p>
-                                    <h4>{{ str_pad($employees->count(), 2, '0', STR_PAD_LEFT) }}</h4>
-                                </div>
+            <div class="row g-3 mb-4">
+                <!-- Total Employee -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #0f8b8d 0%, #0b6b67 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Total Employee</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($employees->count(), 2, '0', STR_PAD_LEFT) }}</h2>
+                                <small class="text-white-75">Employees</small>
                             </div>
 
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-users" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                </div>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-users" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-body d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center overflow-hidden">
-                                <div>
-                                    <span class="avatar avatar-lg bg-success rounded-circle"><i
-                                            class="ti ti-user-share"></i></span>
-                                </div>
-                                <div class="ms-2 overflow-hidden">
-                                    <p class="fs-12 fw-medium mb-1 text-truncate">Active Employees</p>
-                                    <h4>{{ str_pad(
+
+                <!-- Active Employees -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #21c48a 0%, #14a86a 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Active Employees</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad(
                                         $employees->filter(function ($e) {
                                                 return $e->employmentDetail && $e->employmentDetail->status == 1;
                                             })->count(),
@@ -106,24 +117,36 @@
                                         '0',
                                         STR_PAD_LEFT,
                                     ) }}
-                                    </h4>
+                                </h2>
+                                <small class="text-white-75">Employees</small>
+                            </div>
 
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-share" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                </div>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-share" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-body d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center overflow-hidden">
-                                <div>
-                                    <span class="avatar avatar-lg bg-danger rounded-circle"><i
-                                            class="ti ti-user-pause"></i></span>
-                                </div>
-                                <div class="ms-2 overflow-hidden">
-                                    <p class="fs-12 fw-medium mb-1 text-truncate">InActive Employees</p>
-                                    <h4>{{ str_pad(
+
+                <!-- Inactive Employees -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #a33658 0%, #8b2c48 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Inactive Employees</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad(
                                         $employees->filter(function ($e) {
                                                 return $e->employmentDetail && $e->employmentDetail->status == 0;
                                             })->count(),
@@ -131,47 +154,74 @@
                                         '0',
                                         STR_PAD_LEFT,
                                     ) }}
-                                    </h4>
+                                </h2>
+                                <small class="text-white-75">Employees</small>
+                            </div>
 
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-pause" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                </div>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-pause" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-body d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center overflow-hidden">
-                                <div>
-                                    <span class="avatar avatar-lg bg-info rounded-circle"><i
-                                            class="ti ti-user-plus"></i></span>
-                                </div>
-                                <div class="ms-2 overflow-hidden">
-                                    <p class="fs-12 fw-medium mb-1 text-truncate">New Joiners</p>
-                                    <h4>
-                                        <h4>{{ str_pad(
-                                            $employees->filter(function ($e) {
-                                                    return $e->employmentDetail && \Carbon\Carbon::parse($e->employmentDetail->date_hired)->isSameMonth(now());
-                                                })->count(),
-                                            2,
-                                            '0',
-                                            STR_PAD_LEFT,
-                                        ) }}
-                                        </h4>
 
+                <!-- New Joiners -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #f6b21a 0%, #f09f00 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">New Joiners</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad(
+                                        $employees->filter(function ($e) {
+                                                return $e->employmentDetail &&
+                                                    $e->employmentDetail->date_hired &&
+                                                    \Carbon\Carbon::parse($e->employmentDetail->date_hired)->isSameMonth(now());
+                                            })->count(),
+                                        2,
+                                        '0',
+                                        STR_PAD_LEFT,
+                                    ) }}
+                                </h2>
+                                <small class="text-white-75">Employees</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-plus" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                </div>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-plus" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Employee List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
-                                style="width:200px;">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                oninput="filter();" style="width:200px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -330,6 +380,7 @@
             </div>
 
         </div>
+
 
         @include('layout.partials.footer-company')
 
@@ -1375,7 +1426,7 @@
                         <span class="me-3 fw-medium" id="billing_cycle_label_monthly">Monthly</span>
                         <div class="form-check form-switch form-check-lg">
                             <input class="form-check-input" type="checkbox" role="switch" id="billing_cycle_toggle"
-                                   style="cursor: pointer; width: 3.5rem; height: 1.75rem;">
+                                style="cursor: pointer; width: 3.5rem; height: 1.75rem;">
                         </div>
                         <span class="ms-3 fw-medium" id="billing_cycle_label_yearly">
                             Yearly <span class="badge bg-success ms-1">Save more!</span>
