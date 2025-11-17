@@ -258,11 +258,6 @@ class AttendanceEmployeeController extends Controller
             ->where('user_id', $authUser->id)
             ->get()
 
-            // ✅ REMOVED: Don't filter out rest days without shifts
-            // ->filter(function ($assignment) {
-            //     return $assignment->shift !== null;
-            // })
-
             // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
                 // skip excluded dates
@@ -291,7 +286,7 @@ class AttendanceEmployeeController extends Controller
 
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
-                // ✅ UPDATED: Skip time validation for rest days
+
                 if ($assignment->is_rest_day) {
                     return true;
                 }
@@ -326,7 +321,7 @@ class AttendanceEmployeeController extends Controller
 
             // 3️⃣ Sort by shift start time
             ->sortBy(function ($assignment) {
-                // ✅ UPDATED: Prioritize rest days
+
                 if ($assignment->is_rest_day) {
                     return '00:00:00';
                 }
@@ -1832,34 +1827,68 @@ class AttendanceEmployeeController extends Controller
 
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
+                // ✅ UPDATED: Skip time validation for rest days
+                if ($assignment->is_rest_day) {
+                    return true;
+                }
+
                 $shift = $assignment->shift;
-                if (! $shift->start_time || ! $shift->end_time) {
+
+                // ✅ UPDATED: Keep null check for regular shifts only
+                if (!$shift) {
+                    return false;
+                }
+
+                // If flexible, always allow
+                if ($shift->is_flexible) {
+                    return true;
+                }
+
+                if (!$shift->start_time || !$shift->end_time) {
                     return true; // if missing times, skip this filter
                 }
+
                 $start = Carbon::parse("{$today} {$shift->start_time}");
-                $end   = Carbon::parse("{$today} {$shift->end_time}");
+                $end = Carbon::parse("{$today} {$shift->end_time}");
+
+                // Handle night shifts that cross midnight
+                if ($end->lte($start)) {
+                    $end->addDay(); // Move end time to next day
+                }
+
                 // keep only if now is before or equal end time
                 return $now->lte($end);
             })
 
             // 3️⃣ Sort by shift start time
-            ->sortBy(fn($a) => $a->shift->start_time ?? '00:00:00');
+            ->sortBy(function ($assignment) {
+                // ✅ UPDATED: Prioritize rest days
+                if ($assignment->is_rest_day) {
+                    return '00:00:00';
+                }
+                return $assignment->shift ? ($assignment->shift->start_time ?? '99:99:99') : '99:99:99';
+            });
 
-        $hasShift = $assignments->isNotEmpty();
-
-
-
-        // Check if today is a rest day
-        $isRestDay = false;
+        // ✅ UPDATED: Detect rest day and regular assignments
         $restDayAssignment = $assignments->firstWhere('is_rest_day', true);
-        if ($restDayAssignment) {
-            $isRestDay = true;
-        }
+        $regularAssignment = $assignments->firstWhere('is_rest_day', false);
 
+        // ✅ UPDATED: Set flags
+        $isRestDay = $restDayAssignment !== null;
+
+        // ✅ UPDATED: Allow hasShift to be true if rest day is allowed
+        $hasShift = $regularAssignment !== null || ($restDayAssignment && $settings->rest_day_time_in_allowed);
+
+        // ✅ UPDATED: Get next assignment (prioritize rest day if allowed)
         $nextAssignment = $assignments->first(function ($assignment) use ($authUser, $today) {
-            // ✅ FIX: Check if shift exists before checking attendance
+            // ✅ Allow rest day assignments
+            if ($assignment->is_rest_day) {
+                return true; // Always return rest day if it exists
+            }
+
+            // ✅ For regular shifts, check if shift exists before checking attendance
             if (!$assignment->shift) {
-                return false; // Skip assignments with missing shifts
+                return false;
             }
 
             return !Attendance::where('user_id', $authUser->id)
@@ -1886,21 +1915,21 @@ class AttendanceEmployeeController extends Controller
 
         $assignmentForBreakManagement = $nextAssignment ?? $currentActiveAssignment;
 
-        // Grace Period getter - safe access
-        $gracePeriod = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+        // ✅ UPDATED: Grace Period getter - safe access (return 0 for rest days)
+        $gracePeriod = ($assignmentForBreakManagement && !$assignmentForBreakManagement->is_rest_day && $assignmentForBreakManagement->shift)
             ? ($assignmentForBreakManagement->shift->grace_period ?? 0)
             : 0;
 
-        // Check if its Flexible Shift - safe access
-        $isFlexible = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
-            ? ($assignmentForBreakManagement->shift->is_flexible ?? false)
+        // ✅ UPDATED: Check if its Flexible Shift - treat rest days as flexible
+        $isFlexible = $assignmentForBreakManagement
+            ? ($assignmentForBreakManagement->is_rest_day || ($assignmentForBreakManagement->shift && $assignmentForBreakManagement->shift->is_flexible))
             : false;
 
         // API response
         if ($request->wantsJson()) {
             return response()->json([
                 'status'    => true,
-                'message'   => 'Attendance Employee Index',
+                'message'   => 'Request Attendance Employee Index',
                 'data'      => $attendances,
             ]);
         }
