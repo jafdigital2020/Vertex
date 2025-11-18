@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Holiday
@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
+                    {{-- <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,7 +41,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> --}}
                     @endif
                     @if(in_array('Create',$permission))
                     <div class="mb-2">
@@ -61,8 +61,8 @@
             <!-- /Breadcrumb -->
 
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Holiday Exception List</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Holiday Exception List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                           <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select"
@@ -178,7 +178,7 @@
                                         @if(in_array('Update',$permission) || in_array('Delete',$permission))
                                         <td class="text-center">
                                             <div class="action-icon d-inline-flex">
-                                                
+
                                                 @if(in_array('Update',$permission))
                                                 @if( $holidayException->status == 'active')
                                                 <a href="#" class="btn-deactivate" data-bs-toggle="modal"
@@ -194,7 +194,7 @@
                                                     title="Activate"><i class="ti ti-circle-check"></i></a>
                                                 @endif
                                                 @endif
-                                        
+
                                               @if(in_array('Delete',$permission))
                                                 <a href="javascript:void(0);" data-bs-toggle="modal" class="btn-delete"
                                                     data-bs-target="#delete_holiday_exception"
@@ -214,8 +214,8 @@
                 </div>
             </div>
 
-        </div> 
-  
+        </div>
+
         @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
@@ -230,13 +230,13 @@
 @endsection
 
 @push('scripts')
-   
+
     <script>
-    
+
     document.addEventListener('DOMContentLoaded', function () {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
         const authToken = localStorage.getItem('token');
- 
+
         function handleSelectAll($sel) {
             const vals = $sel.val() || [];
             if (vals.includes('')) {
@@ -249,7 +249,7 @@
             }
             return false;
         }
- 
+
         function updateEmployeeSelect(modal) {
             const allEmps = modal.data('employees') || [];
             const deptIds = modal.find('.department-select').val() || [];
@@ -273,7 +273,7 @@
 
             modal.find('.employee-select').html(opts).trigger('change');
         }
-    
+
         $(document).on('change', '.branch-select', function () {
             const $this = $(this);
             if (handleSelectAll($this)) return;
@@ -283,14 +283,14 @@
             const depSel = modal.find('.department-select');
             const desSel = modal.find('.designation-select');
             const empSel = modal.find('.employee-select');
-    
+
             depSel.html('<option value="">All Department</option>').trigger('change');
             desSel.html('<option value="">All Designation</option>').trigger('change');
             empSel.html('<option value="">All Employee</option>').trigger('change');
             modal.removeData('employees');
 
             if (!branchIds.length) return;
-    
+
             $.ajax({
                 url: '/api/holiday-exception/departments',
                 method: 'GET',
@@ -311,7 +311,7 @@
                     alert('Failed to fetch departments.');
                 }
             });
-    
+
             $.ajax({
                 url: '/api/holiday-exception/employees',
                 method: 'GET',
@@ -330,7 +330,7 @@
                 }
             });
         });
-    
+
         $(document).on('change', '.department-select', function () {
             const $this = $(this);
             if (handleSelectAll($this)) return;
@@ -365,22 +365,22 @@
                 }
             });
         });
-    
+
         $(document).on('change', '.designation-select', function () {
             const $this = $(this);
             if (handleSelectAll($this)) return;
             updateEmployeeSelect($this.closest('.modal'));
         });
-    
+
         $(document).on('change', '.employee-select', function () {
             handleSelectAll($(this));
         });
-    
+
         $(document).on('change', '.holiday-select', function () {
             handleSelectAll($(this));
         });
     });
-    </script> 
+    </script>
     {{-- Add Holiday Exception User --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -426,7 +426,7 @@
                     }
 
                     if (!response.ok) {
-                        const payload = await response.json();  
+                        const payload = await response.json();
                         toastr.error(payload.message || 'An error occurred.', 'Error');
                         return;
                     }
@@ -438,7 +438,7 @@
                     const modalEl = document.getElementById('add_user_to_holiday_exception');
                     bootstrap.Modal.getInstance(modalEl)?.hide();
 
-                    holidayExceptionFilter(); 
+                    holidayExceptionFilter();
                 } catch (err) {
                     toastr.error(err.message || 'Something went wrong. Please try again.', 'Error');
                 }
@@ -456,7 +456,7 @@
 
             const confirmDeactivateHolidayExceptionBtn = document.getElementById('confirmDeactivateHolidayExceptionBtn');
             const deactivateHolidayEmployeeName = document.getElementById('deactivateHolidayEmployeeName');
- 
+
             document.addEventListener('click', function (event) {
                 const button = event.target.closest('.btn-deactivate');
                 if (button) {
@@ -487,7 +487,7 @@
 
                         const deactivateModal = bootstrap.Modal.getInstance(document.getElementById('deactivate_holiday'));
                         deactivateModal?.hide();
-                        holidayExceptionFilter(); 
+                        holidayExceptionFilter();
                     } else {
                         let message = "Error deactivating holiday exception.";
                         try {
@@ -515,7 +515,7 @@
 
         const confirmActivateHolidayExceptionBtn = document.getElementById('confirmActivateHolidayExceptionBtn');
         const activateHolidayEmployeeName = document.getElementById('activateHolidayEmployeeName');
- 
+
         document.addEventListener('click', function (event) {
             const button = event.target.closest('.btn-activate');
             if (button) {
@@ -546,7 +546,7 @@
 
                     const activateModal = bootstrap.Modal.getInstance(document.getElementById('activate_holiday'));
                     activateModal?.hide();
-                    holidayExceptionFilter(); 
+                    holidayExceptionFilter();
                 } else {
                     let message = "Error activating holiday exception.";
                     try {
@@ -575,7 +575,7 @@
 
             const holidayExceptionConfirmDeleteBtn = document.getElementById('holidayExceptionConfirmDeleteBtn');
             const holidayExceptionEmployeePlaceHolder = document.getElementById('holidayExceptionEmployeePlaceHolder');
- 
+
             document.addEventListener('click', function (e) {
                 const button = e.target.closest('.btn-delete');
                 if (button) {
@@ -587,7 +587,7 @@
                     }
                 }
             });
- 
+
             holidayExceptionConfirmDeleteBtn?.addEventListener('click', function () {
                 if (!holidayExceptionDeleteId) return;
 
@@ -608,7 +608,7 @@
                             document.getElementById('delete_holiday_exception')
                         );
                         deleteModal?.hide();
-                        holidayExceptionFilter(); 
+                        holidayExceptionFilter();
                     } else {
                         let message = "Error deleting holiday exception.";
                         try {
@@ -625,7 +625,7 @@
             });
         });
 
- 
+
 
         function holidayExceptionFilter(){
             var holiday = $('#holiday_filter').val();
@@ -646,9 +646,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#holidayExTable').DataTable().destroy(); 
+                        $('#holidayExTable').DataTable().destroy();
                         $('#holidayExTableBody').html(response.html);
-                        $('#holidayExTable').DataTable();      
+                        $('#holidayExTable').DataTable();
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
@@ -665,8 +665,8 @@
             });
         }
         // $('#branch_filter').on('input', function () {
-        //     const branchId = $(this).val() || 'all'; 
-            
+        //     const branchId = $(this).val() || 'all';
+
         //     $.get(`/api/branches/${branchId}/departments`, function (departments) {
         //         $('#department_filter').empty().append('<option value="">All Departments</option>');
         //         departments.forEach(dep => {
@@ -677,13 +677,13 @@
         // });
 
         // $('#department_filter').on('change', function () {
-        //     const departmentId = $(this).val(); 
+        //     const departmentId = $(this).val();
         //     $.get(`/api/departments/${departmentId}/branch`, function (branch) {
         //         $('#branch_filter').val(branch.id).trigger('change');
         //         holidayExceptionFilter();
-        //     }); 
+        //     });
         // });
- 
+
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
             $select.append(`<option value="">All ${placeholder}</option>`);
@@ -749,7 +749,7 @@
                 });
             });
         });
- 
-    </script> 
-   
+
+    </script>
+
 @endpush
