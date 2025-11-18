@@ -70,8 +70,8 @@
 
             {{-- Table --}}
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Schedule List</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Schedule List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <!-- Bulk Actions Dropdown -->
                         <div class="dropdown me-2">
@@ -133,7 +133,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable table-bordered text-center align-middle mb-0" id="shiftTable">
+                        <table class="table datatable table text-center align-middle mb-0" id="shiftTable">
                             <thead class="table-light">
                                 <tr>
                                     <th class="no-sort">
@@ -180,14 +180,14 @@
                                             @endphp
                                             <td class="p-2 align-middle">
                                                 @if (empty($shifts))
-                                                    <span class="badge bg-danger">No Shift</span>
+                                                    <span class="badge bg-raspberry">No Shift</span>
                                                 @else
                                                     @foreach ($shifts as $shift)
                                                         @if (!empty($shift['rest_day']))
-                                                            <span class="badge bg-warning text-dark">Rest Day</span>
+                                                            <span class="badge bg-mustard text-white">Rest Day</span>
                                                         @else
                                                             <div
-                                                                class="badge bg-outline-success d-flex flex-column align-items-center mb-1">
+                                                                class="badge bg-outline-primary d-flex flex-column align-items-center mb-1">
                                                                 <div>{{ $shift['name'] }}</div>
                                                                 <small>{{ $shift['start_time'] }} -
                                                                     {{ $shift['end_time'] }}</small>

@@ -86,44 +86,101 @@
                             </div>
                         </div>
                     </div>
-                    <div class="border rounded">
-                        <div class="row gx-0">
-                            <div class="col-md col-sm-4 border-end">
-                                <div class="p-3">
-                                    <span class="fw-medium mb-1 d-block">
-                                        <i class="ti ti-check text-success me-1"></i> Present
-                                    </span>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <h5 id="totalPresent">{{ $totalPresent ?? 0 }}</h5>
-                                        <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
-                                            <i class="ti ti-users me-1"></i> Employees
-                                        </span>
+                    <div class="row gx-3">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #28a745 0%, #198754 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75"><i
+                                                class="ti ti-check text-white-75 me-1"></i>
+                                            Present</p>
+                                        <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            {{ str_pad($totalPresent ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                        </h2>
+                                        <small class="text-white-75">Employees</small>
+                                    </div>
+
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-users"
+                                                style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                        </div>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-users"
+                                                    style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md col-sm-4 border-end">
-                                <div class="p-3">
-                                    <span class="fw-medium mb-1 d-block">
-                                        <i class="ti ti-clock-edit text-warning me-1"></i> Late Login
-                                    </span>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <h5 id="totalLate">{{ $totalLate ?? 0 }}</h5>
-                                        <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
-                                            <i class="ti ti-clock me-1"></i> Late
-                                        </span>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75"><i
+                                                class="ti ti-clock-edit text-white-75 me-1"></i>
+                                            Late Login</p>
+                                        <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            {{ str_pad($totalLate ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                        </h2>
+                                        <small class="text-white-75">Late</small>
+                                    </div>
+
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-clock"
+                                                style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                        </div>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-clock"
+                                                    style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md col-sm-4">
-                                <div class="p-3">
-                                    <span class="fw-medium mb-1 d-block">
-                                        <i class="ti ti-user-off text-danger me-1"></i> Absent
-                                    </span>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <h5 id="totalAbsent">{{ $totalAbsent ?? 0 }}</h5>
-                                        <span class="badge bg-danger-subtle text-danger d-inline-flex align-items-center">
-                                            <i class="ti ti-x me-1"></i> Absent
-                                        </span>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #e63946 0%, #a4161a 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75"><i
+                                                class="ti ti-user-off text-white-75 me-1"></i>
+                                            Absent</p>
+                                        <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            {{ str_pad($totalAbsent ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                        </h2>
+                                        <small class="text-white-75">Absent</small>
+                                    </div>
+
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-user-off"
+                                                style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                        </div>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-user-off"
+                                                    style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -133,19 +190,19 @@
             </div>
 
             <div class="payroll-btns mb-3">
-                <a href="{{ route('attendance-admin') }}" class="btn btn-white active border me-2">Attendance</a>
+                <a href="{{ route('attendance-admin') }}" class="btn btn-primary active border me-2">Attendance</a>
                 <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Request Attendance</a>
             </div>
 
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Admin Attendance</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Admin Attendance</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
                         <!-- Bulk Actions Dropdown -->
                         <div class="dropdown me-2">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
-                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                id="bulkActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 Bulk Actions
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">

@@ -58,10 +58,10 @@
             </div>
             <!-- /Breadcrumb -->
 
-            <div class="card">
+            <div class="card bg-primary mb-4">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5>Branches Grid</h5>
+                        <h5 class="text-white">Branches Grid</h5>
                         <div class="input-group input-group-sm w-25">
                             <span class="input-group-text" id="search-addon">
                                 <i class="bi bi-search"></i>

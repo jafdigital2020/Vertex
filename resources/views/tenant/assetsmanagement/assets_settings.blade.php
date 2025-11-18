@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Assets Management
@@ -39,7 +39,7 @@
                     @endif
 
                     @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
+                        {{-- <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-orange d-inline-flex align-items-center"
@@ -59,7 +59,7 @@
                                     </li>
                                 </ul>
                             </div>
-                        </div>
+                        </div> --}}
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -73,8 +73,9 @@
 
             <div class="card">
                 <div class="card-header">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                        <h5 class="mb-0">Assets Settings</h5>
+                    <div
+                        class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                        <h5 class="text-white">Asset Settings</h5>
                         <div class="d-flex flex-wrap gap-3">
                             <div class="form-group me-2" style="max-width:200px;">
                                 <select name="branch_filter" id="branch_filter" class="select2 form-select"
@@ -234,7 +235,7 @@
 
     @component('components.modal-popup', [
         'categories' => $categories,
-        'branches' => $branches
+        'branches' => $branches,
     ])
     @endcomponent
 @endsection
@@ -301,7 +302,7 @@
             var button = $(event.relatedTarget);
 
             var id = button.data('id');
-            var branch_id= button.data('branch_id');
+            var branch_id = button.data('branch_id');
             var name = button.data('name');
             var description = button.data('description');
             var categoryName = button.data('categoryname');
@@ -313,7 +314,7 @@
             var processor = button.data('processor');
             var modal = $(this);
             modal.find('#edit_id').val(id);
-            modal.find('#edit_branch_id').val(branch_id).trigger('change'); 
+            modal.find('#edit_branch_id').val(branch_id).trigger('change');
             modal.find('#edit_name').val(name);
             modal.find('#edit_description').val(description);
             modal.find('#edit_existingCategory').val(categoryName).trigger("change");

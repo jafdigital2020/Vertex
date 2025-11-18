@@ -74,52 +74,85 @@
             <!-- Overtime Counts -->
             <div class="row">
 
-                <div class="col-xl-4 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Approved Request</p>
-                                    <h4 id="approvedRequests">{{ $approvedRequests }}</h4>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #12515D 0%, #2A9D8F 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Approved Request</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($approvedRequests, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">Requests</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-edit" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-pink-transparent border border-pink d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-edit text-pink fs-18"></i></span>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-edit" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-4 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Request</p>
-                                    <h4 id="pendingRequests">{{ $pendingRequests }}</h4>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #b53654 0%, #f2848c 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Pending Request</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($pendingRequests, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">Requests</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-exclamation" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-transparent-purple border border-purple d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-exclamation text-purple fs-18"></i></span>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-exclamation" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-4 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Rejected</p>
-                                    <h4 id="rejectedRequests">{{ $rejectedRequests }}</h4>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #ed7464 0%, #f9c6b8 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Rejected Request</p>
+                                <h2 id="rejectedRequests" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($rejectedRequests, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">Requests</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-exclamation" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-skyblue-transparent border border-skyblue d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-exclamation text-skyblue fs-18"></i></span>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-exclamation" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -130,8 +163,8 @@
 
             <!-- Performance Indicator list -->
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Employee Overtime</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Employee Overtime</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">

@@ -22,8 +22,8 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
+                    @if (in_array('Export', $permission))
+                        {{-- <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,14 +41,14 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> --}}
                     @endif
-                    @if(in_array('Create',$permission))
-                    <div class="mb-2 me-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee_ob"
-                            class="btn btn-primary d-flex align-items-center"><i
-                                class="ti ti-circle-plus me-2"></i>Request</a>
-                    </div>
+                    @if (in_array('Create', $permission))
+                        <div class="mb-2 me-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee_ob"
+                                class="btn btn-primary d-flex align-items-center"><i
+                                    class="ti ti-circle-plus me-2"></i>Request</a>
+                        </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -64,51 +64,150 @@
             <div class="row">
 
                 <div class="col-xl-4 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Approved Request</p>
-                                    <h4>{{ $totalApprovedOB }}</h4>
+                    <div class="card"
+                        style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <!-- LEFT TEXT SECTION -->
+                            <div>
+                                <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Approved Request</h6>
+                                <h3 class="mb-1 fw-bold mt-4" style="line-height: 1; font-size: 20px; color: #212529;">
+                                    {{ $totalApprovedOB }}
+                                </h3>
+                                <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Requests</p>
+                            </div>
+
+                            <!-- RIGHT ICON SECTION -->
+                            <div class="position-relative d-flex align-items-center justify-content-center"
+                                style="width: 100px; height: 100px; overflow: visible;">
+                                <div class="bg-light-primary"
+                                    style="
+                                        position: absolute;
+                                        right: -35%;
+                                        top: 90%;
+                                        transform: translateY(-55%);
+                                        width: 140px;
+                                        height: 140px;
+                                        background: #fdeff4;
+                                        border-radius: 50%;
+                                        z-index: 1;
+                                        clip-path: inset(0 0 0 0 round 12px);
+                                    ">
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-pink-transparent border border-pink d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-edit text-pink fs-18"></i></span>
+
+                                <!-- Icon circle (foreground) -->
+                                <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary"
+                                    style="
+                                        position: relative;
+                                        z-index: 2;
+                                        width: 45px;
+                                        height: 45px;
+                                        color: white;
+
+                                        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                        right: -10px;
+                                        top: 20px;
+                                    ">
+                                    <i class="ti ti-user-check fs-20"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-xl-4 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Request</p>
-                                    <h4>{{ $totalPendingOB }}</h4>
+                    <div class="card"
+                        style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <!-- LEFT TEXT SECTION -->
+                            <div>
+                                <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Pending Request</h6>
+                                <h3 class="mb-1 fw-bold mt-4" style="line-height: 1; font-size: 20px; color: #212529;">
+                                    {{ $totalPendingOB }}
+                                </h3>
+                                <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Requests</p>
+                            </div>
+
+                            <!-- RIGHT ICON SECTION -->
+                            <div class="position-relative d-flex align-items-center justify-content-center"
+                                style="width: 100px; height: 100px; overflow: visible;">
+                                <div class="bg-light-mustard"
+                                    style="
+                                        position: absolute;
+                                        right: -35%;
+                                        top: 90%;
+                                        transform: translateY(-55%);
+                                        width: 140px;
+                                        height: 140px;
+                                        background: #f4eeff;
+                                        border-radius: 50%;
+                                        z-index: 1;
+                                        clip-path: inset(0 0 0 0 round 12px);
+                                    ">
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-transparent-purple border border-purple d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-exclamation text-purple fs-18"></i></span>
+
+                                <!-- Icon circle (foreground) -->
+                                <div class="d-flex align-items-center justify-content-center rounded-circle bg-mustard"
+                                    style="
+                                        position: relative;
+                                        z-index: 2;
+                                        width: 45px;
+                                        height: 45px;
+                                        color: white;
+                                        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                        right: -10px;
+                                        top: 20px;
+                                    ">
+                                    <i class="ti ti-user-exclamation fs-20"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-xl-4 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Rejected</p>
-                                    <h4>{{ $totalRejectedOB }}</h4>
+                    <div class="card"
+                        style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <!-- LEFT TEXT SECTION -->
+                            <div>
+                                <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Rejected Request</h6>
+                                <h3 class="mb-1 fw-bold mt-4" style="line-height: 1; font-size: 20px; color: #212529;">
+                                    {{ $totalRejectedOB }}
+                                </h3>
+                                <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Requests</p>
+                            </div>
+
+                            <!-- RIGHT ICON SECTION -->
+                            <div class="position-relative d-flex align-items-center justify-content-center"
+                                style="width: 100px; height: 100px; overflow: visible;">
+                                <div class="bg-light-raspberry"
+                                    style="
+                                        position: absolute;
+                                        right: -35%;
+                                        top: 90%;
+                                        transform: translateY(-55%);
+                                        width: 140px;
+                                        height: 140px;
+                                        background: #fff2f2;
+                                        border-radius: 50%;
+                                        z-index: 1;
+                                        clip-path: inset(0 0 0 0 round 12px);
+                                    ">
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-skyblue-transparent border border-skyblue d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-exclamation text-skyblue fs-18"></i></span>
+
+                                <!-- Icon circle (foreground) -->
+                                <div class="d-flex align-items-center justify-content-center rounded-circle bg-raspberry"
+                                    style="
+                                        position: relative;
+                                        z-index: 2;
+                                        width: 45px;
+                                        height: 45px;
+                                        color: white;
+                                        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                        right: -10px;
+                                        top: 20px;
+                                    ">
+                                    <i class="ti ti-user-x fs-20"></i>
                                 </div>
                             </div>
                         </div>
@@ -119,8 +218,8 @@
 
             <!-- Performance Indicator list -->
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Official Business</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Official Business</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
@@ -147,16 +246,16 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
-                                   <th class="text-center">Date </th>
-                                   <th class="text-center">Start & End Time</th>
-                                   <th class="text-center">OB Hours</th>
-                                   <th class="text-center">Purpose</th>
-                                   <th class="text-center">File Attachment</th>
-                                   <th class="text-center">Status</th>
-                                   <th class="text-center">Approved By</th>
-                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                   <th class="text-center">Action</th>
-                                   @endif
+                                    <th class="text-center">Date </th>
+                                    <th class="text-center">Start & End Time</th>
+                                    <th class="text-center">OB Hours</th>
+                                    <th class="text-center">Purpose</th>
+                                    <th class="text-center">File Attachment</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Approved By</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody id="obemployeeTableBody">
@@ -177,10 +276,10 @@
                                                 </div>
                                             </div>
                                         </td>
-                                      <td class="text-center">
+                                        <td class="text-center">
                                             {{ $ob->ob_date ? \Carbon\Carbon::parse($ob->ob_date)->format('F j, Y') : 'N/A' }}
                                         </td>
-                                      <td class="text-center">
+                                        <td class="text-center">
                                             @if ($ob->date_ob_in && $ob->date_ob_out)
                                                 {{ \Carbon\Carbon::parse($ob->date_ob_in)->format('h:i A') }} -
                                                 {{ \Carbon\Carbon::parse($ob->date_ob_out)->format('h:i A') }}
@@ -188,9 +287,9 @@
                                                 N/A
                                             @endif
                                         </td>
-                                      <td class="text-center">{{ $ob->ob_minutes_formatted }}</td>
-                                      <td class="text-center">{{ $ob->purpose ?? 'N/A' }}</td>
-                                      <td class="text-center">
+                                        <td class="text-center">{{ $ob->ob_minutes_formatted }}</td>
+                                        <td class="text-center">{{ $ob->purpose ?? 'N/A' }}</td>
+                                        <td class="text-center">
                                             @if ($ob->file_attachment)
                                                 <a href="{{ asset('storage/' . $ob->file_attachment) }}"
                                                     class="text-primary" target="_blank">
@@ -200,7 +299,7 @@
                                                 <span class="text-muted">No Attachment</span>
                                             @endif
                                         </td>
-                                      <td class="text-center">
+                                        <td class="text-center">
                                             @php
                                                 $badgeClass = 'badge-info';
                                                 if ($ob->status == 'approved') {
@@ -214,7 +313,7 @@
                                                 <i class="ti ti-point-filled me-1"></i>{{ ucfirst($ob->status) }}
                                             </span>
                                         </td>
-                                      <td class="text-center">
+                                        <td class="text-center">
                                             @if ($ob->lastApproverName)
                                                 <div class="d-flex align-items-center">
                                                     <a href="javascript:void(0);"
@@ -235,32 +334,33 @@
                                                 &mdash;
                                             @endif
                                         </td>
-                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                      <td class="text-center">
-                                            @if ($ob->status !== 'approved')
-                                                <div class="action-icon d-inline-flex">
-                                                    @if(in_array('Update',$permission))
-                                                    <a href="#" class="me-2" data-bs-toggle="modal"
-                                                        data-bs-target="#edit_employee_ob" data-id="{{ $ob->id }}"
-                                                        data-ob-date="{{ $ob->ob_date }}"
-                                                        data-ob-in="{{ $ob->date_ob_in }}"
-                                                        data-ob-out="{{ $ob->date_ob_out }}"
-                                                        data-ob-break="{{ $ob->ob_break_minutes }}"
-                                                        data-total-ob="{{ $ob->total_ob_minutes }}"
-                                                        data-purpose="{{ $ob->purpose }}"
-                                                        data-file-attachment="{{ $ob->file_attachment }}"><i
-                                                            class="ti ti-edit"></i></a>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                            <td class="text-center">
+                                                @if ($ob->status !== 'approved')
+                                                    <div class="action-icon d-inline-flex">
+                                                        @if (in_array('Update', $permission))
+                                                            <a href="#" class="me-2" data-bs-toggle="modal"
+                                                                data-bs-target="#edit_employee_ob"
+                                                                data-id="{{ $ob->id }}"
+                                                                data-ob-date="{{ $ob->ob_date }}"
+                                                                data-ob-in="{{ $ob->date_ob_in }}"
+                                                                data-ob-out="{{ $ob->date_ob_out }}"
+                                                                data-ob-break="{{ $ob->ob_break_minutes }}"
+                                                                data-total-ob="{{ $ob->total_ob_minutes }}"
+                                                                data-purpose="{{ $ob->purpose }}"
+                                                                data-file-attachment="{{ $ob->file_attachment }}"><i
+                                                                    class="ti ti-edit"></i></a>
                                                         @endif
-                                                    @if(in_array('Delete',$permission))
-                                                    <a href="#" data-bs-toggle="modal" class="btn-delete"
-                                                        data-bs-target="#delete_employee_ob"
-                                                        data-id="{{ $ob->id }}"
-                                                        data-name="{{ $ob->user->personalInformation->full_name ?? 'N/A' }}"><i
-                                                            class="ti ti-trash"></i></a>
-                                                    @endif
-                                                </div>
-                                            @endif
-                                        </td>
+                                                        @if (in_array('Delete', $permission))
+                                                            <a href="#" data-bs-toggle="modal" class="btn-delete"
+                                                                data-bs-target="#delete_employee_ob"
+                                                                data-id="{{ $ob->id }}"
+                                                                data-name="{{ $ob->user->personalInformation->full_name ?? 'N/A' }}"><i
+                                                                    class="ti ti-trash"></i></a>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -283,8 +383,8 @@
 @endsection
 
 @push('scripts')
-   <script>
-          if ($('.bookingrange-filtered').length > 0) {
+    <script>
+        if ($('.bookingrange-filtered').length > 0) {
             var start = moment().startOf('year');
             var end = moment().endOf('year');
 
@@ -307,43 +407,42 @@
 
             booking_range(start, end);
         }
- 
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
-        filter();
-    });
 
-    function filter() {
-        const dateRange = $('#dateRange_filter').val();
-        const status = $('#status_filter').val();
-
-        $.ajax({
-            url: '{{ route('ob-employee-filter') }}',
-            type: 'GET',
-            data: {
-                dateRange,
-                status,
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    $('#obemployeeTable').DataTable().destroy();
-                    $('#obemployeeTableBody').html(response.html);
-                    $('#obemployeeTable').DataTable();
-                } else {
-                    toastr.error(response.message || 'Something went wrong.');
-                }
-            },
-            error: function(xhr) {
-                let message = 'An unexpected error occurred.';
-                if (xhr.status === 403) {
-                    message = 'You are not authorized to perform this action.';
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                toastr.error(message);
-            }
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
         });
-    }
 
+        function filter() {
+            const dateRange = $('#dateRange_filter').val();
+            const status = $('#status_filter').val();
+
+            $.ajax({
+                url: '{{ route('ob-employee-filter') }}',
+                type: 'GET',
+                data: {
+                    dateRange,
+                    status,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#obemployeeTable').DataTable().destroy();
+                        $('#obemployeeTableBody').html(response.html);
+                        $('#obemployeeTable').DataTable();
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
     </script>
 
     {{-- Request OB --}}
@@ -388,7 +487,8 @@
                 }
             }
 
-            $('#employeeOBDateOBIn, #employeeOBDateOBOut, #obBreakMinutes').on('change input', computeOvertimeMinutes);
+            $('#employeeOBDateOBIn, #employeeOBDateOBOut, #obBreakMinutes').on('change input',
+                computeOvertimeMinutes);
 
             // Handle form submission
             $('#employeeOBForm').on('submit', function(e) {
@@ -505,7 +605,8 @@
                     $('#editEmployeeTotalOBMinutesHidden').val('');
                 }
             }
-            $('#editEmployeeOBDateOBIn, #editEmployeeOBDateOBOut, #editEmployeeOBBreakMinutes').on('change input', computeOBMinutesEdit);
+            $('#editEmployeeOBDateOBIn, #editEmployeeOBDateOBOut, #editEmployeeOBBreakMinutes').on('change input',
+                computeOBMinutesEdit);
 
             // Submit update AJAX
             $('#editOBForm').on('submit', function(e) {
@@ -589,7 +690,8 @@
                             filter();
                         } else {
                             return response.json().then(data => {
-                                toastr.error(data.message || "Error deleting official business.");
+                                toastr.error(data.message ||
+                                    "Error deleting official business.");
                             });
                         }
                     })

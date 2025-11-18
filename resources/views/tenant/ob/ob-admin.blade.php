@@ -64,73 +64,119 @@
 
             <!-- Overtime Counts -->
             <div class="row">
-                <div class="col-xl-3 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Count</p>
-                                    <h4>{{ $pendingCount }}</h4>
-                                    <small class="text-muted">This Month</small>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #ffb400 0%, #e68a00 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Pending Requests</p>
+                                <h2 id="pendingCount" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($pendingCount ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">This Month</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-question"
+                                        style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-pink-transparent border border-pink d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-edit text-pink fs-18"></i></span>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-question"
+                                            style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Approved Request</p>
-                                    <h4>{{ $approvedCount }}</h4>
-                                    <small class="text-muted">This Month</small>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Approved Request</p>
+                                <h2 id="approvedCount" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($approvedCount ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">This Month</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-check" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-transparent-purple border border-purple d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-exclamation text-purple fs-18"></i></span>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-check" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Rejected</p>
-                                    <h4>{{ $rejectedCount }}</h4>
-                                    <small class="text-muted">This Month</small>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #b53654 0%, #f2848c 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Rejected</p>
+                                <h2 id="rejectedCount" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($rejectedCount ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">This Month</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-x" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-skyblue-transparent border border-skyblue d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-exclamation text-skyblue fs-18"></i></span>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-x" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">OB Requests</p>
-                                    <h4>{{ $totalOBRequests }}</h4>
-                                    <small class="text-muted">This Month</small>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #12515D 0%, #2A9D8F 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">OB Requests</p>
+                                <h2 id="totalOBCount" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($totalOBRequests ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">This Month</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-check" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-transparent-primary border border-primary d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-check text-primary fs-18"></i></span>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-check" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -141,8 +187,8 @@
 
             <!-- Performance Indicator list -->
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Official Business</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Official Business</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
                         <!-- Bulk Actions Dropdown -->
@@ -866,7 +912,8 @@
 
                 // Show confirmation dialog
                 if (confirm(
-                    `Are you sure you want to approve ${selectedIds.length} official business request(s)?`)) {
+                        `Are you sure you want to approve ${selectedIds.length} official business request(s)?`
+                        )) {
                     processBulkAction('approve', selectedIds);
                 }
             });
@@ -882,7 +929,9 @@
                 }
 
                 // Show confirmation dialog
-                if (confirm(`Are you sure you want to reject ${selectedIds.length} official business request(s)?`)) {
+                if (confirm(
+                        `Are you sure you want to reject ${selectedIds.length} official business request(s)?`
+                        )) {
                     processBulkAction('reject', selectedIds);
                 }
             });
