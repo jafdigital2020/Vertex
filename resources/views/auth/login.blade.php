@@ -7,17 +7,13 @@
             <div class="row">
                 <div class="col-lg-5">
                     <div
-                        class="login-background position-relative d-lg-flex align-items-center justify-content-center d-none flex-wrap vh-100">
-                        <div class="authentication-card w-100">
-                            <div class="authen-overlay-item border w-100">
-                                <h1 class="text-white display-1">Empowering people <br> through seamless HR <br> management.
-                                </h1>
-                                <div class="my-4 mx-auto authen-overlay-img">
-                                    <img src="{{ URL::asset('build/img/bg/authentication-bg-01.png') }}" alt="Img">
-                                </div>
-                                <div>
-                                    <p class="text-white fs-20 fw-semibold text-center">Efficiently manage your workforce,
-                                        streamline <br> operations effortlessly.</p>
+                        class="login-background position-relative d-lg-flex align-items-center justify-content-center d-none flex-wrap vh-100 p-0">
+                        <div class="authentication-card w-100 h-100 d-flex align-items-center justify-content-center">
+                            <div
+                                class="authen-overlay-item border w-100 d-flex flex-column align-items-center justify-content-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <img src="{{ URL::asset('build/img/bg/TIMORA2.1.gif') }}" alt="Img" class="w-100"
+                                        style="object-fit: cover; width:100%;">
                                 </div>
                             </div>
                         </div>
@@ -39,7 +35,7 @@
                                             <p class="mb-0">Please enter your details to sign in</p>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Code</label>
+                                            <label class="form-label">Company Code</label>
                                             <div class="input-group">
                                                 <input type="text" value="" id="companyCode" name="companyCode"
                                                     class="form-control border-end-0">
@@ -69,7 +65,9 @@
                                         <div class="d-flex align-items-center justify-content-between mb-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="form-check form-check-md mb-0">
-                                                    <input class="form-check-input" id="remember_me" type="checkbox">
+                                                    <input class="form-check-input" id="remember_me" name="remember"
+                                                        type="checkbox" value="1"
+                                                        {{ old('remember') ? 'checked' : '' }}>
                                                     <label for="remember_me" class="form-check-label mt-0">Remember
                                                         Me</label>
                                                 </div>
@@ -88,27 +86,30 @@
                                         </div>
                                         <div class="mt-2">
                                             <div class="d-flex align-items-center justify-content-center flex-wrap">
-
                                                 <div class="text-center me-2 flex-fill">
-                                                    <a href="javascript:void(0);"
+                                                    <a href="https://play.google.com/store/apps/details?id=com.jafdigital.timora"
+                                                        target="_blank" rel="noopener noreferrer"
                                                         class="br-10 p-2 btn btn-outline-light border d-flex align-items-center justify-content-center">
                                                         <img class="img-fluid m-1"
-                                                            src="{{ URL::asset('build/img/icons/google-logo.svg') }}"
-                                                            alt="Google Play">
+                                                            src="{{ URL::asset('build/img/icons/google-play-badge.svg') }}"
+                                                            alt="Google Play" style="max-width:40px; height:auto;">
                                                     </a>
                                                 </div>
                                                 <div class="text-center flex-fill">
-                                                    <a href="javascript:void(0);"
+                                                    <a href="https://apps.apple.com/ph/app/timora-automated-payroll-app/id6749219661"
+                                                        target="_blank" rel="noopener noreferrer"
                                                         class="bg-dark br-10 p-2 btn btn-dark d-flex align-items-center justify-content-center">
                                                         <img class="img-fluid m-1"
                                                             src="{{ URL::asset('build/img/icons/apple-logo.svg') }}"
-                                                            alt="Apple">
+                                                            alt="Apple" style="max-width:160px; height:auto;">
                                                     </a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="mt-5 pb-4 text-center">
+                                        <img class="img-fluid" src="{{ URL::asset('build/img/gdpr-image.png') }}"
+                                            alt="GDPR" style="max-height:100px;">
                                         <p class="mb-0 text-gray-9">Copyright &copy; 2025 - JAF Digital Group Inc.</p>
                                     </div>
                                 </div>
@@ -124,4 +125,13 @@
 
 @push('scripts')
     <script src="{{ asset('build/js/login.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            localStorage.clear();
+            sessionStorage.clear();
+            ['laravel_session', 'XSRF-TOKEN', 'remember_web', 'remember_global'].forEach(name => {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+            });
+        });
+    </script>
 @endpush
