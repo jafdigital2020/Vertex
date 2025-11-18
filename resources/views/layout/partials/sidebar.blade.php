@@ -116,7 +116,7 @@
                             @endif
                             {{-- SUPERADMIN MENU --}}
                             @php
-    $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+                                $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
 
                             @endphp
 
@@ -165,8 +165,7 @@
                         <ul>
                             @if (in_array(3, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][8]) || $role_data['role_id'] == 'global_user')
-                                    <li
-                                        class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
+                                    <li class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
                                         <a href="{{ route('branch-grid') }}">
                                             <i class="ti ti-building"></i><span>Branch</span>
                                         </a>
@@ -197,7 +196,7 @@
                                                     class="{{ Request::is('designations') ? 'active' : '' }}">Designations</a>
                                             </li>
                                         @endif
-                                        @if ((isset($role_data['user_permission_ids'][12])  && AddonsChecker::hasAddon(5)) || $role_data['role_id'] == 'global_user')
+                                        @if ((isset($role_data['user_permission_ids'][12]) && AddonsChecker::hasAddon(5)) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('policy') }}"
                                                     class="{{ Request::is('policy') ? 'active' : '' }}">Policies</a>
                                             </li>
@@ -205,10 +204,9 @@
                                     </ul>
                                 </li>
                             @endif
-                            @if ((in_array(5, $role_data['module_ids'])  && AddonsChecker::hasAddon(6)) || $role_data['role_id'] == 'global_user')
+                            @if ((in_array(5, $role_data['module_ids']) && AddonsChecker::hasAddon(6)) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][13]) || $role_data['role_id'] == 'global_user')
-                                    <li
-                                        class="{{ Request::is('holidays', 'holidays/holiday-exception') ? 'active' : '' }}">
+                                    <li class="{{ Request::is('holidays', 'holidays/holiday-exception') ? 'active' : '' }}">
                                         <a href="{{ url('holidays') }}">
                                             <i class="ti ti-calendar-event"></i><span>Holidays</span>
                                         </a>
@@ -216,59 +214,58 @@
                                 @endif
                             @endif
                             @if (in_array(6, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-            'attendance-admin',
-            'attendance-employee',
-            'attendance-settings',
-            'shift-management',
-            'shift-list',
-            'overtime',
-            'overtime-employee',
-            'attendance-employee/request-attendance',
-            'attendance-admin/bulk-atttendance',
-            'attendance-admin/request-attendance',
-        )
-            ? 'active subdrop'
-            : '' }}">
-                                        <i class="ti ti-file-time"></i><span>Attendance</span>
-                                        <span class="menu-arrow"></span>
-                                    </a>
-                                    <ul>
-                                        @if (isset($role_data['user_permission_ids'][14]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('attendance-admin') }}"
-                                                    class="{{ Request::is('attendance-admin', 'attendance-admin/bulk-attednance', 'attendance-admin/request-attendance') ? 'active' : '' }}">Attendance
-                                                    (Admin)</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][15]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('attendance-employee') }}"
-                                                    class="{{ Request::is('attendance-employee', 'attendance-employee/request-attendance') ? 'active' : '' }}">Attendance
-                                                    (Employee)</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][16]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('shift-management') }}"
-                                                    class="{{ Request::is('shift-management') ? 'active' : '' }}">Shift
-                                                    &
-                                                    Schedule</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][17]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('overtime') }}"
-                                                    class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime(Admin)</a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('overtime-employee') }}"
-                                                    class="{{ Request::is('overtime-employee') ? 'active' : '' }}">Overtime(Employee)</a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][18]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('attendance-settings') }}"
-                                                    class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance
-                                                    Settings</a></li>
-                                        @endif
-                                    </ul>
-                                </li>
+                                                <li class="submenu">
+                                                    <a href="javascript:void(0);" class="{{ Request::is(
+                                    'attendance-admin',
+                                    'attendance-employee',
+                                    'attendance-settings',
+                                    'shift-management',
+                                    'shift-list',
+                                    'overtime',
+                                    'overtime-employee',
+                                    'attendance-employee/request-attendance',
+                                    'attendance-admin/bulk-atttendance',
+                                    'attendance-admin/request-attendance',
+                                )
+                                    ? 'active subdrop'
+                                    : '' }}">
+                                                        <i class="ti ti-file-time"></i><span>Attendance</span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+                                                        @if (isset($role_data['user_permission_ids'][14]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ route('attendance-admin') }}"
+                                                                    class="{{ Request::is('attendance-admin', 'attendance-admin/bulk-attednance', 'attendance-admin/request-attendance') ? 'active' : '' }}">Attendance
+                                                                    (Admin)</a></li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][15]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ route('attendance-employee') }}"
+                                                                    class="{{ Request::is('attendance-employee', 'attendance-employee/request-attendance') ? 'active' : '' }}">Attendance
+                                                                    (Employee)</a></li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][16]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ url('shift-management') }}"
+                                                                    class="{{ Request::is('shift-management') ? 'active' : '' }}">Shift
+                                                                    &
+                                                                    Schedule</a></li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][17]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ url('overtime') }}"
+                                                                    class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime(Admin)</a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ url('overtime-employee') }}"
+                                                                    class="{{ Request::is('overtime-employee') ? 'active' : '' }}">Overtime(Employee)</a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][18]) || $role_data['role_id'] == 'global_user')
+                                                            <li><a href="{{ route('attendance-settings') }}"
+                                                                    class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance
+                                                                    Settings</a></li>
+                                                        @endif
+                                                    </ul>
+                                                </li>
                             @endif
                             @if (in_array(7, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
@@ -315,7 +312,7 @@
                                 @endif
                             @endif
 
-                            @if ((in_array(17, $role_data['module_ids'])  && AddonsChecker::hasAddon(1)) || $role_data['role_id'] == 'global_user')
+                            @if ((in_array(17, $role_data['module_ids']) && AddonsChecker::hasAddon(1)) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('official-business/employee', 'official-business/admin') ? 'active subdrop' : '' }}">
@@ -367,95 +364,92 @@
                     <li>
                         <ul>
                             @if (in_array(10, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
-            'employee-salary',
-            'payroll/payroll-items/sss-contribution',
-            'payroll/payroll-items/withholding-tax',
-            'payroll/payroll-items/overtime-table',
-            'payroll/payroll-items/de-minimis-table',
-            'payroll/payroll-items/de-minimis-user',
-            'payroll/payroll-items/earnings',
-            'payroll/payroll-items/earnings/user',
-            'payroll/payroll-items/deductions',
-            'payroll/payroll-items/deductions/user',
-            'payroll',
-            'payroll/process',
-            'payroll/generated-payslips',
-            'payroll/payroll-items/allowance',
-            'payroll/payroll-items/allowance/user',
-        )
-            ? 'active subdrop'
-            : '' }}">
-                                        <i class="ti ti-cash"></i><span>Payroll</span>
-                                        <span class="menu-arrow"></span>
-                                    </a>
-                                    <ul>
-                                        @if (isset($role_data['user_permission_ids'][24]) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('payroll-process') }}"
-                                                    class="{{ Request::is('payroll') ? 'active' : '' }}">
-                                                    Process Payroll
-                                                </a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('generatedPayslipIndex') }}"
-                                                    class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
-                                                    Generated Payslips
-                                                </a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('sss-contributionTable') }}"
-                                                    class="{{ Request::is(
-                'payroll/payroll-items/sss-contribution',
-                'payroll/payroll-items/withholding-tax',
-                'payroll/payroll-items/overtime-table',
-                'payroll/payroll-items/de-minimis-table',
-                'payroll/payroll-items/de-minimis-user',
-                'payroll/payroll-items/earnings',
-                'payroll/payroll-items/earnings/user',
-                'payroll/payroll-items/deductions',
-                'payroll/payroll-items/deductions/user',
-                'payroll/payroll-items/allowance',
-                'payroll/payroll-items/allowance/user',
-            )
-                ? 'active'
-                : '' }}">
-                                                    Payroll Items
-                                                </a>
-                                            </li>
-                                        @endif
+                                                <li class="submenu">
+                                                    <a href="javascript:void(0);" class="{{ Request::is(
+                                    'employee-salary',
+                                    'payroll/payroll-items/sss-contribution',
+                                    'payroll/payroll-items/withholding-tax',
+                                    'payroll/payroll-items/overtime-table',
+                                    'payroll/payroll-items/de-minimis-table',
+                                    'payroll/payroll-items/de-minimis-user',
+                                    'payroll/payroll-items/earnings',
+                                    'payroll/payroll-items/earnings/user',
+                                    'payroll/payroll-items/deductions',
+                                    'payroll/payroll-items/deductions/user',
+                                    'payroll',
+                                    'payroll/process',
+                                    'payroll/generated-payslips',
+                                    'payroll/payroll-items/allowance',
+                                    'payroll/payroll-items/allowance/user',
+                                )
+                                    ? 'active subdrop'
+                                    : '' }}">
+                                                        <i class="ti ti-cash"></i><span>Payroll</span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+                                                        @if (isset($role_data['user_permission_ids'][24]) || $role_data['role_id'] == 'global_user')
+                                                            <li>
+                                                                <a href="{{ route('payroll-process') }}"
+                                                                    class="{{ Request::is('payroll') ? 'active' : '' }}">
+                                                                    Process Payroll
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
+                                                            <li>
+                                                                <a href="{{ route('generatedPayslipIndex') }}"
+                                                                    class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
+                                                                    Generated Payslips
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                        @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
+                                                                                <li>
+                                                                                    <a href="{{ route('sss-contributionTable') }}" class="{{ Request::is(
+                                                                'payroll/payroll-items/sss-contribution',
+                                                                'payroll/payroll-items/withholding-tax',
+                                                                'payroll/payroll-items/overtime-table',
+                                                                'payroll/payroll-items/de-minimis-table',
+                                                                'payroll/payroll-items/de-minimis-user',
+                                                                'payroll/payroll-items/earnings',
+                                                                'payroll/payroll-items/earnings/user',
+                                                                'payroll/payroll-items/deductions',
+                                                                'payroll/payroll-items/deductions/user',
+                                                                'payroll/payroll-items/allowance',
+                                                                'payroll/payroll-items/allowance/user',
+                                                            )
+                                                                ? 'active'
+                                                                : '' }}">
+                                                                                        Payroll Items
+                                                                                    </a>
+                                                                                </li>
+                                                        @endif
 
-                                        @if ((isset($role_data['user_permission_ids'][51]) && AddonsChecker::hasAddon(4)) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('payroll-batch-users') }}"
-                                                    class="{{ Request::is('payroll/batch/users') ? 'active' : '' }}">
-                                                    Payroll Batch Users
-                                                </a>
-                                            </li>
-                                        @endif
-                                        @if ((isset($role_data['user_permission_ids'][52]) && AddonsChecker::hasAddon(4)) || $role_data['role_id'] == 'global_user')
-                                            <li>
-                                                <a href="{{ route('payroll-batch-settings') }}"
-                                                    class="{{ Request::is('payroll/batch/settings') ? 'active' : '' }}">
-                                                    Payroll Batch Settings
-                                                </a>
-                                            </li>
-                                        @endif
-                                    </ul>
-                                </li>
+                                                        @if ((isset($role_data['user_permission_ids'][51]) && AddonsChecker::hasAddon(4)) || $role_data['role_id'] == 'global_user')
+                                                            <li>
+                                                                <a href="{{ route('payroll-batch-users') }}"
+                                                                    class="{{ Request::is('payroll/batch/users') ? 'active' : '' }}">
+                                                                    Payroll Batch Users
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                        @if ((isset($role_data['user_permission_ids'][52]) && AddonsChecker::hasAddon(4)) || $role_data['role_id'] == 'global_user')
+                                                            <li>
+                                                                <a href="{{ route('payroll-batch-settings') }}"
+                                                                    class="{{ Request::is('payroll/batch/settings') ? 'active' : '' }}">
+                                                                    Payroll Batch Settings
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                    </ul>
+                                                </li>
                             @endif
 
                             @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][27]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('payslip') ? 'active' : '' }}">
-                                        <a href="{{ route('user-payslip') }}"
-                                            class="{{ Request::is('payslip') ? 'active' : '' }}">
+                                        <a href="{{ route('user-payslip') }}" class="{{ Request::is('payslip') ? 'active' : '' }}">
                                             <i class="ti ti-cash-register"></i><span>Payslip</span>
                                         </a>
                                     </li>
@@ -464,8 +458,7 @@
                             @if ((in_array(16, $role_data['module_ids']) && AddonsChecker::hasAddon(3)) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][46]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('bank') ? 'active' : '' }}">
-                                        <a href="{{ route('bank') }}"
-                                            class="{{ Request::is('bank') ? 'active' : '' }}">
+                                        <a href="{{ route('bank') }}" class="{{ Request::is('bank') ? 'active' : '' }}">
                                             <i class="ti ti-building"></i><span>Bank</span>
                                         </a>
                                     </li>
@@ -473,7 +466,7 @@
                             @endif
                         </ul>
                     </li>
-                @endif 
+                @endif
                 @if (in_array(4, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                     <li class="menu-title"><span>ADMINISTRATION</span></li>
                     <li>
@@ -501,8 +494,8 @@
                             @endif
                             @if (in_array(13, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
-                                    <a
-                                        href="javascript:void(0);"class="{{ Request::is('users', 'roles-permissions') ? 'active subdrop' : '' }}">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('users', 'roles-permissions') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-user-star"></i><span>User Management</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -519,51 +512,50 @@
                                         @endif
                                     </ul>
                                 </li>
-                            @endif 
+                            @endif
                             @if (in_array(15, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][43]) || $role_data['role_id'] == 'global_user')
-                                    <li class="submenu">
-                                        <a href="javascript:void(0);"
-                                            class="{{ Request::is(
-                'settings/attendance-settings',
-                'settings/approval-steps',
-                'settings/leave-type',
-                'settings/general-settings',
-                'settings/company-settings',
-                'settings/email-settings',
-                'settings/sms-settings',
-                'settings/payment-gateway',
-            )
-                ? 'active subdrop'
-                : '' }}">
-                                            <i class="ti ti-settings"></i><span>Settings</span>
-                                            <span class="menu-arrow"></span>
-                                        </a>
-                                        <ul>
-                                            <li class="submenu submenu-two">
-                                                <a href="javascript:void(0);"
-                                                    class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
-                                                    Settings<span class="menu-arrow inside-submenu"></span></a>
-                                                <ul>
-                                                    <li><a href="{{ route('attendance-settings') }}"
-                                                            class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance
-                                                            Settings
-                                                        </a></li>
-                                                    <li><a href="{{ url('settings/approval-steps') }}"
-                                                            class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
-                                                            Settings</a></li>
-                                                    <li><a href="{{ url('settings/leave-type') }}"
-                                                            class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
-                                                            Type</a></li>
-                                                </ul>
-                                            </li>
-                                        </ul>
-                                    </li>
+                                                <li class="submenu">
+                                                    <a href="javascript:void(0);" class="{{ Request::is(
+                                        'settings/attendance-settings',
+                                        'settings/approval-steps',
+                                        'settings/leave-type',
+                                        'settings/general-settings',
+                                        'settings/company-settings',
+                                        'settings/email-settings',
+                                        'settings/sms-settings',
+                                        'settings/payment-gateway',
+                                    )
+                                        ? 'active subdrop'
+                                        : '' }}">
+                                                        <i class="ti ti-settings"></i><span>Settings</span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+                                                        <li class="submenu submenu-two">
+                                                            <a href="javascript:void(0);"
+                                                                class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
+                                                                Settings<span class="menu-arrow inside-submenu"></span></a>
+                                                            <ul>
+                                                                <li><a href="{{ route('attendance-settings') }}"
+                                                                        class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance
+                                                                        Settings
+                                                                    </a></li>
+                                                                <li><a href="{{ url('settings/approval-steps') }}"
+                                                                        class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
+                                                                        Settings</a></li>
+                                                                <li><a href="{{ url('settings/leave-type') }}"
+                                                                        class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
+                                                                        Type</a></li>
+                                                            </ul>
+                                                        </li>
+                                                    </ul>
+                                                </li>
                                 @endif
                             @endif
                         </ul>
                     </li>
-                @endif 
+                @endif
                 @if (in_array(5, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                     <li class="menu-title"><span>Reports</span></li>
                     <li>
@@ -575,7 +567,7 @@
                                         <i class="ti ti-file"></i><span>Reports</span>
                                         <span class="menu-arrow"></span>
                                     </a>
-                                    <ul> 
+                                    <ul>
                                         @if (isset($role_data['user_permission_ids'][54]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('payroll-report') }}"
                                                     class="{{ Request::is('reports/payroll') ? 'active' : '' }}">Payroll
@@ -593,66 +585,70 @@
                                         @endif
                                     </ul>
                                 </li>
-                            @endif 
+                            @endif
                         </ul>
                     </li>
-                @endif 
+                @endif
 
-        @if (
-            (in_array(3, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-        )
-            <li class="mt-3 d-none" id="subscription-status-card">
-            <div class="card bg-light border-0 shadow-sm text-center p-3">
-                <div class="mb-2">
-                <i class="ti ti-crown fs-2 text-warning"></i>
-                </div>
-                <div>
-                <span class="fw-bold">Subscription</span>
-                </div>
-                <div class="my-1">
-                <span class="badge bg-success fs-6 px-2 py-1" style="font-size: 1rem !important;" id="subscription-days-left">Loading...</span>
-                </div>
-                <div>
-                <a href="{{ url('billing') }}" class="btn btn-primary btn-sm mt-2">Manage Subscription</a>
-                </div>
-            </div>
-            </li>
-        @endif
-        </ul>
+                @if (
+                        (in_array(3, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                    )
+                    <li class="mt-3 d-none" id="subscription-status-card">
+                        <div class="card bg-light border-0 shadow-sm text-center p-3">
+                            <div class="mb-2">
+                                <i class="ti ti-crown fs-2 text-warning"></i>
+                            </div>
+                            <div>
+                                <span class="fw-bold">Subscription</span>
+                            </div>
+                            <div class="my-1">
+                                <span class="badge bg-success fs-6 px-2 py-1" style="font-size: 1rem !important;"
+                                    id="subscription-days-left">Loading...</span>
+                            </div>
+                            <div id="subscription-message" class="d-none text-danger fw-bold mt-2">
+                                You need to resubscribe!
+                            </div>
+                            <div>
+                                <a href="{{ url('billing') }}" class="btn btn-primary btn-sm mt-2">Manage Subscription</a>
+                            </div>
+                        </div>
+                    </li>
+                @endif
+            </ul>
         </div>
-        </div>
-        </div>
-        <!-- /Sidebar -->
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            fetchSubscriptionStatus();
-            });
+    </div>
+</div>
+<!-- /Sidebar -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchSubscriptionStatus();
+    });
 
-            function fetchSubscriptionStatus() {
-            fetch('{{ route('api.subscription-status') }}', { cache: "no-store" })
-                .then(response => response.json())
-                .then(data => {
+    function fetchSubscriptionStatus() {
+        fetch('{{ route('api.subscription-status') }}', { cache: "no-store" })
+            .then(response => response.json())
+            .then(data => {
                 const card = document.getElementById('subscription-status-card');
                 const badge = document.getElementById('subscription-days-left');
                 // Only show card if there is a value for subscription_days_left
                 if (typeof data.subscription_days_left === 'number' && data.subscription_days_left > 0) {
                     if (card) card.classList.remove('d-none');
                     if (badge) {
-                    badge.textContent = `${data.subscription_days_left} days left`;
-                    badge.classList.remove('bg-warning');
-                    badge.classList.add('bg-success');
+                        badge.textContent = `${data.subscription_days_left} days left`;
+                        badge.classList.remove('bg-warning');
+                        badge.classList.add('bg-success');
                     }
                 } else {
                     if (card) card.classList.add('d-none');
                 }
-                })
-                .catch(() => {
+            })
+            .catch(() => {
                 // Hide card on error
                 const card = document.getElementById('subscription-status-card');
                 if (card) card.classList.add('d-none');
-                });
-            }
-        </script>
+            });
+    }
+</script>
 
 <!-- Horizontal Menu -->
 <div class="sidebar sidebar-horizontal" id="horizontal-menu">
@@ -696,16 +692,15 @@
                         <li><a href="{{ url('packages') }}"
                                 class="{{ Request::is('packages', 'packages-grid') ? 'active' : '' }}">Packages</a>
                         </li>
-                        <li><a href="{{ url('domain') }}"
-                                class="{{ Request::is('domain') ? 'active' : '' }}">Domain</a></li>
+                        <li><a href="{{ url('domain') }}" class="{{ Request::is('domain') ? 'active' : '' }}">Domain</a>
+                        </li>
                         <li><a href="{{ url('purchase-transaction') }}"
                                 class="{{ Request::is('purchase-transaction') ? 'active' : '' }}">Purchase
                                 Transaction</a></li>
                     </ul>
                 </li>
                 <li class="submenu">
-                    <a href="#"
-                        class="{{ Request::is(
+                    <a href="#" class="{{ Request::is(
     'chat',
     'voice-call',
     'video-call',
@@ -728,8 +723,7 @@
                         <span class="menu-arrow"></span>
                     </a>
                     <ul>
-                        <li><a href="{{ url('chat') }}"
-                                class="{{ Request::is('chat') ? 'active' : '' }}">Chat</a></li>
+                        <li><a href="{{ url('chat') }}" class="{{ Request::is('chat') ? 'active' : '' }}">Chat</a></li>
                         <li class="submenu submenu-two">
                             <a href="{{ url('call') }}"
                                 class="{{ Request::is('voice-call', 'video-call', 'outgoing-call', 'incoming-call', 'call-history') ? 'active subdrop' : '' }}">Calls<span
@@ -752,12 +746,12 @@
                         </li>
                         <li><a href="{{ url('calendar') }}"
                                 class="{{ Request::is('calendar') ? 'active' : '' }}">Calendar</a></li>
-                        <li><a href="{{ url('email') }}"
-                                class="{{ Request::is('email') ? 'active' : '' }}">Email</a></li>
+                        <li><a href="{{ url('email') }}" class="{{ Request::is('email') ? 'active' : '' }}">Email</a>
+                        </li>
                         <li><a href="{{ url('todo') }}" class="{{ Request::is('todo') ? 'active' : '' }}">To
                                 Do</a></li>
-                        <li><a href="{{ url('notes') }}"
-                                class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a></li>
+                        <li><a href="{{ url('notes') }}" class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a>
+                        </li>
                         <li><a href="{{ url('social-feed') }}"
                                 class="{{ Request::is('social-feed') ? 'active' : '' }}">Social Feed</a></li>
                         <li><a href="{{ url('file-manager') }}"
@@ -770,8 +764,7 @@
                     </ul>
                 </li>
                 <li class="submenu">
-                    <a href="#"
-                        class="{{ Request::is(
+                    <a href="#" class="{{ Request::is(
     'layout-horizontal',
     'layout-detached',
     'layout-modern',
@@ -824,8 +817,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url('layout-box') }}"
-                                class="{{ Request::is('layout-box') ? 'active' : '' }}">
+                            <a href="{{ url('layout-box') }}" class="{{ Request::is('layout-box') ? 'active' : '' }}">
                                 <span>Boxed</span>
                             </a>
                         </li>
@@ -866,22 +858,19 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url('layout-rtl') }}"
-                                class="{{ Request::is('layout-rtl') ? 'active' : '' }}">
+                            <a href="{{ url('layout-rtl') }}" class="{{ Request::is('layout-rtl') ? 'active' : '' }}">
                                 <span>RTL</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url('layout-dark') }}"
-                                class="{{ Request::is('layout-dark') ? 'active' : '' }}">
+                            <a href="{{ url('layout-dark') }}" class="{{ Request::is('layout-dark') ? 'active' : '' }}">
                                 <span>Dark</span>
                             </a>
                         </li>
                     </ul>
                 </li>
                 <li class="submenu">
-                    <a href="#"
-                        class="{{ Request::is(
+                    <a href="#" class="{{ Request::is(
     'clients-grid',
     'clients',
     'projects-grid',
@@ -948,8 +937,8 @@
                             </a>
                         </li>
                         <li class="submenu">
-                            <a
-                                href="javascript:void(0);"class="{{ Request::is('projects-grid', 'tasks', 'task-board', 'projects', 'project-details', 'task-details') ? 'active subdrop' : '' }}"><span>Projects</span>
+                            <a href="javascript:void(0);"
+                                class="{{ Request::is('projects-grid', 'tasks', 'task-board', 'projects', 'project-details', 'task-details') ? 'active subdrop' : '' }}"><span>Projects</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
@@ -964,8 +953,7 @@
                             </ul>
                         </li>
                         <li class="submenu">
-                            <a href="{{ url('call') }}"
-                                class="{{ Request::is(
+                            <a href="{{ url('call') }}" class="{{ Request::is(
     'contacts-grid',
     'contacts',
     'contact-details',
@@ -983,8 +971,7 @@
     'activity',
 )
     ? 'active subdrop'
-    : '' }}">Crm<span
-                                    class="menu-arrow"></span></a>
+    : '' }}">Crm<span class="menu-arrow"></span></a>
                             <ul>
                                 <li><a href="{{ url('contacts-grid') }}"
                                         class="{{ Request::is('contacts-grid', 'contacts', 'contact-details') ? 'active' : '' }}"><span>Contacts</span></a>
@@ -1030,7 +1017,7 @@
                                 <li><a href="{{ url('designations') }}"
                                         class="{{ Request::is('designations') ? 'active' : '' }}">Designations</a>
                                 </li>
-                                
+
                                 <li><a href="{{ url('policy') }}"
                                         class="{{ Request::is('policy') ? 'active' : '' }}">Policies</a></li>
                             </ul>
@@ -1052,8 +1039,7 @@
                         <li class="{{ Request::is('holidays') ? 'active' : '' }}"><a
                                 href="{{ url('holidays') }}"><span>Holidays</span></a></li>
                         <li class="submenu">
-                            <a href="javascript:void(0);"
-                                class="{{ Request::is(
+                            <a href="javascript:void(0);" class="{{ Request::is(
     'leaves',
     'leaves-employee',
     'leave-settings',
@@ -1148,8 +1134,7 @@
                     </ul>
                 </li>
                 <li class="submenu">
-                    <a href="#"
-                        class="{{ Request::is(
+                    <a href="#" class="{{ Request::is(
     'estimates',
     'invoices',
     'payments',
@@ -1359,8 +1344,7 @@
                             </ul>
                         </li>
                         <li class="submenu">
-                            <a href="javascript:void(0);"
-                                class="{{ Request::is(
+                            <a href="javascript:void(0);" class="{{ Request::is(
     'profile-settings',
     'security-settings',
     'notification-settings',
@@ -1583,8 +1567,7 @@
                         title="Dashboard" data-bs-toggle="tab" data-bs-target="#dashboard">
                         <i class="ti ti-smart-home"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
+                    <a href="#" class="nav-link {{ Request::is(
     'chat',
     'voice-call',
     'video-call',
@@ -1601,8 +1584,7 @@
     'invoices',
 )
     ? ' show active '
-    : '' }}"
-                        title="Apps" data-bs-toggle="tab" data-bs-target="#application">
+    : '' }}" title="Apps" data-bs-toggle="tab" data-bs-target="#application">
                         <i class="ti ti-layout-grid-add"></i>
                     </a>
                     <a href="#"
@@ -1610,8 +1592,7 @@
                         title="Super Admin" data-bs-toggle="tab" data-bs-target="#super-admin">
                         <i class="ti ti-user-star"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
+                    <a href="#" class="nav-link {{ Request::is(
     'layout-horizontal',
     'layout-detached',
     'layout-modern',
@@ -1628,8 +1609,7 @@
     'layout-dark',
 )
     ? 'show active'
-    : '' }}"
-                        title="Layout" data-bs-toggle="tab" data-bs-target="#layout">
+    : '' }}" title="Layout" data-bs-toggle="tab" data-bs-target="#layout">
                         <i class="ti ti-layout-board-split"></i>
                     </a>
                     <a href="#"
@@ -1637,8 +1617,7 @@
                         title="Projects" data-bs-toggle="tab" data-bs-target="#projects">
                         <i class="ti ti-users-group"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
+                    <a href="#" class="nav-link {{ Request::is(
     'contacts-grid',
     'contacts',
     'contact-details',
@@ -1656,12 +1635,10 @@
     'activity',
 )
     ? 'show active'
-    : '' }}"
-                        title="Crm" data-bs-toggle="tab" data-bs-target="#crm">
+    : '' }}" title="Crm" data-bs-toggle="tab" data-bs-target="#crm">
                         <i class="ti ti-user-shield"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
+                    <a href="#" class="nav-link {{ Request::is(
     'employees',
     'employees-grid',
     'employee-details',
@@ -1693,8 +1670,7 @@
     'termination',
 )
     ? ' show active '
-    : '' }}"
-                        title="Hrm" data-bs-toggle="tab" data-bs-target="#hrm">
+    : '' }}" title="Hrm" data-bs-toggle="tab" data-bs-target="#hrm">
                         <i class="ti ti-user"></i>
                     </a>
                     <a href="#"
@@ -1702,8 +1678,7 @@
                         title="Finance" data-bs-toggle="tab" data-bs-target="#finance">
                         <i class="ti ti-shopping-cart-dollar"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
+                    <a href="#" class="nav-link {{ Request::is(
     'assets',
     'asset-categories',
     'knowledgebase',
@@ -1758,8 +1733,7 @@
     'clear-cache',
 )
     ? 'show active '
-    : '' }}"
-                        title="Administration" data-bs-toggle="tab" data-bs-target="#administration">
+    : '' }}" title="Administration" data-bs-toggle="tab" data-bs-target="#administration">
                         <i class="ti ti-cash"></i>
                     </a>
                     <a href="#"
@@ -1772,8 +1746,7 @@
                         title="Pages" data-bs-toggle="tab" data-bs-target="#pages">
                         <i class="ti ti-page-break"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
+                    <a href="#" class="nav-link {{ Request::is(
     'login',
     'login-2',
     'login-3',
@@ -1797,12 +1770,10 @@
     'error-500',
 )
     ? ' show active'
-    : '' }} "
-                        title="Authentication" data-bs-toggle="tab" data-bs-target="#authentication">
+    : '' }} " title="Authentication" data-bs-toggle="tab" data-bs-target="#authentication">
                         <i class="ti ti-lock-check"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is(
+                    <a href="#" class="nav-link {{ Request::is(
     'ui-alerts',
     'ui-accordion',
     'ui-avatar',
@@ -1886,12 +1857,10 @@
     'icon-flag',
 )
     ? ' show active '
-    : '' }}"
-                        title="UI Elements" data-bs-toggle="tab" data-bs-target="#ui-elements">
+    : '' }}" title="UI Elements" data-bs-toggle="tab" data-bs-target="#ui-elements">
                         <i class="ti ti-ux-circle"></i>
                     </a>
-                    <a href="#"
-                        class="nav-link {{ Request::is('maps-vector', 'maps-leaflet') ? 'active' : '' }}"
+                    <a href="#" class="nav-link {{ Request::is('maps-vector', 'maps-leaflet') ? 'active' : '' }}"
                         title="Extras" data-bs-toggle="tab" data-bs-target="#extras">
                         <i class="ti ti-vector-triangle"></i>
                     </a>
@@ -1922,8 +1891,8 @@
                         id="dashboard">
                         <ul>
                             <li class="menu-title"><span>MAIN MENU</span></li>
-                            <li><a href="{{ url('index') }}"
-                                    class="{{ Request::is('index') ? 'active' : '' }}">Admin Dashboard</a></li>
+                            <li><a href="{{ url('index') }}" class="{{ Request::is('index') ? 'active' : '' }}">Admin
+                                    Dashboard</a></li>
                             <li><a href="{{ url('employee-dashboard') }}"
                                     class="{{ Request::is('employee-dashboard') ? 'active' : '' }}">Employee
                                     Dashboard</a></li>
@@ -1953,12 +1922,11 @@
     'invoice-details',
 )
     ? ' show active '
-    : '' }}"
-                        id="application">
+    : '' }}" id="application">
                         <ul>
                             <li class="menu-title"><span>APPLICATION</span></li>
-                            <li><a
-                                    href="{{ url('voice-call') }}"class="{{ Request::is('voice-call') ? 'active' : '' }}">Voice
+                            <li><a href="{{ url('voice-call') }}"
+                                    class="{{ Request::is('voice-call') ? 'active' : '' }}">Voice
                                     Call</a></li>
                             <li><a href="{{ url('video-call') }}"
                                     class="{{ Request::is('video-call') ? 'active' : '' }}">Video Call</a></li>
@@ -1976,8 +1944,8 @@
                                     class="{{ Request::is('email') ? 'active' : '' }}">Email</a></li>
                             <li><a href="{{ url('todo') }}" class="{{ Request::is('todo') ? 'active' : '' }}">To
                                     Do</a></li>
-                            <li><a
-                                    href="{{ url('notes') }}"class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a>
+                            <li><a href="{{ url('notes') }}"
+                                    class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a>
                             </li>
                             <li><a href="{{ url('social-active') }}"
                                     class="{{ Request::is('social-active') ? 'active' : '' }}">File Manager</a>
@@ -2029,8 +1997,7 @@
     'layout-dark',
 )
     ? 'show active'
-    : '' }}"
-                        id="layout">
+    : '' }}" id="layout">
                         <ul>
                             <li class="menu-title"><span>LAYOUT</span></li>
                             <li><a href="{{ url('layout-horizontal') }}"
@@ -2119,8 +2086,7 @@
     'activity',
 )
     ? ' show active '
-    : '' }}"
-                        id="crm">
+    : '' }}" id="crm">
                         <ul>
                             <li class="menu-title"><span>CRM</span></li>
                             <li><a href="{{ url('contacts-grid') }}"
@@ -2178,8 +2144,7 @@
     'termination',
 )
     ? ' show active'
-    : '' }}"
-                        id="hrm">
+    : '' }}" id="hrm">
                         <ul>
                             <li class="menu-title"><span>HRM</span></li>
                             <li class="submenu">
@@ -2224,8 +2189,7 @@
                             <li class="{{ Request::is('holidays') ? 'active' : '' }}"><a
                                     href="{{ url('holidays') }}"><span>Holidays</span></a></li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
+                                <a href="javascript:void(0);" class="{{ Request::is(
     'leaves',
     'leaves-employee',
     'leave-settings',
@@ -2338,8 +2302,7 @@
     'payroll',
 )
     ? ' show active'
-    : '' }}"
-                        id="finance">
+    : '' }}" id="finance">
                         <ul>
                             <li class="menu-title"><span>FINANCE & ACCOUNTS</span></li>
                             <li class="submenu">
@@ -2456,8 +2419,7 @@
     'clear-cache',
 )
     ? ' show active '
-    : '' }}"
-                        id="administration">
+    : '' }}" id="administration">
                         <ul>
                             <li class="menu-title"><span>ADMINISTRATION</span></li>
                             <li class="submenu">
@@ -2738,8 +2700,8 @@
                             </li>
                             <li><a href="{{ url('testimonials') }}"
                                     class="{{ Request::is('testimonials') ? 'active' : '' }}">Testimonials</a></li>
-                            <li><a href="{{ url('faq') }}"
-                                    class="{{ Request::is('faq') ? 'active' : '' }}">FAQ’S</a></li>
+                            <li><a href="{{ url('faq') }}" class="{{ Request::is('faq') ? 'active' : '' }}">FAQ’S</a>
+                            </li>
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
@@ -2757,8 +2719,7 @@
     'terms-condition',
 )
     ? ' show active'
-    : '' }} "
-                        id="pages">
+    : '' }} " id="pages">
                         <ul>
                             <li class="menu-title"><span>PAGES</span></li>
                             <li><a href="{{ url('starter') }}"
@@ -2823,8 +2784,7 @@
     'error-500',
 )
     ? ' show active'
-    : '' }} "
-                        id="authentication">
+    : '' }} " id="authentication">
                         <ul>
                             <li class="menu-title"><span>AUTHENTICATION</span></li>
                             <li class="submenu">
@@ -3017,13 +2977,11 @@
     'icon-flag',
 )
     ? ' show active '
-    : '' }}"
-                        id="ui-elements">
+    : '' }}" id="ui-elements">
                         <ul>
                             <li class="menu-title"><span>UI INTERFACE</span></li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
+                                <a href="javascript:void(0);" class="{{ Request::is(
     'ui-alerts',
     'ui-accordion',
     'ui-avatar',
@@ -3191,8 +3149,7 @@
 
                             </li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
+                                <a href="javascript:void(0);" class="{{ Request::is(
     'ui-ribbon',
     'ui-clipboard',
     'ui-drag-drop',
@@ -3255,8 +3212,7 @@
                                 </ul>
                             </li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
+                                <a href="javascript:void(0);" class="{{ Request::is(
     'form-basic-inputs',
     'form-checkbox-radios',
     'form-input-groups',
@@ -3278,8 +3234,7 @@
                                 </a>
                                 <ul>
                                     <li class="submenu submenu-two">
-                                        <a href="javascript:void(0);"
-                                            class="{{ Request::is(
+                                        <a href="javascript:void(0);" class="{{ Request::is(
     'form-basic-inputs',
     'form-checkbox-radios',
     'form-input-groups',
@@ -3427,8 +3382,7 @@
                                 </ul>
                             </li>
                             <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is(
+                                <a href="javascript:void(0);" class="{{ Request::is(
     'icon-fontawesome',
     'icon-tabler',
     'icon-bootstrap',
@@ -3449,8 +3403,7 @@
     'icon-flag',
 )
     ? 'active subdrop'
-    : '' }}">Icons<span
-                                        class="menu-arrow"></span> </a>
+    : '' }}">Icons<span class="menu-arrow"></span> </a>
                                 <ul>
                                     <li>
                                         <a href="{{ url('icon-fontawesome') }}"
@@ -3637,8 +3590,7 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-application" role="tab"
-                                    class="nav-link {{ Request::is(
+                                <a href="#menu-application" role="tab" class="nav-link {{ Request::is(
     'chat',
     'voice-call',
     'video-call',
@@ -3655,9 +3607,7 @@
     'invoices',
 )
     ? ' show active '
-    : '' }} "
-                                    title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application"
-                                    aria-selected="false">
+    : '' }} " title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application" aria-selected="false">
                                     <span><i class="ti ti-layout-grid-add"></i></span>
                                     <p>Applications</p>
                                 </a>
@@ -3672,8 +3622,7 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-layout" role="tab"
-                                    class="nav-link {{ Request::is(
+                                <a href="#menu-layout" role="tab" class="nav-link {{ Request::is(
     'layout-horizontal',
     'layout-detached',
     'layout-modern',
@@ -3690,16 +3639,13 @@
     'layout-dark',
 )
     ? 'show active'
-    : '' }}"
-                                    title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout"
-                                    aria-selected="false">
+    : '' }}" title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout" aria-selected="false">
                                     <span><i class="ti ti-layout-board-split"></i></span>
                                     <p>Layouts</p>
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-project" role="tab"
-                                    class="nav-link {{ Request::is(
+                                <a href="#menu-project" role="tab" class="nav-link {{ Request::is(
     'activity',
     'clients',
     'employees',
@@ -3736,16 +3682,13 @@
     'termination',
 )
     ? ' show active '
-    : '' }}"
-                                    title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project"
-                                    aria-selected="false">
+    : '' }}" title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project" aria-selected="false">
                                     <span><i class="ti ti-folder"></i></span>
                                     <p>Projects</p>
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-crm" role="tab"
-                                    class="nav-link {{ Request::is(
+                                <a href="#menu-crm" role="tab" class="nav-link {{ Request::is(
     'contacts-grid',
     'contacts',
     'contact-details',
@@ -3763,16 +3706,13 @@
     'activity',
 )
     ? 'show active'
-    : '' }}"
-                                    title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm"
-                                    aria-selected="false">
+    : '' }}" title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm" aria-selected="false">
                                     <span><i class="ti ti-user-shield"></i></span>
                                     <p>Crm</p>
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-hrm" role="tab"
-                                    class="nav-link {{ Request::is(
+                                <a href="#menu-hrm" role="tab" class="nav-link {{ Request::is(
     'employees',
     'employees-grid',
     'employee-details',
@@ -3804,9 +3744,7 @@
     'termination',
 )
     ? ' show active '
-    : '' }}"
-                                    title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm"
-                                    aria-selected="false">
+    : '' }}" title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm" aria-selected="false">
                                     <span><i class="ti ti-users"></i></span>
                                     <p>Hrm</p>
                                 </a>
@@ -3821,8 +3759,7 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-administration" role="tab"
-                                    class="nav-link {{ Request::is(
+                                <a href="#menu-administration" role="tab" class="nav-link {{ Request::is(
     'assets',
     'asset-categories',
     'knowledgebase',
@@ -3877,9 +3814,7 @@
     'clear-cache',
 )
     ? 'show active '
-    : '' }}"
-                                    title="Administration" data-bs-toggle="tab"
-                                    data-bs-target="#menu-administration" aria-selected="false">
+    : '' }}" title="Administration" data-bs-toggle="tab" data-bs-target="#menu-administration" aria-selected="false">
                                     <span><i class="ti ti-cash"></i></span>
                                     <p>Administration</p>
                                 </a>
@@ -3903,8 +3838,7 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-authentication" role="tab"
-                                    class="nav-link {{ Request::is(
+                                <a href="#menu-authentication" role="tab" class="nav-link {{ Request::is(
     'login',
     'login-2',
     'login-3',
@@ -3928,16 +3862,13 @@
     'error-500',
 )
     ? ' show active'
-    : '' }} "
-                                    title="Authentication" data-bs-toggle="tab"
-                                    data-bs-target="#menu-authentication" aria-selected="false">
+    : '' }} " title="Authentication" data-bs-toggle="tab" data-bs-target="#menu-authentication" aria-selected="false">
                                     <span><i class="ti ti-lock-check"></i></span>
                                     <p>Authentication</p>
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="#menu-ui-elements" role="tab"
-                                    class="nav-link {{ Request::is(
+                                <a href="#menu-ui-elements" role="tab" class="nav-link {{ Request::is(
     'ui-alerts',
     'ui-accordion',
     'ui-avatar',
@@ -4021,9 +3952,7 @@
     'icon-flag',
 )
     ? ' show active '
-    : '' }}"
-                                    title="UI Elements" data-bs-toggle="tab" data-bs-target="#menu-ui-elements"
-                                    aria-selected="false">
+    : '' }}" title="UI Elements" data-bs-toggle="tab" data-bs-target="#menu-ui-elements" aria-selected="false">
                                     <span><i class="ti ti-ux-circle"></i></span>
                                     <p>Basic UI</p>
                                 </a>
@@ -4086,8 +4015,7 @@
     'invoice-details',
 )
     ? ' show active '
-    : '' }}"
-                            id="menu-application">
+    : '' }}" id="menu-application">
                             <ul class="stack-submenu">
                                 <li><a href="{{ url('chat') }}"
                                         class="{{ Request::is('chat') ? 'active' : '' }}">Chat</a></li>
@@ -4118,8 +4046,8 @@
                                         class="{{ Request::is('calendar') ? 'active' : '' }}">Calendar</a></li>
                                 <li><a href="{{ url('email') }}"
                                         class="{{ Request::is('email') ? 'active' : '' }}">Email</a></li>
-                                <li><a href="{{ url('todo') }}"
-                                        class="{{ Request::is('todo') ? 'active' : '' }}">To Do</a></li>
+                                <li><a href="{{ url('todo') }}" class="{{ Request::is('todo') ? 'active' : '' }}">To
+                                        Do</a></li>
                                 <li><a href="{{ url('notes') }}"
                                         class="{{ Request::is('notes') ? 'active' : '' }}">Notes</a></li>
                                 <li><a href="{{ url('file-manager') }}"
@@ -4149,8 +4077,7 @@
     'layout-dark',
 )
     ? 'show active'
-    : '' }}"
-                            id="menu-layout">
+    : '' }}" id="menu-layout">
                             <ul class="stack-submenu">
                                 <li class="{{ Request::is('layout-horizontal') ? 'active' : '' }}">
                                     <a href="{{ url('layout-horizontal') }}">
@@ -4266,8 +4193,7 @@
     'activity',
 )
     ? 'show active'
-    : '' }}"
-                            id="menu-crm">
+    : '' }}" id="menu-crm">
                             <ul class="stack-submenu">
                                 <li
                                     class="{{ Request::is('contacts-grid', 'contacts', 'contact-details') ? 'active' : '' }}">
@@ -4277,12 +4203,10 @@
                                     class="{{ Request::is('companies-grid', 'companies-crm', 'company-details') ? 'active' : '' }}">
                                     <a href="{{ url('companies-grid') }}"><span>Companies</span></a>
                                 </li>
-                                <li
-                                    class="{{ Request::is('deals-grid', 'deals-details', 'deals') ? 'active' : '' }}">
+                                <li class="{{ Request::is('deals-grid', 'deals-details', 'deals') ? 'active' : '' }}">
                                     <a href="{{ url('deals-grid') }}"><span>Deals</span></a>
                                 </li>
-                                <li
-                                    class="{{ Request::is('leads-grid', 'leads-details', 'leads') ? 'active' : '' }}">
+                                <li class="{{ Request::is('leads-grid', 'leads-details', 'leads') ? 'active' : '' }}">
                                     <a href="{{ url('leads-grid') }}"><span>Leads</span></a>
                                 </li>
                                 <li class="{{ Request::is('pipeline') ? 'active' : '' }}"><a
@@ -4326,8 +4250,7 @@
     'termination',
 )
     ? ' show active '
-    : '' }}"
-                            id="menu-hrm">
+    : '' }}" id="menu-hrm">
                             <ul class="stack-submenu">
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
@@ -4373,8 +4296,7 @@
                                 <li class="{{ Request::is('holidays') ? 'active' : '' }}"><a
                                         href="{{ url('holidays') }}"><span>Holidays</span></a></li>
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
+                                    <a href="javascript:void(0);" class="{{ Request::is(
     'leaves',
     'leaves-employee',
     'leave-settings',
@@ -4593,8 +4515,7 @@
     'clear-cache',
 )
     ? 'show active '
-    : '' }}"
-                            id="menu-administration">
+    : '' }}" id="menu-administration">
                             <ul class="stack-submenu">
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
@@ -4933,8 +4854,7 @@
     'error-500',
 )
     ? ' show active'
-    : '' }} "
-                            id="menu-authentication">
+    : '' }} " id="menu-authentication">
                             <ul class="stack-submenu">
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
@@ -5108,12 +5028,10 @@
     'icon-flag',
 )
     ? ' show active '
-    : '' }}"
-                            id="menu-ui-elements">
+    : '' }}" id="menu-ui-elements">
                             <ul class="stack-submenu">
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
+                                    <a href="javascript:void(0);" class="{{ Request::is(
     'ui-alerts',
     'ui-accordion',
     'ui-avatar',
@@ -5279,8 +5197,7 @@
                                     </ul>
                                 </li>
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
+                                    <a href="javascript:void(0);" class="{{ Request::is(
     'ui-ribbon',
     'ui-clipboard',
     'ui-drag-drop',
@@ -5343,8 +5260,7 @@
                                     </ul>
                                 </li>
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
+                                    <a href="javascript:void(0);" class="{{ Request::is(
     'form-basic-inputs',
     'form-checkbox-radios',
     'form-input-groups',
@@ -5361,12 +5277,10 @@
     'form-pickers',
 )
     ? 'active subdrop'
-    : '' }}">Forms<span
-                                            class="menu-arrow"></span> </a>
+    : '' }}">Forms<span class="menu-arrow"></span> </a>
                                     <ul>
                                         <li class="submenu submenu-two">
-                                            <a href="javascript:void(0);"
-                                                class="{{ Request::is(
+                                            <a href="javascript:void(0);" class="{{ Request::is(
     'form-basic-inputs',
     'form-checkbox-radios',
     'form-input-groups',
@@ -5516,8 +5430,7 @@
                                     </ul>
                                 </li>
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is(
+                                    <a href="javascript:void(0);" class="{{ Request::is(
     'icon-fontawesome',
     'icon-tabler',
     'icon-bootstrap',
@@ -5538,8 +5451,7 @@
     'icon-flag',
 )
     ? 'active subdrop'
-    : '' }}">Icons<span
-                                            class="menu-arrow"></span> </a>
+    : '' }}">Icons<span class="menu-arrow"></span> </a>
                                     <ul>
                                         <li>
                                             <a href="{{ url('icon-fontawesome') }}"

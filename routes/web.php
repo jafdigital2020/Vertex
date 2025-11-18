@@ -33,6 +33,7 @@ use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Billing\BillingController;
+use App\Http\Controllers\Tenant\BranchAddonController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\Tenant\Profile\ProfileController;
@@ -288,7 +289,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/deductions/user-filter', [DeductionsController::class, 'userDeductionFilter'])->name('user-deductions-filter');
     Route::get('/payroll/payroll-items/allowance', [AllowanceController::class, 'payrollItemsAllowance'])->name('allowance');
-     Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('userAllowanceIndex');
+    Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('userAllowanceIndex');
 
     // Bank
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank')->middleware(CheckAddon::class . ':3');
@@ -305,12 +306,12 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users')->middleware(CheckAddon::class . ':4');
     Route::get('/payroll/batch/users_filter', [PayrollBatchController::class, 'payrollBatchUsersFilter'])->name('payroll-batch-users-filter');
     Route::post('/payroll/batch/users/update', [PayrollBatchController::class, 'payrollBatchUsersUpdate'])->name('payroll-batch-users-update');
-    Route::post('/payroll/batch/users/bulk-assign' , [PayrollBatchController::class, 'payrollBatchBulkAssign'])->name('payroll-batch-bulk-assign');
+    Route::post('/payroll/batch/users/bulk-assign', [PayrollBatchController::class, 'payrollBatchBulkAssign'])->name('payroll-batch-bulk-assign');
     Route::post('/fetch-departments', [PayrollBatchController::class, 'fetchDepartments'])->name('fetch.departments');
     Route::post('/fetch-designations', [PayrollBatchController::class, 'fetchDesignations'])->name('fetch.designations');
     Route::post('/fetch-employees', [PayrollBatchController::class, 'fetchEmployees'])->name('fetch.employees');
     Route::post('/payroll-batch/check-duplicate', [PayrollBatchController::class, 'checkDuplicatePayroll'])
-    ->name('payroll-batch.check-duplicate');
+        ->name('payroll-batch.check-duplicate');
 
 
     Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('payroll-batch-settings')->middleware(CheckAddon::class . ':4');
@@ -326,7 +327,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.ajaxMarkAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.ajaxMarkAllAsRead');
 
-        // Auth User Profile
+    // Auth User Profile
     Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
 
     // Official Business
@@ -344,7 +345,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/employee-assets-create', [AssetsController::class, 'employeeAssetsStore'])->name('employee-assets-create');
     Route::get('/employee-assets-history', [AssetsController::class, 'employeeAssetsHistoryIndex'])->name('employee-assets-history')->middleware(CheckPermission::class . ':49');
     Route::get('/employee-assets-history-filter', [AssetsController::class, 'employeeAssetsHistoryFilter'])->name('employee-assets-history-filter');
-    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50')->middleware(CheckAddon::class . ':2'); 
+    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50')->middleware(CheckAddon::class . ':2');
     Route::get('/assets-settings-filter', [AssetsController::class, 'assetsSettingsFilter'])->name('assets-settings-filter');
     Route::get('/assets-settings-details', [AssetsController::class, 'assetsSettingsDetails'])->name('assets-settings-details');
     Route::post('/assets-settings-details/update', [AssetsController::class, 'assetsSettingsDetailsUpdate'])->name('assetsSettingsDetailsUpdate');
@@ -353,30 +354,33 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/assets-settings/delete', [AssetsController::class, 'assetsSettingsDelete'])->name('assetsSettingsDelete');
     Route::get('/assets-settings-history', [AssetsController::class, 'assetsSettingsHistoryIndex'])->name('assets-settings-history')->middleware(CheckPermission::class . ':50');
     Route::get('/assets-settings-history-filter', [AssetsController::class, 'assetsSettingsHistoryFilter'])->name('assets-history-filter');
-    });
+});
 
-    Route::get('/send-test-notif', function () {
-        $user = User::find(47);
-        $user->notify(new UserNotification('Welcome! This is your test notification.'));
-        return 'Notification Sent!';
-    });
-
-
-    // Payroll Report
-    Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('payroll-report');
-    Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report');
-    Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report');
-    Route::get('/generate-pdf', [SssReportController::class, 'generatePdf']);
+Route::get('/send-test-notif', function () {
+    $user = User::find(47);
+    $user->notify(new UserNotification('Welcome! This is your test notification.'));
+    return 'Notification Sent!';
+});
 
 
-    // Billing
-    Route::get('/billing', [BillingController::class, 'billingIndex'])->name('billing');
-    Route::get('/payment', [PaymentHistoryController::class, 'paymentIndex'])->name('payment');
-
-    Route::get('/invoice/{id}/download', [App\Http\Controllers\Tenant\Billing\BillingController::class, 'downloadInvoice'])->name('invoice.download');
-    Route::get('/invoices/download-all', [App\Http\Controllers\Tenant\Billing\BillingController::class, 'downloadAllInvoices'])->name('invoices.download-all');
-
-
-    Route::get('/employees/topup/success', [EmployeePaymentController::class, 'showPaymentStatus'])->name('employee.paymentstatus');
+// Payroll Report
+Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('payroll-report');
+Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report');
+Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report');
+Route::get('/generate-pdf', [SssReportController::class, 'generatePdf']);
 
 
+// Billing
+Route::get('/billing', [BillingController::class, 'billingIndex'])->name('billing');
+Route::get('/payment', [PaymentHistoryController::class, 'paymentIndex'])->name('payment');
+
+Route::get('/invoice/{id}/download', [App\Http\Controllers\Tenant\Billing\BillingController::class, 'downloadInvoice'])->name('invoice.download');
+Route::get('/invoices/download-all', [App\Http\Controllers\Tenant\Billing\BillingController::class, 'downloadAllInvoices'])->name('invoices.download-all');
+
+// Branch Add-ons
+Route::get('/addons', [BranchAddonController::class, 'index'])->name('addons.purchase');
+Route::post('/addons/purchase', [BranchAddonController::class, 'purchase'])->name('addon.purchase');
+Route::post('/addons/cancel', [BranchAddonController::class, 'cancel'])->name('addon.cancel');
+Route::get('/addons/payment/callback/{invoice}', [BranchAddonController::class, 'paymentCallback'])->name('addon.payment.callback');
+
+Route::get('/employees/topup/success', [EmployeePaymentController::class, 'showPaymentStatus'])->name('employee.paymentstatus');

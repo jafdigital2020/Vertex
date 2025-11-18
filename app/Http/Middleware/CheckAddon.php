@@ -17,16 +17,16 @@ class CheckAddon
      * @param  int  $addonId
      * @return mixed
      */
-   
+
     public function handle(Request $request, Closure $next, $addonId)
-    { 
- 
+    {
+
         if (Auth::guard('global')->check()) {
             return $next($request);
         }
- 
+
         if (!AddonsChecker::hasAddon((int) $addonId)) {
-            return response()->view('errors.access_denied', [], 403);
+            return response()->view('errors.featurerequired', [], 403);
         }
 
         return $next($request);

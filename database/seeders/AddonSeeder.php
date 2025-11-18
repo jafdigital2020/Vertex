@@ -13,7 +13,6 @@ class AddonSeeder extends Seeder
      */
     public function run(): void
     {
-
         DB::table('addons')->insert([
             [
                 'addon_key' => 'employee_official_business',
@@ -24,6 +23,13 @@ class AddonSeeder extends Seeder
                 'is_active' => true,
                 'module_ids' => '17',
                 'submodule_ids' => '47,48',
+                'features' => json_encode([
+                    'Track employee business trips',
+                    'Manage travel requests',
+                    'Automated approval workflow',
+                    'Expense tracking integration'
+                ]),
+                'icon' => 'briefcase',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -36,6 +42,14 @@ class AddonSeeder extends Seeder
                 'is_active' => true,
                 'module_ids' => '18',
                 'submodule_ids' => '49,50',
+                'features' => json_encode([
+                    'Complete asset inventory',
+                    'Asset assignment tracking',
+                    'Maintenance scheduling',
+                    'Depreciation calculations',
+                    'Asset history logs'
+                ]),
+                'icon' => 'box',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -48,6 +62,13 @@ class AddonSeeder extends Seeder
                 'is_active' => true,
                 'module_ids' => '16',
                 'submodule_ids' => '46',
+                'features' => json_encode([
+                    'Multi-bank format support',
+                    'Automated file generation',
+                    'Secure data export',
+                    'Custom field mapping'
+                ]),
+                'icon' => 'building-bank',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -60,6 +81,13 @@ class AddonSeeder extends Seeder
                 'is_active' => true,
                 'module_ids' => '10',
                 'submodule_ids' => '51,52',
+                'features' => json_encode([
+                    'Bulk payroll processing',
+                    'Multiple batch support',
+                    'Automated calculations',
+                    'Error detection & reporting'
+                ]),
+                'icon' => 'calculator',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -72,6 +100,13 @@ class AddonSeeder extends Seeder
                 'is_active' => true,
                 'module_ids' => '4',
                 'submodule_ids' => '12',
+                'features' => json_encode([
+                    'Upload company policies',
+                    'Version control',
+                    'Employee acknowledgment tracking',
+                    'Document organization'
+                ]),
+                'icon' => 'file-text',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -84,10 +119,16 @@ class AddonSeeder extends Seeder
                 'module_ids' => '5',
                 'submodule_ids' => '13',
                 'is_active' => true,
+                'features' => json_encode([
+                    'Custom holiday creation',
+                    'Branch-specific holidays',
+                    'Automated leave calculations',
+                    'Holiday calendar sync'
+                ]),
+                'icon' => 'calendar-event',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
         ]);
-    
     }
 }
