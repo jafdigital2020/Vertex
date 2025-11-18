@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use App\Http\Controllers\DataAccessController;
 
 class SuspensionController extends Controller
@@ -407,7 +408,17 @@ class SuspensionController extends Controller
                 'action_date' => now(),
                 'description' => 'Information report received for offense.',
             ]);
-
+            if($request->user_id){
+                $user = User::find($request->user_id);
+                if ($user) {
+                    $user->notify(
+                        new UserNotification(
+                            "A suspension has been filed against you. Please wait for the Notice of Written Explanation (NOWE) to be uploaded by the admin before you can submit your response."
+                        )
+                    );
+                } 
+            }
+          
             DB::commit();
 
             return response()->json([
@@ -456,16 +467,19 @@ class SuspensionController extends Controller
                 'file_path' => $filePath,
                 'description' => 'Notice of Written Explanation issued to employee.'
             ]);
-
+            if ($suspension->user_id) { 
+                $user = User::find($suspension->user_id); 
+                if ($user) {
+                    $user->notify(
+                        new UserNotification(
+                            "A NOWE has been uploaded for your suspension. You may now submit your response."
+                        )
+                    );
+                }
+            }
+ 
             DB::commit();
-
-            Log::info('NOWE issued successfully', [
-                'suspension_id' => $suspension->id,
-                'user_id' => $suspension->user_id,
-                'action_by' => $authUser->id,
-                'file_path' => $filePath
-            ]);
-
+            
             return response()->json([
                 'status' => 'success',
                 'message' => 'NOWE successfully issued.',
@@ -514,7 +528,28 @@ class SuspensionController extends Controller
                 'file_path' => 'suspension_replies/' . $fileName,
                 'description' => 'Employee reply received and recorded.'
             ]);
+            
+             if ($suspension->user_id) {
+             
+                $suspension_admin_id = SuspensionAction::where('suspension_id', $suspension->id)
+                    ->where('action_type', 'nowe_issued')
+                    ->value('action_by');
 
+                $adminUser = User::find($suspension_admin_id);
+ 
+                $employeeName = 
+                (Auth::user()->personalInformation->first_name ?? '') . ' ' . 
+                (Auth::user()->personalInformation->last_name ?? '');
+
+                if ($adminUser) {
+                    $adminUser->notify(
+                        new UserNotification(
+                            "{$employeeName} has submitted a reply for suspension #{$suspension->id}."
+                        )
+                    );
+                }
+            }
+ 
             DB::commit();
 
             return response()->json([
@@ -557,6 +592,17 @@ class SuspensionController extends Controller
                 'description' => $request->investigation_notes,
             ]);
 
+            if ($suspension->user_id) { 
+                $user = User::find($suspension->user_id); 
+                if ($user) {
+                    $user->notify(
+                        new UserNotification(
+                            "An investigation report has been issued for your suspension. Please review it accordingly."
+                        )
+                    );
+                }
+            }
+ 
             DB::commit();
 
             return response()->json([
@@ -616,7 +662,18 @@ class SuspensionController extends Controller
                 'file_path' => $filePath,
                 'description' => 'Disciplinary Action Memo issued to employee (' . str_replace('_', ' ', $request->suspension_type) . ').',
             ]);
-
+            
+            if ($suspension->user_id) { 
+                $user = User::find($suspension->user_id); 
+                if ($user) {
+                    $user->notify(
+                        new UserNotification(
+                            "A Disciplinary Action Memo has been uploaded for your suspension."
+                        )
+                    );
+                }
+            }
+ 
             DB::commit();
 
             return response()->json([
@@ -673,6 +730,18 @@ class SuspensionController extends Controller
                 'description' => 'Suspension implemented without pay.',
                 'remarks' => 'Duration: ' . $days . ' days'
             ]);
+                
+            if ($suspension->user_id) { 
+                $user = User::find($suspension->user_id); 
+                if ($user) {
+                    $user->notify(
+                        new UserNotification(
+                             "Your suspension #{$suspension->id} has been implemented from {$request->suspension_start_date} to {$request->suspension_end_date} ({$days} days)."
+                        )
+                    );
+                }
+            } 
+
 
             DB::commit();
 
@@ -717,6 +786,17 @@ class SuspensionController extends Controller
                 'action_date' => now(),
                 'description' => 'Employee returned to office. Case closed.',
             ]);
+
+            if ($suspension->user_id) { 
+                $user = User::find($suspension->user_id); 
+                if ($user) {
+                    $user->notify(
+                        new UserNotification(
+                             "Your suspension has been completed. You have been marked as returned to work."
+                        )
+                    );
+                }
+            }  
 
             DB::commit();
 

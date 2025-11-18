@@ -1514,19 +1514,16 @@
                                 throw new Error('Unexpected server response.');
                             }
 
-                            if (res.ok && data.status === 'success') {
-                                returnSuccess.textContent = data.message || 'Employee successfully returned to work.';
-                                returnSuccess.classList.remove('d-none');
-                                setTimeout(() => {
-                                    returnModal.hide();
-                                    location.reload();
-                                }, 1500);
+                            if (res.ok && data.status === 'success') { 
+                                toastr.success('Employee successfully returned to work.','Success');
+                                filter();
+                                $('#returnToWorkModal').modal('hide');
                             } else {
+                                toastr.error(data.message,'Error');
                                 throw new Error(data.message || `Server error (${res.status}).`);
                             }
                         } catch (err) {
-                            returnError.textContent = err.message || 'Error marking return to work.';
-                            returnError.classList.remove('d-none');
+                            toastr.error(err.message,'Error'); 
                         }
                     });
                 });
