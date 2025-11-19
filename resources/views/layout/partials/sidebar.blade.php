@@ -480,11 +480,11 @@
                         <ul>
                             @if (in_array(12, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
-                                    <a href="javascript:void(0);"
+                                    {{-- <a href="javascript:void(0);"
                                         class="{{ Request::is('knowledgebase', 'knowledgebase-details', 'activity') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-headset"></i><span>Help & Supports</span>
                                         <span class="menu-arrow"></span>
-                                    </a>
+                                    </a> --}}
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][28]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('knowledgebase') }}"

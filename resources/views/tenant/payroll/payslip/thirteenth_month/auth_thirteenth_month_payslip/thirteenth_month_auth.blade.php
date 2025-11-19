@@ -68,88 +68,120 @@
                 </div>
 
                 <!-- 13th Month Pay Statistics -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="card bg-pink-img">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span
-                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                            <i class="ti ti-calendar-dollar text-pink fs-18"></i>
-                                        </span>
-                                    </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #12515D 0%, #2A9D8F 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">My 13th Month Pay</p>
+                                <h2 id="total-13th-month-amount" class="mb-1 fw-bold text-white mt-3" style="font-size:22px;">
+                                    ₱0.00
+                                </h2>
+                                <small class="text-white-75">All Periods</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-calendar-dollar" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div class="text-end">
-                                    <p class="mb-1">My 13th Month Pay</p>
-                                    <h4 class="mb-0 text-success" id="total-13th-month-amount">₱0.00</h4>
-                                    <small class="text-muted">All Periods</small>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-calendar-dollar" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-md-6">
-                    <div class="card bg-yellow-img">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span
-                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                            <i class="ti ti-cash text-warning fs-18"></i>
-                                        </span>
-                                    </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #b53654 0%, #f2848c 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">My Total Basic Pay</p>
+                                <h2 id="total-basic-pay" class="mb-1 fw-bold text-white mt-3" style="font-size:22px;">
+                                    ₱0.00
+                                </h2>
+                                <small class="text-white-75">All Periods</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-cash" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div class="text-end">
-                                    <p class="mb-1">My Total Basic Pay</p>
-                                    <h4 class="mb-0 text-primary" id="total-basic-pay">₱0.00</h4>
-                                    <small class="text-muted">All Periods</small>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-cash" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-md-6">
-                    <div class="card bg-blue-img">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span
-                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                            <i class="ti ti-files text-info fs-18"></i>
-                                        </span>
-                                    </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #ed7464 0%, #f9c6b8 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Total Records</p>
+                                <h2 id="total-employees-paid" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($totalRecords ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">Matches Filter</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-files" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div class="text-end">
-                                    <p class="mb-1">Total Records</p>
-                                    <h4 class="mb-0 text-info" id="total-employees-paid">0</h4>
-                                    <small class="text-muted">Matches Filter</small>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-files" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-md-6">
-                    <div class="card bg-green-img">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span
-                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                            <i class="ti ti-calculator text-success fs-18"></i>
-                                        </span>
-                                    </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #ffb400 0%, #e68a00 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Average Per Record</p>
+                                <h2 id="average-per-employee" class="mb-1 fw-bold text-white mt-3" style="font-size:22px;">
+                                    ₱0.00
+                                </h2>
+                                <small class="text-white-75">Calculated</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-calculator" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div class="text-end">
-                                    <p class="mb-1">Average Per Record</p>
-                                    <h4 class="mb-0 text-warning" id="average-per-employee">₱0.00</h4>
-                                    <small class="text-muted">Calculated</small>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-calculator" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
