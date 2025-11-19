@@ -455,10 +455,10 @@
                         offsetY: -20,
                         style: {
                             fontSize: '12px',
-                            colors: ['#304758']
+                            colors: ['#008080']
                         }
                     },
-                    colors: ['#28a745'],
+                    colors: ['#008080'],
                     xaxis: {
                         categories: years,
                         title: {
@@ -466,9 +466,7 @@
                         }
                     },
                     yaxis: {
-                        title: {
-                            text: 'Amount (₱)'
-                        },
+
                         labels: {
                             formatter: function(val) {
                                 return '₱' + val.toLocaleString('en-US', {
@@ -551,7 +549,7 @@
                         curve: 'smooth',
                         width: 2
                     },
-                    colors: ['#4472C4'],
+                    colors: ['#008080'],
                     fill: {
                         type: 'gradient',
                         gradient: {
@@ -572,9 +570,6 @@
                         }
                     },
                     yaxis: {
-                        title: {
-                            text: 'Amount (₱)'
-                        },
                         labels: {
                             formatter: function(val) {
                                 return '₱' + val.toLocaleString('en-US', {

@@ -280,17 +280,17 @@
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][19]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('leave-admin') }}"
-                                                    class="{{ Request::is('leave/leave-admin') ? 'active' : '' }}">Leaves
+                                                    class="{{ Request::is('leave/leave-admin') ? 'active' : '' }}"><i class="ti ti-list-letters"></i>&nbsp;Leaves
                                                     (Admin)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][20]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('leave-employees') }}"
-                                                    class="{{ Request::is('leave/leave-employee') ? 'active' : '' }}">Leave
+                                                    class="{{ Request::is('leave/leave-employee') ? 'active' : '' }}"><i class="ti ti-send"></i>&nbsp;Leave
                                                     (Employee)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][21]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('leave-settings') }}"
-                                                    class="{{ Request::is('leave/leave-settings') ? 'active' : '' }}">Leave
+                                                    class="{{ Request::is('leave/leave-settings') ? 'active' : '' }}"><i class="ti ti-settings"></i>&nbsp;Leave
                                                     Settings</a></li>
                                         @endif
                                     </ul>
@@ -325,13 +325,13 @@
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][47]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('ob-admin') }}"
-                                                    class="{{ Request::is('official-business/admin') ? 'active' : '' }}">Official
+                                                    class="{{ Request::is('official-business/admin') ? 'active' : '' }}"><i class="ti ti-briefcase"></i>&nbsp;Official
                                                     Business
                                                     (Admin)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][48]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('ob-employee') }}"
-                                                    class="{{ Request::is('official-business/employee') ? 'active' : '' }}">Official
+                                                    class="{{ Request::is('official-business/employee') ? 'active' : '' }}"><i class="ti ti-calendar-user"></i>&nbsp;Official
                                                     Business
                                                     (Employee)</a></li>
                                         @endif
@@ -348,12 +348,12 @@
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][49]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('employee-assets') }}"
-                                                    class="{{ Request::is('employee-assets') ? 'active' : '' }}">Employee
+                                                    class="{{ Request::is('employee-assets') ? 'active' : '' }}"><i class="ti ti-device-desktop-check"></i>&nbsp;Employee
                                                     Assets</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][50]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('assets-settings') }}"
-                                                    class="{{ Request::is('assets-settings') ? 'active' : '' }}">Assets
+                                                    class="{{ Request::is('assets-settings') ? 'active' : '' }}"><i class="ti ti-settings"></i>&nbsp;Assets
                                                     Settings</a></li>
                                         @endif
                                     </ul>
@@ -397,7 +397,7 @@
                                             <li>
                                                 <a href="{{ route('payroll-process') }}"
                                                     class="{{ Request::is('payroll') ? 'active' : '' }}">
-                                                    Process Payroll
+                                                   <i class="ti ti-settings"></i>&nbsp; Process Payroll
                                                 </a>
                                             </li>
                                         @endif
@@ -405,7 +405,7 @@
                                             <li>
                                                 <a href="{{ route('generatedPayslipIndex') }}"
                                                     class="{{ Request::is('payroll/generated-payslips', 'thirteenth-month-payslip') ? 'active' : '' }}">
-                                                    Generated Payslips
+                                                   <i class="ti ti-credit-card-pay"></i>&nbsp; Generated Payslips
                                                 </a>
                                             </li>
                                         @endif
@@ -427,7 +427,7 @@
                                                     )
                                                         ? 'active'
                                                         : '' }}">
-                                                    Payroll Items
+                                                    <i class="ti ti-list"></i>&nbsp;Payroll Items
                                                 </a>
                                             </li>
                                         @endif
@@ -435,7 +435,7 @@
                                             <li>
                                                 <a href="{{ route('payroll-batch-users') }}"
                                                     class="{{ Request::is('payroll/batch/users') ? 'active' : '' }}">
-                                                    Payroll Batch Users
+                                                    <i class="ti ti-users"></i>&nbsp;Payroll Batch Users
                                                 </a>
                                             </li>
                                         @endif
@@ -443,7 +443,7 @@
                                             <li>
                                                 <a href="{{ route('payroll-batch-settings') }}"
                                                     class="{{ Request::is('payroll/batch/settings') ? 'active' : '' }}">
-                                                    Payroll Batch Settings
+                                                    <i class="ti ti-settings"></i>&nbsp;Payroll Batch Settings
                                                 </a>
                                             </li>
                                         @endif
@@ -511,11 +511,11 @@
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][30]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('users') }}"
-                                                    class="{{ Request::is('users') ? 'active' : '' }}">Users</a></li>
+                                                    class="{{ Request::is('users') ? 'active' : '' }}"><i class="ti ti-users"></i>&nbsp;Users</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][31]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('roles-permissions') }}"
-                                                    class="{{ Request::is('roles-permissions') ? 'active' : '' }}">Roles
+                                                    class="{{ Request::is('roles-permissions') ? 'active' : '' }}"><i class="ti ti-lock"></i>&nbsp;Roles
                                                     &
                                                     Permissions</a></li>
                                         @endif
@@ -614,25 +614,25 @@
                                         <ul>
                                             <li class="submenu submenu-two">
                                                 <a href="javascript:void(0);"
-                                                    class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type', 'settings/custom-fields') ? 'active subdrop' : '' }}">App
+                                                    class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type', 'settings/custom-fields') ? 'active subdrop' : '' }}"><i class="ti ti-settings"></i>&nbsp;App
                                                     Settings<span class="menu-arrow inside-submenu"></span></a>
                                                 <ul>
                                                     <li><a href="{{ route('attendance-settings') }}"
-                                                            class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance
+                                                            class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}"><i class="ti ti-calendar"></i>&nbsp;Attendance
                                                             Settings
                                                         </a></li>
                                                     <li><a href="{{ url('settings/approval-steps') }}"
-                                                            class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
+                                                            class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}"><i class="ti ti-checklist"></i>&nbsp;Approval
                                                             Settings</a></li>
                                                     <li><a href="{{ url('settings/leave-type') }}"
-                                                            class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
+                                                            class="{{ Request::is('settings/leave-type') ? 'active' : '' }}"><i class="ti ti-briefcase"></i>&nbsp;Leave
                                                             Type</a></li>
                                                     <li><a href="{{ url('settings/custom-fields') }}"
-                                                            class="{{ Request::is('settings/custom-fields') ? 'active' : '' }}">Custom
+                                                            class="{{ Request::is('settings/custom-fields') ? 'active' : '' }}"><i class="ti ti-tag"></i>&nbsp;Custom
                                                             Fields (Prefix)
                                                         </a></li>
                                                     <li><a href="{{ url('settings/biometrics') }}"
-                                                            class="{{ Request::is('settings/biometrics') ? 'active' : '' }}">ZKTeco
+                                                            class="{{ Request::is('settings/biometrics') ? 'active' : '' }}"><i class="ti ti-fingerprint"></i>&nbsp;ZKTeco
                                                             Biometrics
                                                         </a></li>
                                                 </ul>
@@ -665,17 +665,17 @@
                                                             class="{{ Request::is('test/test-employee') ? 'active' : '' }}">Attendance Reports</a></li> --}}
                                         @if (isset($role_data['user_permission_ids'][54]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('payroll-report') }}"
-                                                    class="{{ Request::is('reports/payroll') ? 'active' : '' }}">Payroll
+                                                    class="{{ Request::is('reports/payroll') ? 'active' : '' }}"><i class="ti ti-list"></i>&nbsp;Payroll
                                                     Reports</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][55]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('alphalist-report') }}"
-                                                    class="{{ Request::is('reports/alphalist') ? 'active' : '' }}">Alphalist
+                                                    class="{{ Request::is('reports/alphalist') ? 'active' : '' }}"><i class="ti ti-list"></i>&nbsp;Alphalist
                                                     Reports</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][56]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('sss-report') }}"
-                                                    class="{{ Request::is('reports/sss') ? 'active' : '' }}">SSS
+                                                    class="{{ Request::is('reports/sss') ? 'active' : '' }}"><i class="ti ti-list"></i>&nbsp;SSS
                                                     Reports</a></li>
                                         @endif
                                     </ul>
