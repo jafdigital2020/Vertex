@@ -1540,8 +1540,8 @@ button:focus {
 .btn.btn-primary.focus,
 .btn.btn-primary:active,
 .btn.btn-primary.active {
-    background-color: rgb(222.1333333333, 80.4102564103, 13.0666666667);
-    border: 1px solid rgb(222.1333333333, 80.4102564103, 13.0666666667);
+    background-color: #053a47;
+    border: 1px solid #053a47;
     color: #FFF;
 }
 
@@ -1764,8 +1764,8 @@ button:focus {
 .btn.btn-primary.focus,
 .btn.btn-primary:active,
 .btn.btn-primary.active {
-    background-color: rgb(240.9696682464, 92.4819905213, 22.3303317536);
-    border: 1px solid rgb(240.9696682464, 92.4819905213, 22.3303317536);
+    background-color: #053a47;
+    border: 1px solid #053a47;
     color: #FFF;
 }
 

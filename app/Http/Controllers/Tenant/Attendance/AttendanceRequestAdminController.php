@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant\Attendance;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\UserLog;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Models\RequestAttendanceApproval;
 use App\Http\Controllers\DataAccessController;
 
@@ -899,4 +901,5 @@ class AttendanceRequestAdminController extends Controller
         // 7) Update request attendance status
         $requestAttendance->update(['status' => 'rejected']);
     }
+
 }

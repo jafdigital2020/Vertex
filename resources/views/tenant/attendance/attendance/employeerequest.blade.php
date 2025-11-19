@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Employee
@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
+                        {{-- <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -45,7 +45,7 @@
                                     </li>
                                 </ul>
                             </div>
-                        </div>
+                        </div> --}}
                     @endif
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#request_attendance"
@@ -298,131 +298,318 @@
 
                         {{-- Total Hours Today --}}
                         <div class="col-xl-4 col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="border-bottom mb-2 pb-2">
-                                        <span class="avatar avatar-sm bg-primary mb-2"><i
-                                                class="ti ti-clock-stop"></i></span>
-                                        <h2 class="mb-2">{{ $latest->total_work_minutes_formatted ?? '00' }}</h2>
-                                        <p class="fw-medium text-truncate">Total Hours Today</p>
+                            <div class="card"
+                                style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <!-- LEFT TEXT SECTION -->
+                                    <div>
+                                        <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Total Hours Today
+                                        </h6>
+                                        <h3 class="mb-1 fw-bold mt-4"
+                                            style="line-height: 1; font-size: 20px; color: #212529;">
+                                            {{ $latest->total_work_minutes_formatted ?? '0 min' }}
+                                        </h3>
+                                        <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Hours</p>
                                     </div>
-                                    {{-- <div>
-                                        <p class="d-flex align-items-center fs-13">
-                                            <span class="avatar avatar-xs rounded-circle bg-success flex-shrink-0 me-2">
-                                                <i class="ti ti-arrow-up fs-12"></i>
-                                            </span>
-                                            <span>5% This Week</span>
-                                        </p>
-                                    </div> --}}
+
+                                    <!-- RIGHT ICON SECTION -->
+                                    <div class="position-relative d-flex align-items-center justify-content-center"
+                                        style="width: 100px; height: 100px; overflow: visible;">
+                                        <div
+                                            style="
+                                                    position: absolute;
+                                                    right: -35%;
+                                                    top: 90%;
+                                                    transform: translateY(-55%);
+                                                    width: 140px;
+                                                    height: 140px;
+                                                    background: #e9f5f3;
+                                                    border-radius: 50%;
+                                                    z-index: 1;
+                                                    clip-path: inset(0 0 0 0 round 12px);
+                                                ">
+                                        </div>
+
+                                        <!-- Teal icon circle (foreground) -->
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle"
+                                            style="
+                                                    position: relative;
+                                                    z-index: 2;
+                                                    width: 45px;
+                                                    height: 45px;
+                                                    background: #008e86;
+                                                    color: white;
+                                                    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                                    right: -10px;
+                                                    top: 20px;
+                                                ">
+                                            <i class="ti ti-clock fs-20"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Total Hours This Cut-off --}}
                         <div class="col-xl-4 col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="border-bottom mb-2 pb-2">
-                                        <span class="avatar avatar-sm bg-dark mb-2"><i class="ti ti-clock-up"></i></span>
-                                        <h2 class="mb-2">{{ $totalWeeklyHoursFormatted }}</h2>
-                                        <p class="fw-medium text-truncate">Total Hours Week</p>
+                            <div class="card"
+                                style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <!-- LEFT TEXT SECTION -->
+                                    <div>
+                                        <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Total Hours Week
+                                        </h6>
+                                        <h3 class="mb-1 fw-bold mt-4"
+                                            style="line-height: 1; font-size: 20px; color: #212529;">
+                                            {{ $totalWeeklyHoursFormatted }}
+                                        </h3>
+                                        <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Hours</p>
                                     </div>
-                                    {{-- <div>
-                                        <p class="d-flex align-items-center fs-13">
-                                            <span class="avatar avatar-xs rounded-circle bg-success flex-shrink-0 me-2">
-                                                <i class="ti ti-arrow-up fs-12"></i>
-                                            </span>
-                                            <span>7% Last Week</span>
-                                        </p>
-                                    </div> --}}
+
+                                    <!-- RIGHT ICON SECTION -->
+                                    <div class="position-relative d-flex align-items-center justify-content-center"
+                                        style="width: 100px; height: 100px; overflow: visible;">
+                                        <div class="bg-light-raspberry"
+                                            style="
+                                                    position: absolute;
+                                                    right: -35%;
+                                                    top: 90%;
+                                                    transform: translateY(-55%);
+                                                    width: 140px;
+                                                    height: 140px;
+                                                    background: #e9f5f3;
+                                                    border-radius: 50%;
+                                                    z-index: 1;
+                                                    clip-path: inset(0 0 0 0 round 12px);
+                                                ">
+                                        </div>
+
+                                        <!-- Teal icon circle (foreground) -->
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-raspberry"
+                                            style="
+                                                    position: relative;
+                                                    z-index: 2;
+                                                    width: 45px;
+                                                    height: 45px;
+                                                    color: white;
+                                                    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                                    right: -10px;
+                                                    top: 20px;
+                                                ">
+                                            <i class="ti ti-clock-hour-11 fs-20"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Total Late Today --}}
                         <div class="col-xl-4 col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="border-bottom mb-2 pb-2">
-                                        <span class="avatar avatar-sm bg-info mb-2"><i
-                                                class="ti ti-calendar-up"></i></span>
-                                        <h2 class="mb-2">{{ $totalMonthlyHoursFormatted }}</h2>
-                                        <p class="fw-medium text-truncate">Total Hours Month</p>
+                            <div class="card"
+                                style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <!-- LEFT TEXT SECTION -->
+                                    <div>
+                                        <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Total Hours Month
+                                        </h6>
+                                        <h3 class="mb-1 fw-bold mt-4"
+                                            style="line-height: 1; font-size: 20px; color: #212529;">
+                                            {{ $totalMonthlyHoursFormatted }}
+                                        </h3>
+                                        <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Hours</p>
                                     </div>
-                                    {{-- <div>
-                                        <p class="d-flex align-items-center fs-13 text-truncate">
-                                            <span class="avatar avatar-xs rounded-circle bg-danger flex-shrink-0 me-2">
-                                                <i class="ti ti-arrow-down fs-12"></i>
-                                            </span>
-                                            <span>8% Last Month</span>
-                                        </p>
-                                    </div> --}}
+
+                                    <!-- RIGHT ICON SECTION -->
+                                    <div class="position-relative d-flex align-items-center justify-content-center"
+                                        style="width: 100px; height: 100px; overflow: visible;">
+                                        <div class="bg-light-coral"
+                                            style="
+                                                    position: absolute;
+                                                    right: -35%;
+                                                    top: 90%;
+                                                    transform: translateY(-55%);
+                                                    width: 140px;
+                                                    height: 140px;
+                                                    background: #e9f5f3;
+                                                    border-radius: 50%;
+                                                    z-index: 1;
+                                                    clip-path: inset(0 0 0 0 round 12px);
+                                                ">
+                                        </div>
+
+                                        <!-- Teal icon circle (foreground) -->
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-coral"
+                                            style="
+                                                    position: relative;
+                                                    z-index: 2;
+                                                    width: 45px;
+                                                    height: 45px;
+                                                    color: white;
+                                                    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                                    right: -10px;
+                                                    top: 20px;
+                                                ">
+                                            <i class="ti ti-calendar fs-20"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Total Late this cut-off --}}
                         <div class="col-xl-4 col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="border-bottom mb-2 pb-2">
-                                        <span class="avatar avatar-sm bg-pink mb-2"><i
-                                                class="ti ti-calendar-star"></i></span>
-                                        <h2 class="mb-2">{{ $totalMonthlyNightHoursFormatted }}</h2>
-                                        <p class="fw-medium text-truncate">Night Diff This Month</p>
+                            <div class="card"
+                                style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <!-- LEFT TEXT SECTION -->
+                                    <div>
+                                        <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Night Diff This
+                                            Month</h6>
+                                        <h3 class="mb-1 fw-bold mt-4"
+                                            style="line-height: 1; font-size: 20px; color: #212529;">
+                                            {{ $totalMonthlyNightHoursFormatted }}
+                                        </h3>
+                                        <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Hours</p>
                                     </div>
-                                    {{-- <div>
-                                        <p class="d-flex align-items-center fs-13 text-truncate">
-                                            <span class="avatar avatar-xs rounded-circle bg-danger flex-shrink-0 me-2">
-                                                <i class="ti ti-arrow-down fs-12"></i>
-                                            </span>
-                                            <span>6% Last Month</span>
-                                        </p>
-                                    </div> --}}
+
+                                    <!-- RIGHT ICON SECTION -->
+                                    <div class="position-relative d-flex align-items-center justify-content-center"
+                                        style="width: 100px; height: 100px; overflow: visible;">
+                                        <div class="bg-light-mustard"
+                                            style="
+                                                    position: absolute;
+                                                    right: -35%;
+                                                    top: 90%;
+                                                    transform: translateY(-55%);
+                                                    width: 140px;
+                                                    height: 140px;
+                                                    background: #e9f5f3;
+                                                    border-radius: 50%;
+                                                    z-index: 1;
+                                                    clip-path: inset(0 0 0 0 round 12px);
+                                                ">
+                                        </div>
+
+                                        <!-- Icon circle (foreground) -->
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-mustard"
+                                            style="
+                                                    position: relative;
+                                                    z-index: 2;
+                                                    width: 45px;
+                                                    height: 45px;
+                                                    color: white;
+                                                    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                                    right: -10px;
+                                                    top: 20px;
+                                                ">
+                                            <i class="ti ti-moon fs-20"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Leaves taken this cut-off --}}
+                        {{-- Late This Month --}}
                         <div class="col-xl-4 col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="border-bottom mb-2 pb-2">
-                                        <span class="avatar avatar-sm bg-pink mb-2"><i
-                                                class="ti ti-calendar-star"></i></span>
-                                        <h2 class="mb-2">{{ $totalMonthlyLateHoursFormatted }}</h2>
-                                        <p class="fw-medium text-truncate">Late this Month</p>
+                            <div class="card"
+                                style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <!-- LEFT TEXT SECTION -->
+                                    <div>
+                                        <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Late This Month
+                                        </h6>
+                                        <h3 class="mb-1 fw-bold mt-4"
+                                            style="line-height: 1; font-size: 20px; color: #212529;">
+                                            {{ $totalMonthlyLateHoursFormatted }}
+                                        </h3>
+                                        <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Hours</p>
                                     </div>
-                                    {{-- <div>
-                                        <p class="d-flex align-items-center fs-13 text-truncate">
-                                            <span class="avatar avatar-xs rounded-circle bg-danger flex-shrink-0 me-2">
-                                                <i class="ti ti-arrow-down fs-12"></i>
-                                            </span>
-                                            <span>6% Last Month</span>
-                                        </p>
-                                    </div> --}}
+
+                                    <!-- RIGHT ICON SECTION -->
+                                    <div class="position-relative d-flex align-items-center justify-content-center"
+                                        style="width: 100px; height: 100px; overflow: visible;">
+                                        <div class="bg-light-primary"
+                                            style="
+                                                position: absolute;
+                                                right: -35%;
+                                                top: 90%;
+                                                transform: translateY(-55%);
+                                                width: 140px;
+                                                height: 140px;
+                                                background: #e9f5f3;
+                                                border-radius: 50%;
+                                                z-index: 1;
+                                                clip-path: inset(0 0 0 0 round 12px);
+                                            ">
+                                        </div>
+
+                                        <!-- Icon circle (foreground) -->
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary"
+                                            style="
+                                                position: relative;
+                                                z-index: 2;
+                                                width: 45px;
+                                                height: 45px;
+                                                color: white;
+                                                box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                                right: -10px;
+                                                top: 20px;
+                                            ">
+                                            <i class="ti ti-alert-circle fs-20"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Leaves remaing --}}
+                        {{-- Undertime This Month --}}
                         <div class="col-xl-4 col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="border-bottom mb-2 pb-2">
-                                        <span class="avatar avatar-sm bg-pink mb-2"><i
-                                                class="ti ti-calendar-star"></i></span>
-                                        <h2 class="mb-2">{{ $totalMonthlyUndertimeHoursFormatted }}</h2>
-                                        <p class="fw-medium text-truncate">Undertime this Month</p>
+                            <div class="card"
+                                style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: none; overflow: hidden;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <!-- LEFT TEXT SECTION -->
+                                    <div>
+                                        <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Undertime This
+                                            Month</h6>
+                                        <h3 class="mb-1 fw-bold mt-4"
+                                            style="line-height: 1; font-size: 20px; color: #212529;">
+                                            {{ $totalMonthlyUndertimeHoursFormatted }}
+                                        </h3>
+                                        <p class="fw-medium text-muted mb-0" style="font-size: 12px;">Hours</p>
                                     </div>
-                                    {{-- <div>
-                                        <p class="d-flex align-items-center fs-13 text-truncate">
-                                            <span class="avatar avatar-xs rounded-circle bg-danger flex-shrink-0 me-2">
-                                                <i class="ti ti-arrow-down fs-12"></i>
-                                            </span>
-                                            <span>6% Last Month</span>
-                                        </p>
-                                    </div> --}}
+
+                                    <!-- RIGHT ICON SECTION -->
+                                    <div class="position-relative d-flex align-items-center justify-content-center"
+                                        style="width: 100px; height: 100px; overflow: visible;">
+                                        <div class="bg-light-raspberry"
+                                            style="
+                                                position: absolute;
+                                                right: -35%;
+                                                top: 90%;
+                                                transform: translateY(-55%);
+                                                width: 140px;
+                                                height: 140px;
+                                                background: #e9f5f3;
+                                                border-radius: 50%;
+                                                z-index: 1;
+                                                clip-path: inset(0 0 0 0 round 12px);
+                                            ">
+                                        </div>
+
+                                        <!-- Icon circle (foreground) -->
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-raspberry"
+                                            style="
+                                                position: relative;
+                                                z-index: 2;
+                                                width: 45px;
+                                                height: 45px;
+                                                color: white;
+                                                box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+                                                right: -10px;
+                                                top: 20px;
+                                            ">
+                                            <i class="ti ti-calendar-star fs-20"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1592,7 +1779,9 @@
                 e.preventDefault();
 
                 // Disable button to prevent multiple clicks
-                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Deleting...');
+                $(this).prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Deleting...'
+                );
 
                 $.ajax({
                     url: `/api/attendance-employee/request/delete/${deleteRequestId}`,
@@ -1617,7 +1806,8 @@
                             'An error occurred while deleting the request');
                     },
                     complete: function() {
-                        $('#requestAttendanceConfirmBtn').prop('disabled', false).text('Yes, Delete');
+                        $('#requestAttendanceConfirmBtn').prop('disabled', false).text(
+                            'Yes, Delete');
                     }
                 });
             });

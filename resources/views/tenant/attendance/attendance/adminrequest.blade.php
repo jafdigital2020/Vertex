@@ -932,7 +932,7 @@
                 if (requestDeleteId) {
                     $.ajax({
                         type: 'DELETE',
-                        url: `/api/attendance-employee/request/delete/${requestDeleteId}/`,
+                        url: `/api/attendance-admin/request/delete/${requestDeleteId}/`,
                         data: {
                             _token: '{{ csrf_token() }}'
                         },

@@ -204,6 +204,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/attendance-employee/request', [AttendanceEmployeeController::class, 'requestAttendance'])->name('api.requestAttendance');
     Route::post('/attendance-employee/request/edit/{id}', [AttendanceEmployeeController::class, 'requestAttendanceEdit'])->name('api.requestAttendanceEdit');
     Route::delete('/attendance-employee/request/delete/{id}', [AttendanceEmployeeController::class, 'requestAttendanceDelete'])->name('api.requestAttendanceDelete');
+    Route::delete('/attendance-admin/request/delete/{id}', [AttendanceEmployeeController::class, 'requestAttendanceDelete'])->name('api.requestAdminAttendanceDelete');
     Route::get('/attendance-admin/request-attendance', [AttendanceRequestAdminController::class, 'adminRequestAttendanceIndex'])->name('api.adminRequestAttendance');
     Route::post('/attendance-admin/request-attendance/{req}/approve', [AttendanceRequestAdminController::class, 'requestAttendanceApproval'])->name('api.requestAttendanceApproval');
     Route::post('/attendance-admin/request-attendance/{req}/reject', [AttendanceRequestAdminController::class, 'requestAttendanceReject'])->name('api.requestAttendanceReject');

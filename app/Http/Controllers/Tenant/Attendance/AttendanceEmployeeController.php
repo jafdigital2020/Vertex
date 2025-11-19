@@ -1968,6 +1968,23 @@ class AttendanceEmployeeController extends Controller
     // Request Attendance (Create/Store)
     public function requestAttendance(Request $request)
     {
+        // ✅ Block Global admin / global guard users
+        if (Auth::guard('global')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Global administrators are not authorized to submit attendance requests.'
+            ], 403);
+        }
+
+        // ✅ Ensure we have a valid tenant user
+        $user = Auth::user();
+        if (!$user || !$user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid user session. Please log in again.'
+            ], 401);
+        }
+
         $input = $request->all();
 
         // Validation rules
@@ -2033,7 +2050,7 @@ class AttendanceEmployeeController extends Controller
 
         // Store to database
         $attendance = new RequestAttendance();
-        $attendance->user_id = Auth::id();
+        $attendance->user_id = $user->id; // ✅ Use validated user ID
         $attendance->request_date = $input['request_date'];
         $attendance->request_date_in = $input['request_date_in'];
         $attendance->request_date_out = $input['request_date_out'];
@@ -2043,6 +2060,18 @@ class AttendanceEmployeeController extends Controller
         $attendance->reason = $input['reason'] ?? null;
         $attendance->file_attachment = $attachmentPath;
         $attendance->save();
+
+        // ✅ Optional: Log the action
+        UserLog::create([
+            'user_id'        => $user->id,
+            'global_user_id' => null,
+            'module'         => 'Attendance Request',
+            'action'         => 'Create',
+            'description'    => 'Created attendance request for date "' . $attendance->request_date . '"',
+            'affected_id'    => $attendance->id,
+            'old_data'       => null,
+            'new_data'       => json_encode($attendance->toArray()),
+        ]);
 
         return response()->json([
             'success' => true,
