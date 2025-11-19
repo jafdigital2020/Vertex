@@ -133,6 +133,10 @@ ul .btn-primary:not(:disabled):not(.disabled).active:focus {
     box-shadow: none;
 }
 
+.bg-teal {
+    background-color: #008080 !important;
+}
+
 .bg-raspberry {
     background-color: #b53654 !important;
 }
@@ -1456,10 +1460,17 @@ hr {
 
 .btn-primary {
     color: #FFF;
-    background-color: #064856;
-    border-color: #064856;
+    background-color: #12515D;
+    border-color: #12515D;
     font-size: 14px;
     font-size: 14px;
+}
+
+.btn-check:checked+.btn-outline-teal {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+    color: #FFF !important;
+    box-shadow: 0 3px 10px rgba(0, 128, 128, 0.5);
 }
 
 .btn-check:checked+.btn,
@@ -1468,9 +1479,9 @@ hr {
 .btn.show:hover,
 .btn:first-child:active,
 :not(.btn-check)+.btn:active {
-    background-color: #064856;
-    border-color: #064856;
-    color: #FFF;
+    background-color: #12515D;
+    border-color: #12515D;
+    color: #ffffff;
 }
 
 button {
@@ -1547,6 +1558,22 @@ button:focus {
 .btn.btn-secondary.active {
     background-color: rgb(46.1272727273, 87.5636363636, 100.0727272727);
     border: 1px solid rgb(46.1272727273, 87.5636363636, 100.0727272727);
+    color: #FFF;
+}
+
+.btn.btn-teal {
+    background-color: #008080;
+    border: 1px solid #008080;
+    color: #FFF;
+}
+
+.btn.btn-teal:hover,
+.btn.btn-teal:focus,
+.btn.btn-teal.focus,
+.btn.btn-teal:active,
+.btn.btn-teal.active {
+    background-color: #008080;
+    border: 1px solid #008080;
     color: #FFF;
 }
 
@@ -2086,6 +2113,22 @@ button:focus {
     background-color: #3B7080 !important;
     border: 1px solid #3B7080 !important;
     box-shadow: 0 3px 10px rgba(59, 112, 128, 0.5);
+    color: #FFF !important;
+}
+
+.btn-outline-teal {
+    border: 1px solid #008080 !important;
+    color: #008080 !important;
+}
+
+.btn-outline-teal:hover,
+.btn-outline-teal:focus,
+.btn-outline-teal.focus,
+.btn-outline-teal:active,
+.btn-outline-teal.active {
+    background-color: #008080 !important;
+    border: 1px solid #008080 !important;
+    box-shadow: 0 3px 10px rgba(0, 128, 128, 0.5);
     color: #FFF !important;
 }
 

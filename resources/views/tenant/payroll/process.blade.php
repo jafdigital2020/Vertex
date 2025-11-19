@@ -349,54 +349,51 @@
                                         <div class="mb-4">
                                             <label class="form-label fw-medium d-block mb-2">SSS Contribution <span
                                                     class="text-danger">*</span></label>
-                                            <div class="btn-group w-100" role="group">
-                                                <input type="radio" class="btn-check" name="sss_option" id="sssYes"
-                                                    value="yes" required>
-                                                <label class="btn btn-outline-secondary" for="sssYes">Half</label>
+                                            <div class="btn-group w-100" role="group" aria-label="SSS Contribution Options">
+                                                <input type="radio" class="btn-check" name="sss_option" id="sssYes" value="yes" required>
+                                                <label class="btn btn-outline-teal me-2" for="sssYes">Half</label>
 
-                                                <input type="radio" class="btn-check" name="sss_option" id="sssNo"
-                                                    value="no" required>
-                                                <label class="btn btn-outline-secondary" for="sssNo">None</label>
+                                                <input type="radio" class="btn-check" name="sss_option" id="sssNo" value="no" required>
+                                                <label class="btn btn-outline-teal me-2" for="sssNo">None</label>
 
-                                                <input type="radio" class="btn-check" name="sss_option" id="sssFull"
-                                                    value="full" required>
-                                                <label class="btn btn-outline-secondary" for="sssFull">Full</label>
+                                                <input type="radio" class="btn-check" name="sss_option" id="sssFull" value="full" required>
+                                                <label class="btn btn-outline-teal" for="sssFull">Full</label>
                                             </div>
                                         </div>
 
                                         <div class="mb-4">
                                             <label class="form-label fw-medium d-block mb-2">PhilHealth Contribution <span
                                                     class="text-danger">*</span></label>
-                                            <div class="btn-group w-100" role="group">
+                                            <div class="btn-group w-100" role="group" aria-label="PhilHealth Contribution Options">
                                                 <input type="radio" class="btn-check" name="philhealth_option"
                                                     id="philhealthYes" value="yes" required>
-                                                <label class="btn btn-outline-secondary" for="philhealthYes">Half</label>
+                                                <label class="btn btn-outline-teal me-2" for="philhealthYes">Half</label>
 
                                                 <input type="radio" class="btn-check" name="philhealth_option"
                                                     id="philhealthNo" value="no" required>
-                                                <label class="btn btn-outline-secondary" for="philhealthNo">None</label>
+                                                <label class="btn btn-outline-teal me-2" for="philhealthNo">None</label>
 
                                                 <input type="radio" class="btn-check" name="philhealth_option"
                                                     id="philhealthFull" value="full" required>
-                                                <label class="btn btn-outline-secondary" for="philhealthFull">Full</label>
+                                                <label class="btn btn-outline-teal" for="philhealthFull">Full</label>
                                             </div>
                                         </div>
 
                                         <div class="mb-4">
                                             <label class="form-label fw-medium d-block mb-2">Pag-IBIG Contribution <span
                                                     class="text-danger">*</span></label>
-                                            <div class="btn-group w-100" role="group">
+                                            <div class="btn-group w-100" role="group" aria-label="Pag-IBIG Contribution Options">
                                                 <input type="radio" class="btn-check" name="pagibig_option"
                                                     id="pagibigYes" value="yes" required>
-                                                <label class="btn btn-outline-secondary" for="pagibigYes">Half</label>
+                                                <label class="btn btn-outline-teal me-2" for="pagibigYes">Half</label>
 
                                                 <input type="radio" class="btn-check" name="pagibig_option"
                                                     id="pagibigNo" value="no" required>
-                                                <label class="btn btn-outline-secondary" for="pagibigNo">None</label>
+                                                <label class="btn btn-outline-teal me-2" for="pagibigNo">None</label>
 
                                                 <input type="radio" class="btn-check" name="pagibig_option"
                                                     id="pagibigFull" value="full" required>
-                                                <label class="btn btn-outline-secondary" for="pagibigFull">Full</label>
+                                                <label class="btn btn-outline-teal" for="pagibigFull">Full</label>
                                             </div>
                                         </div>
 
@@ -406,11 +403,11 @@
                                             <div class="btn-group w-100" role="group">
                                                 <input type="radio" class="btn-check" name="cutoff_period"
                                                     id="cutoffOne" value="1" required>
-                                                <label class="btn btn-outline-secondary" for="cutoffOne">1st Half</label>
+                                                <label class="btn btn-outline-teal me-2" for="cutoffOne">1st Half</label>
 
                                                 <input type="radio" class="btn-check" name="cutoff_period"
                                                     id="cutoffTwo" value="2" required>
-                                                <label class="btn btn-outline-secondary" for="cutoffTwo">2nd Half</label>
+                                                <label class="btn btn-outline-teal me-2" for="cutoffTwo">2nd Half</label>
 
                                                 {{-- <input type="radio" class="btn-check" name="cutoff_period"
                                                     id="cutoffWeekly" value="weekly" required disabled>
@@ -1385,7 +1382,8 @@
                             <i class="ti ti-file-export fs-18 text-primary"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0 text-white" id="thirteenthMonthExportModalLabel">Export 13th Month
+                            <h5 class="modal-title fw-bold mb-0 text-white" id="thirteenthMonthExportModalLabel">Export
+                                13th Month
                                 Pay</h5>
                             <small class="opacity-75">Choose export options</small>
                         </div>

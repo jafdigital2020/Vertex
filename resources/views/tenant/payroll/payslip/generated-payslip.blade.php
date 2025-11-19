@@ -62,7 +62,7 @@
 
             <div class="row">
 
-                <div class="d-flex mb-2 align-items-center gap-2">
+                <div class="d-flex mb-2 align-items-center gap-2 mb-3">
                     <select id="summary-range" class="form-select form-select-sm w-auto">
                         <option value="monthly">Monthly</option>
                         <option value="yearly">Yearly</option>
@@ -74,77 +74,127 @@
                 <!-- Total Exponses -->
                 <div class="col-xl-6 d-flex">
                     <div class="row flex-fill">
-                        <div class="col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <div
-                                        class="d-flex align-items-center justify-content-between bg-light border rounded p-2 mb-2">
-                                        <div>
-                                            <span class="fs-14 fw-normal text-truncate mb-1">Total Earnings</span>
-                                            <h5 id="total-earnings">₱0.00</h5>
-                                        </div>
-                                        <a href="#"
-                                            class="avatar avatar-md avatar-rounded bg-transparent-primary border border-primary">
-                                            <span class="text-primary"><i class="ti ti-brand-shopee"></i></span>
-                                        </a>
+
+                        <div class="col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #12515D 0%, #2A9D8F 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Total Earnings</p>
+                                        <h2 id="total-earnings" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            ₱0.00
+                                        </h2>
+                                        <small class="text-white-75">This Period</small>
                                     </div>
 
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <div
-                                        class="d-flex align-items-center justify-content-between bg-light border rounded p-2 mb-2">
-                                        <div>
-                                            <span class="fs-14 fw-normal text-truncate mb-1">Total Deductions</span>
-                                            <h5 id="total-deductions">₱0.00</h5>
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-brand-shopee" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <a href="#"
-                                            class="avatar avatar-md avatar-rounded bg-transparent-danger border border-danger">
-                                            <span class="text-danger"><i class="ti ti-brand-shopee"></i></span>
-                                        </a>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-brand-shopee" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <div
-                                        class="d-flex align-items-center justify-content-between bg-light border rounded p-2 mb-2">
-                                        <div class="">
-                                            <span class="fs-14 fw-normal text-truncate mb-1">Total Payroll</span>
-                                            <h5 id="total-payroll"></h5>
+                        <div class="col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #b53654 0%, #f2848c 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Total Deductions</p>
+                                        <h2 id="total-deductions" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            ₱0.00
+                                        </h2>
+                                        <small class="text-white-75">This Period</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-arrow-narrow-down" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <a href="#"
-                                            class="avatar avatar-md avatar-rounded bg-transparent-success border border-success">
-                                            <span class="text-success"><i class="ti ti-brand-shopee"></i></span>
-                                        </a>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-arrow-narrow-down" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <div
-                                        class="d-flex align-items-center justify-content-between bg-light border rounded p-2 mb-2">
-                                        <div class="">
-                                            <span class="fs-14 fw-normal text-truncate mb-1">Total Net Pay</span>
-                                            <h5 id="total-net-pay">₱0.00</h5>
+
+                        <div class="col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #ffb400 0%, #e68a00 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Total Payroll</p>
+                                        <h2 id="total-payroll" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            Payrolls: 0
+                                        </h2>
+                                        <small class="text-white-75">This Period</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-chart-area-line" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <a href="#"
-                                            class="avatar avatar-md avatar-rounded bg-transparent-skyblue border border-skyblue">
-                                            <span class="text-skyblue"><i class="ti ti-brand-shopee"></i></span>
-                                        </a>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-chart-area-line" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Total Net Pay</p>
+                                        <h2 id="total-net-pay" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            ₱0.00
+                                        </h2>
+                                        <small class="text-white-75">This Period</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-currency-peso" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                        </div>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-currency-peso" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <!-- /Total Exponses -->
@@ -664,7 +714,7 @@
                             minimumFractionDigits: 2
                         }));
 
-                    $('#total-payroll').text('Payrolls: ' + res.totalPayrollCount);
+                    $('#total-payroll').text(res.totalPayrollCount);
                     // Optionally update a sub-label:
                     let label = (range === 'yearly') ?
                         res.year :
@@ -698,7 +748,7 @@
                         xaxis: {
                             categories: response.months
                         },
-                        colors: ['#ff6384'],
+                        colors: ['#008080'],
                         dataLabels: {
                             enabled: false
                         },
