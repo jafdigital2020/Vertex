@@ -59,73 +59,92 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-xl-4 col-md-6">
-                                <div class="card bg-pink-img">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center justify-content-between">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-shrink-0 me-2">
-                                                    <span
-                                                        class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                                        <i class="ti ti-users text-pink fs-18"></i>
-                                                    </span>
-                                                </div>
+
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card text-white position-relative overflow-hidden"
+                                    style="border-radius:10px; background: linear-gradient(135deg, #0f8b8d 0%, #0b6b67 100%); min-height:120px;">
+                                    <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                        <div class="me-3" style="z-index:3;">
+                                            <p class="fs-12 fw-medium mb-1 text-white-75">Total Employee</p>
+                                            <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                                {{ str_pad($summaryData['users_current'] ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                            </h2>
+                                            <small class="text-white-75">Employees</small>
+                                        </div>
+
+                                        <!-- Right icon circle group -->
+                                        <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                            <div
+                                                style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                                <i class="ti ti-users" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                             </div>
-                                            <div class="text-end">
-                                                <p class="mb-1">Active Users</p>
-                                                <h4 id="activeUsersCount">{{ $summaryData['users_current'] ?? 0 }}</h4>
-                                                <small class="text-muted">Current</small>
+                                            <div
+                                                style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                                <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                    <i class="ti ti-users" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="col-xl-4 col-md-6">
-                                <div class="card bg-yellow-img">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center justify-content-between">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-shrink-0 me-2">
-                                                    <span
-                                                        class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                                        <i class="ti ti-user-check text-warning fs-18"></i>
-                                                    </span>
-                                                </div>
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card text-white position-relative overflow-hidden"
+                                    style="border-radius:10px; background: linear-gradient(135deg, #a33658 0%, #8b2c48 100%); min-height:120px;">
+                                    <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                        <div class="me-3" style="z-index:3;">
+                                            <p class="fs-12 fw-medium mb-1 text-white-75">User Limit</p>
+                                            <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                                {{ str_pad($summaryData['users_limit'] ?? 0, 2, '0', STR_PAD_LEFT) }}
+                                            </h2>
+                                            <small class="text-white-75">Plan Capacity</small>
+                                        </div>
+
+                                        <!-- Right icon circle group -->
+                                        <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                            <div
+                                                style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                                <i class="ti ti-user-check" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                             </div>
-                                            <div class="text-end">
-                                                <p class="mb-1">User Limit</p>
-                                                <h4 id="userLimitCount">{{ $summaryData['users_limit'] ?? 0 }}</h4>
-                                                <small class="text-muted">Plan Capacity</small>
+                                            <div
+                                                style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                                <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                    <i class="ti ti-user-check" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="col-xl-4 col-md-6">
-                                <div class="card bg-blue-img">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center justify-content-between">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-shrink-0 me-2">
-                                                    <span
-                                                        class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                                        <i class="ti ti-calendar text-info fs-18"></i>
-                                                    </span>
-                                                </div>
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card text-white position-relative overflow-hidden"
+                                     style="border-radius:10px; background: linear-gradient(135deg, #ed7464 0%, #f9c6b8 100%); min-height:120px;">
+                                    <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                        <div class="me-3" style="z-index:3;">
+                                            <p class="fs-12 fw-medium mb-1 text-white-75">Renewal Date</p>
+                                            <h2 id="renewalDate" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                                {{ \Carbon\Carbon::parse($summaryData['renewal_date'] ?? now())->format('M d, Y') }}
+                                            </h2>
+                                            <small class="text-white-75">Next Renewal</small>
+                                        </div>
+
+                                        <!-- Right icon circle group -->
+                                        <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                            <div style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                                <i class="ti ti-calendar" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                             </div>
-                                            <div class="text-end">
-                                                <p class="mb-1">Renewal Date</p>
-                                                <h4 id="renewalDate">
-                                                    {{ \Carbon\Carbon::parse($summaryData['renewal_date'] ?? now())->format('M d, Y') }}
-                                                </h4>
-                                                <small class="text-muted">Next Renewal</small>
+                                            <div style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                                <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                    <i class="ti ti-calendar" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -393,8 +412,8 @@
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-primary text-white">
                     <div class="d-flex align-items-center">
-                        <i class="ti ti-arrow-up-circle fs-4 me-2"></i>
-                        <h5 class="modal-title mb-0">Confirm Plan Upgrade</h5>
+                        <i class="ti ti-arrow-up-circle fs-20 me-2"></i>
+                        <h5 class="modal-title mb-0 text-white">Confirm Plan Upgrade</h5>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -494,19 +513,13 @@
         // Fetch and display available plans
         async function loadAvailablePlans() {
             try {
-                console.log('🔍 Loading available plans...');
                 const response = await fetch('/subscriptions/available-plans');
-                console.log('📡 Response status:', response.status);
 
                 const data = await response.json();
-                console.log('📦 Data received:', data);
 
                 if (data.success) {
                     window.allPlans = data.available_plans || [];
                     window.currentBillingCycle = data.current_billing_cycle || 'monthly';
-
-                    console.log('✅ Plans loaded:', window.allPlans.length);
-                    console.log('🔄 Current billing cycle:', window.currentBillingCycle);
 
                     // Initialize toggle to match current billing cycle
                     $('#billing_cycle_toggle').prop('checked', window.currentBillingCycle === 'yearly');
@@ -573,9 +586,6 @@
                 '#064856';
 
             filteredPlans.forEach(plan => {
-                console.log('🏷️ Rendering plan:', plan.name, '(ID:', plan.id, ')');
-                console.log('📊 Plan data:', plan); // Debug log to see all plan values
-
                 const isRecommended = plan.is_recommended || false;
 
                 // Ensure all numeric values are valid numbers
@@ -595,13 +605,7 @@
                          data-plan-id="${plan.id}"
                          style="cursor: pointer; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 16px; border-width: 2px; transform-origin: center;">
 
-                        ${isRecommended ? `
-                                        <div class="position-absolute top-0 end-0 m-3" style="z-index: 10;">
-                                            <span class="badge bg-gradient px-3 py-2 rounded-pill shadow-sm text-primary" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%);">
-                                                <i class="ti ti-star-filled me-1"></i>Recommended
-                                            </span>
-                                        </div>
-                                        ` : ''}
+
 
                         <div class="card-body p-4 d-flex flex-column" style="min-height: 480px;">
                             <!-- Plan Name & Icon -->
@@ -654,6 +658,7 @@
                                             <small class="text-muted" style="font-size: 0.8rem;">Implementation fee</small>
                                         </div>
                                     </li>
+
                                 </ul>
                             </div>
 
@@ -882,7 +887,6 @@
             $('#billing_cycle_toggle').on('change', function() {
                 const isYearly = $(this).is(':checked');
                 const cycle = isYearly ? 'yearly' : 'monthly';
-                console.log('🔄 Billing cycle changed to:', cycle);
                 updateBillingCycleLabels(cycle);
                 renderPlansForCycle(cycle);
             });

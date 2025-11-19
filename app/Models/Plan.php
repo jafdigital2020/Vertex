@@ -24,6 +24,7 @@ class Plan extends Model
         'implementation_fee', // New field for integration fee
         'vat_percentage', // New field for VAT percentage
         'base_license_count', // New field for base license count
+        'inclusions', // New field for inclusions
     ];
 
 

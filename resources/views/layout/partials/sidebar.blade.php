@@ -700,12 +700,12 @@
                                         @if (isset($role_data['user_permission_ids'][57]) || $role_data['role_id'] == 'global_user')
                                             <li>
                                                 <a href="{{ url('billing') }}"
-                                                    class="{{ Request::is('billing') ? 'active' : '' }}">Bills &
+                                                    class="{{ Request::is('billing') ? 'active' : '' }}"><i class="ti ti-currency-peso"></i>&nbsp;Bills &
                                                     Payment</a>
                                             </li>
-                                                                                        <li>
+                                            <li>
                                                 <a href="{{ url('subscriptions') }}"
-                                                    class="{{ Request::is('subscriptions') ? 'active' : '' }}">Subscriptions</a>
+                                                    class="{{ Request::is('subscriptions') ? 'active' : '' }}"><i class="ti ti-list"></i>&nbsp;Subscriptions</a>
                                             </li>
                                         @endif
                                     </ul>
