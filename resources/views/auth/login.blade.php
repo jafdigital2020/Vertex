@@ -5,6 +5,7 @@
     <div class="container-fuild">
         <div class="w-100 overflow-hidden position-relative flex-wrap d-block vh-100">
             <div class="row">
+
                 <div class="col-lg-5">
                     <div
                         class="login-background position-relative d-lg-flex align-items-center justify-content-center d-none flex-wrap vh-100 p-0">
@@ -12,13 +13,14 @@
                             <div
                                 class="authen-overlay-item border w-100 d-flex flex-column align-items-center justify-content-center">
                                 <div class="d-flex align-items-center justify-content-center">
-                                    <img src="{{ URL::asset('build/img/bg/TIMORA2.1.gif') }}" alt="Img" class="w-100"
+                                    <img src="{{ URL::asset('build/img/bg/1.gif') }}" alt="Img" class="w-100"
                                         style="object-fit: cover; width:100%;">
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-lg-7 col-md-12 col-sm-12">
                     <div class="row justify-content-center align-items-center vh-100 overflow-auto flex-wrap">
                         <div class="col-md-7 mx-auto vh-100">
