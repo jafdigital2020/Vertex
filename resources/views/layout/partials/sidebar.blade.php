@@ -98,13 +98,15 @@
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][1]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin-dashboard') }}"
-                                                    class="{{ Request::is('admin-dashboard') ? 'active' : '' }}">Admin
-                                                    Dashboard</a></li>
+                                                class="{{ Request::is('admin-dashboard') ? 'active' : '' }}">
+                                                <i class="ti ti-settings"></i>&nbsp;Admin Dashboard
+                                            </a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][2]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('employee-dashboard') }}"
-                                                    class="{{ Request::is('employee-dashboard') ? 'active' : '' }}">Employee
-                                                    Dashboard</a></li>
+                                                    class="{{ Request::is('employee-dashboard') ? 'active' : '' }}">
+                                                    <i class="ti ti-user"></i>&nbsp;Employee Dashboard
+                                                </a></li>
                                         @endif
                                     </ul>
                                 </li>
@@ -178,23 +180,23 @@
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][9]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('employees') }}"
-                                                    class="{{ Request::is('employees') ? 'active' : '' }}">Employee
+                                                    class="{{ Request::is('employees') ? 'active' : '' }}"><i class="ti ti-list"></i>&nbsp; Employee
                                                     Lists</a>
                                             </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][10]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('departments') }}"
-                                                    class="{{ Request::is('departments') ? 'active' : '' }}">Departments</a>
+                                                    class="{{ Request::is('departments') ? 'active' : '' }}"><i class="ti ti-buildings"></i>&nbsp; Departments</a>
                                             </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][11]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('designations') }}"
-                                                    class="{{ Request::is('designations') ? 'active' : '' }}">Designations</a>
+                                                    class="{{ Request::is('designations') ? 'active' : '' }}"><i class="ti ti-tag"></i>&nbsp; Designations</a>
                                             </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][12]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('policy') }}"
-                                                    class="{{ Request::is('policy') ? 'active' : '' }}">Policies</a>
+                                                    class="{{ Request::is('policy') ? 'active' : '' }}"><i class="ti ti-file"></i>&nbsp; Policies</a>
                                             </li>
                                         @endif
                                     </ul>
@@ -235,34 +237,34 @@
                                             <li>
                                                 <a href="{{ route('attendance-admin') }}"
                                                    class="{{ Request::is('attendance-admin', 'attendance-admin/bulk-attednance', 'attendance-admin/request-attendance') ? 'active' : '' }}">
-                                                    Attendance (Admin)
+                                                   <i class="ti ti-adjustments-alt"></i>&nbsp;Attendance (Admin)
                                                 </a>
                                             </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][15]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('attendance-employee') }}"
-                                                    class="{{ Request::is('attendance-employee', 'attendance-employee/request-attendance') ? 'active' : '' }}">Attendance
+                                                    class="{{ Request::is('attendance-employee', 'attendance-employee/request-attendance') ? 'active' : '' }}"><i class="ti ti-user"></i>&nbsp;Attendance
                                                     (Employee)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][16]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('shift-management') }}"
-                                                    class="{{ Request::is('shift-management') ? 'active' : '' }}">Shift
+                                                    class="{{ Request::is('shift-management') ? 'active' : '' }}"><i class="ti ti-calendar"></i>&nbsp;Shift
                                                     &
                                                     Schedule</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][17]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('overtime') }}"
-                                                    class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime(Admin)</a>
+                                                    class="{{ Request::is('overtime') ? 'active' : '' }}"><i class="ti ti-clock"></i>&nbsp;Overtime(Admin)</a>
                                             </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('overtime-employee') }}"
-                                                    class="{{ Request::is('overtime-employee') ? 'active' : '' }}">Overtime(Employee)</a>
+                                                    class="{{ Request::is('overtime-employee') ? 'active' : '' }}"><i class="ti ti-stopwatch"></i>&nbsp;Overtime(Employee)</a>
                                             </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][18]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('attendance-settings') }}"
-                                                    class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance
+                                                    class="{{ Request::is('attendance-settings') ? 'active' : '' }}"><i class="ti ti-settings"></i>&nbsp;Attendance
                                                     Settings</a></li>
                                         @endif
                                     </ul>

@@ -375,21 +375,29 @@
                                 <div class="text-center">
                                     <h5 class="text-white mb-4">Team Birthday</h5>
 
-                                    @foreach ($branchBirthdayEmployees as $employee)
-                                        <span class="avatar avatar-xl avatar-rounded mb-2">
-                                            <img src="{{ $employee['profile_picture'] }}"
-                                                alt="{{ $employee['full_name'] }}">
-                                        </span>
-                                        <div class="mb-3">
-                                            <h6 class="text-white fw-medium mb-1">{{ $employee['full_name'] }}</h6>
-                                            <p class="text-white">{{ $employee['designation'] }}</p>
-                                        </div>
-                                    @endforeach
-
                                     @if ($branchBirthdayEmployees->isNotEmpty())
+                                        @foreach ($branchBirthdayEmployees as $employee)
+                                            <span class="avatar avatar-xl avatar-rounded mb-2">
+                                                <img src="{{ $employee['profile_picture'] }}"
+                                                    alt="{{ $employee['full_name'] }}">
+                                            </span>
+                                            <div class="mb-3">
+                                                <h6 class="text-white fw-medium mb-1">{{ $employee['full_name'] }}</h6>
+                                                <p class="text-white mb-0">{{ $employee['designation'] }}</p>
+                                            </div>
+                                        @endforeach
+
                                         <a href="#" class="btn btn-sm btn-light d-inline-flex align-items-center">
                                             <i class="ti ti-gift me-1"></i>Send Wishes
                                         </a>
+                                    @else
+                                        <div class="py-4">
+                                            <div
+                                                class="avatar avatar-xl avatar-rounded bg-white bg-opacity-20 mb-3 mx-auto">
+                                                <i class="ti ti-cake text-white fs-2"></i>
+                                            </div>
+                                            <h6 class="text-white fw-normal mb-0">No Birthdays Today</h6>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
