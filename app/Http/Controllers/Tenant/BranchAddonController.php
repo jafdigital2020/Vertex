@@ -42,8 +42,10 @@ class BranchAddonController extends Controller
             ->where('status', 'active')
             ->first();
 
-        // Get all available addons
-        $addons = Addon::where('is_active', true)->get();
+        // Get all available addons (only 'addon' category, exclude 'upgrade')
+        $addons = Addon::where('is_active', true)
+            ->where('addon_category', 'addon')
+            ->get();
 
         // Get currently active addons for this branch
         $branchAddons = BranchAddon::where('branch_id', $branch->id)

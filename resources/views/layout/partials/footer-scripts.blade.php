@@ -335,4 +335,104 @@
 
 
 
+<!-- Addon Modal Script -->
+@if(session()->has('addon_redirect'))
+<script>
+    // Show page for 1.5 seconds before showing modal
+    setTimeout(function() {
+        var errorView = @json(session('addon_redirect'));
+        var isAddon = errorView === 'errors.addonrequired';
+
+        // Create backdrop overlay
+        var backdrop = document.createElement('div');
+        backdrop.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);opacity:0;transition:opacity 0.5s;z-index:99998;backdrop-filter:blur(3px);';
+        document.body.appendChild(backdrop);
+
+        // Create modal container
+        var modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);width:90%;max-width:580px;background:linear-gradient(135deg, #12515D 0%, #0f3d47 25%, #1a4b56 50%, #008080 100%);border-radius:28px;padding:48px 40px;box-shadow:0 40px 80px rgba(0,0,0,0.25);z-index:99999;opacity:0;transition:all 0.5s cubic-bezier(0.16, 1, 0.3, 1);overflow-y:auto;max-height:90vh;';
+
+        // Content HTML
+        var dashboardUrl = '{{ (\App\Helpers\PermissionHelper::get(1)) ? route("admin-dashboard") : route("employee-dashboard") }}';
+
+        if (isAddon) {
+            modal.innerHTML = `
+                <div style="text-align:center;color:#fff;">
+                    <div style="width:80px;height:80px;margin:0 auto 32px;background:linear-gradient(135deg, #FFB400, #ed7464);border-radius:20px;display:flex;align-items:center;justify-content:center;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+                        </svg>
+                    </div>
+                    <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg, #FFB400, #ed7464);color:#fff;padding:8px 16px;border-radius:16px;font-size:13px;font-weight:600;margin-bottom:24px;text-transform:uppercase;">
+                        <div style="width:8px;height:8px;background:#fff;border-radius:50%;"></div>
+                        Add-on Purchase Required
+                    </div>
+                    <h1 style="color:#fff;font-size:32px;font-weight:700;margin-bottom:16px;">Add-on Required</h1>
+                    <p style="color:rgba(255,255,255,0.9);font-size:16px;margin-bottom:40px;line-height:1.6;">
+                        This feature requires a paid add-on. Browse our marketplace to unlock additional HR & payroll capabilities.
+                    </p>
+                    <div style="display:flex;flex-direction:column;gap:16px;align-items:center;">
+                        <a href="/addons" style="display:inline-flex;align-items:center;gap:8px;padding:16px 32px;background:linear-gradient(135deg, #FFB400, #ed7464);color:#fff;text-decoration:none;border-radius:12px;font-weight:600;font-size:15px;">
+                            <span>Browse Add-ons</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <a href="${dashboardUrl}" style="color:rgba(255,255,255,0.9);text-decoration:none;font-size:14px;font-weight:500;padding:8px 16px;display:inline-flex;align-items:center;gap:6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+                            </svg>
+                            Return to Dashboard
+                        </a>
+                    </div>
+                </div>
+            `;
+        } else {
+            modal.innerHTML = `
+                <div style="text-align:center;color:#fff;">
+                    <div style="width:80px;height:80px;margin:0 auto 32px;background:linear-gradient(135deg, #008080, #12515D);border-radius:20px;display:flex;align-items:center;justify-content:center;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <circle cx="12" cy="16" r="1"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                    </div>
+                    <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg, #b53654, #d1477a);color:#fff;padding:8px 16px;border-radius:16px;font-size:13px;font-weight:600;margin-bottom:24px;text-transform:uppercase;">
+                        <div style="width:8px;height:8px;background:#fff;border-radius:50%;"></div>
+                        Premium Access Required
+                    </div>
+                    <h1 style="color:#fff;font-size:32px;font-weight:700;margin-bottom:16px;">Feature Access Required</h1>
+                    <p style="color:rgba(255,255,255,0.9);font-size:16px;margin-bottom:40px;line-height:1.6;">
+                        Unlock advanced HR & payroll capabilities. Choose the perfect plan to scale your business operations.
+                    </p>
+                    <div style="display:flex;flex-direction:column;gap:16px;align-items:center;">
+                        <a href="https://wizard.timora.ph/subscription" style="display:inline-flex;align-items:center;gap:8px;padding:16px 32px;background:linear-gradient(135deg, #008080, #12515D);color:#fff;text-decoration:none;border-radius:12px;font-weight:600;font-size:15px;">
+                            <span>Upgrade Now</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <a href="${dashboardUrl}" style="color:rgba(255,255,255,0.9);text-decoration:none;font-size:14px;font-weight:500;padding:8px 16px;display:inline-flex;align-items:center;gap:6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+                            </svg>
+                            Return to Dashboard
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.body.appendChild(modal);
+
+        // Fade in backdrop and modal
+        setTimeout(function() {
+            backdrop.style.opacity = '1';
+            modal.style.opacity = '1';
+            modal.style.transform = 'translate(-50%,-50%) scale(1)';
+        }, 10);
+    }, 1500);
+</script>
+@endif
+
 @stack('scripts')

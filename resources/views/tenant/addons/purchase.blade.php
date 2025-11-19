@@ -344,7 +344,7 @@
 
                                 @if ($addon->features)
                                     <ul class="feature-list">
-                                        @foreach (json_decode($addon->features, true) ?? [] as $feature)
+                                        @foreach ($addon->features ?? [] as $feature)
                                             <li>
                                                 <i class="ti ti-check"></i>
                                                 <span>{{ $feature }}</span>

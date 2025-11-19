@@ -148,6 +148,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ===========  Employee API ================ //
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('api.employees');
     Route::get('/employee-credits', [EmployeeListController::class, 'getEmployeeCredits'])->name('api.employee-credits');
+    Route::get('/billing-stats', [EmployeeListController::class, 'getBillingStats'])->name('api.billing-stats');
     Route::post('employees', [EmployeeListController::class, 'employeeStore'])->name('api.employeeStore');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
     Route::get('/get-branch-data/{branchId}', [EmployeeListController::class, 'getDepartmentsAndEmployeesByBranch']); // and employee

@@ -1,215 +1,214 @@
 <?php $page = 'earning-user'; ?>
 @extends('layout.mainlayout')
 @section('content')
-    <!-- Page Wrapper -->
-    <div class="page-wrapper">
-        <div class="content">
+        <!-- Page Wrapper -->
+        <div class="page-wrapper">
+            <div class="content">
 
-            <!-- Breadcrumb -->
-            <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
-                <div class="my-auto mb-2">
-                    <h2 class="mb-1">Employee's Earnings</h2>
-                    <nav>
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
-                            </li>
-                            <li class="breadcrumb-item">
-                                Payroll Items
-                            </li>
-                            <li class="breadcrumb-item active" aria-current="page">Employee's Earnings</li>
-                        </ol>
-                    </nav>
-                </div>
-                <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
-                            <div class="dropdown">
-                                <a href="javascript:void(0);"
-                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                    data-bs-toggle="dropdown">
-                                    <i class="ti ti-file-export me-1"></i>Export
-                                </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    @endif
-                    @if (in_array('Create', $permission))
-                        <div class="mb-2">
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_earning_user"
-                                class="btn btn-primary d-flex align-items-center"><i
-                                    class="ti ti-circle-plus me-2"></i>Assign
-                                Earning</a>
-                        </div>
-                    @endif
-                    <div class="head-icons ms-2">
-                        <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
-                            data-bs-original-title="Collapse" id="collapse-header">
-                            <i class="ti ti-chevrons-up"></i>
-                        </a>
+                <!-- Breadcrumb -->
+                <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
+                    <div class="my-auto mb-2">
+                        <h2 class="mb-1">Employee's Earnings</h2>
+                        <nav>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    Payroll Items
+                                </li>
+                                <li class="breadcrumb-item active" aria-current="page">Employee's Earnings</li>
+                            </ol>
+                        </nav>
                     </div>
-                </div>
-            </div>
-            <!-- /Breadcrumb -->
-
-            <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Employee's Earnings</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="me-3">
-                            <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" oninput="filter()">
-                                <span class="input-icon-addon">
-                                    <i class="ti ti-chevron-down"></i>
-                                </span>
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                        @if (in_array('Export', $permission))
+                            <div class="me-2 mb-2">
+                                <div class="dropdown">
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                        data-bs-toggle="dropdown">
+                                        <i class="ti ti-file-export me-1"></i>Export
+                                    </a>
+                                    <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
+                                        <li>
+                                            <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                    class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                    class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;"
-                                onchange="filter()">
-                                <option value="" selected>All Branches</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select"
-                                style="width:150px;" onchange="filter()">
-                                <option value="" selected>All Departments</option>
-                                @foreach ($departments as $department)
-                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                style="width:150px;" onchange="filter()">
-                                <option value="" selected>All Designations</option>
-                                @foreach ($designations as $designation)
-                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
-                                <option value="" selected>All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
+                        @endif
+                        @if (in_array('Create', $permission))
+                            <div class="mb-2">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#add_earning_user"
+                                    class="btn btn-primary d-flex align-items-center"><i
+                                        class="ti ti-circle-plus me-2"></i>Assign
+                                    Earning</a>
+                            </div>
+                        @endif
+                        <div class="head-icons ms-2">
+                            <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-original-title="Collapse" id="collapse-header">
+                                <i class="ti ti-chevrons-up"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable" id="userEarningsTable">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th class="no-sort">
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox" id="select-all">
-                                        </div>
-                                    </th>
-                                    <th>Employee</th>
-                                    <th class="text-center">Earnings</th>
-                                    <th class="text-center">Amount</th>
-                                    <th class="text-center">Frequency</th>
-                                    <th class="text-center">Effective Date</th>
-                                    <th class="text-center">Type</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Created By</th>
-                                    <th class="text-center">Edited By</th>
-                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                        <th class="text-center">Action</th>
-                                    @endif
-                                </tr>
-                            </thead>
-                            <tbody id="userEarningsTableBody">
-                                @foreach ($userEarnings as $userEarning)
+                <!-- /Breadcrumb -->
+
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                        <h5>Employee's Earnings</h5>
+                        <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                            <div class="me-3">
+                                <div class="input-icon-end position-relative">
+                                    <input type="text" class="form-control date-range bookingrange"
+                                        placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" oninput="filter()">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-chevron-down"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group me-2">
+                                                                                    <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();" style="width:200px;">
+                                                                                        @foreach ($branches as $i => $branch)
+                                                                                            <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
+                                                                                            </option>
+                                                                                        @endforeach
+                                                                                    </select>
+                            </div>
+                            <div class="form-group me-2">
+                                <select name="department_filter" id="department_filter" class="select2 form-select"
+                                    style="width:150px;" onchange="filter()">
+                                    <option value="" selected>All Departments</option>
+                                    @foreach ($departments as $department)
+                                        <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group me-2">
+                                <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                    style="width:150px;" onchange="filter()">
+                                    <option value="" selected>All Designations</option>
+                                    @foreach ($designations as $designation)
+                                        <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group me-2">
+                                <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                                    <option value="" selected>All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="custom-datatable-filter table-responsive">
+                            <table class="table datatable" id="userEarningsTable">
+                                <thead class="thead-light">
                                     <tr>
-                                        <td>
+                                        <th class="no-sort">
                                             <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
+                                                <input class="form-check-input" type="checkbox" id="select-all">
                                             </div>
-                                        </td>
-                                        <td>{{ $userEarning->user->personalInformation->last_name }},
-                                            {{ $userEarning->user->personalInformation->first_name }} </td>
-                                        <td class="text-center">{{ $userEarning->earningType->name }}</td>
-                                        <td class="text-center">{{ $userEarning->amount }}</td>
-                                        <td class="text-center">
-                                            {{ ucwords(str_replace('_', ' ', $userEarning->frequency)) }}</td>
-                                        <td class="text-center">
-                                            {{ $userEarning->effective_start_date?->format('M j, Y') ?? '' }} -
-                                            {{ $userEarning->effective_end_date?->format('M j, Y') ?? '' }} </td>
-                                        <td class="text-center">{{ ucfirst($userEarning->type) }}</td>
-                                        <td class="text-center">
-                                            <span
-                                                class="badge d-inline-flex align-items-center badge-xs
-                                                {{ $userEarning->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
-                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($userEarning->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">{{ $userEarning->creator_name }}</td>
-                                        <td class="text-center">{{ $userEarning->updater_name }}</td>
+                                        </th>
+                                        <th>Employee</th>
+                                        <th class="text-center">Earnings</th>
+                                        <th class="text-center">Amount</th>
+                                        <th class="text-center">Frequency</th>
+                                        <th class="text-center">Effective Date</th>
+                                        <th class="text-center">Type</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Created By</th>
+                                        <th class="text-center">Edited By</th>
                                         @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                            <td class="text-center">
-                                                <div class="action-icon d-inline-flex">
-                                                    @if (in_array('Update', $permission))
-                                                        <a href="#" data-bs-toggle="modal"
-                                                            data-bs-target="#edit_earning_user"
-                                                            data-id="{{ $userEarning->id }}"
-                                                            data-earning-type-id="{{ $userEarning->earning_type_id }}"
-                                                            data-type="{{ $userEarning->type }}"
-                                                            data-amount="{{ $userEarning->amount }}"
-                                                            data-frequency="{{ $userEarning->frequency }}"
-                                                            data-effective_start_date="{{ $userEarning->effective_start_date?->format('Y-m-d') ?? '' }}"
-                                                            data-effective_end_date="{{ $userEarning->effective_end_date?->format('Y-m-d') ?? '' }}"
-                                                            data-status="{{ $userEarning->status }}">
-                                                            <i class="ti ti-edit" title="Edit"></i>
-                                                        </a>
-                                                    @endif
-                                                    @if (in_array('Delete', $permission))
-                                                        <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                            data-bs-target="#delete_earning_user"
-                                                            data-id="{{ $userEarning->id }}"
-                                                            data-name="{{ $userEarning->user->personalInformation->last_name }}, {{ $userEarning->user->personalInformation->first_name }}">
-                                                            <i class="ti ti-trash" title="Delete"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </td>
+                                            <th class="text-center">Action</th>
                                         @endif
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody id="userEarningsTableBody">
+                                    @foreach ($userEarnings as $userEarning)
+                                        <tr>
+                                            <td>
+                                                <div class="form-check form-check-md">
+                                                    <input class="form-check-input" type="checkbox">
+                                                </div>
+                                            </td>
+                                            <td>{{ $userEarning->user->personalInformation->last_name }},
+                                                {{ $userEarning->user->personalInformation->first_name }} </td>
+                                            <td class="text-center">{{ $userEarning->earningType->name }}</td>
+                                            <td class="text-center">{{ $userEarning->amount }}</td>
+                                            <td class="text-center">
+                                                {{ ucwords(str_replace('_', ' ', $userEarning->frequency)) }}</td>
+                                            <td class="text-center">
+                                                {{ $userEarning->effective_start_date?->format('M j, Y') ?? '' }} -
+                                                {{ $userEarning->effective_end_date?->format('M j, Y') ?? '' }} </td>
+                                            <td class="text-center">{{ ucfirst($userEarning->type) }}</td>
+                                            <td class="text-center">
+                                                <span
+                                                    class="badge d-inline-flex align-items-center badge-xs
+                                                    {{ $userEarning->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
+                                                    <i class="ti ti-point-filled me-1"></i>{{ ucfirst($userEarning->status) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">{{ $userEarning->creator_name }}</td>
+                                            <td class="text-center">{{ $userEarning->updater_name }}</td>
+                                            @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                <td class="text-center">
+                                                    <div class="action-icon d-inline-flex">
+                                                        @if (in_array('Update', $permission))
+                                                            <a href="#" data-bs-toggle="modal"
+                                                                data-bs-target="#edit_earning_user"
+                                                                data-id="{{ $userEarning->id }}"
+                                                                data-earning-type-id="{{ $userEarning->earning_type_id }}"
+                                                                data-type="{{ $userEarning->type }}"
+                                                                data-amount="{{ $userEarning->amount }}"
+                                                                data-frequency="{{ $userEarning->frequency }}"
+                                                                data-effective_start_date="{{ $userEarning->effective_start_date?->format('Y-m-d') ?? '' }}"
+                                                                data-effective_end_date="{{ $userEarning->effective_end_date?->format('Y-m-d') ?? '' }}"
+                                                                data-status="{{ $userEarning->status }}">
+                                                                <i class="ti ti-edit" title="Edit"></i>
+                                                            </a>
+                                                        @endif
+                                                        @if (in_array('Delete', $permission))
+                                                            <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                                data-bs-target="#delete_earning_user"
+                                                                data-id="{{ $userEarning->id }}"
+                                                                data-name="{{ $userEarning->user->personalInformation->last_name }}, {{ $userEarning->user->personalInformation->first_name }}">
+                                                                <i class="ti ti-trash" title="Delete"></i>
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+
             </div>
 
+            @include('layout.partials.footer-company')
         </div>
+        <!-- /Page Wrapper -->
 
-        @include('layout.partials.footer-company')
-    </div>
-    <!-- /Page Wrapper -->
-
-    @component('components.modal-popup', [
+        @component('components.modal-popup', [
         'earningTypes' => $earningTypes,
         'branches' => $branches,
         'departments' => $departments,
         'designations' => $designations,
     ])
-    @endcomponent
+        @endcomponent
 @endsection
 
 @push('scripts')

@@ -483,7 +483,7 @@ class EmployeeListController extends Controller
             $employmentDetail = EmploymentDetail::create([
                 'user_id' => $user->id,
                 'employee_id' => $fullEmployeeId,
-                'biometrics_id' => $request->biometrics_id, 
+                'biometrics_id' => $request->biometrics_id,
                 'branch_id' => $request->branch_id,
                 'department_id' => $request->department_id,
                 'designation_id' => $request->designation_id,
@@ -725,7 +725,7 @@ class EmployeeListController extends Controller
             if ($user->employmentDetail) {
                 $user->employmentDetail->update([
                     'employee_id' => $fullEmployeeId,
-                    'biometrics_id' => $request->biometrics_id, 
+                    'biometrics_id' => $request->biometrics_id,
                     'branch_id' => $request->branch_id,
                     'department_id' => $request->department_id,
                     'designation_id' => $request->designation_id,
@@ -1129,4 +1129,68 @@ class EmployeeListController extends Controller
         return response()->json([
             'employee_credits' => $subscription->employee_credits ?? 0,
         ]);
-    }}
+    }
+
+    public function getBillingStats()
+    {
+        $authUser = $this->authUser();
+
+        if (!$authUser || !$authUser->employmentDetail) {
+            return response()->json([
+                'total_credits' => 0,
+                'active_employees' => 0,
+                'credits_used' => 0,
+                'credits_used_percent' => 0,
+                'subscription_status' => 'inactive',
+                'message' => 'User not found or no employment details.'
+            ], 404);
+        }
+
+        $branchId = $authUser->employmentDetail->branch_id;
+
+        // Get total credits from branch_subscriptions for the user's branch
+        $totalCredits = BranchSubscription::where('branch_id', $branchId)
+            ->where('tenant_id', $authUser->tenant_id)
+            ->sum('employee_credits');
+
+        // Count active employees: users with active_subscription = 1 from auth user's branch
+        // Active employees are those consuming subscription credits
+        $activeEmployees = User::where('tenant_id', $authUser->tenant_id)
+            ->where('active_subscription', 1)
+            ->whereHas('employmentDetail', function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->count();
+
+        // Credits used: count ALL users within the branch (regardless of active_subscription value)
+        $creditsUsed = User::where('tenant_id', $authUser->tenant_id)
+            ->whereHas('employmentDetail', function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->count();
+
+        // Get subscription status
+        $subscription = BranchSubscription::where('branch_id', $branchId)
+            ->where('tenant_id', $authUser->tenant_id)
+            ->latest()
+            ->first();
+
+        $subscriptionStatus = 'inactive';
+        if ($subscription) {
+            $subscriptionStatus = $subscription->status ?? 'active';
+        }
+
+        // Calculate credits used as percentage
+        $creditsUsedPercent = $totalCredits > 0
+            ? round(($creditsUsed / $totalCredits) * 100)
+            : 0;
+
+        return response()->json([
+            'total_credits' => $totalCredits,
+            'active_employees' => $activeEmployees,
+            'credits_used' => $creditsUsed,
+            'credits_used_percent' => $creditsUsedPercent,
+            'subscription_status' => $subscriptionStatus,
+        ]);
+    }
+}

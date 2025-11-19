@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Feature Access Required</title>
+    <title>Add-on Required</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -64,16 +64,20 @@
             right: -50%;
             bottom: -50%;
             background:
-                repeating-linear-gradient(90deg,
+                repeating-linear-gradient(
+                    90deg,
                     transparent 0px,
                     rgba(255, 255, 255, 0.02) 1px,
                     transparent 2px,
-                    transparent 80px),
-                repeating-linear-gradient(0deg,
+                    transparent 80px
+                ),
+                repeating-linear-gradient(
+                    0deg,
                     transparent 0px,
                     rgba(255, 255, 255, 0.02) 1px,
                     transparent 2px,
-                    transparent 80px);
+                    transparent 80px
+                );
             animation: drift 25s linear infinite;
             pointer-events: none;
             opacity: 0.4;
@@ -147,13 +151,15 @@
             height: 150px;
             opacity: 0.02;
             background:
-                conic-gradient(from 0deg,
+                conic-gradient(
+                    from 0deg,
                     rgba(0, 128, 128, 0.1) 0deg,
                     rgba(255, 180, 0, 0.1) 72deg,
                     rgba(237, 116, 100, 0.1) 144deg,
                     rgba(181, 54, 84, 0.1) 216deg,
                     rgba(18, 81, 93, 0.1) 288deg,
-                    rgba(0, 128, 128, 0.1) 360deg);
+                    rgba(0, 128, 128, 0.1) 360deg
+                );
             border-radius: 50%;
             animation: rotate 30s linear infinite;
             filter: blur(1px);
@@ -173,49 +179,29 @@
         }
 
         @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-
-            33% {
-                transform: translateY(-10px) rotate(1deg);
-            }
-
-            66% {
-                transform: translateY(5px) rotate(-1deg);
-            }
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-10px) rotate(1deg); }
+            66% { transform: translateY(5px) rotate(-1deg); }
         }
 
         @keyframes drift {
-            from {
-                transform: translateX(-50px) translateY(-25px);
-            }
-
-            to {
-                transform: translateX(50px) translateY(25px);
-            }
+            from { transform: translateX(-50px) translateY(-25px); }
+            to { transform: translateX(50px) translateY(25px); }
         }
 
         @keyframes floatShapes {
-
-            0%,
-            100% {
+            0%, 100% {
                 transform: translateY(0px) translateX(0px) rotate(0deg);
                 opacity: 0.6;
             }
-
             25% {
                 transform: translateY(-15px) translateX(8px) rotate(45deg);
                 opacity: 0.4;
             }
-
             50% {
                 transform: translateY(-8px) translateX(-12px) rotate(90deg);
                 opacity: 0.8;
             }
-
             75% {
                 transform: translateY(12px) translateX(4px) rotate(135deg);
                 opacity: 0.5;
@@ -252,11 +238,12 @@
             right: 0;
             height: 1px;
             background: linear-gradient(90deg,
-                    transparent 0%,
-                    var(--mustard) 20%,
-                    var(--coral) 50%,
-                    var(--teal) 80%,
-                    transparent 100%);
+                transparent 0%,
+                var(--mustard) 20%,
+                var(--coral) 50%,
+                var(--teal) 80%,
+                transparent 100%
+            );
             opacity: 0.6;
         }
 
@@ -280,7 +267,6 @@
                 opacity: 0;
                 transform: translateY(40px) scale(0.96);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -288,20 +274,15 @@
         }
 
         @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .security-icon {
             width: 80px;
             height: 80px;
             margin: 0 auto 32px;
-            background: linear-gradient(135deg, var(--teal), var(--dark-forest));
+            background: linear-gradient(135deg, var(--mustard), var(--coral));
             border-radius: 20px;
             display: flex;
             align-items: center;
@@ -314,7 +295,7 @@
             content: '';
             position: absolute;
             inset: -2px;
-            background: linear-gradient(135deg, var(--mustard), var(--coral));
+            background: linear-gradient(135deg, var(--teal), var(--dark-forest));
             border-radius: 22px;
             z-index: -1;
             opacity: 0.6;
@@ -327,12 +308,9 @@
         }
 
         @keyframes float {
-
-            0%,
-            100% {
+            0%, 100% {
                 transform: translateY(0);
             }
-
             50% {
                 transform: translateY(-8px);
             }
@@ -342,7 +320,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, var(--raspberry), #d1477a);
+            background: linear-gradient(135deg, var(--mustard), var(--coral));
             color: var(--white);
             padding: 8px 16px;
             border-radius: 16px;
@@ -362,12 +340,9 @@
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
+            0%, 100% {
                 opacity: 1;
             }
-
             50% {
                 opacity: 0.5;
             }
@@ -417,7 +392,7 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--teal), var(--mustard));
+            background: linear-gradient(90deg, var(--mustard), var(--coral));
         }
 
         .feature-card:hover {
@@ -444,12 +419,12 @@
         }
 
         .feature-card:nth-child(1) .feature-icon {
-            background: linear-gradient(135deg, var(--teal), var(--dark-forest));
+            background: linear-gradient(135deg, var(--mustard), var(--coral));
             color: var(--white);
         }
 
         .feature-card:nth-child(2) .feature-icon {
-            background: linear-gradient(135deg, var(--mustard), var(--coral));
+            background: linear-gradient(135deg, var(--teal), var(--dark-forest));
             color: var(--white);
         }
 
@@ -472,7 +447,7 @@
         }
 
         .highlight {
-            color: var(--teal);
+            color: var(--mustard);
             font-weight: 600;
         }
 
@@ -488,7 +463,7 @@
             align-items: center;
             gap: 8px;
             padding: 16px 32px;
-            background: linear-gradient(135deg, var(--teal), var(--dark-forest));
+            background: linear-gradient(135deg, var(--mustard), var(--coral));
             color: var(--white);
             text-decoration: none;
             border-radius: 12px;
@@ -505,7 +480,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--mustard), var(--coral));
+            background: linear-gradient(135deg, var(--teal), var(--dark-forest));
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -516,7 +491,7 @@
 
         .primary-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(0, 128, 128, 0.4);
+            box-shadow: 0 12px 24px rgba(255, 180, 0, 0.4);
         }
 
         .primary-button span {
@@ -546,7 +521,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: linear-gradient(135deg, var(--dark-forest), var(--teal));
+            background: linear-gradient(135deg, var(--mustard), var(--coral));
             color: var(--white);
             padding: 6px 12px;
             border-radius: 8px;
@@ -554,7 +529,7 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         @media (max-width: 640px) {
@@ -598,97 +573,84 @@
     </div>
 
     <div class="container">
-        <div class="hr-context">HR System</div>
+        <div class="hr-context">Add-on Required</div>
 
         <div class="security-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <circle cx="12" cy="16" r="1" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4"/>
+                <path d="M12 8h.01"/>
             </svg>
         </div>
 
         <div class="status-badge">
             <div class="status-dot"></div>
-            Premium Access Required
+            Add-on Purchase Required
         </div>
 
-        <h1>Feature Access Required</h1>
+        <h1>Add-on Required</h1>
         <p class="subtitle">
-            Unlock advanced HR & payroll capabilities to enhance your workforce management.
-            Choose the perfect plan to scale your business operations.
+            This feature requires a paid add-on. Browse our marketplace to unlock additional HR & payroll capabilities tailored to your business needs.
         </p>
 
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-header">
                     <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M2 12h20" />
-                            <path
-                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                         </svg>
                     </div>
-                    <div class="feature-title">Custom Domain Portal</div>
+                    <div class="feature-title">Pay Per Feature</div>
                 </div>
                 <div class="feature-description">
-                    Get your <span class="highlight">own branded portal</span> with custom domain access for your
-                    organization, giving you full control and professional identity.
+                    <span class="highlight">Only pay</span> for the features you need. No bundled packages—choose exactly what works for your organization.
                 </div>
             </div>
 
             <div class="feature-card">
                 <div class="feature-header">
                     <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                         </svg>
                     </div>
-                    <div class="feature-title">Unlimited Feature Access</div>
+                    <div class="feature-title">Instant Activation</div>
                 </div>
                 <div class="feature-description">
-                    <span class="highlight">Access all features</span> without restrictions. Unlike Timora's limited
-                    payroll-only access, unlock the complete HR management suite.
+                    Add-ons are <span class="highlight">activated immediately</span> after purchase. Start using new features without any delays or setup time.
                 </div>
             </div>
 
             <div class="feature-card">
                 <div class="feature-header">
                     <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
                         </svg>
                     </div>
-                    <div class="feature-title">Premium Plan Benefits</div>
+                    <div class="feature-title">Flexible Billing</div>
                 </div>
                 <div class="feature-description">
-                    Unlock advanced capabilities including <span class="highlight">full payroll processing</span>,
-                    attendance tracking, leave management, and comprehensive compliance tools.
+                    Choose <span class="highlight">monthly or yearly</span> billing cycles that fit your budget. Manage subscriptions easily and cancel anytime.
                 </div>
             </div>
         </div>
 
         <div class="cta-section">
-            <a href="https://wizard.timora.ph/subscription" class="primary-button">
-                <span>Upgrade Now</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14" />
-                    <path d="M12 5l7 7-7 7" />
+            <a href="/addons" class="primary-button">
+                <span>Browse Add-ons</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"/>
+                    <path d="M12 5l7 7-7 7"/>
                 </svg>
             </a>
-            <a href="{{ (\App\Helpers\PermissionHelper::get(1)) ? route('admin-dashboard') : route('employee-dashboard') }}"
-                class="secondary-button">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 12H5" />
-                    <path d="M12 19l-7-7 7-7" />
+            <a href="{{ (\App\Helpers\PermissionHelper::get(1)) ? route('admin-dashboard') : route('employee-dashboard') }}" class="secondary-button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5"/>
+                    <path d="M12 19l-7-7 7-7"/>
                 </svg>
                 Return to Dashboard
             </a>

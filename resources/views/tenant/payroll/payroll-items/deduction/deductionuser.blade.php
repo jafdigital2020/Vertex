@@ -70,16 +70,17 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" style="width:150px;" class="select2 form-select" onchange="filter()">
-                                <option value="" selected>All Branches</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
+                                style="width:200px;">
+                                @foreach ($branches as $i => $branch)
+                                    <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" style="width:150px;" class="select2 form-select"
-                                onchange="filter()">
+                            <select name="department_filter" id="department_filter" style="width:150px;"
+                                class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -87,8 +88,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" style="width:150px;" class="select2 form-select"
-                                onchange="filter()">
+                            <select name="designation_filter" id="designation_filter" style="width:150px;"
+                                class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -137,21 +138,23 @@
                                             </div>
                                         </td>
                                         <td>{{ $userDeduction->user->personalInformation->last_name }},
-                                            {{ $userDeduction->user->personalInformation->first_name }} </td>
+                                            {{ $userDeduction->user->personalInformation->first_name }}
+                                        </td>
                                         <td class="text-center">{{ $userDeduction->deductionType->name }}</td>
                                         <td class="text-center">{{ $userDeduction->amount }}</td>
                                         <td class="text-center">
-                                            {{ ucwords(str_replace('_', ' ', $userDeduction->frequency)) }}</td>
+                                            {{ ucwords(str_replace('_', ' ', $userDeduction->frequency)) }}
+                                        </td>
                                         <td class="text-center">
                                             {{ $userDeduction->effective_start_date?->format('M j, Y') ?? '' }} -
-                                            {{ $userDeduction->effective_end_date?->format('M j, Y') ?? '' }} </td>
+                                            {{ $userDeduction->effective_end_date?->format('M j, Y') ?? '' }}
+                                        </td>
                                         <td class="text-center">{{ ucfirst($userDeduction->type) }}</td>
                                         <td class="text-center">
                                             <span
                                                 class="badge d-inline-flex align-items-center badge-xs
-                                                {{ $userDeduction->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
-                                                <i
-                                                    class="ti ti-point-filled me-1"></i>{{ ucfirst($userDeduction->status) }}
+                                                            {{ $userDeduction->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
+                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($userDeduction->status) }}
                                             </span>
                                         </td>
                                         <td class="text-center">{{ $userDeduction->creator_name }}</td>
@@ -160,8 +163,7 @@
                                             <td class="text-center">
                                                 <div class="action-icon d-inline-flex">
                                                     @if (in_array('Update', $permission))
-                                                        <a href="#" data-bs-toggle="modal"
-                                                            data-bs-target="#edit_deduction_user"
+                                                        <a href="#" data-bs-toggle="modal" data-bs-target="#edit_deduction_user"
                                                             data-id="{{ $userDeduction->id }}"
                                                             data-deduction-type-id="{{ $userDeduction->deduction_type_id }}"
                                                             data-type="{{ $userDeduction->type }}"
@@ -175,8 +177,7 @@
                                                     @endif
                                                     @if (in_array('Delete', $permission))
                                                         <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                            data-bs-target="#delete_deduction_user"
-                                                            data-id="{{ $userDeduction->id }}"
+                                                            data-bs-target="#delete_deduction_user" data-id="{{ $userDeduction->id }}"
                                                             data-name="{{ $userDeduction->user->personalInformation->last_name }}, {{ $userDeduction->user->personalInformation->first_name }}">
                                                             <i class="ti ti-trash" title="Delete"></i>
                                                         </a>
@@ -210,7 +211,7 @@
 
 @push('scripts')
     <script>
-        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+        $('#dateRange_filter').on('apply.daterangepicker', function (ev, picker) {
             filter();
         });
 
@@ -230,8 +231,8 @@
                     department,
                     designation
                 },
-                success: function(response) {
-                    if (response.status === 'success') {  
+                success: function (response) {
+                    if (response.status === 'success') {
                         $('#userDeductionsTable').DataTable().destroy();
                         $('#userDeductionsTableBody').html(response.html);
                         $('#userDeductionsTable').DataTable();
@@ -239,7 +240,7 @@
                         toastr.error(response.message || 'Something went wrong.');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     let message = 'An unexpected error occurred.';
                     if (xhr.status === 403) {
                         message = 'You are not authorized to perform this action.';
@@ -253,7 +254,7 @@
     </script>
     {{-- Filter --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             const authToken = localStorage.getItem('token');
 
@@ -288,8 +289,8 @@
                     const u = emp.user?.personal_information;
                     if (u) {
                         opts += `<option value="${emp.user.id}">
-                   ${u.last_name}, ${u.first_name}
-                 </option>`;
+                       ${u.last_name}, ${u.first_name}
+                     </option>`;
                     }
                 });
 
@@ -299,7 +300,7 @@
             }
 
             // — Branch change → fetch Depts, Emps & Shifts
-            $(document).on('change', '.branch-select', function() {
+            $(document).on('change', '.branch-select', function () {
                 const $this = $(this);
                 if (handleSelectAll($this)) return;
 
@@ -348,7 +349,7 @@
             });
 
             // — Department change → fetch Designations & re-filter Employees
-            $(document).on('change', '.department-select', function() {
+            $(document).on('change', '.department-select', function () {
                 const $this = $(this);
                 if (handleSelectAll($this)) return;
 
@@ -385,14 +386,14 @@
             });
 
             // — Designation change → re-filter Employees
-            $(document).on('change', '.designation-select', function() {
+            $(document).on('change', '.designation-select', function () {
                 const $this = $(this);
                 if (handleSelectAll($this)) return;
                 updateEmployeeSelect($this.closest('.modal'));
             });
 
             // — Employee “All Employee” handler
-            $(document).on('change', '.employee-select', function() {
+            $(document).on('change', '.employee-select', function () {
                 handleSelectAll($(this));
             });
 
@@ -401,7 +402,7 @@
 
     {{-- Form Submission Store/Create w/ Hide Section --}}
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // CSRF token for all Ajax requests
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
@@ -425,7 +426,7 @@
             $typeSelect.on('change', toggleSection);
 
             // Handle form submit
-            $('#assignDeductionUserForm').on('submit', function(e) {
+            $('#assignDeductionUserForm').on('submit', function (e) {
                 e.preventDefault();
 
                 // Clear previous validation states
@@ -452,7 +453,7 @@
                     headers: {
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    success: function(response) {
+                    success: function (response) {
                         // Reset and close modal
                         $('#assignDeductionUserForm')[0].reset();
                         $('#add_deduction_user').modal('hide');
@@ -461,7 +462,7 @@
                         toastr.success(response.message || 'Deduction assigned successfully.');
                         filter();
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         if (xhr.status === 422) {
                             let json = xhr.responseJSON;
 
@@ -470,7 +471,7 @@
                                 toastr.error(json.errors.user_id[0]);
                             }
 
-                            $.each(json.errors, function(field, messages) {
+                            $.each(json.errors, function (field, messages) {
                                 if (field === 'user_id') return;
 
                                 let baseField = field.replace(/\.\d+$/, '');
@@ -506,7 +507,7 @@
 
     {{-- Form Submission Update/Edit w/Hide Section --}}
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
             // Cache selects & section
@@ -523,7 +524,7 @@
             }
 
             // When the modal is shown, populate fields
-            $('#edit_deduction_user').on('show.bs.modal', function(event) {
+            $('#edit_deduction_user').on('show.bs.modal', function (event) {
                 const button = $(event.relatedTarget);
                 const recordId = button.data('id');
                 const deductionTypeId = button.data('deduction-type-id');
@@ -556,7 +557,7 @@
             $typeSelect.on('change', toggleSection);
 
             // Handle form submission via AJAX (PUT)
-            $('#editAssignDeductionForm').on('submit', function(e) {
+            $('#editAssignDeductionForm').on('submit', function (e) {
                 e.preventDefault();
 
                 $('.is-invalid').removeClass('is-invalid');
@@ -587,7 +588,7 @@
                     headers: {
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    success: function(response) {
+                    success: function (response) {
                         // Reset form, close modal, show success
                         $('#editAssignDeductionForm')[0].reset();
                         $('#edit_deduction_user').modal('hide');
@@ -595,7 +596,7 @@
                             'Assigned deduction updated successfully.');
                         filter();
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         if (xhr.status === 422) {
                             const json = xhr.responseJSON;
 
@@ -603,7 +604,7 @@
                                 if (json.errors.earning_type_id) {
                                     toastr.error(json.errors.earning_type_id[0]);
                                 }
-                                $.each(json.errors, function(field, messages) {
+                                $.each(json.errors, function (field, messages) {
                                     const $input = $('[name="' + field + '"]');
                                     $input.addClass('is-invalid');
                                     const errHtml = '<div class="invalid-feedback">' +
@@ -632,7 +633,7 @@
 
     {{-- Delete Confirmation --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
@@ -644,7 +645,7 @@
 
             // Set up the delete buttons to capture data
 
-            $(document).on('click', '.btn-delete', function() {
+            $(document).on('click', '.btn-delete', function () {
                 deleteId = $(this).data('id');
                 const deductionName = $(this).data('name');
 
@@ -654,19 +655,19 @@
                 }
             });
             // Confirm delete button click event
-            userDeductionConfirmBtn?.addEventListener('click', function() {
+            userDeductionConfirmBtn?.addEventListener('click', function () {
                 if (!deleteId) return;
 
                 fetch(`/api/payroll/payroll-items/deductions/user/delete/${deleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content"),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                })
                     .then(response => {
                         if (response.ok) {
                             toastr.success("Assigned deduction deleted successfully.");
@@ -698,14 +699,14 @@
             });
         }
 
-        $(document).ready(function() {
+        $(document).ready(function () {
 
-            $('#branch_filter').on('input', function() {
+            $('#branch_filter').on('input', function () {
                 const branchId = $(this).val();
 
                 $.get('/api/filter-from-branch', {
                     branch_id: branchId
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         populateDropdown($('#department_filter'), res.departments, 'Departments');
                         populateDropdown($('#designation_filter'), res.designations,
@@ -715,14 +716,14 @@
             });
 
 
-            $('#department_filter').on('input', function() {
+            $('#department_filter').on('input', function () {
                 const departmentId = $(this).val();
                 const branchId = $('#branch_filter').val();
 
                 $.get('/api/filter-from-department', {
                     department_id: departmentId,
                     branch_id: branchId,
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         if (res.branch_id) {
                             $('#branch_filter').val(res.branch_id).trigger('change');
@@ -733,7 +734,7 @@
                 });
             });
 
-            $('#designation_filter').on('change', function() {
+            $('#designation_filter').on('change', function () {
                 const designationId = $(this).val();
                 const branchId = $('#branch_filter').val();
                 const departmentId = $('#department_filter').val();
@@ -742,7 +743,7 @@
                     designation_id: designationId,
                     branch_id: branchId,
                     department_id: departmentId
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         if (designationId === '') {
                             populateDropdown($('#designation_filter'), res.designations,

@@ -73,11 +73,11 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
-                                style="width:150px;">
-                                <option value="" selected>All Branches</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
+                                style="width:200px;">
+                                @foreach ($branches as $i => $branch)
+                                    <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -145,12 +145,13 @@
                                         <td>{{ ucwords(str_replace('_', ' ', $allowance->frequency)) }}</td>
                                         <td>
                                             {{ $allowance->effective_start_date?->format('M j, Y') ?? '' }} -
-                                            {{ $allowance->effective_end_date?->format('M j, Y') ?? 'Indefinite' }} </td>
+                                            {{ $allowance->effective_end_date?->format('M j, Y') ?? 'Indefinite' }}
+                                        </td>
                                         <td>{{ ucfirst($allowance->type) }}</td>
                                         <td>
                                             <span
                                                 class="badge d-inline-flex align-items-center badge-xs
-                                                {{ $allowance->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
+                                                            {{ $allowance->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
                                                 <i class="ti ti-point-filled me-1"></i>{{ ucfirst($allowance->status) }}
                                             </span>
                                         </td>
@@ -158,8 +159,8 @@
                                         <td>{{ $allowance->updater_name }}</td>
                                         <td>
                                             <div class="action-icon d-inline-flex">
-                                                <a href="#" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_allowance_user" data-id="{{ $allowance->id }}"
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#edit_allowance_user"
+                                                    data-id="{{ $allowance->id }}"
                                                     data-allowance-id="{{ $allowance->allowance_id }}"
                                                     data-type="{{ $allowance->type }}"
                                                     data-override-enabled="{{ $allowance->override_enabled ? 1 : 0 }}"
@@ -173,8 +174,7 @@
                                                 </a>
                                                 {{-- Delete --}}
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_allowance_user"
-                                                    data-id="{{ $allowance->id }}"
+                                                    data-bs-target="#delete_allowance_user" data-id="{{ $allowance->id }}"
                                                     data-name="{{ $allowance->user->personalInformation->full_name ?? 'Allowance' }}">
                                                     <i class="ti ti-trash" title="Delete"></i>
                                                 </a>
@@ -206,7 +206,7 @@
 @push('scripts')
     {{-- Modal Filter --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             const authToken = localStorage.getItem('token');
 
@@ -241,8 +241,8 @@
                     const u = emp.user?.personal_information;
                     if (u) {
                         opts += `<option value="${emp.user.id}">
-                   ${u.last_name}, ${u.first_name}
-                 </option>`;
+                       ${u.last_name}, ${u.first_name}
+                     </option>`;
                     }
                 });
 
@@ -252,7 +252,7 @@
             }
 
             // — Branch change → fetch Depts, Emps & Shifts
-            $(document).on('change', '.branch-select', function() {
+            $(document).on('change', '.branch-select', function () {
                 const $this = $(this);
                 if (handleSelectAll($this)) return;
 
@@ -301,7 +301,7 @@
             });
 
             // — Department change → fetch Designations & re-filter Employees
-            $(document).on('change', '.department-select', function() {
+            $(document).on('change', '.department-select', function () {
                 const $this = $(this);
                 if (handleSelectAll($this)) return;
 
@@ -338,14 +338,14 @@
             });
 
             // — Designation change → re-filter Employees
-            $(document).on('change', '.designation-select', function() {
+            $(document).on('change', '.designation-select', function () {
                 const $this = $(this);
                 if (handleSelectAll($this)) return;
                 updateEmployeeSelect($this.closest('.modal'));
             });
 
             // — Employee “All Employee” handler
-            $(document).on('change', '.employee-select', function() {
+            $(document).on('change', '.employee-select', function () {
                 handleSelectAll($(this));
             });
 
@@ -379,7 +379,7 @@
         }
 
         // Initialize when the modal is shown for assigning
-        $('#add_allowance_user').on('show.bs.modal', function() {
+        $('#add_allowance_user').on('show.bs.modal', function () {
             toggleSectionAssign();
             toggleOverrideAmountAssign();
         });
@@ -391,12 +391,12 @@
 
     {{-- Assigning Script --}}
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
 
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
             const authToken = localStorage.getItem('token');
 
-            $('#assignAllowanceUserForm').on('submit', function(e) {
+            $('#assignAllowanceUserForm').on('submit', function (e) {
                 e.preventDefault();
 
                 // Clear previous validation states
@@ -426,7 +426,7 @@
                         'X-CSRF-TOKEN': csrfToken
                     },
 
-                    success: function(response) {
+                    success: function (response) {
                         $('#assignAllowanceUserForm')[0].reset();
                         $('#add_allowance_user').modal('hide');
                         toastr.success(response.message || 'Allowance assigned successfully.');
@@ -435,7 +435,7 @@
                         }, 1000);
                     },
 
-                    error: function(xhr) {
+                    error: function (xhr) {
                         if (xhr.status === 422) {
                             let json = xhr.responseJSON;
 
@@ -444,7 +444,7 @@
                                 toastr.error(json.errors.user_id[0]);
                             }
 
-                            $.each(json.errors, function(field, messages) {
+                            $.each(json.errors, function (field, messages) {
                                 if (field === 'user_id') return;
 
                                 let baseField = field.replace(/\.\d+$/, '');
@@ -479,7 +479,7 @@
 
     {{-- Edit Allowance User --}}
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             const csrfToken = $('meta[name="csrf-token"]').attr('content'); // CSRF Token
 
             const $typeSelect = $('#editUserAllowanceType');
@@ -508,7 +508,7 @@
             }
 
             // When the Edit modal is shown, populate fields and toggle sections
-            $('#edit_allowance_user').on('show.bs.modal', function(event) {
+            $('#edit_allowance_user').on('show.bs.modal', function (event) {
                 const button = $(event.relatedTarget); // Button that triggered the modal
                 const recordId = button.data('id'); // Get record ID
                 const allowanceId = button.data('allowance-id');
@@ -547,7 +547,7 @@
             $('#editUserAllowanceOverride').on('change', toggleOverrideAmount);
 
             // Form submission via AJAX (PUT method)
-            $('#editAssignAllowanceUserForm').on('submit', function(e) {
+            $('#editAssignAllowanceUserForm').on('submit', function (e) {
                 e.preventDefault(); // Prevent default form submission
 
                 // Clear previous validation errors
@@ -583,7 +583,7 @@
                         'X-CSRF-TOKEN': csrfToken
                     },
 
-                    success: function(response) {
+                    success: function (response) {
                         $('#editAssignAllowanceUserForm')[0].reset();
                         $('#edit_allowance_user').modal('hide');
                         toastr.success(response.message ||
@@ -593,7 +593,7 @@
                         }, 1000);
                     },
 
-                    error: function(xhr) {
+                    error: function (xhr) {
                         if (xhr.status === 422) {
                             const json = xhr.responseJSON;
                             if (json.errors) {
@@ -603,7 +603,7 @@
                             }
 
                             // Loop through and display validation errors
-                            $.each(json.errors, function(field, messages) {
+                            $.each(json.errors, function (field, messages) {
                                 const $input = $('[name="' + field + '"]');
                                 $input.addClass('is-invalid');
                                 const errHtml = '<div class="invalid-feedback">' +
@@ -628,7 +628,7 @@
 
     {{-- Delete Allowance User --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
@@ -640,7 +640,7 @@
 
             // Set up the delete buttons to capture data
 
-            $(document).on('click', '.btn-delete', function() {
+            $(document).on('click', '.btn-delete', function () {
                 deleteId = $(this).data('id');
                 const allowanceName = $(this).data('name');
 
@@ -651,19 +651,19 @@
             });
 
             // Confirm delete button click event
-            userAllowanceConfirmBtn?.addEventListener('click', function() {
+            userAllowanceConfirmBtn?.addEventListener('click', function () {
                 if (!deleteId) return;
 
                 fetch(`/api/payroll/payroll-items/allowance/user/delete/${deleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content"),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                })
                     .then(response => {
                         if (response.ok) {
                             toastr.success("Assigned earning deleted successfully.");

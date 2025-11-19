@@ -206,7 +206,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('leave-type')->middleware(CheckPermission::class . ':43');
     Route::get('/settings/approval-steps', [ApprovalController::class, 'approvalIndex'])->name('approval-steps')->middleware(CheckPermission::class . ':43');
     Route::get('/settings/custom-fields', [CustomfieldController::class, 'customfieldIndex'])->name('custom-fields');
-    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('biometrics')->middleware(CheckPermission::class . ':43');
+    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('biometrics')->middleware(CheckPermission::class . ':58')->middleware(CheckAddon::class . ':zkteco_biometrics');
 
 
     // Geofence
@@ -288,11 +288,11 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/payroll-items/deductions-filter', [DeductionsController::class, 'deductionsFilter'])->name('deductions-filter');
     Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/deductions/user-filter', [DeductionsController::class, 'userDeductionFilter'])->name('user-deductions-filter');
-    Route::get('/payroll/payroll-items/allowance', [AllowanceController::class, 'payrollItemsAllowance'])->name('allowance');
-    Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('userAllowanceIndex');
+    Route::get('/payroll/payroll-items/allowance', [AllowanceController::class, 'payrollItemsAllowance'])->name('allowance')->middleware(CheckAddon::class . ':allowance_management');
+    Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('userAllowanceIndex')->middleware(CheckAddon::class . ':allowance_management');
 
     // Bank
-    Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank')->middleware(CheckAddon::class . ':3');
+    Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank')->middleware(CheckAddon::class . ':bank_data_export_csv');
 
     // Payroll Process
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('payroll-process');
@@ -365,9 +365,9 @@ Route::get('/send-test-notif', function () {
 
 // Payroll Report
 Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('payroll-report');
-Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report');
-Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report');
-Route::get('/generate-pdf', [SssReportController::class, 'generatePdf']);
+Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report')->middleware(CheckAddon::class . ':alphalist_report');
+Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report')->middleware(CheckAddon::class . ':sss_reports');
+Route::get('/generate-pdf', [SssReportController::class, 'generatePdf'])->middleware(CheckAddon::class . ':sss_reports');
 
 
 // Billing
@@ -382,5 +382,16 @@ Route::get('/addons', [BranchAddonController::class, 'index'])->name('addons.pur
 Route::post('/addons/purchase', [BranchAddonController::class, 'purchase'])->name('addon.purchase');
 Route::post('/addons/cancel', [BranchAddonController::class, 'cancel'])->name('addon.cancel');
 Route::get('/addons/payment/callback/{invoice}', [BranchAddonController::class, 'paymentCallback'])->name('addon.payment.callback');
+
+// Addon Access Denied Pages
+Route::get('/addonrequired', function () {
+    session()->forget('addon_redirect'); // Clear session after use
+    return response()->view('errors.addonrequired', [], 200);
+})->name('addon.required');
+
+Route::get('/featurerequired', function () {
+    session()->forget('addon_redirect'); // Clear session after use
+    return response()->view('errors.featurerequired', [], 200);
+})->name('feature.required');
 
 Route::get('/employees/topup/success', [EmployeePaymentController::class, 'showPaymentStatus'])->name('employee.paymentstatus');

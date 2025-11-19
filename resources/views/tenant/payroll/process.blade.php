@@ -2068,13 +2068,13 @@
                     const benefitName = deminimisBenefits[item.deminimis_benefit_id] ||
                         `Unknown (${item.deminimis_benefit_id})`;
                     html += `
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">${benefitName}</label>
-                            <input type="number" step="0.01" class="form-control"
-                                name="deminimis_amounts[${item.deminimis_benefit_id}]"
-                                value="${item.amount}">
-                        </div>
-                    `;
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">${benefitName}</label>
+                                <input type="number" step="0.01" class="form-control"
+                                    name="deminimis_amounts[${item.deminimis_benefit_id}]"
+                                    value="${item.amount}">
+                            </div>
+                        `;
                 });
                 $('#deminimis_heading').show();
                 $('#deminimis_fields').show().html(html);
@@ -2095,13 +2095,13 @@
             if (Array.isArray(earningsArr) && earningsArr.length) {
                 earningsArr.forEach(function (item, idx) {
                     earningsHtml += `
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">${item.earning_type_name}</label>
-                        <input type="number" step="0.01" class="form-control"
-                            name="earnings[${item.earning_type_id}][applied_amount]"
-                            value="${item.applied_amount}">
-                    </div>
-                `;
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">${item.earning_type_name}</label>
+                            <input type="number" step="0.01" class="form-control"
+                                name="earnings[${item.earning_type_id}][applied_amount]"
+                                value="${item.applied_amount}">
+                        </div>
+                    `;
                 });
                 $('#earnings_heading').show();
                 $('#earnings_fields').show().html(earningsHtml);
@@ -2123,13 +2123,13 @@
                 allowanceArr.forEach(function (item, idx) {
                     // Use allowance_id for the input name to match your JSON structure
                     allowanceHtml += `
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">${item.allowance_name}</label>
-                        <input type="number" step="0.01" class="form-control"
-                            name="allowances[${item.allowance_id}][applied_amount]"
-                            value="${item.applied_amount}">
-                    </div>
-                `;
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">${item.allowance_name}</label>
+                            <input type="number" step="0.01" class="form-control"
+                                name="allowances[${item.allowance_id}][applied_amount]"
+                                value="${item.applied_amount}">
+                        </div>
+                    `;
                 });
                 $('#allowance_heading').show();
                 $('#allowance_fields').show().html(allowanceHtml);
@@ -2150,13 +2150,13 @@
             if (Array.isArray(deductionsArr) && deductionsArr.length) {
                 deductionsArr.forEach(function (item, idx) {
                     deductionsHtml += `
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">${item.deduction_type_name}</label>
-                            <input type="number" step="0.01" class="form-control"
-                                name="deductions[${item.deduction_type_id}][applied_amount]"
-                                value="${item.applied_amount}">
-                        </div>
-                    `;
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">${item.deduction_type_name}</label>
+                                <input type="number" step="0.01" class="form-control"
+                                    name="deductions[${item.deduction_type_id}][applied_amount]"
+                                    value="${item.applied_amount}">
+                            </div>
+                        `;
                 });
                 $('#deductions_heading').show();
                 $('#deductions_fields').show().html(deductionsHtml);
@@ -2675,17 +2675,17 @@
                             `${monthName} ${yearStr}`.trim();
 
                         rows += `
-                            <tr>
-                                <td class="fw-medium">${monthYear}</td>
-                                <td class="text-center">${month.payroll_count}</td>
-                                <td class="text-end">₱${parseFloat(month.basic_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-end">₱${parseFloat(month.leave_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-end text-danger">₱${parseFloat(month.late_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-end text-danger">₱${parseFloat(month.undertime_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-end text-danger">₱${parseFloat(month.absent_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-end text-success fw-bold">₱${parseFloat(month.thirteenth_month_contribution || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            </tr>
-                        `;
+                                <tr>
+                                    <td class="fw-medium">${monthYear}</td>
+                                    <td class="text-center">${month.payroll_count}</td>
+                                    <td class="text-end">₱${parseFloat(month.basic_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td class="text-end">₱${parseFloat(month.leave_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td class="text-end text-danger">₱${parseFloat(month.late_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td class="text-end text-danger">₱${parseFloat(month.undertime_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td class="text-end text-danger">₱${parseFloat(month.absent_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td class="text-end text-success fw-bold">₱${parseFloat(month.thirteenth_month_contribution || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                </tr>
+                            `;
                     });
                 }
                 $('#modal_monthly_breakdown').html(rows);

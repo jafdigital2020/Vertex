@@ -599,28 +599,57 @@
                         (in_array(3, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                     )
                     <li class="mt-3 d-none" id="subscription-status-card">
-                        <div class="card border-0 shadow-sm overflow-hidden">
-                            <div class="card-body p-3 text-center">
-                                <div class="d-flex align-items-center justify-content-center mb-3">
-                                    <div class="avatar avatar-sm bg-primary-transparent rounded me-2">
-                                        <i class="ti ti-crown text-primary"></i>
+                        <div class="card border-0 shadow-sm overflow-hidden" style="background: linear-gradient(135deg, #008080 0%, #12515D 100%); border-radius: 12px;">
+                            <div class="card-body p-3 position-relative">
+                                <!-- Decorative background element -->
+                                <div style="position: absolute; top: -15px; right: -15px; width: 60px; height: 60px; background: rgba(255,255,255,0.08); border-radius: 50%; filter: blur(15px);"></div>
+
+                                <!-- Compact header -->
+                                <div class="d-flex align-items-center justify-content-between mb-2 position-relative">
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center justify-content-center me-2"
+                                             style="width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                                            <i class="ti ti-crown" style="font-size: 16px; color: #fff;"></i>
+                                        </div>
+                                        <span class="text-white fw-semibold" style="font-size: 13px;">Subscription</span>
                                     </div>
-                                    <span class="fs-14 fw-medium text-dark">Subscription Status</span>
                                 </div>
-                                <div class="mb-3">
-                                    <span class="badge bg-success-transparent text-success fs-12 px-3 py-2"
-                                        id="subscription-days-left">
+
+                                <!-- Compact progress display -->
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="flex-grow-1">
+                                        <!-- Progress bar -->
+                                        <div style="height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden;">
+                                            <div id="subscription-progress-bar" style="height: 100%; background: #fff; width: 0%; transition: width 0.5s ease, background 0.3s ease; border-radius: 3px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3 text-end">
+                                        <div id="subscription-days-number" class="text-white fw-bold" style="font-size: 20px; line-height: 1;">--</div>
+                                        <div class="text-white" style="font-size: 9px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.3px;">days</div>
+                                    </div>
+                                </div>
+
+                                <!-- Status text (compact) -->
+                                <div class="mb-2">
+                                    <span id="subscription-status-text" class="text-white" style="font-size: 11px; opacity: 0.9;">
                                         Loading...
                                     </span>
                                 </div>
-                                <div id="subscription-message" class="d-none mb-3">
-                                    <div class="alert alert-warning p-2 mb-0" role="alert">
-                                        <i class="ti ti-alert-triangle me-1"></i>
-                                        <span class="fs-12">Your subscription is expiring soon. Please renew to continue using all features.</span>
+
+                                <!-- Warning message (compact) -->
+                                <div id="subscription-message" class="d-none mb-2">
+                                    <div class="p-2 rounded" style="background: rgba(255,255,255,0.15);">
+                                        <i class="ti ti-alert-triangle text-white" style="font-size: 10px;"></i>
+                                        <span class="text-white" style="font-size: 10px; opacity: 0.9;">Renew soon</span>
                                     </div>
                                 </div>
-                                <a href="{{ url('billing') }}" class="btn btn-sm btn-primary w-100">
-                                    <i class="ti ti-settings me-1"></i>Manage Subscription
+
+                                <!-- Compact manage button -->
+                                <a href="{{ url('billing') }}" class="btn btn-sm w-100"
+                                   style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); color: #fff; font-weight: 600; font-size: 11px; padding: 6px; border-radius: 8px; transition: all 0.2s ease;"
+                                   onmouseover="this.style.background='rgba(255,255,255,0.35)';"
+                                   onmouseout="this.style.background='rgba(255,255,255,0.25)';">
+                                    <i class="ti ti-settings" style="font-size: 12px;"></i> Manage
                                 </a>
                             </div>
                         </div>
@@ -641,32 +670,69 @@
             .then(response => response.json())
             .then(data => {
                 const card = document.getElementById('subscription-status-card');
-                const badge = document.getElementById('subscription-days-left');
+                const daysNumber = document.getElementById('subscription-days-number');
+                const statusText = document.getElementById('subscription-status-text');
                 const message = document.getElementById('subscription-message');
+                const progressBar = document.getElementById('subscription-progress-bar');
+                const cardElement = card?.querySelector('.card');
 
                 // Always show card if subscription_days_left exists (even if 0 or negative)
                 if (typeof data.subscription_days_left === 'number') {
                     if (card) card.classList.remove('d-none');
 
-                    if (badge) {
-                        if (data.subscription_days_left > 0) {
-                            // Active subscription
-                            badge.textContent = `${data.subscription_days_left} days left`;
-                            badge.classList.remove('bg-warning', 'bg-danger');
-                            badge.classList.add('bg-success');
-                            if (message) message.classList.add('d-none');
-                        } else if (data.subscription_days_left === 0) {
-                            // Expires today
-                            badge.textContent = 'Expires Today';
-                            badge.classList.remove('bg-success', 'bg-danger');
-                            badge.classList.add('bg-warning');
-                            if (message) message.classList.remove('d-none');
-                        } else {
-                            // Expired
-                            badge.textContent = 'Expired';
-                            badge.classList.remove('bg-success', 'bg-warning');
-                            badge.classList.add('bg-danger');
-                            if (message) message.classList.remove('d-none');
+                    const daysLeft = data.subscription_days_left;
+                    const maxDays = 365; // Assume max subscription is 365 days
+                    const progressPercentage = Math.max(0, Math.min(100, (daysLeft / maxDays) * 100));
+
+                    if (daysLeft > 0) {
+                        // Active subscription
+                        if (daysNumber) daysNumber.textContent = daysLeft;
+                        if (statusText) statusText.textContent = daysLeft > 30 ? 'Active & running smoothly' : 'Expiring soon';
+                        if (message) message.classList.add('d-none');
+
+                        // Update progress bar (green for >30 days, yellow for <=30 days)
+                        if (progressBar) {
+                            progressBar.style.width = progressPercentage + '%';
+                            progressBar.style.background = daysLeft > 30 ? '#10b981' : '#f59e0b';
+                        }
+
+                        // Update card gradient (teal for >30 days, mustard for <=30 days)
+                        if (cardElement) {
+                            cardElement.style.background = daysLeft > 30
+                                ? 'linear-gradient(135deg, #008080 0%, #12515D 100%)'
+                                : 'linear-gradient(135deg, #FFB400 0%, #ed7464 100%)';
+                        }
+
+                        // Show warning if less than 30 days
+                        if (daysLeft <= 30 && message) {
+                            message.classList.remove('d-none');
+                        }
+                    } else if (daysLeft === 0) {
+                        // Expires today
+                        if (daysNumber) daysNumber.textContent = '0';
+                        if (statusText) statusText.textContent = 'Expires today!';
+                        if (message) message.classList.remove('d-none');
+                        if (progressBar) {
+                            progressBar.style.width = '0%';
+                            progressBar.style.background = '#f59e0b';
+                        }
+                        if (cardElement) {
+                            cardElement.style.background = 'linear-gradient(135deg, #FFB400 0%, #ed7464 100%)';
+                        }
+                    } else {
+                        // Expired
+                        if (daysNumber) {
+                            daysNumber.textContent = '!';
+                            daysNumber.style.fontSize = '24px';
+                        }
+                        if (statusText) statusText.textContent = 'Subscription expired';
+                        if (message) message.classList.remove('d-none');
+                        if (progressBar) {
+                            progressBar.style.width = '0%';
+                            progressBar.style.background = '#ef4444';
+                        }
+                        if (cardElement) {
+                            cardElement.style.background = 'linear-gradient(135deg, #b53654 0%, #ed7464 100%)';
                         }
                     }
                 } else {

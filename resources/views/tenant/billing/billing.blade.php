@@ -31,56 +31,94 @@
           </div>
           <!-- /Breadcrumb -->
 
-          {{-- Subscriptions Summary --}}
-          <div class="card mt-2">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <h5 class="mb-0">Subscriptions</h5>
-              <div class="d-flex gap-2">
-                {{-- Actions here if needed --}}
-              </div>
-            </div>
-
-            <div class="card-body">
-              <div id="subs-alert" class="alert alert-info d-none mb-3">
-                <strong>Heads up:</strong> Your subscription details are loading…
-              </div>
-
-              <div id="subs-empty" class="text-center text-muted d-none">
-                <i class="ti ti-package mb-2" style="font-size:28px;"></i>
-                <div>No active subscriptions found.</div>
-              </div>
-
-              <div id="subs-grid" class="row g-3">
-                <!-- Skeletons (shown while loading) -->
-                @for ($i = 0; $i < 2; $i++)
-                  <div class="col-xl-6 col-lg-6">
-                    <div class="border rounded-3 p-3">
-                      <div class="placeholder-glow">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                          <span class="placeholder col-5"></span>
-                          <span class="badge bg-secondary placeholder col-2">&nbsp;</span>
-                        </div>
-                        <div class="placeholder col-8 mb-2"></div>
-                        <div class="placeholder col-6 mb-3"></div>
-                        <div class="progress mb-2" style="height: 8px;">
-                          <div class="progress-bar placeholder col-12" role="progressbar" style="width: 100%"></div>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                          <span class="placeholder col-3"></span>
-                          <span class="placeholder col-2"></span>
-                        </div>
-                      </div>
+          {{-- Quick Stats Cards --}}
+          <div class="row g-3 mb-3">
+            <div class="col-lg-3 col-md-6">
+              <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, rgba(0,128,128,0.1) 0%, rgba(18,81,93,0.05) 100%); border-radius: 12px;">
+                <div class="card-body p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <p class="text-muted mb-1" style="font-size: 12px;">Total Credits</p>
+                      <h3 class="mb-0 fw-bold" style="color: #008080;" id="total-credits-stat">--</h3>
+                      <small class="text-muted">Available employees</small>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #008080, #12515D); border-radius: 10px;">
+                      <i class="ti ti-users" style="font-size: 24px; color: #fff;"></i>
                     </div>
                   </div>
-                @endfor
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, rgba(255,180,0,0.1) 0%, rgba(237,116,100,0.05) 100%); border-radius: 12px;">
+                <div class="card-body p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <p class="text-muted mb-1" style="font-size: 12px;">Active Employees</p>
+                      <h3 class="mb-0 fw-bold" style="color: #FFB400;" id="active-employees-stat">--</h3>
+                      <small class="text-muted">Currently registered</small>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #FFB400, #ed7464); border-radius: 10px;">
+                      <i class="ti ti-user-check" style="font-size: 24px; color: #fff;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, rgba(237,116,100,0.1) 0%, rgba(181,54,84,0.05) 100%); border-radius: 12px;">
+                <div class="card-body p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <p class="text-muted mb-1" style="font-size: 12px;">Subscription Status</p>
+                      <h3 class="mb-0 fw-bold" style="color: #ed7464;" id="subscription-status-stat">--</h3>
+                      <small class="text-muted" id="subscription-days-stat">Loading...</small>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #ed7464, #b53654); border-radius: 10px;">
+                      <i class="ti ti-calendar-event" style="font-size: 24px; color: #fff;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, rgba(181,54,84,0.1) 0%, rgba(18,81,93,0.05) 100%); border-radius: 12px;">
+                <div class="card-body p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <p class="text-muted mb-1" style="font-size: 12px;">Credits Used</p>
+                      <h3 class="mb-0 fw-bold" style="color: #b53654;" id="credits-used-stat">--</h3>
+                      <small class="text-muted" id="credits-usage-percent-stat">0% used</small>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #b53654, #ed7464); border-radius: 10px;">
+                      <i class="ti ti-chart-pie" style="font-size: 24px; color: #fff;"></i>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="card mt-2">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <h5 class="mb-0">Payments</h5>
-              <button class="btn btn-outline-primary btn-sm" id="downloadAllBtn">Download All</button>
+
+          <div class="card mt-3 border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between py-3">
+              <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center justify-content-center me-3"
+                     style="width: 40px; height: 40px; background: linear-gradient(135deg, #FFB400, #ed7464); border-radius: 10px;">
+                  <i class="ti ti-file-invoice" style="font-size: 20px; color: #fff;"></i>
+                </div>
+                <div>
+                  <h5 class="mb-0 fw-semibold">Payment History</h5>
+                  <small class="text-muted">View and manage your invoices</small>
+                </div>
+              </div>
+              <button class="btn btn-sm" style="background: linear-gradient(135deg, #008080, #12515D); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 600;" id="downloadAllBtn">
+                <i class="ti ti-download me-1"></i>Download All
+              </button>
             </div>
             <div class="card-body p-0">
               <div class="table-responsive">
@@ -445,167 +483,38 @@
 
           <script>
           document.addEventListener('DOMContentLoaded', function () {
-            const subsGrid  = document.getElementById('subs-grid');
-            const subsEmpty = document.getElementById('subs-empty');
-            const subsAlert = document.getElementById('subs-alert');
-
-            // Helpers
-            const fmtDate = (d) => {
-              if (!d) return '-';
-              const dt = new Date(d);
-              return isNaN(dt.getTime()) ? '-' : dt.toLocaleDateString();
-            };
-            const statusBadge = (status) => {
-              const s = (status || '').toLowerCase();
-              if (s === 'active') return 'success';
-              if (s === 'trial') return 'info';
-              if (s === 'pending') return 'warning';
-              if (s === 'overdue' || s === 'cancelled' || s === 'failed') return 'danger';
-              return 'secondary';
-            };
-            const calcProgress = (used, total) => {
-              if (!total || total <= 0) return 0;
-              const pct = Math.max(0, Math.min(100, Math.round((used / total) * 100)));
-              return isFinite(pct) ? pct : 0;
-            };
-
-            const renderSubCard = (sub) => {
-              const plan = (sub.plan || 'starter').toString();
-              const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
-              const status = sub.status || sub.payment_status || 'active';
-              const badge  = statusBadge(status);
-              const start  = fmtDate(sub.subscription_start || sub.trial_start);
-              const end    = fmtDate(sub.subscription_end || sub.trial_end);
-              const nextRenewal = fmtDate(sub.next_renewal_date || sub.renewed_at);
-              const amountPaid  = sub.amount_paid ? Number(sub.amount_paid) : null;
-
-              const details = sub.plan_details || {};
-              const totalCredits = sub.employee_credits ?? details.employee_credits ?? details.included_credits ?? 0;
-              const usedCredits  = details.used_credits ?? 0;
-              const progress     = calcProgress(usedCredits, totalCredits);
-
-              const branchName = sub.branch?.name || details.branch_name || null;
-              const tenantName = sub.branch?.tenant?.tenant_name || details.tenant_name || null;
-
-              let paymentSummary = '';
-              if (Array.isArray(sub.payments) && sub.payments.length > 0) {
-                const latest = sub.payments[0];
-                paymentSummary = `
-                  <div class="mt-2 small">
-                    <span class="text-muted">Latest Payment:</span>
-                    <span class="badge bg-${statusBadge(latest.status)}">${latest.status ? latest.status.charAt(0).toUpperCase() + latest.status.slice(1) : '-'}</span>
-                    <span class="ms-2">₱${parseFloat(latest.amount ?? latest.invoice?.amount_due ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    <span class="ms-2">${fmtDate(latest.paid_at ?? latest.invoice?.issued_at)}</span>
-                  </div>
-                `;
-              }
-
-              // Credits badge (async)
-              let creditsInfo = '';
-              if (sub.branch_id) {
-                creditsInfo = `<span class="small text-muted" data-branch-id="${sub.branch_id}" id="branch-credits-${sub.branch_id}">Loading credits...</span>`;
-              }
-
-              return `
-                <div class="col-xl-6 col-lg-6">
-                  <div class="border rounded-3 p-3 h-100">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div>
-                        <h6 class="mb-1">${planName} Plan</h6>
-                        ${branchName || tenantName ? `
-                          <div class="text-muted small">
-                            ${tenantName ? `<span class="me-2"><i class="ti ti-building"></i> ${tenantName}</span>` : ''}
-                            ${branchName ? `<span><i class="ti ti-home-2"></i> ${branchName}</span>` : ''}
-                          </div>` : ''
-                        }
-                      </div>
-                      <span class="badge bg-${badge}">
-                        ${(status === 'paid' ? 'Active' : status.charAt(0).toUpperCase() + status.slice(1))}
-                      </span>
-                    </div>
-
-                    <div class="row mt-3 g-2">
-                      <div class="col-6">
-                        <div class="small text-muted">Current</div>
-                        <div class="fw-medium">${start}</div>
-                      </div>
-                      <div class="col-6">
-                        <div class="small text-muted">End / Next Renewal</div>
-                        <div class="fw-medium">${end !== '-' ? end : nextRenewal}</div>
-                      </div>
-                    </div>
-
-                    <div class="mt-3">
-                      <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="small text-muted">Employee Credits</span>
-                        <span class="small fw-medium">${usedCredits}/${totalCredits}</span>
-                      </div>
-                      <div class="progress" style="height: 8px;">
-                        <div class="progress-bar ${progress >= 85 ? 'bg-danger' : (progress >= 60 ? 'bg-warning' : '')}" role="progressbar" style="width: ${progress}%"></div>
-                      </div>
-                      ${creditsInfo}
-                    </div>
-
-                    ${amountPaid !== null ? `
-                      <div class="mt-3 border-top pt-2 d-flex justify-content-between">
-                        <span class="small text-muted">Amount</span>
-                        <span class="fw-medium">₱${amountPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                      </div>` : ''
-                    }
-                    ${paymentSummary}
-                  </div>
-                </div>
-              `;
-            };
-
-            // Fetch + render subscriptions
-            fetch('{{ route('api.payment-history') }}')
+            // Fetch billing stats and update stat cards
+            fetch('{{ route('api.billing-stats') }}')
               .then(res => res.json())
               .then(data => {
-                const subs = Array.isArray(data.subscriptions) ? data.subscriptions : [];
-                subsGrid.innerHTML = '';
+                // Update Total Credits stat
+                const totalEl = document.getElementById('total-credits-stat');
+                if (totalEl) totalEl.textContent = data.total_credits || 0;
 
-                if (!subs.length) {
-                  subsEmpty.classList.remove('d-none');
-                  return;
+                // Update Active Employees stat
+                const activeEl = document.getElementById('active-employees-stat');
+                if (activeEl) activeEl.textContent = data.active_employees || 0;
+
+                // Update Credits Used stat
+                const creditsUsedEl = document.getElementById('credits-used-stat');
+                const creditsUsedPercentEl = document.getElementById('credits-usage-percent-stat');
+                if (creditsUsedEl) creditsUsedEl.textContent = data.credits_used || 0;
+                if (creditsUsedPercentEl) creditsUsedPercentEl.textContent = `${data.credits_used_percent || 0}% used`;
+
+                // Update Subscription Status stat
+                const statusEl = document.getElementById('subscription-status-stat');
+                const daysEl = document.getElementById('subscription-days-stat');
+                const status = data.subscription_status || 'inactive';
+
+                if (statusEl) {
+                  statusEl.textContent = status === 'active' ? 'Active' : status.charAt(0).toUpperCase() + status.slice(1);
                 }
-
-                // Renewal reminder
-                const now = new Date();
-                const warn = subs.some(s => {
-                  const next = s.next_renewal_date ? new Date(s.next_renewal_date) : null;
-                  if (!next || isNaN(next.getTime())) return false;
-                  const diffDays = Math.ceil((next - now) / (1000 * 60 * 60 * 24));
-                  return diffDays <= 7;
-                });
-                if (warn) {
-                  subsAlert.classList.remove('d-none', 'alert-info');
-                  subsAlert.classList.add('alert-warning');
-                  subsAlert.innerHTML = `<strong>Renewal reminder:</strong> You have a subscription due soon. Consider topping up or renewing early.`;
+                if (daysEl) {
+                  daysEl.textContent = status === 'active' ? 'Active subscription' : 'No active subscription';
                 }
-
-                subsGrid.innerHTML = subs.map(renderSubCard).join('');
-
-                // Load credits per branch
-                subs.forEach(sub => {
-                  if (sub.branch_id) {
-                    fetch(`{{ route('api.employee-credits') }}?branch_id=${sub.branch_id}`)
-                      .then(res => res.json())
-                      .then(creditsData => {
-                        const el = document.getElementById(`branch-credits-${sub.branch_id}`);
-                        if (el) el.textContent = `Credits: ${creditsData.employee_credits ?? 0}`;
-                      })
-                      .catch(() => {
-                        const el = document.getElementById(`branch-credits-${sub.branch_id}`);
-                        if (el) el.textContent = 'Credits: N/A';
-                      });
-                  }
-                });
               })
               .catch(() => {
-                subsAlert.classList.remove('d-none', 'alert-info');
-                subsAlert.classList.add('alert-danger');
-                subsAlert.innerHTML = `<strong>Oops!</strong> We couldn't load your subscriptions right now.`;
+                console.error('Failed to load billing stats');
               });
           });
           </script>
