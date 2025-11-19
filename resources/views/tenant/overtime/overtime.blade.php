@@ -179,13 +179,12 @@
                             </div>
                         </div>
                         <div class="form-group me-2" style="max-width:200px;">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;"
-                                oninput="filter()">
-                                <option value="" selected>All Branches</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                @endforeach
-                            </select>
+                                                        <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();" style="width:200px;">
+                                                            @foreach ($branches as $i => $branch)
+                                                                <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
@@ -246,12 +245,12 @@
                                 @if (in_array('Read', $permission))
                                     @foreach ($overtimes as $ot)
                                                                         @php
-                                        $status = strtolower($ot->status);
-                                        $colors = [
-                                            'approved' => 'success',
-                                            'rejected' => 'danger',
-                                            'pending' => 'info',
-                                        ];
+        $status = strtolower($ot->status);
+        $colors = [
+            'approved' => 'success',
+            'rejected' => 'danger',
+            'pending' => 'info',
+        ];
                                                                         @endphp
                                                                         <tr data-overtime-id="{{ $ot->id }}">
                                                                             <td>

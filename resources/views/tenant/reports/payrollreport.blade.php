@@ -58,14 +58,12 @@
                                 </div>
                             </div>
                             <div class="form-group mb-0">
-                                <select name="branch_filter" id="branch_filter" class="select2 form-select">
-                                    <option value="" selected>All Branches</option>
-                                    @foreach ($branches as $branch)
-                                        <option value="{{ $branch->id }}"
-                                            {{ request('branch_filter') == $branch->id ? 'selected' : '' }}>
-                                            {{ $branch->name }}</option>
-                                    @endforeach
-                                </select>
+                                                        <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();" style="width:200px;">
+                                                            @foreach ($branches as $i => $branch)
+                                                                <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
                             </div>
                             <div class="form-group mb-0">
                                 <select name="sortby_filter" id="sortby_filter" class="select2 form-select">
@@ -104,15 +102,15 @@
             @if (request()->has('date_range') || request()->has('branch_filter') || request()->has('sortby_filter'))
                 {{-- Statistics --}}
                 @php
-                    $firstUserGroup = $payrollsGrouped->first();
-                    $pay_period_start = $payrollsGrouped->min('pay_period_start');
-                    $pay_period_end = $payrollsGrouped->max('pay_period_end');
-                    $total_earnings = $payrollsGrouped->sum('total_earnings');
-                    $total_deductions = $payrollsGrouped->sum('total_deductions');
-                    $gross_pay = $payrollsGrouped->sum('gross_pay');
-                    $net_pay = $payrollsGrouped->sum('net_pay');
-                    $basic_pay = $payrollsGrouped->sum('basic_pay');
-                    $prepared_by = $firstUserGroup['processor_name'] ?? 'Unknown Processor';
+    $firstUserGroup = $payrollsGrouped->first();
+    $pay_period_start = $payrollsGrouped->min('pay_period_start');
+    $pay_period_end = $payrollsGrouped->max('pay_period_end');
+    $total_earnings = $payrollsGrouped->sum('total_earnings');
+    $total_deductions = $payrollsGrouped->sum('total_deductions');
+    $gross_pay = $payrollsGrouped->sum('gross_pay');
+    $net_pay = $payrollsGrouped->sum('net_pay');
+    $basic_pay = $payrollsGrouped->sum('basic_pay');
+    $prepared_by = $firstUserGroup['processor_name'] ?? 'Unknown Processor';
                 @endphp
 
                 <div class="printable-area">
@@ -221,29 +219,29 @@
                                     <tbody>
                                         @foreach ($payrollsGrouped as $userId => $group)
                                             @php
-                                                $otherEarningsTotal = 0;
-                                                if (
-                                                    isset($group['earnings_breakdown']) &&
-                                                    count($group['earnings_breakdown'])
-                                                ) {
-                                                    foreach ($group['earnings_breakdown'] as $earning) {
-                                                        $otherEarningsTotal += $earning['total_applied_amount'] ?? 0;
-                                                    }
-                                                }
+        $otherEarningsTotal = 0;
+        if (
+            isset($group['earnings_breakdown']) &&
+            count($group['earnings_breakdown'])
+        ) {
+            foreach ($group['earnings_breakdown'] as $earning) {
+                $otherEarningsTotal += $earning['total_applied_amount'] ?? 0;
+            }
+        }
 
-                                                $otherDeductionsTotal = 0;
+        $otherDeductionsTotal = 0;
 
-                                                if (
-                                                    isset($group['deductions_breakdown']) &&
-                                                    count($group['deductions_breakdown'])
-                                                ) {
-                                                    foreach ($group['deductions_breakdown'] as $deduction) {
-                                                        $otherDeductionsTotal +=
-                                                            $deduction['total_applied_amount'] ?? 0;
-                                                    }
-                                                }
+        if (
+            isset($group['deductions_breakdown']) &&
+            count($group['deductions_breakdown'])
+        ) {
+            foreach ($group['deductions_breakdown'] as $deduction) {
+                $otherDeductionsTotal +=
+                    $deduction['total_applied_amount'] ?? 0;
+            }
+        }
 
-                                                $otherDeductionsTotal = 0;
+        $otherDeductionsTotal = 0;
                                             @endphp
 
                                             <tr>
@@ -341,19 +339,19 @@
                                             <td style="border: 1px solid; background: #f4f6fa;"></td>
 
                                             @php
-                                                $totalMinutes = $payrollsGrouped->sum('total_work_minutes');
-                                                $hours = intdiv($totalMinutes, 60);
-                                                $mins = $totalMinutes % 60;
-                                                $parts = [];
-                                                if ($hours > 0) {
-                                                    $hourLabel = $hours === 1 ? 'hr' : 'hrs';
-                                                    $parts[] = "{$hours} {$hourLabel}";
-                                                }
-                                                if ($mins > 0) {
-                                                    $minLabel = $mins === 1 ? 'min' : 'mins';
-                                                    $parts[] = "{$mins} {$minLabel}";
-                                                }
-                                                $totalWorkedFormatted = count($parts) ? implode(' ', $parts) : '0 min';
+    $totalMinutes = $payrollsGrouped->sum('total_work_minutes');
+    $hours = intdiv($totalMinutes, 60);
+    $mins = $totalMinutes % 60;
+    $parts = [];
+    if ($hours > 0) {
+        $hourLabel = $hours === 1 ? 'hr' : 'hrs';
+        $parts[] = "{$hours} {$hourLabel}";
+    }
+    if ($mins > 0) {
+        $minLabel = $mins === 1 ? 'min' : 'mins';
+        $parts[] = "{$mins} {$minLabel}";
+    }
+    $totalWorkedFormatted = count($parts) ? implode(' ', $parts) : '0 min';
                                             @endphp
 
                                             <td style="border: 1px solid; background: #f4f6fa;">

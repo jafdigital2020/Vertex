@@ -58,14 +58,12 @@
                                 </div>
                             </div>
                             <div class="form-group mb-0">
-                                <select name="branch_filter" id="branch_filter" class="select2 form-select">
-                                    <option value="" selected>All Branches</option>
-                                    @foreach ($branches as $branch)
-                                        <option value="{{ $branch->id }}"
-                                            {{ request('branch_filter') == $branch->id ? 'selected' : '' }}>
-                                            {{ $branch->name }}</option>
-                                    @endforeach
-                                </select>
+                                                                                    <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();" style="width:200px;">
+                                                                                        @foreach ($branches as $i => $branch)
+                                                                                            <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
+                                                                                            </option>
+                                                                                        @endforeach
+                                                                                    </select>
                             </div>
                             <div class="form-group mb-0">
                                 <select name="sortby_filter" id="sortby_filter" class="select2 form-select">
@@ -143,9 +141,9 @@
                         <tbody>
                             @forelse ($payrollsGrouped as $userId => $group)
                                 @php
-                                    $employeeShare = $group['sss_contribution'] ?? 0;
-                                    $employerShare = $group['sss_contribution_employer'] ?? 0;
-                                    $totalShare = $employeeShare + $employerShare;
+        $employeeShare = $group['sss_contribution'] ?? 0;
+        $employerShare = $group['sss_contribution_employer'] ?? 0;
+        $totalShare = $employeeShare + $employerShare;
                                 @endphp
                                 <tr>
                                     <td class="text-center">{{ $loop->iteration }}</td>
@@ -165,13 +163,13 @@
                         </tbody>
                         <tfoot>
                             @php
-                                $totalEmployeeShare = $payrollsGrouped->sum(function ($group) {
-                                    return $group['sss_contribution'] ?? 0;
-                                });
-                                $totalEmployerShare = $payrollsGrouped->sum(function ($group) {
-                                    return $group['sss_contribution_employer'] ?? 0;
-                                });
-                                $grandTotalShare = $totalEmployeeShare + $totalEmployerShare;
+    $totalEmployeeShare = $payrollsGrouped->sum(function ($group) {
+        return $group['sss_contribution'] ?? 0;
+    });
+    $totalEmployerShare = $payrollsGrouped->sum(function ($group) {
+        return $group['sss_contribution_employer'] ?? 0;
+    });
+    $grandTotalShare = $totalEmployeeShare + $totalEmployerShare;
                             @endphp
                             <tr class="fw-bold bg-light">
                                 <td colspan="5" class="text-center border border-dark">TOTAL</td>

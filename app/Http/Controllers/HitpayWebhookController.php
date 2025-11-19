@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Payment;
 use App\Models\Invoice;
 use App\Models\BranchSubscription;
+use App\Models\BranchAddon;
 use Carbon\Carbon;
 
 class HitpayWebhookController extends Controller
@@ -43,6 +44,7 @@ class HitpayWebhookController extends Controller
         return match ($type) {
             'employee_credits' => $this->processEmployeeCredits($payment, $meta, $status),
             'monthly_starter'  => $this->processMonthlyStarter($payment, $meta, $status),
+            'addon'            => $this->processAddonPayment($payment, $meta, $status),
             default            => $this->processSubscriptionPayment($payment, $meta, $status),
         };
     }
@@ -145,6 +147,56 @@ class HitpayWebhookController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Monthly Starter processed']);
+    }
+
+    private function processAddonPayment(Payment $payment, array $meta, string $status)
+    {
+        if (!in_array($status, ['succeeded', 'completed', 'paid', 'successful'])) {
+            return response()->json(['success' => true, 'message' => 'Ignored non-paid addon event']);
+        }
+
+        $branchAddonId = data_get($meta, 'branch_addon_id');
+        if (!$branchAddonId) {
+            Log::warning('Addon webhook: branch_addon_id not found in meta', ['payment_id' => $payment->id]);
+            return response()->json(['success' => false, 'message' => 'Branch addon ID not found'], 400);
+        }
+
+        $branchAddon = BranchAddon::find($branchAddonId);
+        if (!$branchAddon) {
+            Log::warning('Addon webhook: BranchAddon not found', ['branch_addon_id' => $branchAddonId]);
+            return response()->json(['success' => false, 'message' => 'Branch addon not found'], 404);
+        }
+
+        // Activate the addon
+        if (!$branchAddon->active) {
+            $branchAddon->update([
+                'active' => true,
+            ]);
+            Log::info('Addon activated', [
+                'branch_addon_id' => $branchAddon->id,
+                'addon_id' => $branchAddon->addon_id,
+                'branch_id' => $branchAddon->branch_id,
+            ]);
+        }
+
+        // Update payment status
+        $payment->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
+        // Update invoice
+        $invoice = $this->findInvoice($payment, $meta);
+        if ($invoice && $invoice->status !== 'paid') {
+            $invoice->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+                'amount_paid' => $invoice->amount_due,
+            ]);
+            Log::info('Invoice marked paid (addon)', ['invoice_id' => $invoice->id]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Addon payment processed and activated']);
     }
 
     private function processSubscriptionPayment(Payment $payment, array $meta, string $status)

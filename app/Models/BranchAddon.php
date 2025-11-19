@@ -18,6 +18,7 @@ class BranchAddon extends Model
         'active',
         'start_date',
         'end_date',
+        'feature_type',
         'billing_cycle',
         'price_paid',
         'invoice_id',
@@ -135,5 +136,14 @@ class BranchAddon extends Model
             'end_date' => $endDate,
             'billing_cycle' => $billingCycle,
         ]);
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (!$model->feature_type && $model->addon) {
+                $model->feature_type = $model->addon->addon_category;
+            }
+        });
     }
 }

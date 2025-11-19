@@ -862,8 +862,10 @@ class MicroBusinessController extends Controller
     public function addOnFeatures()
     {
         // Use the Addon model instead of DB::table for Eloquent features and casting
+        // Filter only 'addon' category (excludes 'upgrade' category)
         $addons = Addon::where('is_active', true)
-            ->get(['id', 'addon_key', 'name', 'price', 'type', 'description']);
+            ->where('addon_category', 'addon')
+            ->get(['id', 'addon_key', 'name', 'price', 'type', 'description', 'addon_category']);
 
         return response()->json([
             'addons' => $addons,

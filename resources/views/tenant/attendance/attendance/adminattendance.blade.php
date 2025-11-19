@@ -1,509 +1,510 @@
 <?php $page = 'attendance-admin'; ?>
 @extends('layout.mainlayout')
 @section('content')
-    <!-- Page Wrapper -->
-    <div class="page-wrapper">
-        <div class="content">
+        <!-- Page Wrapper -->
+        <div class="page-wrapper">
+            <div class="content">
 
-            <!-- Breadcrumb -->
-            <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
-                <div class="my-auto mb-2">
-                    <h2 class="mb-1">Attendance Admin</h2>
-                    <nav>
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item">
-                                <a href="#"><i class="ti ti-smart-home"></i></a>
-                            </li>
-                            <li class="breadcrumb-item active" aria-current="page">Attendance Admin</li>
-                        </ol>
-                    </nav>
-                </div>
-                <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
-                            <div class="dropdown">
-                                <a href="javascript:void(0);"
-                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                    data-bs-toggle="dropdown">
-                                    <i class="ti ti-file-export me-1"></i>Export / Download
+                <!-- Breadcrumb -->
+                <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
+                    <div class="my-auto mb-2">
+                        <h2 class="mb-1">Attendance Admin</h2>
+                        <nav>
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="#"><i class="ti ti-smart-home"></i></a>
+                                </li>
+                                <li class="breadcrumb-item active" aria-current="page">Attendance Admin</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                        @if (in_array('Export', $permission))
+                            <div class="me-2 mb-2">
+                                <div class="dropdown">
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                        data-bs-toggle="dropdown">
+                                        <i class="ti ti-file-export me-1"></i>Export / Download
+                                    </a>
+                                    <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
+                                        <li>
+                                            <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                    class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                    class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ route('downloadAttendanceTemplate') }}"
+                                                class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
+                                                Template </a>
+                                        </li>
+                                        <li>
+                                            {{-- <a href="{{ route('downloadAttendanceBulkImportTemplate') }}"
+                                                class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
+                                                Bulk Import Template </a> --}}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        @endif
+                        @if (in_array('Create', $permission))
+                            <div class="mb-2 d-flex gap-2">
+                                <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
+                                    data-bs-target="#attendance_upload_modal">
+                                    <i class="ti ti-file-upload me-2"></i> Import Attendance
                                 </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ route('downloadAttendanceTemplate') }}"
-                                            class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
-                                            Template </a>
-                                    </li>
-                                    <li>
-                                        {{-- <a href="{{ route('downloadAttendanceBulkImportTemplate') }}"
-                                            class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
-                                            Bulk Import Template </a> --}}
-                                    </li>
-                                </ul>
+                                <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
+                                    data-bs-target="#add_attendance">
+                                    <i class="ti ti-plus me-2"></i> Add Attendance
+                                </a>
                             </div>
-                        </div>
-                    @endif
-                    @if (in_array('Create', $permission))
-                        <div class="mb-2 d-flex gap-2">
-                            <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
-                                data-bs-target="#attendance_upload_modal">
-                                <i class="ti ti-file-upload me-2"></i> Import Attendance
-                            </a>
-                            <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
-                                data-bs-target="#add_attendance">
-                                <i class="ti ti-plus me-2"></i> Add Attendance
+                        @endif
+                        <div class="ms-2 head-icons">
+                            <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-original-title="Collapse" id="collapse-header">
+                                <i class="ti ti-chevrons-up"></i>
                             </a>
                         </div>
-                    @endif
-                    <div class="ms-2 head-icons">
-                        <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
-                            data-bs-original-title="Collapse" id="collapse-header">
-                            <i class="ti ti-chevrons-up"></i>
-                        </a>
                     </div>
                 </div>
-            </div>
-            <!-- /Breadcrumb -->
+                <!-- /Breadcrumb -->
 
-            <div class="card border-0">
-                <div class="card-body">
-                    <div class="row align-items-center mb-4">
-                        <div class="col-md-5">
-                            <div class="mb-3 mb-md-0">
-                                <h4 class="mb-1">Attendance Details</h4>
-                                {{-- <p>Data from the 800+ total no of employees</p> --}}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="border rounded">
-                        <div class="row gx-0">
-                            <div class="col-md col-sm-4 border-end">
-                                <div class="p-3">
-                                    <span class="fw-medium mb-1 d-block">
-                                        <i class="ti ti-check text-success me-1"></i> Present
-                                    </span>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                     <h5 id="totalPresent">{{ $totalPresent ?? 0 }}</h5>
-                                        <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
-                                            <i class="ti ti-users me-1"></i> Employees
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md col-sm-4 border-end">
-                                <div class="p-3">
-                                    <span class="fw-medium mb-1 d-block">
-                                        <i class="ti ti-clock-edit text-warning me-1"></i> Late Login
-                                    </span>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                       <h5 id="totalLate">{{ $totalLate ?? 0 }}</h5>
-                                        <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
-                                            <i class="ti ti-clock me-1"></i> Late
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md col-sm-4">
-                                <div class="p-3">
-                                    <span class="fw-medium mb-1 d-block">
-                                        <i class="ti ti-user-off text-danger me-1"></i> Absent
-                                    </span>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <h5 id="totalAbsent">{{ $totalAbsent ?? 0 }}</h5>
-                                        <span class="badge bg-danger-subtle text-danger d-inline-flex align-items-center">
-                                            <i class="ti ti-x me-1"></i> Absent
-                                        </span>
-                                    </div>
+                <div class="card border-0">
+                    <div class="card-body">
+                        <div class="row align-items-center mb-4">
+                            <div class="col-md-5">
+                                <div class="mb-3 mb-md-0">
+                                    <h4 class="mb-1">Attendance Details</h4>
+                                    {{-- <p>Data from the 800+ total no of employees</p> --}}
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="payroll-btns mb-3">
-                <a href="{{ route('attendance-admin') }}" class="btn btn-white active border me-2">Attendance</a>
-                <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Request Attendance</a>
-            </div>
-
-            <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Admin Attendance</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-
-                        <div class="me-3">
-                            <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" onchange="filter()">
-                                <span class="input-icon-addon">
-                                    <i class="ti ti-chevron-down"></i>
-                                </span>
-                            </div>
-                        </div>
-                        <div class=" form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select " oninput="filter()" style="width:150px;">
-                                <option value="" selected>All Branches</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
-                                <option value="" selected>All Departments</option>
-                                @foreach ($departments as $department)
-                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
-                                <option value="" selected>All Designations</option>
-                                @foreach ($designations as $designation)
-                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
-                                <option value="" selected>All Status</option>
-                                <option value="present">Present</option>
-                                <option value="late">Late</option>
-                                <option value="absent">Absent</option>
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable" id="adminAttTable">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th class="no-sort">
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox" id="select-all">
+                        <div class="border rounded">
+                            <div class="row gx-0">
+                                <div class="col-md col-sm-4 border-end">
+                                    <div class="p-3">
+                                        <span class="fw-medium mb-1 d-block">
+                                            <i class="ti ti-check text-success me-1"></i> Present
+                                        </span>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                         <h5 id="totalPresent">{{ $totalPresent ?? 0 }}</h5>
+                                            <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
+                                                <i class="ti ti-users me-1"></i> Employees
+                                            </span>
                                         </div>
-                                    </th>
-                                    <th>Employee</th>
-                                    <th class="text-center">Date</th>
-                                    <th class="text-center">Shift</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Clock In</th>
-                                    <th class="text-center">Clock Out</th>
-                                    <th class="text-center">Late</th>
-                                    <th>Photo</th>
-                                    <th>Location</th>
-                                    <th>Device</th>
-                                    <th>Production Hours</th>
-                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                        <th class="text-center">Action</th>
-                                    @endif
-                                </tr>
-                            </thead>
-                            <tbody id="adminAttTableBody">
-                                @foreach ($userAttendances as $userAtt)
-                                    @php
-                                        $status = $userAtt->status;
-                                        $statusText = ucfirst($status);
-                                        if ($status === 'present') {
-                                            $badgeClass = 'badge-success-transparent';
-                                        } elseif ($status === 'late') {
-                                            $badgeClass = 'badge-danger-transparent';
-                                        } else {
-                                            $badgeClass = 'badge-secondary-transparent';
-                                        }
-                                    @endphp
+                                    </div>
+                                </div>
+                                <div class="col-md col-sm-4 border-end">
+                                    <div class="p-3">
+                                        <span class="fw-medium mb-1 d-block">
+                                            <i class="ti ti-clock-edit text-warning me-1"></i> Late Login
+                                        </span>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                           <h5 id="totalLate">{{ $totalLate ?? 0 }}</h5>
+                                            <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
+                                                <i class="ti ti-clock me-1"></i> Late
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md col-sm-4">
+                                    <div class="p-3">
+                                        <span class="fw-medium mb-1 d-block">
+                                            <i class="ti ti-user-off text-danger me-1"></i> Absent
+                                        </span>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h5 id="totalAbsent">{{ $totalAbsent ?? 0 }}</h5>
+                                            <span class="badge bg-danger-subtle text-danger d-inline-flex align-items-center">
+                                                <i class="ti ti-x me-1"></i> Absent
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payroll-btns mb-3">
+                    <a href="{{ route('attendance-admin') }}" class="btn btn-white active border me-2">Attendance</a>
+                    <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Request Attendance</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                        <h5>Admin Attendance</h5>
+                        <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+
+                            <div class="me-3">
+                                <div class="input-icon-end position-relative">
+                                    <input type="text" class="form-control date-range bookingrange"
+                                        placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" onchange="filter()">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-chevron-down"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class=" form-group me-2">
+                                                                <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();" style="width:200px;">
+                                                                    @foreach ($branches as $i => $branch)
+                                                                        <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                            </div>
+                            <div class="form-group me-2">
+                                <select name="department_filter" id="department_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
+                                    <option value="" selected>All Departments</option>
+                                    @foreach ($departments as $department)
+                                        <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group me-2">
+                                <select name="designation_filter" id="designation_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
+                                    <option value="" selected>All Designations</option>
+                                    @foreach ($designations as $designation)
+                                        <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group me-2">
+                                <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                                    <option value="" selected>All Status</option>
+                                    <option value="present">Present</option>
+                                    <option value="late">Late</option>
+                                    <option value="absent">Absent</option>
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="custom-datatable-filter table-responsive">
+                            <table class="table datatable" id="adminAttTable">
+                                <thead class="thead-light">
                                     <tr>
-                                        <td>
+                                        <th class="no-sort">
                                             <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
+                                                <input class="form-check-input" type="checkbox" id="select-all">
                                             </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center file-name-icon">
-                                                <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                    <img src="{{ URL::asset('build/img/users/user-49.jpg') }}"
-                                                        class="img-fluid" alt="img">
-                                                </a>
-                                                <div class="ms-2">
-                                                    <h6 class="fw-medium"><a
-                                                            href="#">{{ $userAtt->user->personalInformation->last_name }},
-                                                            {{ $userAtt->user->personalInformation->first_name }}
-                                                            {{ $userAtt->user->personalInformation->middle_name }}.</a>
-                                                    </h6>
-                                                    <span
-                                                        class="fs-12 fw-normal ">{{ $userAtt->user->employmentDetail->department->department_name }}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            @if ($userAtt->attendance_date)
-                                                {{ \Carbon\Carbon::parse($userAtt->attendance_date)->format('F j, Y') }}
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">{{ $userAtt->shift->name ?? '-' }}</td>
-                                        <td class="text-center">
-                                            <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
-                                                <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
-                                            </span>
-                                             @if ($status === 'late')
-                                                    <a href="#" class="ms-2" data-bs-toggle="tooltip"
-                                                        data-bs-placement="right"
-                                                        title="{{ $userAtt->late_status_box }}">
-                                                        <i class="ti ti-info-circle text-info"></i>
-                                                    </a>
-                                                @endif
-                                        </td>
-                                        <td class="text-center">{{ $userAtt->time_only }}</td>
-                                        <td class="text-center">{{ $userAtt->time_out_only }}</td>
-                                        <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
-                                        <td>
-                                            @if ($userAtt->time_in_photo_path || $userAtt->time_out_photo_path)
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown" data-bs-boundary="viewport"
-                                                        data-bs-container="body">
-                                                        View Photo
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($userAtt->time_in_photo_path)
-                                                            <li>
-                                                                <a class="dropdown-item"
-                                                                    href="{{ Storage::url($userAtt->time_in_photo_path) }}"
-                                                                    target="_blank">Clock-In Photo</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($userAtt->time_out_photo_path)
-                                                            <li>
-                                                                <a class="dropdown-item"
-                                                                    href="{{ Storage::url($userAtt->time_out_photo_path) }}"
-                                                                    target="_blank">Clock-Out Photo</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Photo</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if (
-                                                ($userAtt->time_in_latitude && $userAtt->time_in_longitude) ||
-                                                    ($userAtt->time_out_latitude && $userAtt->time_out_longitude))
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown">
-                                                        View Location
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($userAtt->time_in_latitude && $userAtt->time_in_longitude)
-                                                            <li>
-                                                                <a class="dropdown-item view-map-btn" href="#"
-                                                                    data-lat="{{ $userAtt->time_in_latitude }}"
-                                                                    data-lng="{{ $userAtt->time_in_longitude }}">Clock-In
-                                                                    Location</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($userAtt->time_out_latitude && $userAtt->time_out_longitude)
-                                                            <li>
-                                                                <a class="dropdown-item view-map-btn" href="#"
-                                                                    data-lat="{{ $userAtt->time_out_latitude }}"
-                                                                    data-lng="{{ $userAtt->time_out_longitude }}">Clock-Out
-                                                                    Location</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Location</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if ($userAtt->clock_in_method || $userAtt->clock_out_method)
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown" data-bs-boundary="viewport"
-                                                        data-bs-container="body">
-                                                        View Device
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($userAtt->clock_in_method)
-                                                            <li>
-                                                                <a class="dropdown-item" href="#">
-                                                                    Clock-In Device ({{ $userAtt->clock_in_method }})</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($userAtt->clock_out_method)
-                                                            <li>
-                                                                <a class="dropdown-item" href="#">
-                                                                    Clock-Out Device ({{ $userAtt->clock_out_method }})</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Device</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-success d-inline-flex align-items-center">
-                                                <i class="ti ti-clock-hour-11 me-1"></i>
-                                                {{ $userAtt->total_work_minutes_formatted }}
-                                            </span>
-                                            @if (!empty($userAtt->total_night_diff_minutes_formatted) && $userAtt->total_night_diff_minutes_formatted !== '00:00')
-                                                <br>
-                                                <span class="badge badge-info d-inline-flex align-items-center mt-1">
-                                                    <i class="ti ti-moon me-1"></i>
-                                                    Night: {{ $userAtt->total_night_diff_minutes_formatted }}
-                                                </span>
-                                            @endif
-                                        </td>
+                                        </th>
+                                        <th>Employee</th>
+                                        <th class="text-center">Date</th>
+                                        <th class="text-center">Shift</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Clock In</th>
+                                        <th class="text-center">Clock Out</th>
+                                        <th class="text-center">Late</th>
+                                        <th>Photo</th>
+                                        <th>Location</th>
+                                        <th>Device</th>
+                                        <th>Production Hours</th>
                                         @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                            <td>
-                                                <div class="action-icon d-inline-flex">
-                                                    @if (in_array('Update', $permission))
-                                                        <a href="#" class="me-2" data-bs-toggle="modal"
-                                                            data-bs-target="#edit_attendance"
-                                                            data-id="{{ $userAtt->id }}"
-                                                            data-clock-in="{{ optional($userAtt->date_time_in)->format('H:i') }}"
-                                                            data-clock-out="{{ optional($userAtt->date_time_out)->format('H:i') }}"
-                                                            data-total-late="{{ $userAtt->total_late_formatted }}"
-                                                            data-work-minutes="{{ $userAtt->total_work_minutes_formatted }}"
-                                                            data-nightdiff-minutes="{{ $userAtt->total_night_diff_minutes_formatted }}"
-                                                            data-attendance-date="{{ $userAtt->attendance_date->format('Y-m-d') }}"
-                                                            data-status="{{ $userAtt->status }}"><i
-                                                                class="ti ti-edit"></i></a>
-                                                    @endif
-                                                    @if (in_array('Delete', $permission))
-                                                        <a href="#" class="me-2 btn-delete" data-bs-toggle="modal"
-                                                            data-bs-target="#delete_attendance"
-                                                            data-id="{{ $userAtt->id }}"
-                                                            data-first-name="{{ $userAtt->user->personalInformation->first_name }}"><i
-                                                                class="ti ti-trash"></i></a>
-                                                    @endif
-                                                </div>
-                                            </td>
+                                            <th class="text-center">Action</th>
                                         @endif
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody id="adminAttTableBody">
+                                    @foreach ($userAttendances as $userAtt)
+                                        @php
+        $status = $userAtt->status;
+        $statusText = ucfirst($status);
+        if ($status === 'present') {
+            $badgeClass = 'badge-success-transparent';
+        } elseif ($status === 'late') {
+            $badgeClass = 'badge-danger-transparent';
+        } else {
+            $badgeClass = 'badge-secondary-transparent';
+        }
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                <div class="form-check form-check-md">
+                                                    <input class="form-check-input" type="checkbox">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center file-name-icon">
+                                                    <a href="#" class="avatar avatar-md border avatar-rounded">
+                                                        <img src="{{ URL::asset('build/img/users/user-49.jpg') }}"
+                                                            class="img-fluid" alt="img">
+                                                    </a>
+                                                    <div class="ms-2">
+                                                        <h6 class="fw-medium"><a
+                                                                href="#">{{ $userAtt->user->personalInformation->last_name }},
+                                                                {{ $userAtt->user->personalInformation->first_name }}
+                                                                {{ $userAtt->user->personalInformation->middle_name }}.</a>
+                                                        </h6>
+                                                        <span
+                                                            class="fs-12 fw-normal ">{{ $userAtt->user->employmentDetail->department->department_name }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                @if ($userAtt->attendance_date)
+                                                    {{ \Carbon\Carbon::parse($userAtt->attendance_date)->format('F j, Y') }}
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">{{ $userAtt->shift->name ?? '-' }}</td>
+                                            <td class="text-center">
+                                                <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
+                                                    <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
+                                                </span>
+                                                 @if ($status === 'late')
+                                                        <a href="#" class="ms-2" data-bs-toggle="tooltip"
+                                                            data-bs-placement="right"
+                                                            title="{{ $userAtt->late_status_box }}">
+                                                            <i class="ti ti-info-circle text-info"></i>
+                                                        </a>
+                                                    @endif
+                                            </td>
+                                            <td class="text-center">{{ $userAtt->time_only }}</td>
+                                            <td class="text-center">{{ $userAtt->time_out_only }}</td>
+                                            <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
+                                            <td>
+                                                @if ($userAtt->time_in_photo_path || $userAtt->time_out_photo_path)
+                                                    <div class="btn-group" style="position: static; overflow: visible;">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-primary dropdown-toggle"
+                                                            data-bs-toggle="dropdown" data-bs-boundary="viewport"
+                                                            data-bs-container="body">
+                                                            View Photo
+                                                        </button>
+                                                        <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
+                                                            @if ($userAtt->time_in_photo_path)
+                                                                <li>
+                                                                    <a class="dropdown-item"
+                                                                        href="{{ Storage::url($userAtt->time_in_photo_path) }}"
+                                                                        target="_blank">Clock-In Photo</a>
+                                                                </li>
+                                                            @endif
+                                                            @if ($userAtt->time_out_photo_path)
+                                                                <li>
+                                                                    <a class="dropdown-item"
+                                                                        href="{{ Storage::url($userAtt->time_out_photo_path) }}"
+                                                                        target="_blank">Clock-Out Photo</a>
+                                                                </li>
+                                                            @endif
+                                                        </ul>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">No Photo</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if (
+            ($userAtt->time_in_latitude && $userAtt->time_in_longitude) ||
+            ($userAtt->time_out_latitude && $userAtt->time_out_longitude)
+        )
+                                                    <div class="btn-group" style="position: static; overflow: visible;">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-primary dropdown-toggle"
+                                                            data-bs-toggle="dropdown">
+                                                            View Location
+                                                        </button>
+                                                        <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
+                                                            @if ($userAtt->time_in_latitude && $userAtt->time_in_longitude)
+                                                                <li>
+                                                                    <a class="dropdown-item view-map-btn" href="#"
+                                                                        data-lat="{{ $userAtt->time_in_latitude }}"
+                                                                        data-lng="{{ $userAtt->time_in_longitude }}">Clock-In
+                                                                        Location</a>
+                                                                </li>
+                                                            @endif
+                                                            @if ($userAtt->time_out_latitude && $userAtt->time_out_longitude)
+                                                                <li>
+                                                                    <a class="dropdown-item view-map-btn" href="#"
+                                                                        data-lat="{{ $userAtt->time_out_latitude }}"
+                                                                        data-lng="{{ $userAtt->time_out_longitude }}">Clock-Out
+                                                                        Location</a>
+                                                                </li>
+                                                            @endif
+                                                        </ul>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">No Location</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($userAtt->clock_in_method || $userAtt->clock_out_method)
+                                                    <div class="btn-group" style="position: static; overflow: visible;">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-primary dropdown-toggle"
+                                                            data-bs-toggle="dropdown" data-bs-boundary="viewport"
+                                                            data-bs-container="body">
+                                                            View Device
+                                                        </button>
+                                                        <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
+                                                            @if ($userAtt->clock_in_method)
+                                                                <li>
+                                                                    <a class="dropdown-item" href="#">
+                                                                        Clock-In Device ({{ $userAtt->clock_in_method }})</a>
+                                                                </li>
+                                                            @endif
+                                                            @if ($userAtt->clock_out_method)
+                                                                <li>
+                                                                    <a class="dropdown-item" href="#">
+                                                                        Clock-Out Device ({{ $userAtt->clock_out_method }})</a>
+                                                                </li>
+                                                            @endif
+                                                        </ul>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">No Device</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-success d-inline-flex align-items-center">
+                                                    <i class="ti ti-clock-hour-11 me-1"></i>
+                                                    {{ $userAtt->total_work_minutes_formatted }}
+                                                </span>
+                                                @if (!empty($userAtt->total_night_diff_minutes_formatted) && $userAtt->total_night_diff_minutes_formatted !== '00:00')
+                                                    <br>
+                                                    <span class="badge badge-info d-inline-flex align-items-center mt-1">
+                                                        <i class="ti ti-moon me-1"></i>
+                                                        Night: {{ $userAtt->total_night_diff_minutes_formatted }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                <td>
+                                                    <div class="action-icon d-inline-flex">
+                                                        @if (in_array('Update', $permission))
+                                                            <a href="#" class="me-2" data-bs-toggle="modal"
+                                                                data-bs-target="#edit_attendance"
+                                                                data-id="{{ $userAtt->id }}"
+                                                                data-clock-in="{{ optional($userAtt->date_time_in)->format('H:i') }}"
+                                                                data-clock-out="{{ optional($userAtt->date_time_out)->format('H:i') }}"
+                                                                data-total-late="{{ $userAtt->total_late_formatted }}"
+                                                                data-work-minutes="{{ $userAtt->total_work_minutes_formatted }}"
+                                                                data-nightdiff-minutes="{{ $userAtt->total_night_diff_minutes_formatted }}"
+                                                                data-attendance-date="{{ $userAtt->attendance_date->format('Y-m-d') }}"
+                                                                data-status="{{ $userAtt->status }}"><i
+                                                                    class="ti ti-edit"></i></a>
+                                                        @endif
+                                                        @if (in_array('Delete', $permission))
+                                                            <a href="#" class="me-2 btn-delete" data-bs-toggle="modal"
+                                                                data-bs-target="#delete_attendance"
+                                                                data-id="{{ $userAtt->id }}"
+                                                                data-first-name="{{ $userAtt->user->personalInformation->first_name }}"><i
+                                                                    class="ti ti-trash"></i></a>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Map Modal -->
-        <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Clock-In Location</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-0">
-                        <div id="mapModalContainer" style="width:100%;height:400px;"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Attendance Upload Modal --}}
-        <div class="modal fade" id="attendance_upload_modal" tabindex="-1" aria-labelledby="attendanceUploadLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <form action="{{ route('importAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
+            <!-- Map Modal -->
+            <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV(Per Row)</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                            <h5 class="modal-title">Clock-In Location</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="csv_file" class="form-label">Select CSV File</label>
-                                <input type="file" name="csv_file" id="csv_file" class="form-control"
-                                    accept=".csv" required>
-                                <small class="form-text text-muted">Ensure you use the correct template.
-                                    <a href="{{ asset('templates/attendance_template.csv') }}" class="text-primary"
-                                        target="_blank">
-                                        Download Template
-                                    </a>
-                                </small>
-                            </div>
+                        <div class="modal-body p-0">
+                            <div id="mapModalContainer" style="width:100%;height:400px;"></div>
                         </div>
-
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-white me-2" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="ti ti-upload me-1"></i> Import File
-                            </button>
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- Bulk Attendance Upload Modal --}}
-        <div class="modal fade" id="bulk_attendance_upload_modal" tabindex="-1" aria-labelledby="attendanceUploadLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <form action="{{ route('bulkImportAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV(Bulk)</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                        </div>
-
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="csv_file" class="form-label">Select CSV File</label>
-                                <input type="file" name="csv_file" id="csv_file" class="form-control"
-                                    accept=".csv" required>
-
+            {{-- Attendance Upload Modal --}}
+            <div class="modal fade" id="attendance_upload_modal" tabindex="-1" aria-labelledby="attendanceUploadLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <form action="{{ route('importAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV(Per Row)</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                             </div>
-                        </div>
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-white me-2" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="ti ti-upload me-1"></i> Import File
-                            </button>
-                        </div>
-                    </form>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="csv_file" class="form-label">Select CSV File</label>
+                                    <input type="file" name="csv_file" id="csv_file" class="form-control"
+                                        accept=".csv" required>
+                                    <small class="form-text text-muted">Ensure you use the correct template.
+                                        <a href="{{ asset('templates/attendance_template.csv') }}" class="text-primary"
+                                            target="_blank">
+                                            Download Template
+                                        </a>
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-white me-2" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-upload me-1"></i> Import File
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
+
+            {{-- Bulk Attendance Upload Modal --}}
+            <div class="modal fade" id="bulk_attendance_upload_modal" tabindex="-1" aria-labelledby="attendanceUploadLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <form action="{{ route('bulkImportAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV(Bulk)</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="csv_file" class="form-label">Select CSV File</label>
+                                    <input type="file" name="csv_file" id="csv_file" class="form-control"
+                                        accept=".csv" required>
+
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-white me-2" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-upload me-1"></i> Import File
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            @include('layout.partials.footer-company')
+
         </div>
+        <!-- /Page Wrapper -->
 
-        @include('layout.partials.footer-company')
-
-    </div>
-    <!-- /Page Wrapper -->
-
-    @component('components.modal-popup', [
+        @component('components.modal-popup', [
         'branchUsers' => $branchUsers ?? [],
     ])
-    @endcomponent
+        @endcomponent
 @endsection
 
 @push('scripts')

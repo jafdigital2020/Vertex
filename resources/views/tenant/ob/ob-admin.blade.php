@@ -154,12 +154,12 @@
                             </div>
                         </div>
                         <div class="form-group me-2" >
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="max-width:150px;">
-                                <option value="" selected>All Branches</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                @endforeach
-                            </select>
+                                                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();" style="width:200px;">
+                                                                @foreach ($branches as $i => $branch)
+                                                                    <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
@@ -213,12 +213,12 @@
 
                                 @foreach ($obEntries as $ob)
                                     @php
-                                        $status = strtolower($ob->status);
-                                        $colors = [
-                                            'approved' => 'success',
-                                            'rejected' => 'danger',
-                                            'pending' => 'info',
-                                        ];
+    $status = strtolower($ob->status);
+    $colors = [
+        'approved' => 'success',
+        'rejected' => 'danger',
+        'pending' => 'info',
+    ];
                                     @endphp
                                     <tr>
                                         <td>

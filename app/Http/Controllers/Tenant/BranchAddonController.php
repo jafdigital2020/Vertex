@@ -72,15 +72,7 @@ class BranchAddonController extends Controller
 
             $addon = Addon::findOrFail($request->addon_id);
             $branch = Branch::findOrFail($request->branch_id);
-
-            // Check if user has permission to purchase for this branch
             $user = Auth::user();
-            if ($user->branch_id != $branch->id && !$user->hasRole('Admin')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You do not have permission to purchase addons for this branch.'
-                ], 403);
-            }
 
             // Calculate price based on billing cycle
             $price = $addon->price;
@@ -105,6 +97,28 @@ class BranchAddonController extends Controller
                 ->where('status', 'active')
                 ->first();
 
+            // Calculate addon period
+            $startDate = Carbon::now();
+            $endDate = $billingCycle === 'yearly' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
+
+            // Create BranchAddon record (inactive until payment confirmed)
+            $branchAddon = BranchAddon::create([
+                'branch_id' => $branch->id,
+                'addon_id' => $addon->id,
+                'active' => false, // Will be activated by webhook
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'billing_cycle' => $billingCycle,
+                'price_paid' => $totalAmount,
+                'metadata' => json_encode([
+                    'addon_name' => $addon->name,
+                    'addon_price' => $addon->price,
+                    'subtotal' => $subtotal,
+                    'vat_amount' => $vatAmount,
+                    'vat_percentage' => $vatPercentage,
+                ]),
+            ]);
+
             // Create invoice
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
@@ -113,84 +127,101 @@ class BranchAddonController extends Controller
                 'branch_subscription_id' => $branchSubscription?->id,
                 'invoice_type' => 'addon',
                 'amount_due' => $totalAmount,
+                'amount_paid' => 0,
                 'subscription_amount' => $price,
                 'calculated_subtotal' => $subtotal,
                 'calculated_vat_percentage' => $vatPercentage,
                 'calculated_vat_amount' => $vatAmount,
-                'currency' => 'PHP',
+                'currency' => env('HITPAY_CURRENCY', 'PHP'),
                 'status' => 'pending',
+                'issued_at' => Carbon::now(),
                 'due_date' => Carbon::now()->addDays(7),
+                'period_start' => $startDate,
+                'period_end' => $endDate,
                 'notes' => "Addon Purchase: {$addon->name} - {$billingCycle} billing",
                 'metadata' => json_encode([
                     'addon_id' => $addon->id,
                     'addon_name' => $addon->name,
                     'billing_cycle' => $billingCycle,
                     'addon_price' => $addon->price,
+                    'branch_addon_id' => $branchAddon->id,
                 ]),
             ]);
+
+            // Link invoice to branch addon
+            $branchAddon->update(['invoice_id' => $invoice->id]);
 
             // Create HitPay payment request
             $returnUrl = route('addon.payment.callback', ['invoice' => $invoice->id]);
 
-            $paymentData = [
+            $hitpayPayload = [
                 'amount' => number_format($totalAmount, 2, '.', ''),
-                'currency' => 'PHP',
-                'reference_number' => $invoiceNumber,
-                'webhook' => config('services.hitpay.webhook_url'),
-                'redirect_url' => $returnUrl,
-                'purpose' => "Addon: {$addon->name}",
-                'name' => $branch->name ?? 'Customer',
+                'currency' => env('HITPAY_CURRENCY', 'PHP'),
                 'email' => $user->email ?? 'customer@example.com',
+                'name' => $branch->name ?? 'Customer',
+                'phone' => null,
+                'purpose' => "Addon: {$addon->name}",
+                'reference_number' => $invoiceNumber,
+                'redirect_url' => $returnUrl,
+                'webhook' => env('HITPAY_WEBHOOK_URL'),
+                'send_email' => true,
+                'meta' => json_encode([
+                    'type' => 'addon',
+                    'invoice_id' => $invoice->id,
+                    'branch_addon_id' => $branchAddon->id,
+                    'addon_id' => $addon->id,
+                    'addon_name' => $addon->name,
+                    'billing_cycle' => $billingCycle,
+                ]),
             ];
 
             try {
-                $client = new \GuzzleHttp\Client([
-                    'base_uri' => config('services.hitpay.base_url', 'https://api.hitpayapp.com/'),
-                    'timeout' => 30,
-                    'verify' => true,
+                $client = new \GuzzleHttp\Client();
+
+                $response = $client->request('POST', env('HITPAY_URL'), [
+                    'form_params' => $hitpayPayload,
                     'headers' => [
-                        'X-BUSINESS-API-KEY' => config('services.hitpay.api_key'),
+                        'X-BUSINESS-API-KEY' => env('HITPAY_API_KEY'),
                         'Content-Type' => 'application/x-www-form-urlencoded',
-                        'Accept' => 'application/json',
-                    ]
+                    ],
                 ]);
 
-                $response = $client->post('v1/payment-requests', [
-                    'form_params' => $paymentData
+                $hitpayData = json_decode($response->getBody(), true);
+
+                // Create payment record
+                Payment::create([
+                    'tenant_id' => tenant('id'),
+                    'branch_subscription_id' => $branchSubscription?->id,
+                    'invoice_id' => $invoice->id,
+                    'payment_method' => 'hitpay',
+                    'payment_gateway' => 'hitpay',
+                    'transaction_reference' => $hitpayData['reference_number'] ?? $invoiceNumber,
+                    'amount' => $totalAmount,
+                    'currency' => env('HITPAY_CURRENCY', 'PHP'),
+                    'status' => 'pending',
+                    'payment_date' => Carbon::now(),
+                    'checkout_url' => $hitpayData['url'] ?? null,
+                    'receipt_url' => $hitpayData['receipt_url'] ?? null,
+                    'payment_provider' => $hitpayData['payment_provider']['code'] ?? null,
+                    'gateway_response' => json_encode($hitpayData),
+                    'meta' => json_encode([
+                        'type' => 'addon',
+                        'branch_addon_id' => $branchAddon->id,
+                        'addon_id' => $addon->id,
+                        'addon_name' => $addon->name,
+                        'billing_cycle' => $billingCycle,
+                    ]),
                 ]);
 
-                $responseData = json_decode($response->getBody(), true);
+                DB::commit();
 
-                if ($response->getStatusCode() === 201 && isset($responseData['id'])) {
-                    // Create payment record
-                    Payment::create([
-                        'tenant_id' => tenant('id'),
-                        'branch_subscription_id' => $branchSubscription?->id,
-                        'invoice_id' => $invoice->id,
-                        'payment_method' => 'hitpay',
-                        'transaction_id' => $responseData['id'],
-                        'amount' => $totalAmount,
-                        'currency' => 'PHP',
-                        'status' => 'pending',
-                        'payment_date' => Carbon::now(),
-                        'metadata' => json_encode([
-                            'payment_url' => $responseData['url'] ?? $responseData['payment_url'],
-                            'raw_response' => $responseData,
-                        ]),
-                    ]);
-
-                    DB::commit();
-
-                    return response()->json([
-                        'success' => true,
-                        'payment_url' => $responseData['url'] ?? $responseData['payment_url'],
-                        'invoice_id' => $invoice->id,
-                        'reference' => $responseData['id'],
-                        'message' => 'Redirecting to payment gateway...'
-                    ]);
-                } else {
-                    throw new \Exception('Invalid response from HitPay API');
-                }
+                return response()->json([
+                    'success' => true,
+                    'checkoutUrl' => $hitpayData['url'] ?? null,
+                    'invoice_id' => $invoice->id,
+                    'reference' => $hitpayData['reference_number'] ?? $invoiceNumber,
+                    'message' => 'Payment created. Complete payment to activate addon.'
+                ]);
             } catch (\Exception $e) {
                 Log::error('HitPay Payment Creation Failed for Addon', [
                     'error' => $e->getMessage(),
@@ -239,68 +270,13 @@ class BranchAddonController extends Controller
             $status = $request->query('status');
             $reference = $request->query('reference');
 
-            if ($status === 'completed' && $payment->status !== 'completed') {
-                DB::beginTransaction();
+            // Note: Addon activation is handled by HitPay webhook (processAddonPayment)
+            // This callback is just for user redirect and confirmation
 
-                // Update payment status
-                $payment->update([
-                    'status' => 'completed',
-                    'metadata' => json_encode(array_merge(
-                        json_decode($payment->metadata, true) ?? [],
-                        ['callback_data' => $request->all()]
-                    ))
-                ]);
-
-                // Update invoice status
-                $invoice->update([
-                    'status' => 'paid',
-                    'amount_paid' => $invoice->amount_due,
-                    'paid_date' => Carbon::now(),
-                ]);
-
-                // Activate the addon
-                $metadata = json_decode($invoice->metadata, true);
-                $addonId = $metadata['addon_id'] ?? null;
-                $billingCycle = $metadata['billing_cycle'] ?? 'monthly';
-
-                if ($addonId) {
-                    $startDate = Carbon::now();
-                    $endDate = $billingCycle === 'yearly'
-                        ? $startDate->copy()->addYear()
-                        : $startDate->copy()->addMonth();
-
-                    // Check if addon already exists for this branch
-                    $branchAddon = BranchAddon::where('branch_id', $invoice->branch_id)
-                        ->where('addon_id', $addonId)
-                        ->first();
-
-                    if ($branchAddon) {
-                        // Update existing addon
-                        $branchAddon->update([
-                            'active' => true,
-                            'start_date' => $startDate,
-                            'end_date' => $endDate,
-                        ]);
-                    } else {
-                        // Create new branch addon
-                        BranchAddon::create([
-                            'branch_id' => $invoice->branch_id,
-                            'addon_id' => $addonId,
-                            'active' => true,
-                            'start_date' => $startDate,
-                            'end_date' => $endDate,
-                        ]);
-                    }
-                }
-
-                DB::commit();
-
+            if ($status === 'completed') {
                 return redirect()->route('addons.purchase')
-                    ->with('success', 'Addon purchased successfully! Your new features are now active.');
+                    ->with('success', 'Payment completed! Your addon will be activated shortly.');
             } elseif ($status === 'failed' || $status === 'canceled') {
-                $payment->update(['status' => $status]);
-                $invoice->update(['status' => 'failed']);
-
                 return redirect()->route('addons.purchase')
                     ->with('error', 'Payment was ' . $status . '. Please try again.');
             }
@@ -329,15 +305,6 @@ class BranchAddonController extends Controller
 
         try {
             $branchAddon = BranchAddon::findOrFail($request->branch_addon_id);
-            $user = Auth::user();
-
-            // Check permissions
-            if ($user->branch_id != $branchAddon->branch_id && !$user->hasRole('Admin')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You do not have permission to cancel this addon.'
-                ], 403);
-            }
 
             $branchAddon->update([
                 'active' => false,

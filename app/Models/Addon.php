@@ -15,6 +15,7 @@ class Addon extends Model
         'price',
         'type',
         'description',
+        'addon_category',
         'is_active',
         'module_ids',
         'submodule_ids',

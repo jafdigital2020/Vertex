@@ -473,7 +473,7 @@
                                     billing_cycle: currentCycle
                                 }
                             }).then(response => {
-                                if (response.success && response.payment_url) {
+                                if (response.success) {
                                     return response;
                                 }
                                 throw new Error(response.message || 'Payment initialization failed');
@@ -485,8 +485,21 @@
                         },
                         allowOutsideClick: () => !Swal.isLoading()
                     }).then((result) => {
-                        if (result.isConfirmed && result.value.payment_url) {
-                            window.location.href = result.value.payment_url;
+                        if (result.isConfirmed && result.value) {
+                            if (result.value.checkoutUrl) {
+                                // Redirect to payment gateway
+                                window.location.href = result.value.checkoutUrl;
+                            } else {
+                                // Payment created but no checkout URL (likely development mode)
+                                Swal.fire({
+                                    title: 'Payment Created',
+                                    text: result.value.message || 'Payment record created successfully.',
+                                    icon: 'info',
+                                    confirmButtonColor: '#008080'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            }
                         }
                     });
                 });
