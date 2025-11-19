@@ -306,7 +306,7 @@
                             {{-- Display users with birthdays today --}}
                             @if (count($birthdayTodayUsers) > 0)
                                 @foreach ($birthdayTodayUsers as $user)
-                                    <div class="bg-light-mustard p-2 border border-dashed rounded-top mb-3 text-muted">
+                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-muted">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div class="d-flex align-items-center">
                                                 <a href="javascript:void(0);" class="avatar">
@@ -325,7 +325,7 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <span class="badge badge-success fs-10 px-3 py-1">🎉 Happy Birthday</span>
+                                            <span class="badge bg-success fs-10 px-3 py-1">🎉 Happy Birthday</span>
                                         </div>
                                     </div>
                                 @endforeach
@@ -339,7 +339,7 @@
                             <h6 class="mb-2">Upcoming Birthdays</h6>
                             @if (count($nearestBirthdays) > 0)
                                 @foreach ($nearestBirthdays as $nearestBirthday)
-                                    <div class="bg-light-mustard p-2 border border-dashed rounded-top mb-3 text-muted">
+                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-muted">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div class="d-flex align-items-center">
                                                 <a href="javascript:void(0);" class="avatar">
@@ -358,7 +358,7 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <a href="javascript:void(0);" class="btn btn-secondary btn-xs">
+                                            <a href="javascript:void(0);" class="btn btn-mustard btn-xs">
                                                 <i class="ti ti-cake me-1"></i>
                                                 {{ $nearestBirthday->birth_date ? \Carbon\Carbon::parse($nearestBirthday->birth_date)->format('F, d') : 'N/A' }}
                                             </a>
