@@ -316,7 +316,7 @@
                                                 <div class="ms-2 overflow-hidden">
                                                     <h6 class="fs-medium">
                                                         {{ $user->personalInformation->first_name }}
-                                                        {{ $user->personalInformation->middle_name ? $user->personalInformation->middle_name . ' ' : '' }}
+
                                                         {{ $user->personalInformation->last_name }}
                                                         {{ $user->personalInformation->suffix ?? '' }}
                                                     </h6>
@@ -349,7 +349,7 @@
                                                 <div class="ms-2 overflow-hidden">
                                                     <h6 class="fs-medium">
                                                         {{ $nearestBirthday->first_name ?? '' }}
-                                                        {{ $nearestBirthday->middle_name ?? '' }}
+
                                                         {{ $nearestBirthday->last_name ?? '' }}
                                                         {{ $nearestBirthday->suffix ?? '' }}
                                                     </h6>
