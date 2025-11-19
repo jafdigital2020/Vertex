@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\Tenant\Settings\BioController;
-use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
@@ -14,6 +12,7 @@ use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\Tenant\DesignationController;
+use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
@@ -27,11 +26,14 @@ use App\Http\Controllers\Tenant\Overtime\OvertimeController;
 use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
+use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
 use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\SalaryBondController;
+use App\Http\Controllers\Tenant\Employees\SuspensionController;
+use App\Http\Controllers\Tenant\Payroll\CustomOtRateController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Report\PayrollReportController;
 use App\Http\Controllers\Tenant\Settings\CustomfieldController;
@@ -50,7 +52,6 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
-use App\Http\Controllers\Tenant\Employees\SuspensionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -312,7 +313,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/suspension/{id}/return', [SuspensionController::class, 'markReturnToWork'])
         ->name('api.suspensionMarkReturnToWork');
 
-        
+
     // ============= Resignation API ================ //
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('api.resignationIndex');
 
@@ -446,7 +447,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resignation/approve/{id}', [ResignationController::class, 'approve'])->name('api.resignation-approve');
     Route::post('/resignation/reject/{id}', [ResignationController::class, 'reject'])->name('api.resignation-reject');
 
-    // hr resignation api 
+    // hr resignation api
     Route::get('/resignation/filter-from-branch', [ResignationController::class, 'HRfromBranch']);
     Route::get('/resignation/filter-from-department', [ResignationController::class, 'HRfromDepartment']);
     Route::get('/resignation/filter-from-designation', [ResignationController::class, 'HRfromDesignation']);
@@ -467,4 +468,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resignation/remarks/mark-as-read/{id}', [ResignationController::class, 'markRemarksAsRead']);
     Route::post('/asset-remarks/hr/mark-as-read/{assetId}/{itemNo}', [ResignationController::class, 'HRassetmarkAsRead']);
     Route::post('/resignations/{id}/undo-clearance', [ResignationController::class, 'undoClearance']);
+
+    // Custom OT Rate
+    Route::get('/payroll/payroll-items/custom-ot-rate', [CustomOtRateController::class, 'otRateIndex'])->name('api.custom-ot-rate');
+    Route::post('/payroll/payroll-items/custom-ot-rate', [CustomOtRateController::class, 'store'])->name('api.custom-ot-rate.store');
+    Route::get('/payroll/payroll-items/custom-ot-rate/{id}', [CustomOtRateController::class, 'getTemplateRates'])->name('api.custom-ot-rate.show');
+    Route::put('/payroll/payroll-items/custom-ot-rate/update', [CustomOtRateController::class, 'update'])->name('api.custom-ot-rate.update');
+    Route::delete('/payroll/payroll-items/custom-ot-rate/delete', [CustomOtRateController::class, 'destroy'])->name('api.custom-ot-rate.delete');
 });

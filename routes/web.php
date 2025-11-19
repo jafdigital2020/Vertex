@@ -65,6 +65,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\Tenant\Employees\InactiveListController;
 use App\Http\Controllers\Tenant\Payroll\AllowanceController;
+use App\Http\Controllers\Tenant\Payroll\CustomOtRateController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -368,8 +369,15 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/assets-settings-history', [AssetsController::class, 'assetsSettingsHistoryIndex'])->name('assets-settings-history')->middleware(CheckPermission::class . ':50');
     Route::get('/assets-settings-history-filter', [AssetsController::class, 'assetsSettingsHistoryFilter'])->name('assets-history-filter');
 
-    // export assets 
+    // export assets
     Route::get('/export-asset-pdf/{assetDetailId}/{userId}', [AssetsController::class, 'exportAssetPDF'])->name('export.asset.pdf');
+
+    // Custom OT Rate
+    Route::get('/payroll/payroll-items/custom-ot-rate', [CustomOtRateController::class, 'otRateIndex'])->name('custom-ot-rate');
+    Route::post('/payroll/payroll-items/custom-ot-rate', [CustomOtRateController::class, 'store'])->name('custom-ot-rate.store');
+    Route::get('/payroll/payroll-items/custom-ot-rate/{id}', [CustomOtRateController::class, 'getTemplateRates'])->name('custom-ot-rate.show');
+    Route::post('/payroll/payroll-items/custom-ot-rate/update', [CustomOtRateController::class, 'update'])->name('custom-ot-rate.update');
+    Route::post('/payroll/payroll-items/custom-ot-rate/delete', [CustomOtRateController::class, 'destroy'])->name('custom-ot-rate.delete');
 });
 
 Route::get('/send-test-notif', function () {

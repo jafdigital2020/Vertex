@@ -37,6 +37,7 @@
 	<meta name="keywords" content="admin, estimates, bootstrap, business, html5, responsive, Projects">
 	<meta name="author" content="JAF Digital Group Inc. -  Timora">
 	<meta name="robots" content="noindex, nofollow">
+	<meta name="csrf-token" content="{{ csrf_token() }}">
 	<title>Timora</title>
 
 
