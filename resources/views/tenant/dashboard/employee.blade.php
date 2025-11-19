@@ -382,12 +382,14 @@
                                         </span>
                                         <div class="mb-3">
                                             <h6 class="text-white fw-medium mb-1">{{ $employee['full_name'] }}</h6>
-                                            <p>{{ $employee['designation'] }}</p>
+                                            <p class="text-white">{{ $employee['designation'] }}</p>
                                         </div>
                                     @endforeach
 
                                     @if ($branchBirthdayEmployees->isNotEmpty())
-                                        <a href="#" class="btn btn-sm btn-primary">Send Wishes</a>
+                                        <a href="#" class="btn btn-sm btn-light d-inline-flex align-items-center">
+                                            <i class="ti ti-gift me-1"></i>Send Wishes
+                                        </a>
                                     @endif
                                 </div>
                             </div>
