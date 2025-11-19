@@ -11153,7 +11153,7 @@
                                     <small class="text-muted">Leave blank if salaries vary.</small>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Work Days Per Year <span class="text-danger">*</span></label>
                                     <select class="form-select" name="worked_days_per_year" id="branchWorkedDaysPerYear">
@@ -11166,13 +11166,13 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4" id="addCustomWorkedDaysWrapper" style="display:none;">
+                            <div class="col-md-6" id="addCustomWorkedDaysWrapper" style="display:none;">
                                 <div class="mb-3">
                                     <label class="form-label">Custom Worked Days</label>
                                     <input type="text" class="form-control" id="branchCustomWorkedDays" name="custom_worked_days" placeholder="Enter Custom Worked Days">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Computation Type <span class="text-danger"> *</span></label>
                                     <select name="salary_computation_type" id="branchSalaryComputationType" class="form-select">
@@ -11184,13 +11184,25 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">SSS Contribution Template <span class="text-danger"> *</span></label>
                                     <select name="sss_contribution_template" id="branchSssContributionTemplate" class="form-select">
                                         <option value="">Select</option>
                                         @foreach($sssYears as $year)
                                             <option value="{{ $year }}">{{ $year }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="branchOtTemplate" class="form-label">OT Template <span class="text-danger"> *</span></label>
+                                    <select name="ot_template_id" id="branchOtTemplate" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="" selected>Default</option>
+                                        @foreach($otTemplatesRates as $template)
+                                            <option value="{{ $template->id }}">{{ $template->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -11428,6 +11440,17 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="editBranchOtTemplate" class="form-label">OT Template</label>
+                                    <select name="ot_template_id" id="editBranchOtTemplate" class="form-select">
+                                        <option value="" selected>Default</option>
+                                        @foreach($otTemplatesRates as $template)
+                                            <option value="{{ $template->id }}">{{ $template->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -11449,7 +11472,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body"> 
+                <div class="modal-body">
                     <div class="mb-3">
                         <label for="groupSelect" class="form-label">Select Group</label>
                         <select id="groupSelect" class="form-select select2">
@@ -11458,20 +11481,20 @@
                                 <option value="{{ $group }}">{{ $group }}</option>
                             @endforeach
                         </select>
-                    </div> 
+                    </div>
                     <div class="mb-3 d-none" id="branchesSection">
                         <label class="form-label">Branches in this Group</label>
-                        <select id="branchesSelect" class="form-select select2" multiple style="width:100%"> 
+                        <select id="branchesSelect" class="form-select select2" multiple style="width:100%">
                         </select>
-                    </div> 
-                </div> 
+                    </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-success" id="saveGroupChanges" disabled>Save Changes</button>
-                </div> 
+                </div>
             </div>
         </div>
-    </div> 
+    </div>
 
     {{-- Delete Overtime --}}
     <div class="modal fade" id="delete_branch">

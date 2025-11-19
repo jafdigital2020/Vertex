@@ -34,4 +34,9 @@ class OtTemplate extends Model
         return $this->hasMany(OtTemplateRate::class);
     }
 
+    public function branches()
+    {
+        return $this->hasMany(Branch::class);
+    }
+
 }

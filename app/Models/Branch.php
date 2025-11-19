@@ -40,6 +40,7 @@ class Branch extends Model
         'wage_order',
         'branch_tin',
         'sss_contribution_template', // SSS contribution year template
+        'ot_template_id', // OT Template ID
     ];
 
     public function employmentDetail()
@@ -71,5 +72,11 @@ class Branch extends Model
     public function policyTargets()
     {
         return $this->hasMany(PolicyTarget::class, 'target_id', 'id');
+    }
+
+    // OT Template
+    public function otTemplate()
+    {
+        return $this->belongsTo(OtTemplate::class, 'ot_template_id', 'id');
     }
 }
