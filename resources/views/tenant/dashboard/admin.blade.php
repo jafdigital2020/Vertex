@@ -109,8 +109,8 @@
                     <div class="d-flex align-items-center flex-wrap mb-1">
                         <a href="{{ url('employees') }}" class="btn btn-secondary btn-md me-2 mb-2"><i
                                 class="ti ti-square-rounded-plus me-1"></i>Add Employee</a>
-                        {{-- <a href="{{ url('branches') }}" class="btn btn-primary btn-md mb-2"><i
-                                class="ti ti-square-rounded-plus me-1"></i>Add Branches</a> --}}
+                        <a href="{{ url('branches') }}" class="btn btn-primary btn-md mb-2"><i
+                                class="ti ti-square-rounded-plus me-1"></i>Add Branches</a>
                     </div>
                 </div>
             </div>
@@ -118,80 +118,177 @@
 
             {{-- Cards --}}
             <div class="row">
-                <!-- Widget Info (First Row) -->
-                <div class="col-xxl-10 d-flex">
-                    <div class="row w-100 flex-nowrap">
-                        <div class="col-md-3 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-primary mb-2">
-                                        <i class="ti ti-users-group fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Total Employees</h6>
-                                    <h3 class="mb-3">{{ $totalActiveUsers }}/{{ $totalUsers }} <span
-                                            class="fs-12 fw-medium text-success"><i
-                                                class="fa-solid fa-caret-up me-1"></i>{{ number_format($totalUserPercentage, 1) }}%</span>
-                                    </h3>
-                                    <a href="{{ route('employees') }}" class="link-default">View Details</a>
+                <!-- Statistics Cards -->
+                <div class="col-12 mb-3">
+                    <div class="row g-2">
+                        <!-- Total Employees Card -->
+                        <div class="col-xl-3 col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-md bg-secondary bg-opacity-10 rounded-2">
+                                                <i class="ti ti-users fs-20 text-secondary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-light border-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical text-muted fs-20"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{{ route('employees') }}">View All</a>
+                                                </li>
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2 mt-4">
+                                        <h4 class="fw-bold mb-1 text-dark">{{ $totalActiveUsers }}</h4>
+                                        <p class="text-muted mb-0 fs-12">
+                                            <span class="fw-medium"></span> Total Employees
+                                        </p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-muted fs-11">Active Rate</small>
+                                        <span class="badge bg-success-subtle text-success fs-10 px-2 py-1">
+                                            <i
+                                                class="ti ti-trending-up me-1"></i>{{ number_format($totalUserPercentage, 1) }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 5px;">
+                                        <div class="progress-bar bg-success" style="width: {{ $totalUserPercentage }}%">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-danger mb-2">
-                                        <i class="ti ti-user-star fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Inactive Employees</h6>
-                                    <h3 class="mb-3">{{ $totalInactive }} <span class="fs-12 fw-medium text-danger"><i
-                                                class="fa-solid fa-caret-down me-1"></i>{{ number_format($totalInactivePercentage, 1) }}%</span>
-                                    </h3>
-                                    <a href="{{ route('employees') }}" class="link-default">View All</a>
+
+                        <!-- Present Today Card -->
+                        <div class="col-xl-3 col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-md bg-success bg-opacity-10 rounded-2">
+                                                <i class="ti ti-check fs-20 text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-light border-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical text-muted fs-20"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{{ route('attendance-admin') }}">View
+                                                        All</a></li>
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2 mt-4">
+                                        <h4 class="fw-bold mb-1 text-dark">{{ $presentTodayUsersCount }}</h4>
+                                        <p class="text-muted mb-0 fs-12">Present Today</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-muted fs-11">Attendance Rate</small>
+                                        <span class="badge bg-success-subtle text-success fs-10 px-2 py-1">
+                                            <i
+                                                class="ti ti-trending-up me-1"></i>{{ number_format($presentTodayUsersPercentage, 1) }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 5px;">
+                                        <div class="progress-bar bg-success"
+                                            style="width: {{ $presentTodayUsersPercentage }}%"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-success mb-2">
-                                        <i class="ti ti-check fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Present Today</h6>
-                                    <h3 class="mb-3">{{ $presentTodayUsersCount }} <span
-                                            class="fs-12 fw-medium text-success"><i
-                                                class="fa-solid fa-caret-down me-1"></i>{{ number_format($presentTodayUsersPercentage, 1) }}%</span>
-                                    </h3>
-                                    <a href="{{ route('attendance-admin') }}" class="link-default">View All</a>
+
+                        <!-- Late Today Card -->
+                        <div class="col-xl-3 col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-md bg-warning bg-opacity-10 rounded-2">
+                                                <i class="ti ti-clock-edit fs-20 text-warning"></i>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-light border-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical text-muted fs-20"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{{ route('attendance-admin') }}">View
+                                                        All</a></li>
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2 mt-4">
+                                        <h4 class="fw-bold mb-1 text-dark">{{ $lateTodayUsersCount }}</h4>
+                                        <p class="text-muted mb-0 fs-12">Late Arrivals</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-muted fs-11">Late Rate</small>
+                                        <span class="badge bg-warning-subtle text-warning fs-10 px-2 py-1">
+                                            <i
+                                                class="ti ti-clock me-1"></i>{{ number_format($lateTodayUsersPercentage, 1) }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 5px;">
+                                        <div class="progress-bar bg-warning"
+                                            style="width: {{ $lateTodayUsersPercentage }}%"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-warning mb-2">
-                                        <i class="ti ti-clock-edit fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Late Today</h6>
-                                    <h3 class="mb-3">{{ $lateTodayUsersCount }}<span
-                                            class="fs-12 fw-medium text-danger"><i
-                                                class="fa-solid fa-caret-down me-1"></i>{{ number_format($lateTodayUsersPercentage, 1) }}%</span>
-                                    </h3>
-                                    <a href="{{ route('attendance-admin') }}" class="link-default">View All</a>
+
+                        <!-- Leave Today Card -->
+                        <div class="col-xl-3 col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-md bg-info bg-opacity-10 rounded-2">
+                                                <i class="ti ti-beach fs-20 text-info"></i>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-light border-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical text-muted fs-20"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{{ route('leave-admin') }}">View
+                                                        All</a></li>
+                                                <li><a class="dropdown-item"
+                                                        href="{{ route('leave-employees') }}">Request Leave</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2 mt-4">
+                                        <h4 class="fw-bold mb-1 text-dark">{{ $leaveTodayUsers }}</h4>
+                                        <p class="text-muted mb-0 fs-12">Employees on Leave</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-muted fs-11">Leave Status</small>
+                                        <span class="badge bg-info-subtle text-info fs-10 px-2 py-1">
+                                            <i class="ti ti-beach me-1"></i>On Leave
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 5px;">
+                                        <div class="progress-bar bg-info"
+                                            style="width: {{ $totalUsers > 0 ? ($leaveTodayUsers / $totalUsers) * 100 : 0 }}%">
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-2 d-flex" style="min-width: 220px; max-width: 250px;">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-info mb-2">
-                                        <i class="ti ti-beach fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Leave Today</h6>
-                                    <h3 class="mb-3">{{ $leaveTodayUsers }}</h3>
-                                    <a href="{{ route('leave-admin') }}" class="link-default">View All</a>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -201,15 +298,15 @@
                 <!-- Birthdays -->
                 <div class="col-xxl-4 col-xl-6 d-flex">
                     <div class="card flex-fill">
-                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap">
-                            <h5 class="mb-2">Birthdays</h5>
+                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-mustard">
+                            <h5 class="mb-2 text-white">Birthdays</h5>
                         </div>
                         <div class="card-body pb-1">
                             <h6 class="mb-2">Today</h6>
                             {{-- Display users with birthdays today --}}
                             @if (count($birthdayTodayUsers) > 0)
                                 @foreach ($birthdayTodayUsers as $user)
-                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3">
+                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-muted">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div class="d-flex align-items-center">
                                                 <a href="javascript:void(0);" class="avatar">
@@ -219,7 +316,7 @@
                                                 <div class="ms-2 overflow-hidden">
                                                     <h6 class="fs-medium">
                                                         {{ $user->personalInformation->first_name }}
-                                                        {{ $user->personalInformation->middle_name ? $user->personalInformation->middle_name . ' ' : '' }}
+
                                                         {{ $user->personalInformation->last_name }}
                                                         {{ $user->personalInformation->suffix ?? '' }}
                                                     </h6>
@@ -228,12 +325,12 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <span class="badge badge-success fs-10 px-3 py-1">🎉 Happy Birthday</span>
+                                            <span class="badge bg-success fs-10 px-3 py-1">🎉 Happy Birthday</span>
                                         </div>
                                     </div>
                                 @endforeach
                             @else
-                                <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-center">
+                                <div class="bg-light-mustard p-3 border border-dashed rounded-top mb-3 text-center text-muted w-100" style="width:100%; min-width:100%;">
                                     No Birthdays Today
                                 </div>
                             @endif
@@ -242,7 +339,7 @@
                             <h6 class="mb-2">Upcoming Birthdays</h6>
                             @if (count($nearestBirthdays) > 0)
                                 @foreach ($nearestBirthdays as $nearestBirthday)
-                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3">
+                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-muted">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div class="d-flex align-items-center">
                                                 <a href="javascript:void(0);" class="avatar">
@@ -252,7 +349,7 @@
                                                 <div class="ms-2 overflow-hidden">
                                                     <h6 class="fs-medium">
                                                         {{ $nearestBirthday->first_name ?? '' }}
-                                                        {{ $nearestBirthday->middle_name ?? '' }}
+
                                                         {{ $nearestBirthday->last_name ?? '' }}
                                                         {{ $nearestBirthday->suffix ?? '' }}
                                                     </h6>
@@ -261,7 +358,7 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <a href="javascript:void(0);" class="btn btn-secondary btn-xs">
+                                            <a href="javascript:void(0);" class="btn btn-mustard btn-xs">
                                                 <i class="ti ti-cake me-1"></i>
                                                 {{ $nearestBirthday->birth_date ? \Carbon\Carbon::parse($nearestBirthday->birth_date)->format('F, d') : 'N/A' }}
                                             </a>
@@ -269,7 +366,7 @@
                                     </div>
                                 @endforeach
                             @else
-                                <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-center">
+                                <div class="bg-light-mustard p-2 border border-dashed rounded-top mb-3 text-center text-muted w-100" style="width:100%; min-width:100%;">
                                     No Upcoming Birthdays
                                 </div>
                             @endif
@@ -282,8 +379,8 @@
                 <!-- Attendance Overview -->
                 <div class="col-xxl-4 col-xl-6 d-flex">
                     <div class="card flex-fill">
-                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap">
-                            <h5 class="mb-2">Attendance</h5>
+                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-raspberry">
+                            <h5 class="mb-2 text-white">Attendance</h5>
                         </div>
                         <div class="card-body">
                             <div class="chartjs-wrapper-demo position-relative mb-4">
@@ -293,6 +390,7 @@
                                     <h3 id="total-attendance-count">0</h3>
                                 </div>
                             </div>
+
                             <h6 class="mb-3">Status</h6>
                             <div class="d-flex align-items-center justify-content-between">
                                 <p class="f-13 mb-2"><i class="ti ti-circle-filled text-success me-1"></i>Present</p>
@@ -347,8 +445,8 @@
                 <!-- Clock-In/Out -->
                 <div class="col-xxl-4 col-xl-6 d-flex">
                     <div class="card flex-fill">
-                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap">
-                            <h5 class="mb-2">Clock-In/Out</h5>
+                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-coral">
+                            <h5 class="mb-2 text-white">Clock-In/Out</h5>
                         </div>
                         <div class="card-body">
                             <div>
@@ -384,32 +482,41 @@
                             <div
                                 class="d-flex align-items-center justify-content-between mb-3 p-2 border border-dashed br-5">
                                 @foreach ($lateTodayUsers->take(2) as $late)
-                                    <div class="d-flex align-items-center">
-                                        <span class="avatar flex-shrink-0">
-                                            <img src="{{ asset('storage/' . ($late->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
-                                                class="rounded-circle border" alt="img">
-                                        </span>
-                                        <div class="ms-2">
-                                            <h6 class="fs-14 fw-medium text-truncate">
-                                                {{ $late->personalInformation->full_name }} <span
-                                                    class="fs-10 fw-medium d-inline-flex align-items-center badge badge-success"><i
-                                                        class="ti ti-clock-hour-11 me-1"></i>{{ $late->attendance->first()->total_late_formatted ?? 'N/A' }}</span>
-                                            </h6>
-                                            <p class="fs-13">
-                                                {{ $present->employmentDetail->department->department_name ?? 'N/A' }}</p>
+                                    <div
+                                        class="d-flex align-items-center justify-content-between mb-3 p-2 border border-dashed br-5">
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar flex-shrink-0">
+                                                <img src="{{ asset('storage/' . ($late->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
+                                                    class="rounded-circle border" alt="img">
+                                            </span>
+                                            <div class="ms-2">
+                                                <h6 class="fs-14 fw-medium text-truncate">
+                                                    {{ $late->personalInformation->full_name }}
+                                                    <span
+                                                        class="fs-10 fw-medium d-inline-flex align-items-center badge badge-success">
+                                                        <i class="ti ti-clock-hour-11 me-1"></i>
+                                                        {{ $late->attendance->first()->total_late_formatted ?? '-' }}
+                                                    </span>
+                                                </h6>
+                                                <p class="fs-13">
+                                                    {{ $late->employmentDetail->department->department_name ?? '-' }}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <a href="javascript:void(0);" class="link-default me-2"><i
-                                                class="ti ti-clock-share"></i></a>
-                                        <span
-                                            class="fs-10 fw-medium d-inline-flex align-items-center badge badge-danger"><i
-                                                class="ti ti-circle-filled fs-5 me-1"></i>
-                                            {{ $late->attendance->first()->time_only ?? 'N/A' }}</span>
+                                        <div class="d-flex align-items-center">
+                                            <a href="javascript:void(0);" class="link-default me-2">
+                                                <i class="ti ti-clock-share"></i>
+                                            </a>
+                                            <span
+                                                class="fs-10 fw-medium d-inline-flex align-items-center badge badge-danger">
+                                                <i class="ti ti-circle-filled fs-5 me-1"></i>
+                                                {{ $late->attendance->first()->time_only ?? 'N/A' }}
+                                            </span>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
-                            <a href="{{ route('attendance-admin') }}" class="btn btn-light btn-md w-100">View All
+                            <a href="{{ route('attendance-admin') }}" class="btn btn-coral btn-md w-100">View All
                                 Attendance</a>
                         </div>
                     </div>
@@ -1068,12 +1175,12 @@
                                     label: 'Salary (PHP)',
                                     data: monthlyNetPay,
                                     fill: false,
-                                    borderColor: '#0C4B5E',
-                                    backgroundColor: '#0C4B5E',
+                                    borderColor: '#12515D',
+                                    backgroundColor: '#12515D',
                                     tension: 0.3,
                                     pointRadius: 4,
                                     pointBackgroundColor: '#fff',
-                                    pointBorderColor: '#0C4B5E',
+                                    pointBorderColor: '#12515D',
                                     pointHoverRadius: 6,
                                 }]
                             },
@@ -1137,14 +1244,14 @@
                         datasets: [{
                             label: 'Overtime Pay',
                             data: overtimePay,
-                            borderColor: '#FF6384',
-                            backgroundColor: 'rgba(255,99,132,0.1)',
+                            borderColor: '#12515D',
+                            backgroundColor: '#12515D',
                             fill: true,
                             borderWidth: 2,
                             tension: 0.3,
                             pointRadius: 4,
                             pointBackgroundColor: '#fff',
-                            pointBorderColor: '#FF6384',
+                            pointBorderColor: '#12515D',
                             pointHoverRadius: 6,
                         }]
                     },
@@ -1174,10 +1281,7 @@
                                 grid: {
                                     color: '#eee'
                                 },
-                                title: {
-                                    display: true,
-                                    text: 'Amount (PHP)'
-                                },
+
                                 ticks: {
                                     callback: function(value) {
                                         return value.toLocaleString();

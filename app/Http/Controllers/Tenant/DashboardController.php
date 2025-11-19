@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Tenant;
 
-use App\Models\EmploymentDetail;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Branch;
@@ -50,37 +49,40 @@ class DashboardController extends Controller
                 $query->whereHas('employmentDetail', function ($sub) use ($branchId) {
                     $sub->where('branch_id', $branchId);
                 });
-            });
+            })
+            ->with(['employmentDetail', 'employmentDetail.designation', 'personalInformation']);
 
         // Branches for this tenant
         $branches = Branch::where('tenant_id', $tenantId)
             ->whereHas('employmentDetail')
             ->get();
 
-        // Total users (filtered by branch if applicable)
         $totalUsers = (clone $usersQuery)->count();
-
-        // Total active users
         $totalActiveUsers = (clone $usersQuery)
             ->whereHas('employmentDetail', function ($query) {
                 $query->where('status', '1');
             })
             ->count();
 
-        // Active percentage
-        $totalUserPercentage = $totalUsers > 0 ? ($totalActiveUsers / $totalUsers) * 100 : 0;
+        // Total Users Percentage∏
+        $totalUserPercentage = 0;
+        if ($totalUsers > 0) {
+            $totalUserPercentage = ($totalActiveUsers / $totalUsers) * 100;
+        }
 
-        // Total inactive users
         $totalInactive = (clone $usersQuery)
             ->whereHas('employmentDetail', function ($query) {
                 $query->where('status', '0');
             })
             ->count();
 
-        // Inactive percentage
-        $totalInactivePercentage = $totalUsers > 0 ? ($totalInactive / $totalUsers) * 100 : 0;
+        // Total Inactive Percentage
+        $totalInactivePercentage = 0;
+        if ($totalUsers > 0) {
+            $totalInactivePercentage = ($totalInactive / $totalUsers) * 100;
+        }
 
-        // Present today
+        // Present Today Users
         $presentTodayUsers = (clone $usersQuery)
             ->whereHas('attendance', function ($query) {
                 $query->whereDate('attendance_date', Carbon::today())
@@ -88,14 +90,18 @@ class DashboardController extends Controller
             })
             ->with(['attendance' => function ($query) {
                 $query->whereDate('attendance_date', Carbon::today())
-                    ->orderByDesc('id');
+                    ->orderByDesc('id'); // or orderByDesc('created_at') if available
             }])
             ->get();
-
         $presentTodayUsersCount = $presentTodayUsers->count();
-        $presentTodayUsersPercentage = $totalUsers > 0 ? ($presentTodayUsersCount / $totalUsers) * 100 : 0;
 
-        // Late today
+        // Present Today Users Percentage
+        $presentTodayUsersPercentage = 0;
+        if ($totalUsers > 0) {
+            $presentTodayUsersPercentage = ($presentTodayUsersCount / $totalUsers) * 100;
+        }
+
+        // Late Today Users
         $lateTodayUsers = (clone $usersQuery)
             ->whereHas('attendance', function ($query) {
                 $query->whereDate('attendance_date', Carbon::today())
@@ -108,9 +114,14 @@ class DashboardController extends Controller
             ->get();
 
         $lateTodayUsersCount = $lateTodayUsers->count();
-        $lateTodayUsersPercentage = $totalUsers > 0 ? ($lateTodayUsersCount / $totalUsers) * 100 : 0;
 
-        // Leave today
+        // Late Today Users Percentage
+        $lateTodayUsersPercentage = 0;
+        if ($totalUsers > 0) {
+            $lateTodayUsersPercentage = ($lateTodayUsersCount / $totalUsers) * 100;
+        }
+
+        // Leave Today Users
         $leaveTodayUsers = (clone $usersQuery)
             ->whereHas('leaveRequest', function ($query) {
                 $query->where('status', 'approved')
@@ -119,8 +130,8 @@ class DashboardController extends Controller
             })
             ->count();
 
-        // Birthdays today
-        $birthdayTodayUsers = (clone $usersQuery)
+        // Birthday Today Users
+        $birthdayTodayUsers = $usersQuery
             ->whereHas('personalInformation', function ($query) {
                 $query->whereMonth('birth_date', now()->month)
                     ->whereDay('birth_date', now()->day);
@@ -129,21 +140,37 @@ class DashboardController extends Controller
             ->take(2)
             ->get();
 
-        // Nearest birthdays (filtered by branch)
-        $nearestBirthdays = (clone $usersQuery)
-            ->join('employment_details as ed', 'users.id', '=', 'ed.user_id')
+        // Nearest Birthday (Future Dates)
+        $nearestBirthdays = User::where('tenant_id', $tenantId)
             ->join('employment_personal_information as personal_information', 'users.id', '=', 'personal_information.user_id')
-            ->where('ed.branch_id', $branchId)
             ->where(function ($query) {
-            $query->whereMonth('personal_information.birth_date', now()->month)
-                ->whereDay('personal_information.birth_date', '>', now()->day)
-                ->orWhereMonth('personal_information.birth_date', '>', now()->month);
+                $query->where(function ($q) {
+                    // Remaining days in current month (after today)
+                    $q->whereMonth('personal_information.birth_date', now()->month)
+                        ->whereDay('personal_information.birth_date', '>', now()->day);
+                })
+                    ->orWhere(function ($q) {
+                        // Future months
+                        $q->whereMonth('personal_information.birth_date', '>', now()->month);
+                    });
             })
-            ->orderByRaw("DATE_FORMAT(personal_information.birth_date, '%m-%d') ASC")
+            ->select('users.*', 'personal_information.*')
+            ->orderByRaw("
+        CASE
+            WHEN MONTH(personal_information.birth_date) = MONTH(NOW())
+                AND DAY(personal_information.birth_date) > DAY(NOW())
+            THEN CONCAT('2024-', LPAD(MONTH(personal_information.birth_date), 2, '0'), '-', LPAD(DAY(personal_information.birth_date), 2, '0'))
+
+            WHEN MONTH(personal_information.birth_date) > MONTH(NOW())
+            THEN CONCAT('2024-', LPAD(MONTH(personal_information.birth_date), 2, '0'), '-', LPAD(DAY(personal_information.birth_date), 2, '0'))
+
+            ELSE CONCAT('2025-', LPAD(MONTH(personal_information.birth_date), 2, '0'), '-', LPAD(DAY(personal_information.birth_date), 2, '0'))
+        END ASC
+    ")
             ->take(4)
             ->get();
 
-        // Users with shift today but no clock-in
+        // Users with shift today but no clock in
         $today = Carbon::today()->toDateString();
         $weekday = strtolower(Carbon::today()->format('D'));
 
@@ -160,25 +187,29 @@ class DashboardController extends Controller
                         $sub->where('type', 'recurring')
                             ->whereDate('start_date', '<=', $today)
                             ->where(function ($end) use ($today) {
-                                $end->whereNull('end_date')->orWhereDate('end_date', '>=', $today);
+                                $end->whereNull('end_date')
+                                    ->orWhereDate('end_date', '>=', $today);
                             })
                             ->whereJsonContains('days_of_week', $weekday)
                             ->where(function ($ex) use ($today) {
-                                $ex->whereNull('excluded_dates')->orWhereJsonDoesntContain('excluded_dates', $today);
+                                $ex->whereNull('excluded_dates')
+                                    ->orWhereJsonDoesntContain('excluded_dates', $today);
                             })
                             ->where('is_rest_day', false);
                     })->orWhere(function ($sub) use ($today) {
                         $sub->where('type', 'custom')
                             ->whereJsonContains('custom_dates', $today)
                             ->where(function ($ex) use ($today) {
-                                $ex->whereNull('excluded_dates')->orWhereJsonDoesntContain('excluded_dates', $today);
+                                $ex->whereNull('excluded_dates')
+                                    ->orWhereJsonDoesntContain('excluded_dates', $today);
                             })
                             ->where('is_rest_day', false);
                     });
                 });
             })
             ->whereHas('shiftAssignment.shift', function ($q) {
-                $q->whereNotNull('start_time')->whereNotNull('end_time');
+                $q->whereNotNull('start_time')
+                    ->whereNotNull('end_time');
             })
             ->whereDoesntHave('attendance', function ($query) use ($today) {
                 $query->whereDate('attendance_date', $today);
@@ -223,8 +254,6 @@ class DashboardController extends Controller
        
         return view('tenant.dashboard.admin', $data);
     }
-
-
 
     // Admin Dashboard Attendance Summary Today
     public function attendanceSummaryToday(Request $request)
@@ -303,7 +332,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    // Admin Dashboard Overtime and Holiday Pay
+    // Admin Dashboard Overtime
     public function overtimeOverview(Request $request)
     {
         $currentYear = Carbon::now()->year;
@@ -339,7 +368,7 @@ class DashboardController extends Controller
     public function employeeDashboard(Request $request)
     {
 
-        $authUser = $this->authUser(); 
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(2);
         $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
@@ -370,17 +399,21 @@ class DashboardController extends Controller
         // Branch Birthday Employee
         $branchBirthdayEmployees = collect();
 
-        $employmentDetail = $authUser->employmentDetail ?? null;
-        $branch = $employmentDetail && isset($employmentDetail->branch) ? $employmentDetail->branch : null;
-        $branchEmploymentDetails = $branch && isset($branch->employmentDetail) ? $branch->employmentDetail : [];
+        // Check if user is global user
+        if (Auth::guard('global')->check()) {
+            // For global users, get all birthday employees across all tenants
+            $birthdayEmployees = User::whereHas('personalInformation', function ($query) {
+                $query->whereMonth('birth_date', now()->month)
+                    ->whereDay('birth_date', now()->day);
+            })
+                ->with(['personalInformation', 'employmentDetail.designation'])
+                ->get();
 
-        if ($branchEmploymentDetails && is_iterable($branchEmploymentDetails)) {
-            foreach ($branchEmploymentDetails as $employmentDetail) {
-                $user = $employmentDetail->user ?? null;
-                $pi = $user && isset($user->personalInformation) ? $user->personalInformation : null;
-                $birthDate = $pi && isset($pi->birth_date) ? $pi->birth_date : null;
+            foreach ($birthdayEmployees as $user) {
+                $pi = $user->personalInformation;
+                $employmentDetail = $user->employmentDetail;
 
-                if ($birthDate && Carbon::parse($birthDate)->isToday()) {
+                if ($pi) {
                     $firstName = $pi->first_name ?? '';
                     $middleName = $pi->middle_name ?? '';
                     $lastName = $pi->last_name ?? '';
@@ -388,7 +421,7 @@ class DashboardController extends Controller
 
                     $profilePicture = isset($pi->profile_picture) && $pi->profile_picture
                         ? asset('storage/' . $pi->profile_picture)
-                        : asset('build/img/users/user-35.jpg'); // fallback image
+                        : asset('build/img/users/user-35.jpg');
 
                     $designation = isset($employmentDetail->designation) && isset($employmentDetail->designation->designation_name)
                         ? $employmentDetail->designation->designation_name
@@ -401,7 +434,47 @@ class DashboardController extends Controller
                     ]);
                 }
             }
+        } else {
+            // For regular users, only get birthday employees from their branch
+            $employmentDetail = $authUser->employmentDetail ?? null;
+            $branch = $employmentDetail && isset($employmentDetail->branch) ? $employmentDetail->branch : null;
+            $branchEmploymentDetails = $branch && isset($branch->employmentDetail) ? $branch->employmentDetail : [];
+
+            if ($branchEmploymentDetails && is_iterable($branchEmploymentDetails)) {
+                foreach ($branchEmploymentDetails as $employmentDetail) {
+                    $user = $employmentDetail->user ?? null;
+                    $pi = $user && isset($user->personalInformation) ? $user->personalInformation : null;
+                    $birthDate = $pi && isset($pi->birth_date) ? $pi->birth_date : null;
+
+                    if ($birthDate && Carbon::parse($birthDate)->isToday()) {
+                        $firstName = $pi->first_name ?? '';
+                        $middleName = $pi->middle_name ?? '';
+                        $lastName = $pi->last_name ?? '';
+                        $fullName = trim("{$firstName} {$middleName} {$lastName}");
+
+                        $profilePicture = isset($pi->profile_picture) && $pi->profile_picture
+                            ? asset('storage/' . $pi->profile_picture)
+                            : asset('build/img/users/user-35.jpg');
+
+                        $designation = isset($employmentDetail->designation) && isset($employmentDetail->designation->designation_name)
+                            ? $employmentDetail->designation->designation_name
+                            : '—';
+
+                        $branchBirthdayEmployees->push([
+                            'full_name' => $fullName,
+                            'designation' => $designation,
+                            'profile_picture' => $profilePicture,
+                        ]);
+                    }
+                }
+            }
         }
+
+        Log::info('Branch birthday employees summary', [
+            'total_birthday_employees' => $branchBirthdayEmployees->count(),
+            'is_global_user' => Auth::guard('global')->check(),
+            'date_checked' => Carbon::today()->toDateString()
+        ]);
 
         // Get the authenticated user's ID
         $userId = $authUser->id;
@@ -458,6 +531,11 @@ class DashboardController extends Controller
         $allNotifications = $leaveRequests
             ->concat($overtimes)
             ->concat($officialBusinesses)
+            ->filter(function ($item) {
+                // Only include items where main_date is today or future
+                return Carbon::parse($item['main_date'])->isToday() ||
+                    Carbon::parse($item['main_date'])->isFuture();
+            })
             ->sortByDesc('date')
             ->values();
 

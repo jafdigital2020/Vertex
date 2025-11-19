@@ -133,12 +133,44 @@ ul .btn-primary:not(:disabled):not(.disabled).active:focus {
     box-shadow: none;
 }
 
+.bg-teal {
+    background-color: #008080 !important;
+}
+
+.bg-raspberry {
+    background-color: #b53654 !important;
+}
+
+.bg-light-raspberry {
+    background-color: #f8ecee !important;
+}
+
+.bg-coral {
+    background-color: #ed7464 !important;
+}
+
+.bg-light-coral {
+    background-color: #fef2f0 !important;
+}
+
+.bg-mustard {
+    background-color: #ffb400 !important;
+}
+
+.bg-light-mustard {
+    background-color: #fff8eb !important;
+}
+
 .bg-primary {
-    background-color: #064856 !important;
+    background-color: #12515D !important;
+}
+
+.bg-light-primary {
+    background-color: #e9f2f2 !important;
 }
 
 .bg-secondary {
-    background-color: #3B7080 !important;
+    background-color: #008080 !important;
 }
 
 .bg-info {
@@ -1428,10 +1460,17 @@ hr {
 
 .btn-primary {
     color: #FFF;
-    background-color: #064856;
-    border-color: #064856;
+    background-color: #12515D;
+    border-color: #12515D;
     font-size: 14px;
     font-size: 14px;
+}
+
+.btn-check:checked+.btn-outline-teal {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+    color: #FFF !important;
+    box-shadow: 0 3px 10px rgba(0, 128, 128, 0.5);
 }
 
 .btn-check:checked+.btn,
@@ -1440,9 +1479,9 @@ hr {
 .btn.show:hover,
 .btn:first-child:active,
 :not(.btn-check)+.btn:active {
-    background-color: #064856;
-    border-color: #064856;
-    color: #FFF;
+    background-color: #12515D;
+    border-color: #12515D;
+    color: #ffffff;
 }
 
 button {
@@ -1519,6 +1558,70 @@ button:focus {
 .btn.btn-secondary.active {
     background-color: rgb(46.1272727273, 87.5636363636, 100.0727272727);
     border: 1px solid rgb(46.1272727273, 87.5636363636, 100.0727272727);
+    color: #FFF;
+}
+
+.btn.btn-teal {
+    background-color: #008080;
+    border: 1px solid #008080;
+    color: #FFF;
+}
+
+.btn.btn-teal:hover,
+.btn.btn-teal:focus,
+.btn.btn-teal.focus,
+.btn.btn-teal:active,
+.btn.btn-teal.active {
+    background-color: #008080;
+    border: 1px solid #008080;
+    color: #FFF;
+}
+
+.btn.btn-raspberry {
+    background-color: #b53654;
+    border: 1px solid #b53654;
+    color: #FFF;
+}
+
+.btn.btn-raspberry:hover,
+.btn.btn-raspberry:focus,
+.btn.btn-raspberry.focus,
+.btn.btn-raspberry:active,
+.btn.btn-raspberry.active {
+    background-color: #b53654;
+    border: 1px solid #b53654;
+    color: #FFF;
+}
+
+.btn.btn-coral {
+    background-color: #ed7464;
+    border: 1px solid #ed7464;
+    color: #FFF;
+}
+
+.btn.btn-coral:hover,
+.btn.btn-coral:focus,
+.btn.btn-coral.focus,
+.btn.btn-coral:active,
+.btn.btn-coral.active {
+    background-color: #ed7464;
+    border: 1px solid #ed7464;
+    color: #FFF;
+}
+
+.btn.btn-mustard {
+    background-color: #ffb400;
+    border: 1px solid #ffb400;
+    color: #FFF;
+}
+
+.btn.btn-mustard:hover,
+.btn.btn-mustard:focus,
+.btn.btn-mustard.focus,
+.btn.btn-mustard:active,
+.btn.btn-mustard.active {
+    background-color: #ffb400;
+    border: 1px solid #ffb400;
     color: #FFF;
 }
 
@@ -2010,6 +2113,22 @@ button:focus {
     background-color: #3B7080 !important;
     border: 1px solid #3B7080 !important;
     box-shadow: 0 3px 10px rgba(59, 112, 128, 0.5);
+    color: #FFF !important;
+}
+
+.btn-outline-teal {
+    border: 1px solid #008080 !important;
+    color: #008080 !important;
+}
+
+.btn-outline-teal:hover,
+.btn-outline-teal:focus,
+.btn-outline-teal.focus,
+.btn-outline-teal:active,
+.btn-outline-teal.active {
+    background-color: #008080 !important;
+    border: 1px solid #008080 !important;
+    box-shadow: 0 3px 10px rgba(0, 128, 128, 0.5);
     color: #FFF !important;
 }
 
@@ -17275,12 +17394,78 @@ button.swal2-cancel {
     margin-bottom: 24px;
 }
 
-.sidebar .sidebar-menu>ul>li>ul>li>a:hover {
-    background: #E8E9EA;
+/* Modern smooth hover for submenu items */
+.sidebar .sidebar-menu>ul>li>ul>li>a {
+    transition: background-color .22s cubic-bezier(.4, 0, .2, 1),
+        color .18s cubic-bezier(.4, 0, .2, 1),
+        transform .18s cubic-bezier(.4, 0, .2, 1),
+        box-shadow .22s cubic-bezier(.4, 0, .2, 1);
+    will-change: transform, background-color, box-shadow;
+    border-radius: 6px;
+}
+
+/* Hover / focus state */
+.sidebar .sidebar-menu>ul>li>ul>li>a:hover,
+.sidebar .sidebar-menu>ul>li>ul>li>a:focus {
+    background: linear-gradient(90deg, #12515D 0%, #0f4952 100%);
+    color: #fff;
+    transform: translateX(6px);
+    box-shadow: 0 8px 20px rgba(6, 72, 86, 0.12);
+}
+
+/* Text/icon color */
+.sidebar .sidebar-menu>ul>li>ul>li>a:hover span,
+.sidebar .sidebar-menu>ul>li>ul>li>a:focus span,
+.sidebar .sidebar-menu>ul>li>ul>li>a:hover i,
+.sidebar .sidebar-menu>ul>li>ul>li>a:focus i {
+    color: #fff !important;
+}
+
+/* Submenu arrow transition (handles pseudo arrow and icon arrows) */
+.sidebar .sidebar-menu>ul>li>ul>li>a .menu-arrow {
+    transition: color .18s ease, opacity .18s ease, transform .18s ease;
+}
+
+.sidebar .sidebar-menu>ul>li>ul>li>a .menu-arrow::before {
+    transition: border-color .18s ease;
+}
+
+/* Make arrow visible/white on hover */
+.sidebar .sidebar-menu>ul>li>ul>li>a:hover .menu-arrow::before,
+.sidebar .sidebar-menu>ul>li>ul>li>a:focus .menu-arrow::before {
+    border-right-color: #fff !important;
+    border-bottom-color: #fff !important;
+}
+
+.sidebar .sidebar-menu>ul>li>ul>li>a:hover .menu-arrow,
+.sidebar .sidebar-menu>ul>li>ul>li>a:focus .menu-arrow,
+.sidebar .sidebar-menu>ul>li>ul>li>a:hover .menu-arrow *,
+.sidebar .sidebar-menu>ul>li>ul>li>a:focus .menu-arrow * {
+    color: #fff !important;
+}
+
+/* Preserve styling for submenu that is itself a "submenu" */
+.sidebar .sidebar-menu>ul>li>ul>li.submenu>a,
+.sidebar .sidebar-menu>ul>li>ul>li.submenu>a:focus {
+    transition: background-color .22s ease, color .18s ease;
+    border-radius: 6px;
 }
 
 .sidebar .sidebar-menu>ul>li>ul>li.submenu>a:hover {
-    background: #E8E9EA;
+    background: linear-gradient(90deg, #12515D 0%, #0f4952 100%);
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+    .sidebar .sidebar-menu>ul>li>ul>li>a,
+    .sidebar .sidebar-menu>ul>li>ul>li>a .menu-arrow,
+    .sidebar .sidebar-menu>ul>li>ul>li>a .menu-arrow::before {
+        transition: none !important;
+        transform: none !important;
+        will-change: auto;
+        box-shadow: none !important;
+    }
 }
 
 .sidebar .sidebar-menu>ul>li:last-child ul {
@@ -17414,6 +17599,14 @@ button.swal2-cancel {
     margin-left: 8px;
 }
 
+.sidebar .sidebar-menu>ul>li ul li.active a span {
+    color: #ffffff !important;
+}
+
+.sidebar .sidebar-menu>ul>li ul li.active a i {
+    color: #ffffff !important;
+}
+
 .sidebar .sidebar-menu>ul>li ul li a.active {
     color: #064856;
 }
@@ -17423,14 +17616,14 @@ button.swal2-cancel {
 }
 
 .sidebar .sidebar-menu>ul>li ul>li.active a {
-    background: #E8E9EA;
+    background: #12515D;
     border-radius: 5px;
-    color: #FFF;
+    color: #ffffff;
 }
 
 .sidebar .sidebar-menu>ul>li ul>li.active a .menu-arrow::before {
-    border-right: 2px solid #064856;
-    border-bottom: 2px solid #064856;
+    border-right: 2px solid #12515D;
+    border-bottom: 2px solid #12515D;
 }
 
 .sidebar .sidebar-menu>ul>li ul>li.active a.subdrop {
@@ -17440,8 +17633,8 @@ button.swal2-cancel {
 }
 
 .sidebar .sidebar-menu>ul>li ul>li.active a.subdrop i {
-    color: #FFF;
-    background: #FFF;
+    color: #ffffff;
+    background: #ffffff;
 }
 
 .sidebar .sidebar-menu>ul>li ul>li.active a.subdrop span {
@@ -17473,6 +17666,7 @@ button.swal2-cancel {
 .sidebar .sidebar-menu>ul>li .submenu ul li {
     margin-bottom: 0;
 }
+
 
 .sidebar .sidebar-menu>ul li {
     margin-bottom: 5px;
@@ -17534,7 +17728,7 @@ button.swal2-cancel {
 }
 
 .sidebar .sidebar-menu>ul li .submenu>a.subdrop {
-    background: #E8E9EA;
+    background: #12515D;
 }
 
 .sidebar .sidebar-menu>ul li .submenu>a.subdrop i {
@@ -17542,12 +17736,24 @@ button.swal2-cancel {
 }
 
 .sidebar .sidebar-menu>ul li .submenu>a.active {
-    background: #E8E9EA;
+    background: #12515D;
     border-radius: 5px;
 }
 
+.sidebar .sidebar-menu>ul li .submenu>a.active span {
+    color: #ffffff;
+}
+
 .sidebar .sidebar-menu>ul li .submenu>a.active i {
-    color: #374151;
+    color: #ffffff;
+}
+
+.sidebar .sidebar-menu>ul li .submenu>a.active i {
+    color: #ffffff;
+}
+
+.sidebar .sidebar-menu>ul li .submenu>a.active .menu-arrow::before {
+    border-color: #ffffff;
 }
 
 .sidebar .sidebar-menu>ul li .submenu.submenu-two a.subdrop,
@@ -33796,17 +34002,21 @@ span.flatpickr-weekday {
 }
 
 #cameraModal .modal-footer button {
-    margin-right: 0.5rem; /* Adds little space between buttons */
+    margin-right: 0.5rem;
+    /* Adds little space between buttons */
 }
 
 #cameraModal .modal-footer button:last-child {
-    margin-right: 0; /* Remove space after the last button */
+    margin-right: 0;
+    /* Remove space after the last button */
 }
 
 .branch-select {
     max-height: 250px;
     overflow-y: auto;
 }
+
+
 
 /* End:: swiper js */
 
