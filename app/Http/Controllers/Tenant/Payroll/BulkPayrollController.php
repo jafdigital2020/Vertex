@@ -69,99 +69,155 @@ class BulkPayrollController extends Controller
 
             // Save computed payroll for each user (Bulk columns mapping)
             foreach ($data['user_id'] as $userId) {
-            $payroll = Payroll::updateOrCreate(
-                [
-                'tenant_id' => $tenantId,
-                'user_id' => $userId,
-                'payroll_period_start' => $data['start_date'],
-                'payroll_period_end' => $data['end_date'],
-                'payroll_type' => $payrollType,
-                ],
-                [
-                'payroll_period' => $payrollPeriod,
-                // Bulk columns mapping
-                'total_worked_minutes' => $bulkAttendanceData[$userId]['regular_working_minutes'] ?? 0,
-                'total_worked_days' => $bulkAttendanceData[$userId]['regular_working_days'] ?? 0,
-                'total_overtime_minutes' => $bulkAttendanceData[$userId]['regular_overtime_minutes'] ?? 0,
-                'total_night_differential_minutes' => $bulkAttendanceData[$userId]['regular_nd_minutes'] ?? 0,
-                'total_overtime_night_diff_minutes' => $bulkAttendanceData[$userId]['regular_nd_overtime_minutes'] ?? 0,
-                // Add other bulk columns as needed
+                $payroll = Payroll::updateOrCreate(
+                    [
+                        'tenant_id' => $tenantId,
+                        'user_id' => $userId,
+                        'payroll_period_start' => $data['start_date'],
+                        'payroll_period_end' => $data['end_date'],
+                        'payroll_type' => $payrollType,
+                    ],
+                    [
+                        'payroll_period' => $payrollPeriod,
+                        // Bulk columns mapping
+                        'total_worked_minutes' => $bulkAttendanceData[$userId]['regular_working_minutes'] ?? 0,
+                        'total_worked_days' => $bulkAttendanceData[$userId]['regular_working_days'] ?? 0,
+                        'total_overtime_minutes' => $bulkAttendanceData[$userId]['regular_overtime_minutes'] ?? 0,
+                        'total_night_differential_minutes' => $bulkAttendanceData[$userId]['regular_nd_minutes'] ?? 0,
+                        'total_overtime_night_diff_minutes' => $bulkAttendanceData[$userId]['regular_nd_overtime_minutes'] ?? 0,
+                        // Add other bulk columns as needed
 
-                // Pay breakdown
-                'holiday_pay' => $holidayPay[$userId]['holiday_pay_amount'] ?? 0,
-                'leave_pay' => $leavePay[$userId]['total_leave_pay'] ?? 0,
-                'overtime_pay' =>
-                    ($grossPay[$userId]['overtime_pay']['ordinary'] ?? 0)
-                    + ($grossPay[$userId]['overtime_pay']['holiday'] ?? 0)
-                    + ($grossPay[$userId]['overtime_pay']['holiday_rest_day'] ?? 0),
-                'night_differential_pay' => ($grossPay[$userId]['night_diff_pay']['ordinary'] ?? 0) + ($grossPay[$userId]['night_diff_pay']['rest_day'] ?? 0) + ($grossPay[$userId]['night_diff_pay']['holiday'] ?? 0),
-                'overtime_night_diff_pay' => ($grossPay[$userId]['overtime_night_diff_pay']['ordinary'] ?? 0) + ($grossPay[$userId]['overtime_night_diff_pay']['rest_day'] ?? 0) + ($grossPay[$userId]['overtime_night_diff_pay']['holiday'] ?? 0),
+                        // Pay breakdown
+                        'holiday_pay' => $holidayPay[$userId]['holiday_pay_amount'] ?? 0,
+                        'leave_pay' => $leavePay[$userId]['total_leave_pay'] ?? 0,
+                        'overtime_pay' => ($grossPay[$userId]['overtime_pay']['ordinary'] ?? 0)
+                            + ($grossPay[$userId]['overtime_pay']['holiday'] ?? 0)
+                            + ($grossPay[$userId]['overtime_pay']['holiday_rest_day'] ?? 0),
+                        'night_differential_pay' => ($grossPay[$userId]['night_diff_pay']['ordinary'] ?? 0) + ($grossPay[$userId]['night_diff_pay']['rest_day'] ?? 0) + ($grossPay[$userId]['night_diff_pay']['holiday'] ?? 0),
+                        'overtime_night_diff_pay' => ($grossPay[$userId]['overtime_night_diff_pay']['ordinary'] ?? 0) + ($grossPay[$userId]['overtime_night_diff_pay']['rest_day'] ?? 0) + ($grossPay[$userId]['overtime_night_diff_pay']['holiday'] ?? 0),
 
-                // Deductions
-                'late_deduction' => $deductions[$userId]['late_deduction'] ?? 0,
-                'undertime_deduction' => $deductions[$userId]['undertime_deduction'] ?? 0,
-                'absent_deduction' => $deductions[$userId]['absent_deduction'] ?? 0,
-                'earnings' => isset($earnings[$userId]['earning_details']) ? json_encode($earnings[$userId]['earning_details']) : null,
-                'total_earnings' => $totalEarnings[$userId]['total_earnings'] ?? 0,
-                'taxable_income' => $withholdingTax[$userId]['taxable_income'] ?? 0,
+                        // Deductions
+                        'late_deduction' => $deductions[$userId]['late_deduction'] ?? 0,
+                        'undertime_deduction' => $deductions[$userId]['undertime_deduction'] ?? 0,
+                        'absent_deduction' => $deductions[$userId]['absent_deduction'] ?? 0,
+                        'earnings' => isset($earnings[$userId]['earning_details']) ? json_encode($earnings[$userId]['earning_details']) : null,
+                        'total_earnings' => $totalEarnings[$userId]['total_earnings'] ?? 0,
+                        'taxable_income' => $withholdingTax[$userId]['taxable_income'] ?? 0,
 
-                // De Minimis
-                'deminimis' => null, // Add if you have deminimis logic for bulk
+                        // De Minimis
+                        'deminimis' => null, // Add if you have deminimis logic for bulk
 
-                // Mandates
-                'sss_contribution' => $sssContributions[$userId]['employee_total'] ?? 0,
-                'philhealth_contribution' => $philhealthContributions[$userId]['employee_total'] ?? 0,
-                'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
-                'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
-                'loan_deductions' => null, // Add loan logic if needed
-                'deductions' => isset($deductions[$userId]['deduction_details']) ? json_encode($deductions[$userId]['deduction_details']) : null,
-                'total_deductions' => $totalDeductions[$userId]['total_deductions'] ?? 0,
+                        // Mandates
+                        'sss_contribution' => $sssContributions[$userId]['employee_total'] ?? 0,
+                        'philhealth_contribution' => $philhealthContributions[$userId]['employee_total'] ?? 0,
+                        'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
+                        'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
+                        'loan_deductions' => null, // Add loan logic if needed
+                        'deductions' => isset($deductions[$userId]['deduction_details']) ? json_encode($deductions[$userId]['deduction_details']) : null,
+                        'total_deductions' => $totalDeductions[$userId]['total_deductions'] ?? 0,
 
-                // Salary Breakdown
-                'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
-                'gross_pay' => $grossPay[$userId]['gross_pay'] ?? 0,
-                'net_salary' => $netPay[$userId]['net_pay'] ?? 0,
+                        // Salary Breakdown
+                        'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
+                        'gross_pay' => $grossPay[$userId]['gross_pay'] ?? 0,
+                        'net_salary' => $netPay[$userId]['net_pay'] ?? 0,
 
-                // 13th month
-                'thirteenth_month_pay' => $thirteenthMonth[$userId]['thirteenth_month'] ?? 0,
+                        // 13th month
+                        'thirteenth_month_pay' => $thirteenthMonth[$userId]['thirteenth_month'] ?? 0,
 
-                // Payment Info
-                'payment_date' => $paymentDate,
-                'processor_type' => Auth::user() ? get_class(Auth::user()) : null,
-                'processor_id' => Auth::id(),
-                'status' => 'Pending',
-                'remarks' => null,
-                ]
-            );
+                        // Payment Info
+                        'payment_date' => $paymentDate,
+                        'processor_type' => Auth::user() ? get_class(Auth::user()) : null,
+                        'processor_id' => Auth::id(),
+                        'status' => 'Pending',
+                        'remarks' => null,
+                    ]
+                );
             }
 
             UserEarning::whereIn('user_id', $data['user_id'])
-            ->where('frequency', 'one_time')
-            ->where('status', 'active')
-            ->whereBetween('effective_start_date', [
-                Carbon::parse($data['start_date'])->startOfDay(),
-                Carbon::parse($data['end_date'])->endOfDay()
-            ])
-            ->update(['status' => 'completed']);
+                ->where('frequency', 'one_time')
+                ->where('status', 'active')
+                ->whereBetween('effective_start_date', [
+                    Carbon::parse($data['start_date'])->startOfDay(),
+                    Carbon::parse($data['end_date'])->endOfDay()
+                ])
+                ->update(['status' => 'completed']);
 
             return response()->json([
-            'attendances'       => $attendances,
-            'bulk_attendance_data' => $bulkAttendanceData,
-            'deductions'        => $deductions,
-            'holiday'           => $holidayPay,
-            'night_diff_pay'    => $nightDiff,
-            'overtimes'         => $grossPay,
-            'message'           => 'Payroll processed and saved.',
+                'attendances'       => $attendances,
+                'bulk_attendance_data' => $bulkAttendanceData,
+                'deductions'        => $deductions,
+                'holiday'           => $holidayPay,
+                'night_diff_pay'    => $nightDiff,
+                'overtimes'         => $grossPay,
+                'message'           => 'Payroll processed and saved.',
             ]);
         } else {
             return response()->json([
-            'message' => 'Payroll type not supported yet.',
+                'message' => 'Payroll type not supported yet.',
             ], 422);
         }
     }
 
 
     // =================== BULK PAYROLL OPERATIONS =================== //
+
+    /**
+     * Get OT multipliers for a user based on branch's OT template
+     * Falls back to default ot_tables if template is null or rate type not found
+     *
+     * @param int $userId
+     * @param string $column - 'overtime', 'night_differential', 'night_differential_overtime', 'normal'
+     * @return array - Multipliers keyed by type (ordinary, rest_day, regular_holiday, special_holiday)
+     */
+    protected function getOtMultipliers(int $userId, string $column = 'overtime')
+    {
+        // Get default multipliers from ot_tables as fallback
+        $defaultMultipliers = DB::table('ot_tables')->pluck($column, 'type')->toArray();
+
+        try {
+            // Get user's branch OT template
+            $user = User::with('employmentDetail.branch.otTemplate.otTemplateRates')
+                ->find($userId);
+
+            if (!$user || !$user->employmentDetail || !$user->employmentDetail->branch) {
+                return $defaultMultipliers;
+            }
+
+            $branch = $user->employmentDetail->branch;
+
+            // If branch has no OT template, use default
+            if (!$branch->ot_template_id || !$branch->otTemplate) {
+                return $defaultMultipliers;
+            }
+
+            // Get rates from template
+            $templateRates = $branch->otTemplate->otTemplateRates->keyBy('type');
+
+            // Build multipliers array with error handling
+            $multipliers = [];
+            $types = ['ordinary', 'rest_day', 'regular_holiday', 'special_holiday',
+                      'special_holiday_rest_day', 'regular_holiday_rest_day',
+                      'double_holiday', 'double_holiday_rest_day'];
+
+            foreach ($types as $type) {
+                if (isset($templateRates[$type])) {
+                    // Use template rate if available
+                    $multipliers[$type] = $templateRates[$type]->$column ?? $defaultMultipliers[$type] ?? 0;
+                } else {
+                    // Fallback to default ot_tables if type not found in template
+                    $multipliers[$type] = $defaultMultipliers[$type] ?? 0;
+                }
+            }
+
+            return $multipliers;
+
+        } catch (\Exception $e) {
+            // If any error occurs, fallback to default ot_tables
+            Log::warning("Failed to get OT multipliers from template for user {$userId}: " . $e->getMessage());
+            return $defaultMultipliers;
+        }
+    }
 
     // Get Salary Data
     protected function getSalaryData(array $userIds)
@@ -409,11 +465,11 @@ class BulkPayrollController extends Controller
     // Night Diff Computation
     protected function calculateBulkNightDifferential($bulkAttendanceData, array $data, $salaryData)
     {
-        // Get multipliers from ot_tables
-        $multipliers = DB::table('ot_tables')->pluck('night_differential', 'type');
-
         $result = [];
         foreach ($data['user_id'] as $id) {
+            // Get multipliers from branch OT template or fallback to ot_tables
+            $multipliers = $this->getOtMultipliers($id, 'night_differential');
+
             // Salary data handling
             $sal = is_array($salaryData) && isset($salaryData[$id])
                 ? $salaryData[$id]
@@ -486,10 +542,11 @@ class BulkPayrollController extends Controller
     // Overtime Night Differential Computation
     protected function calculateBulkOvertimeNightDiffPay($bulkAttendanceData, array $data, $salaryData)
     {
-        $multipliers = DB::table('ot_tables')->pluck('night_differential_overtime', 'type');
-
         $result = [];
         foreach ($data['user_id'] as $id) {
+            // Get multipliers from branch OT template or fallback to ot_tables
+            $multipliers = $this->getOtMultipliers($id, 'night_differential_overtime');
+
             // Salary data handling
             $sal = isset($salaryData[$id]) ? $salaryData[$id] : [
                 'basic_salary' => 0,
@@ -556,11 +613,11 @@ class BulkPayrollController extends Controller
     // Overtime Pay
     public function calculateBulkOvertimePay($bulkAttendanceData, array $data, $salaryData)
     {
-        // Get multipliers from ot_tables
-        $otMultipliers = DB::table('ot_tables')->pluck('overtime', 'type');
-
         $result = [];
         foreach ($data['user_id'] as $id) {
+            // Get multipliers from branch OT template or fallback to ot_tables
+            $otMultipliers = $this->getOtMultipliers($id, 'overtime');
+
             // Salary data handling
             $sal = is_array($salaryData) && isset($salaryData[$id])
                 ? $salaryData[$id]

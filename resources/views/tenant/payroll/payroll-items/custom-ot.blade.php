@@ -185,16 +185,16 @@
                                                 </label>
                                                 <select class="form-select rate-type" name="rates[0][type]" required>
                                                     <option value="">Select Type</option>
-                                                    <option value="Ordinary">Ordinary Day</option>
-                                                    <option value="Rest Day">Rest Day</option>
-                                                    <option value="Special Holiday">Special Holiday</option>
-                                                    <option value="Regular Holiday">Regular Holiday</option>
-                                                    <option value="Special Holiday Rest Day">Special Holiday + Rest Day
+                                                    <option value="ordinary">Ordinary Day</option>
+                                                    <option value="rest_day">Rest Day</option>
+                                                    <option value="special_holiday">Special Holiday</option>
+                                                    <option value="regular_holiday">Regular Holiday</option>
+                                                    <option value="special_holiday_rest_day">Special Holiday + Rest Day
                                                     </option>
-                                                    <option value="Regular Holiday Rest Day">Regular Holiday + Rest Day
+                                                    <option value="regular_holiday_rest_day">Regular Holiday + Rest Day
                                                     </option>
-                                                    <option value="Double Holiday">Double Holiday</option>
-                                                    <option value="Double Holiday Rest Day">Double Holiday + Rest Day
+                                                    <option value="double_holiday">Double Holiday</option>
+                                                    <option value="double_holiday_rest_day">Double Holiday + Rest Day
                                                     </option>
                                                 </select>
                                             </div>
@@ -486,14 +486,14 @@
                             <label class="form-label fw-semibold">Day Type <span class="text-danger">*</span></label>
                             <select class="form-select rate-type" name="rates[${rateIndex}][type]" required>
                                 <option value="">Select Type</option>
-                                <option value="Ordinary">Ordinary Day</option>
-                                <option value="Rest Day">Rest Day</option>
-                                <option value="Special Holiday">Special Holiday</option>
-                                <option value="Regular Holiday">Regular Holiday</option>
-                                <option value="Special Holiday Rest Day">Special Holiday + Rest Day</option>
-                                <option value="Regular Holiday Rest Day">Regular Holiday + Rest Day</option>
-                                <option value="Double Holiday">Double Holiday</option>
-                                <option value="Double Holiday Rest Day">Double Holiday + Rest Day</option>
+                                <option value="ordinary">Ordinary Day</option>
+                                <option value="rest_day">Rest Day</option>
+                                <option value="special_holiday">Special Holiday</option>
+                                <option value="regular_holiday">Regular Holiday</option>
+                                <option value="special_holiday_rest_day">Special Holiday + Rest Day</option>
+                                <option value="regular_holiday_rest_day">Regular Holiday + Rest Day</option>
+                                <option value="double_holiday">Double Holiday</option>
+                                <option value="double_holiday_rest_day">Double Holiday + Rest Day</option>
                             </select>
                         </div>
                         <div class="col-md-2">
