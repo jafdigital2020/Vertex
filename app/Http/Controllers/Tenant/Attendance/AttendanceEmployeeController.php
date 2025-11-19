@@ -414,6 +414,14 @@ class AttendanceEmployeeController extends Controller
                     'middle_name' => $authUser->personalInformation->middle_name ?? null,
                     'profile_photo_path' => $authUser->personalInformation->profile_picture ?? null,
                 ],
+                'summary' => [
+                    'totalWeeklyHours' => $totalWeeklyHoursFormatted,
+                    'totalMonthlyHours' => $totalMonthlyHoursFormatted,
+                    'totalMonthlyNightHours' => $totalMonthlyNightHoursFormatted,
+                    'totalMonthlyLateHours' => $totalMonthlyLateHoursFormatted,
+                    'totalMonthlyUndertimeHours' => $totalMonthlyUndertimeHoursFormatted,
+                ],
+
             ]);
         }
 

@@ -134,6 +134,11 @@ class EmployeeOvertimeController extends Controller
                     'permission' => $permission
                 ],
                 'allData' => $allOvertimedata,
+                'summary' => [
+                    'pendingRequests' => $pendingRequests,
+                    'approvedRequests' => $approvedRequests,
+                    'rejectedRequests' => $rejectedRequests,
+                ],
             ]);
         }
 
