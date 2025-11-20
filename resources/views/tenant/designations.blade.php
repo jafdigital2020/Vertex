@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Employee
@@ -23,32 +23,32 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                        {{-- <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div> --}}
                     @endif
                     @if (in_array('Create', $permission))
-                    <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_designation"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                            Designation</a>
-                    </div>
+                        <div class="mb-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_designation"
+                                class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                                Designation</a>
+                        </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -59,23 +59,23 @@
                 </div>
             </div>
             <!-- /Breadcrumb -->
- 
+
             <!-- Search Filter  -->
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Designation List</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Designation List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:200px;"
                                 oninput="designation_filter(); autoFilterBranch('branch_filter','department_filter',true)">
-                                <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select" style="width:200px;"
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                style="width:200px;"
                                 oninput="designation_filter(); autoFilterDepartment('department_filter','branch_filter', true)">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
@@ -84,7 +84,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" 
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
                                 oninput="designation_filter()">
                                 <option value="" selected>All Statuses</option>
                                 <option value="active">Active</option>
@@ -115,7 +115,7 @@
                                     <th class="text-center">No of Employees</th>
                                     <th class="text-center">Status</th>
                                     @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                    <th class="text-center">Action</th>
+                                        <th class="text-center">Action</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -144,26 +144,26 @@
                                                 <i class="ti ti-point-filled me-1"></i>Active
                                             </span>
                                         </td>
-                                         @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                        <td class="text-center">
-                                            <div class="action-icon d-inline-flex">
-                                                 @if (in_array('Update', $permission))
-                                                    <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
-                                                        data-bs-target="#edit_designation" data-id="{{ $designation->id }}"
-                                                        data-designation_name="{{ $designation->designation_name }}"
-                                                        data-department_id="{{ $designation->department_id }}"
-                                                        data-job_description="{{ $designation->job_description }}"
-                                                        data-branch_id="{{ $designation->department->branch_id }}"><i
-                                                            class="ti ti-edit"></i></a>
-                                                 @endif
-                                                  @if (in_array('Delete', $permission))
-                                                    <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
-                                                        data-bs-target="#delete_modal" data-id="{{ $designation->id }}"
-                                                        data-designation_name="{{ $designation->designation_name }}"
-                                                        title="Delete"><i class="ti ti-trash"></i></a>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                            <td class="text-center">
+                                                <div class="action-icon d-inline-flex">
+                                                    @if (in_array('Update', $permission))
+                                                        <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
+                                                            data-bs-target="#edit_designation" data-id="{{ $designation->id }}"
+                                                            data-designation_name="{{ $designation->designation_name }}"
+                                                            data-department_id="{{ $designation->department_id }}"
+                                                            data-job_description="{{ $designation->job_description }}"
+                                                            data-branch_id="{{ $designation->department->branch_id }}"><i
+                                                                class="ti ti-edit"></i></a>
                                                     @endif
-                                            </div>
-                                        </td>
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                                            data-bs-target="#delete_modal" data-id="{{ $designation->id }}"
+                                                            data-designation_name="{{ $designation->designation_name }}"
+                                                            title="Delete"><i class="ti ti-trash"></i></a>
+                                                    @endif
+                                                </div>
+                                            </td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -199,12 +199,12 @@
     <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
     <script src="{{ asset('build/js/department/filters.js') }}"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
             // Designation Store
-            document.getElementById("addDesignationForm")?.addEventListener("submit", async function(event) {
+            document.getElementById("addDesignationForm")?.addEventListener("submit", async function (event) {
                 event.preventDefault();
                 let designationName = document.getElementById("designationName").value.trim();
                 let departmentId = document.getElementById("departmentId").value.trim();
@@ -234,7 +234,7 @@
                     let data = await response.json();
                     response.ok ? toastr.success("Designation created successfully!") && setTimeout(
                         () => location.reload(), 1500) : toastr.error(data.message ||
-                        "Failed to create designation.");
+                            "Failed to create designation.");
                 } catch (error) {
                     console.error(error);
                     toastr.error("Something went wrong.");
@@ -247,26 +247,26 @@
         let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         let authToken = localStorage.getItem("token");
 
-        $(document).on('click', '.btn-delete', function() {
+        $(document).on('click', '.btn-delete', function () {
             deleteId = $(this).data("id");
             $('#designationPlaceHolder').text($(this).data("designation_name"));
             console.log("Delete clicked", deleteId);
         });
 
-        $('#confirmDeleteBtn').on('click', function() {
+        $('#confirmDeleteBtn').on('click', function () {
             if (!deleteId) return;
             fetch(`/api/designations/delete/${deleteId}`, {
-                    method: "DELETE",
-                    headers: {
-                        "X-CSRF-TOKEN": csrfToken,
-                        "Accept": "application/json",
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${authToken}`
-                    }
-                })
+                method: "DELETE",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken,
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${authToken}`
+                }
+            })
                 .then(response => response.ok ? toastr.success("Designation deleted successfully!") && setTimeout(
                     () => location.reload(), 800) : response.json().then(data => toastr.error(data.message ||
-                    "Error deleting designation.")))
+                        "Error deleting designation.")))
                 .catch(error => {
                     console.error(error);
                     toastr.error("Server error.");
@@ -286,22 +286,22 @@
                 url: `/designations/departments/${branchId}`,
                 type: 'GET',
                 dataType: 'json',
-                success: function(data) {
+                success: function (data) {
                     departmentDropdown.empty().append('<option value="">Select Department</option>');
-                    $.each(data, function(key, value) {
+                    $.each(data, function (key, value) {
                         departmentDropdown.append(
                             `<option value="${value.id}">${value.department_name}</option>`);
                     });
 
                     // Debug
                     let allOptions = [];
-                    departmentDropdown.find('option').each(function() {
+                    departmentDropdown.find('option').each(function () {
                         allOptions.push($(this).val());
                     });
 
                     let matched = false;
                     if (selectedDepartmentId) {
-                        departmentDropdown.find('option').each(function() {
+                        departmentDropdown.find('option').each(function () {
                             if (
                                 String($(this).val()) === String(selectedDepartmentId) ||
                                 Number($(this).val()) === Number(selectedDepartmentId)
@@ -322,15 +322,15 @@
 
         // All event bindings BELOW the function definition!
 
-        $('#branchId').on('change', function() {
-            loadDepartments( $(this).val(), $('#departmentId'));
+        $('#branchId').on('change', function () {
+            loadDepartments($(this).val(), $('#departmentId'));
         });
 
-        $('#editBranchId').on('change', function() {
+        $('#editBranchId').on('change', function () {
             loadDepartments($(this).val(), $('#editDepartmentId'));
         });
 
-        $(document).on('click', '[data-bs-target="#edit_designation"]', function() {
+        $(document).on('click', '[data-bs-target="#edit_designation"]', function () {
             let $btn = $(this),
                 editId = $btn.data("id"),
                 branchId = $btn.data("branch_id"),
@@ -345,7 +345,7 @@
             loadDepartments(branchId, $('#editDepartmentId'), departmentId);
         });
 
-        $('#editDesignationForm').on('submit', async function(event) {
+        $('#editDesignationForm').on('submit', async function (event) {
             event.preventDefault();
 
             let designationName = $('#editDesignationName').val().trim();
@@ -387,155 +387,155 @@
             }
         });
 
-    
-    let designationTable = initFilteredDataTable('.datatable-filtered');
- 
-     function designation_filter() {
-        let branch_filter = $('#branch_filter').val();
-        let department_filter = $('#department_filter').val();
-        let status_filter = $('#status_filter').val();
-        let sortby_filter = $('#sortby_filter').val();
 
-        $.ajax({
-            url: "{{ route('designation-filter') }}",
-            method: 'GET',
-            data: {
-                branch: branch_filter,
-                department: department_filter,
-                status: status_filter,
-                sort_by: sortby_filter
-            },
-            success: function (response) {
-                if (response.status === 'success') {
-                    const rows = [];
+        let designationTable = initFilteredDataTable('.datatable-filtered');
 
-                    $.each(response.data, function (i, designation) {
-                        const designation_name = designation.designation_name;
-                        const designation_branch = designation.department.branch.name;
-                        const designation_department = designation.department.department_name;
-                        const designation_job_desc = designation.job_description ?? 'N/A';
-                        const active_employees_count = designation.active_employees_count;
+        function designation_filter() {
+            let branch_filter = $('#branch_filter').val();
+            let department_filter = $('#department_filter').val();
+            let status_filter = $('#status_filter').val();
+            let sortby_filter = $('#sortby_filter').val();
 
-                        const statusBadge = (designation.status === "active")
-                            ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
-                            : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
+            $.ajax({
+                url: "{{ route('designation-filter') }}",
+                method: 'GET',
+                data: {
+                    branch: branch_filter,
+                    department: department_filter,
+                    status: status_filter,
+                    sort_by: sortby_filter
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        const rows = [];
 
-                        let actionIcons = '';
+                        $.each(response.data, function (i, designation) {
+                            const designation_name = designation.designation_name;
+                            const designation_branch = designation.department.branch.name;
+                            const designation_department = designation.department.department_name;
+                            const designation_job_desc = designation.job_description ?? 'N/A';
+                            const active_employees_count = designation.active_employees_count;
 
-                        if (response.permission.includes('Update')) {
-                            actionIcons += `
-                                <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
-                                    data-bs-target="#edit_designation"
-                                    data-id="${designation.id}"
-                                    data-designation_name="${designation.designation_name}"
-                                    data-department_id="${designation.department_id}"
-                                    data-job_description="${designation.job_description ?? ''}"
-                                    data-branch_id="${designation.department.branch_id}">
-                                    <i class="ti ti-edit"></i>
-                                </a>`;
-                        }
+                            const statusBadge = (designation.status === "active")
+                                ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
+                                : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
 
-                        if (response.permission.includes('Delete')) {
-                            actionIcons += `
-                                <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
-                                    data-bs-target="#delete_modal"
-                                    data-id="${designation.id}"
-                                    data-designation_name="${designation.designation_name}"
-                                    title="Delete">
-                                    <i class="ti ti-trash"></i>
-                                </a>`;
-                        }
+                            let actionIcons = '';
 
-                        if (response.permission.includes('Read')) {
-                            const row = [
-                                designation_name,
-                                designation_branch,
-                                designation_department,
-                                `<div class="text-center">${designation_job_desc}</div>`,
-                                `<div class="text-center">${active_employees_count}</div>`,
-                                `<div class="text-center">${statusBadge}</div>`,
-                                (response.permission.includes('Update') || response.permission.includes('Delete'))
-                                    ? `<div class="text-center"><div class="action-icon d-inline-flex">${actionIcons}</div></div>`
-                                    : ''
-                            ];
+                            if (response.permission.includes('Update')) {
+                                actionIcons += `
+                                            <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
+                                                data-bs-target="#edit_designation"
+                                                data-id="${designation.id}"
+                                                data-designation_name="${designation.designation_name}"
+                                                data-department_id="${designation.department_id}"
+                                                data-job_description="${designation.job_description ?? ''}"
+                                                data-branch_id="${designation.department.branch_id}">
+                                                <i class="ti ti-edit"></i>
+                                            </a>`;
+                            }
 
-                            rows.push(row);
-                        }
-                    });
+                            if (response.permission.includes('Delete')) {
+                                actionIcons += `
+                                            <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                                data-bs-target="#delete_modal"
+                                                data-id="${designation.id}"
+                                                data-designation_name="${designation.designation_name}"
+                                                title="Delete">
+                                                <i class="ti ti-trash"></i>
+                                            </a>`;
+                            }
 
-                    designationTable.clear().rows.add(rows).draw(false);
-                } else {
-                    toastr.warning('Failed to load designation.');
-                }
-            },
-            error: function () {
-                toastr.error('An error occurred while filtering designation.');
-            }
-        });
-    }
+                            if (response.permission.includes('Read')) {
+                                const row = [
+                                    designation_name,
+                                    designation_branch,
+                                    designation_department,
+                                    `<div class="text-center">${designation_job_desc}</div>`,
+                                    `<div class="text-center">${active_employees_count}</div>`,
+                                    `<div class="text-center">${statusBadge}</div>`,
+                                    (response.permission.includes('Update') || response.permission.includes('Delete'))
+                                        ? `<div class="text-center"><div class="action-icon d-inline-flex">${actionIcons}</div></div>`
+                                        : ''
+                                ];
 
+                                rows.push(row);
+                            }
+                        });
 
-    function autoFilterBranch(branchSelect, departmentSelect,isFilter = false) {
-        var branch = $('#' + branchSelect).val();
-        var departmentSelect = $('#' + departmentSelect);
-        var departmentPlaceholder = isFilter ? 'All Departments' : 'Select Department';
-        var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
-        $.ajax({
-            url: "{{route('designationBranch-filter')}}",
-            method: 'GET',
-            data: {
-                branch: branch,
-            },
-            success: function (response) {
-                if (response.status === 'success') {
-                    departmentSelect.empty().append(`<option value="" selected>${departmentPlaceholder}</option>`);
-
-                    $.each(response.departments, function (i, department) {
-                        departmentSelect.append(
-                            $('<option>', {
-                                value: department.id,
-                                text: department.department_name
-                            })
-                        );
-                    });
-                     designation_filter();
-                } else {
-                    toastr.warning('Failed to get departments.');
-                }
-            },
-            error: function () {
-                toastr.error('An error occurred while getting departments');
-            }
-        });
-    }
-
-
-    function autoFilterDepartment(departmentSelect, branchSelect, isFilter = false) {
-        let department = $('#' + departmentSelect).val();
-        let branch_select = $('#' + branchSelect);
-
-        $.ajax({
-            url:"{{route('designationDepartment-filter')}}",
-            method: 'GET',
-            data: {
-                department: department,
-                branch: branch_select.val(),
-            },
-            success: function (response) {
-                if (response.status === 'success') {
-                    if (response.branch_id !== '') {
-                         branch_select.val(response.branch_id).trigger('change');
+                        designationTable.clear().rows.add(rows).draw(false);
+                    } else {
+                        toastr.warning('Failed to load designation.');
                     }
-                     designation_filter();
-                } else {
-                    toastr.warning('Failed to get branch and designation list.');
+                },
+                error: function () {
+                    toastr.error('An error occurred while filtering designation.');
                 }
-            },
-            error: function () {
-                toastr.error('An error occurred while getting branch and designation list.');
-            }
-        });
-    }
+            });
+        }
+
+
+        function autoFilterBranch(branchSelect, departmentSelect, isFilter = false) {
+            var branch = $('#' + branchSelect).val();
+            var departmentSelect = $('#' + departmentSelect);
+            var departmentPlaceholder = isFilter ? 'All Departments' : 'Select Department';
+            var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
+            $.ajax({
+                url: "{{route('designationBranch-filter')}}",
+                method: 'GET',
+                data: {
+                    branch: branch,
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        departmentSelect.empty().append(`<option value="" selected>${departmentPlaceholder}</option>`);
+
+                        $.each(response.departments, function (i, department) {
+                            departmentSelect.append(
+                                $('<option>', {
+                                    value: department.id,
+                                    text: department.department_name
+                                })
+                            );
+                        });
+                        designation_filter();
+                    } else {
+                        toastr.warning('Failed to get departments.');
+                    }
+                },
+                error: function () {
+                    toastr.error('An error occurred while getting departments');
+                }
+            });
+        }
+
+
+        function autoFilterDepartment(departmentSelect, branchSelect, isFilter = false) {
+            let department = $('#' + departmentSelect).val();
+            let branch_select = $('#' + branchSelect);
+
+            $.ajax({
+                url: "{{route('designationDepartment-filter')}}",
+                method: 'GET',
+                data: {
+                    department: department,
+                    branch: branch_select.val(),
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        if (response.branch_id !== '') {
+                            branch_select.val(response.branch_id).trigger('change');
+                        }
+                        designation_filter();
+                    } else {
+                        toastr.warning('Failed to get branch and designation list.');
+                    }
+                },
+                error: function () {
+                    toastr.error('An error occurred while getting branch and designation list.');
+                }
+            });
+        }
 
     </script>
 
