@@ -27,6 +27,7 @@ use App\Models\HolidayException;
 use App\Models\LeaveEntitlement;
 use App\Models\OvertimeApproval;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Log;
 use App\Models\EmploymentGovernmentId;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\OfficialBusinessApproval;
@@ -381,7 +382,36 @@ class User extends Authenticatable
         return $this->hasMany(SuspensionAction::class, 'action_by');
     }
 
-    protected $appends = ['role_data'];  
+    protected $appends = ['role_data'];
+
+    // public function getRoleDataAttribute()
+    // {
+    //     $userPermission = $this->userPermission;
+    //     if (!$userPermission) {
+    //         return [];
+    //     }
+
+    //     $crudMap        = CRUD::pluck('control_name', 'id')->toArray();
+    //     $rawPermissions = explode(',', $userPermission->user_permission_ids);
+
+    //     $permissions = [];
+    //     foreach ($rawPermissions as $entry) {
+    //         [$moduleId, $crudId] = explode('-', $entry);
+    //         $permissions[$moduleId][] = $crudMap[(int) $crudId] ?? "Unknown";
+    //     }
+
+    //     foreach ($permissions as $moduleId => $actions) {
+    //         $permissions[$moduleId] = array_unique($actions);
+    //     }
+
+    //     return [
+    //         'role_id'            => $userPermission->role_id,
+    //         'menu_ids'           => explode(',', $userPermission->menu_ids),
+    //         'module_ids'         => explode(',', $userPermission->module_ids),
+    //         'user_permission_ids'=> $permissions,
+    //         'status'             => $userPermission->status
+    //     ];
+    // }
 
     public function getRoleDataAttribute()
     {
@@ -395,7 +425,32 @@ class User extends Authenticatable
 
         $permissions = [];
         foreach ($rawPermissions as $entry) {
-            [$moduleId, $crudId] = explode('-', $entry);
+            // Skip empty entries
+            if (empty(trim($entry))) {
+                continue;
+            }
+
+            // Check if entry contains a dash separator
+            if (!str_contains($entry, '-')) {
+                Log::warning("Malformed permission entry: {$entry}");
+                continue;
+            }
+
+            // Safely explode and check if we have exactly 2 parts
+            $parts = explode('-', $entry);
+            if (count($parts) !== 2) {
+                Log::warning("Invalid permission format: {$entry}");
+                continue;
+            }
+
+            [$moduleId, $crudId] = $parts;
+
+            // Ensure both parts are numeric
+            if (!is_numeric($moduleId) || !is_numeric($crudId)) {
+                Log::warning("Non-numeric permission IDs: {$entry}");
+                continue;
+            }
+
             $permissions[$moduleId][] = $crudMap[(int) $crudId] ?? "Unknown";
         }
 
@@ -405,11 +460,10 @@ class User extends Authenticatable
 
         return [
             'role_id'            => $userPermission->role_id,
-            'menu_ids'           => explode(',', $userPermission->menu_ids),
-            'module_ids'         => explode(',', $userPermission->module_ids),
-            'user_permission_ids'=> $permissions,
+            'menu_ids'           => explode(',', $userPermission->menu_ids ?? ''),
+            'module_ids'         => explode(',', $userPermission->module_ids ?? ''),
+            'user_permission_ids' => $permissions,
             'status'             => $userPermission->status
         ];
     }
-
 }
