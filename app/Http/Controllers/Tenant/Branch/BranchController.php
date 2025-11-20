@@ -14,16 +14,18 @@ use App\Models\UserPermissionAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
+use App\Models\OtTemplate;
+use App\Models\OtTemplateRate;
 
 class BranchController extends Controller
 {
 
-     public function authUser()
+    public function authUser()
     {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function branchIndex(Request $request)
@@ -45,42 +47,47 @@ class BranchController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year');
 
+        // Get the OTP rates along with their templates
+        $otTemplatesRates = OtTemplate::with('otTemplateRates')->get();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'This is the branch index endpoint.',
                 'status' => 'success',
                 'branches' => $branches,
                 'sssYears' => $sssYears,
+                'otTemplatesRates' => $otTemplatesRates,
             ]);
         }
 
         return view('tenant.branch.branch-grid', [
             'branches' => $branches,
-            'permission'=> $permission,
+            'permission' => $permission,
             'sssYears' => $sssYears,
             'branchesWithoutGroup' => $branchesWithoutGroup,
-            'branchGroups' => $branchGroups
+            'branchGroups' => $branchGroups,
+            'otTemplatesRates' => $otTemplatesRates,
         ]);
     }
+
     public function filter(Request $request)
-    {  
+    {
         try {
 
             $authUser = $this->authUser();
             $permission = PermissionHelper::get(8);
-            $group = urldecode($request->input('group'));  
+            $group = urldecode($request->input('group'));
 
             $dataAccessController = new DataAccessController();
             $accessData = $dataAccessController->getAccessData($authUser);
- 
+
             $branches = $group
                 ? $accessData['branches']->where('group_name', $group)->get()
-                : $accessData['branches']->get() ;
- 
-            $html = view('tenant.branch.branch-grid-filter', compact('branches','permission'))->render();
+                : $accessData['branches']->get();
+
+            $html = view('tenant.branch.branch-grid-filter', compact('branches', 'permission'))->render();
 
             return response()->json(['html' => $html]);
-
         } catch (\Exception $e) {
             Log::error('Branch filter error: ' . $e->getMessage());
             return response()->json(['error' => 'Server error'], 500);
@@ -88,16 +95,16 @@ class BranchController extends Controller
     }
 
     public function saveGroupBranch(Request $request)
-    {  
+    {
         $authUser = $this->authUser();
         $authUserTenantId = $authUser->tenant_id;
         $permission = PermissionHelper::get(8);
 
         if (!in_array('Create', $permission)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'You do not have the permission to create.'
-                ] );
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ]);
         }
 
         $request->validate([
@@ -115,16 +122,17 @@ class BranchController extends Controller
             'message' => 'Branches successfully grouped!'
         ], 200);
     }
+
     public function getByGroup(Request $request)
-    {   
+    {
         $authUser = $this->authUser();
-        $group = $request->group; 
-        $assigned = Branch::where('tenant_id',$authUser->tenant_id)->where('group_name', $group)
-            ->get(['id', 'name']); 
-        $unassigned = Branch::where('tenant_id',$authUser->tenant_id)->where(function ($q) use ($group) {
-                $q->whereNull('group_name')
+        $group = $request->group;
+        $assigned = Branch::where('tenant_id', $authUser->tenant_id)->where('group_name', $group)
+            ->get(['id', 'name']);
+        $unassigned = Branch::where('tenant_id', $authUser->tenant_id)->where(function ($q) use ($group) {
+            $q->whereNull('group_name')
                 ->orWhere('group_name', '!=', $group);
-            })
+        })
             ->get(['id', 'name']);
 
         return response()->json([
@@ -135,10 +143,10 @@ class BranchController extends Controller
     public function updateGroup(Request $request)
     {
         Branch::where('group_name', $request->group)
-            ->update(['group_name' => null]);  
+            ->update(['group_name' => null]);
 
         Branch::whereIn('id', $request->branches)
-            ->update(['group_name' => $request->group]); 
+            ->update(['group_name' => $request->group]);
 
         return response()->json(['success' => true]);
     }
@@ -149,10 +157,10 @@ class BranchController extends Controller
         $permission = PermissionHelper::get(8);
 
         if (!in_array('Create', $permission)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'You do not have the permission to create.'
-                ] );
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ]);
         }
 
         $validator = Validator::make($request->all(), [
@@ -182,6 +190,7 @@ class BranchController extends Controller
             'branch_tin'                  => 'nullable|string|max:30',
             'wage_order'                  => 'nullable|string|max:255',
             'sss_contribution_template'  => 'nullable|string|max:4',
+            'ot_template_id'              => 'nullable|exists:ot_templates,id',
         ]);
 
         if ($validator->fails()) {
@@ -218,15 +227,15 @@ class BranchController extends Controller
             $data['tenant_id'] = $authUserTenantId;
             $branch = Branch::create($data);
             $branchId = $branch->id;
-            
-            $user_data_access = $authUser->userPermission->data_access_id ?? null; 
+
+            $user_data_access = $authUser->userPermission->data_access_id ?? null;
             if ($user_data_access == 1) {
-                $user_permission_data_access = UserPermissionAccess::where( 'user_permission_id',$authUser->userPermission->id)->first(); 
-                $accessIds = explode(',', $user_permission_data_access->access_ids ?? ''); 
-                $accessIds = array_map('intval', $accessIds); 
+                $user_permission_data_access = UserPermissionAccess::where('user_permission_id', $authUser->userPermission->id)->first();
+                $accessIds = explode(',', $user_permission_data_access->access_ids ?? '');
+                $accessIds = array_map('intval', $accessIds);
                 if (!in_array($branchId, $accessIds)) {
                     $accessIds[] = $branchId;
-                } 
+                }
                 $user_permission_data_access->access_ids = implode(',', $accessIds);
                 $user_permission_data_access->save();
             }
@@ -238,7 +247,6 @@ class BranchController extends Controller
                 'message' => 'Branch successfully created.',
                 'data'    => $branch,
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -252,7 +260,7 @@ class BranchController extends Controller
                 'message' => 'An error occurred while creating the branch.',
             ], 500);
         }
-     }
+    }
 
     public function branchEdit(Request $request, $id)
     {
@@ -262,10 +270,10 @@ class BranchController extends Controller
         $permission = PermissionHelper::get(8);
 
         if (!in_array('Update', $permission)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'You do not have the permission to update.'
-                ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ]);
         }
 
         $validator = Validator::make($request->all(), [
@@ -297,6 +305,7 @@ class BranchController extends Controller
             'wage_order'                  => 'nullable|string|max:255',
             'branch_tin'                  => 'nullable|string|max:30',
             'sss_contribution_template'  => 'nullable|string|max:4',
+            'ot_template_id'              => 'nullable|exists:ot_templates,id',
         ]);
 
         if ($validator->fails()) {
@@ -340,7 +349,6 @@ class BranchController extends Controller
                 'message' => 'Branch successfully updated.',
                 'data' => $branch
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -363,10 +371,10 @@ class BranchController extends Controller
         $permission = PermissionHelper::get(8);
 
         if (!in_array('Delete', $permission)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'You do not have the permission to delete.'
-                ] );
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ]);
         }
         if ($branch->employmentDetail()->exists()) {
             return response()->json([
@@ -402,7 +410,6 @@ class BranchController extends Controller
                 'status' => 'success',
                 'message' => 'Branch successfully deleted.'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
 

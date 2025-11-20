@@ -58,6 +58,7 @@
                     <a href="{{ route('philhealth') }}" class="btn btn-white border me-2">PhilHealth</a>
                     <a href="{{ route('withholding-taxTable') }}" class="btn btn-white border me-2">Withholding Tax</a>
                     <a href="{{ route('ot-table') }}" class="btn btn-white border" me-2>OT Table</a>
+                    <a href="{{ route('custom-ot-rate') }}" class="btn btn-white border me-2">Custom OT</a>
                     <a href="{{ route('de-minimis-benefits') }}" class="btn btn-white border me-2">De Minimis</a>
                     <a href="{{ route('earnings') }}" class="btn btn-white border me-2">Earnings</a>
                     <a href="{{ route('deductions') }}" class="btn btn-white active border me-2">Deductions</a>

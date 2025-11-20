@@ -21,7 +21,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
+                        {{-- <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -39,25 +39,24 @@
                                     </li>
                                 </ul>
                             </div>
-                        </div>
+                        </div> --}}
                     @endif
-                    @if(in_array('Update',$permission))
+                    @if (in_array('Update', $permission))
                         @if ($branchGroups->isNotEmpty())
                             <div class="mb-2 me-2">
                                 <a href="#" data-bs-toggle="modal" data-bs-target="#manage_group"
                                     class="btn btn-primary d-flex align-items-center">
                                     <i class="ti ti-arrows-shuffle me-2"></i>Manage Group
-                                </a> 
-                            </div>  
+                                </a>
+                            </div>
                         @endif
                     @endif
                     @if (in_array('Create', $permission))
-                       
-                       <div class="mb-2 me-2">
+                        <div class="mb-2 me-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#group_branch"
                                 class="btn btn-primary d-flex align-items-center">
                                 <i class="ti ti-building me-2"></i>Group Branches
-                            </a> 
+                            </a>
                         </div>
                         <div class="mb-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#add_branch"
@@ -74,41 +73,41 @@
                 </div>
             </div>
             <!-- /Breadcrumb -->
-        <div class="card">
-            <div class="card-body p-3">
+            <div class="card">
+                <div class="card-body p-3">
 
-                <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
 
-                    <h5 class="mb-0">Branches Grid</h5>
+                        <h5 class="mb-0">Branches Grid</h5>
 
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
 
-                        @if ($branchGroups->isNotEmpty())
-                            <div style="max-width:300px;">
-                                <select name="groupbranch_filter" id="groupbranch_filter" class="select2 form-select"
-                                    style="width:300px;" onchange="filterBranches()">
-                                    <option value="" selected>All Groups</option>
-                                    @foreach ($branchGroups as $group)
-                                        <option value="{{ $group }}">{{ $group }}</option>
-                                    @endforeach
-                                </select>
+                            @if ($branchGroups->isNotEmpty())
+                                <div style="max-width:300px;">
+                                    <select name="groupbranch_filter" id="groupbranch_filter" class="select2 form-select"
+                                        style="width:300px;" onchange="filterBranches()">
+                                        <option value="" selected>All Groups</option>
+                                        @foreach ($branchGroups as $group)
+                                            <option value="{{ $group }}">{{ $group }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            <div class="input-group input-group-sm" style="width:400px;">
+                                <span class="input-group-text" id="search-addon">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" id="branchSearch" class="form-control"
+                                    placeholder="Search branches..." aria-label="Search" aria-describedby="search-addon">
                             </div>
-                        @endif
 
-                        <div class="input-group input-group-sm" style="width:400px;">
-                            <span class="input-group-text" id="search-addon">
-                                <i class="bi bi-search"></i>
-                            </span>
-                            <input type="text" id="branchSearch" class="form-control" placeholder="Search branches..."
-                                aria-label="Search" aria-describedby="search-addon">
                         </div>
 
                     </div>
 
                 </div>
-
             </div>
-        </div>
 
             {{-- Branch Card --}}
             <div class="row" id="branch-container">
@@ -124,7 +123,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="form-check form-check-md">
-                                        <input type="checkbox" class="form-check-input" name="groupID{{$branch->id}}">
+                                        <input type="checkbox" class="form-check-input" name="groupID{{ $branch->id }}">
                                     </div>
                                     <div>
                                         <a href="#"
@@ -166,7 +165,8 @@
                                                         data-wage-order="{{ $branch->wage_order }}"
                                                         data-branch-tin="{{ $branch->branch_tin }}"
                                                         data-sss-template="{{ $branch->sss_contribution_template }}"
-                                                        data-group-name="{{$branch->group_name }}"><i
+                                                        data-ot-template-id="{{ $branch->ot_template_id }}"
+                                                        data-group-name="{{ $branch->group_name }}"><i
                                                             class="ti ti-edit me-1"></i>Edit</a>
                                                 </li>
                                                 {{-- @endif  --}}
@@ -201,11 +201,11 @@
                                         <i class="ti ti-map-pin text-gray-5 me-2"></i>
                                         {{ $branch->location }}
                                     </p>
-                                    @if($branch->group_name !== null)
-                                     <p class="text-dark d-inline-flex align-items-center">
-                                        <i class="ti ti-building text-gray-5 me-2"></i>
-                                        {{ $branch->group_name }}
-                                    </p> 
+                                    @if ($branch->group_name !== null)
+                                        <p class="text-dark d-inline-flex align-items-center">
+                                            <i class="ti ti-building text-gray-5 me-2"></i>
+                                            {{ $branch->group_name }}
+                                        </p>
                                     @endif
                                 </div>
                             </div>
@@ -220,22 +220,23 @@
                     <form id="groupBranchForm" method="POST">
                         <div class="modal-header">
                             <h5 class="modal-title" id="groupBranchLabel">Group Branches</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div> 
-                        <div class="modal-body"> 
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
                             <div class="mb-3">
                                 <label for="group_name" class="form-label">Group Name</label>
                                 <input type="text" class="form-control" id="group_name" name="group_name" required>
-                            </div> 
+                            </div>
                             <div class="mb-3">
                                 <label for="branches" class="form-label">Select Branches</label>
                                 <select id="branches" name="branches[]" class="select2" multiple required>
                                     @foreach ($branchesWithoutGroup as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
-                                </select> 
+                                </select>
                             </div>
-                        </div> 
+                        </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save Group</button>
@@ -252,7 +253,8 @@
 
     @component('components.modal-popup', [
         'sssYears' => $sssYears,
-        'branchGroups' => $branchGroups
+        'branchGroups' => $branchGroups,
+        'otTemplatesRates' => $otTemplatesRates,
     ])
     @endcomponent
 @endsection
@@ -468,6 +470,7 @@
                 $('#editBranchWageOrder').val($(this).data('wage-order'));
                 $('#editBranchTin').val($(this).data('branch-tin'));
                 $('#editBranchSssContributionTemplate').val($(this).data('sss-template'));
+                $('#editBranchOtTemplate').val($(this).data('ot-template-id')).trigger('change');
 
                 // Set logo preview
                 const preview = $('#editBranchLogoPreview');
@@ -616,131 +619,134 @@
         });
     </script>
     <script>
+        $('#groupBranchForm').on('submit', function(e) {
+            e.preventDefault();
 
-    $('#groupBranchForm').on('submit', function(e) {
-        e.preventDefault();
-
-        $.ajax({
-            url: "{{ route('api.saveGroupBranch') }}",
-            type: "POST",
-            data: {
-                group_name: $('#group_name').val(),
-                branches: $('#branches').val()
-            },
-            headers: {
+            $.ajax({
+                url: "{{ route('api.saveGroupBranch') }}",
+                type: "POST",
+                data: {
+                    group_name: $('#group_name').val(),
+                    branches: $('#branches').val()
+                },
+                headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
-            success: function (response) {
-                toastr.success(response.message);
+                success: function(response) {
+                    toastr.success(response.message);
 
-                setTimeout(() => {
-                    location.reload();
-                }, 1200);
-            },
-            error: function (xhr) {
-                console.log(xhr.responseText);  
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1200);
+                },
+                error: function(xhr) {
+                    console.log(xhr.responseText);
 
-                if (xhr.status === 422) {
-                    let errors = xhr.responseJSON.errors;
-                    Object.values(errors).forEach(err => {
-                        toastr.error(err[0]);
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        Object.values(errors).forEach(err => {
+                            toastr.error(err[0]);
+                        });
+                    } else {
+                        toastr.error('Something went wrong. Please try again.');
+                    }
+                }
+            });
+        });
+
+
+        function filterBranches() {
+            let group = $('#groupbranch_filter').val();
+
+            $.ajax({
+                url: "{{ route('branches.filter') }}",
+                method: "GET",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    group
+                },
+                beforeSend: function() {
+                    $('#branch-container').html('<div class="text-center py-3">Loading...</div>');
+                },
+                success: function(response) {
+                    if (response.html) {
+                        $('#branch-container').html(response.html);
+                    } else {
+                        $('#branch-container').html(
+                            '<div class="text-center py-3 text-muted">No branches found.</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    $('#branch-container').html(
+                        '<div class="alert alert-danger text-center">Something went wrong. Please try again.</div>'
+                    );
+                }
+            });
+
+        }
+
+        $('#groupSelect').on('change', function() {
+            const group = $(this).val();
+
+            $('#branchesSection').addClass('d-none');
+            $('#saveGroupChanges').prop('disabled', true);
+
+            $.ajax({
+                url: "{{ route('branches.getByGroup') }}",
+                type: "GET",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    group
+                },
+                success: function(response) {
+                    $('#branchesSelect').empty();
+
+                    response.assigned.forEach(branch => {
+                        $('#branchesSelect').append(
+                            `<option value="${branch.id}" selected>${branch.name}</option>`
+                        );
                     });
-                } else {
-                    toastr.error('Something went wrong. Please try again.');
+                    response.unassigned.forEach(branch => {
+                        $('#branchesSelect').append(
+                            `<option value="${branch.id}">${branch.name}</option>`
+                        );
+                    });
+
+                    $('#branchesSection').removeClass('d-none');
+                    $('#branchesSelect').trigger('change');
+                    $('#saveGroupChanges').prop('disabled', false);
                 }
-            }
+            });
         });
-    });
 
+        $('#saveGroupChanges').on('click', function() {
+            const group = $('#groupSelect').val();
+            const selectedBranches = $('#branchesSelect').val();
 
-    function filterBranches() {
-        let group = $('#groupbranch_filter').val();
-        
-        $.ajax({
-            url: "{{ route('branches.filter') }}",
-            method: "GET", 
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')  
-            },
-            data: { group },
-            beforeSend: function () {
-                $('#branch-container').html('<div class="text-center py-3">Loading...</div>');
-            },
-            success: function (response) {
-                if (response.html) {
-                    $('#branch-container').html(response.html);
-                } else {
-                    $('#branch-container').html('<div class="text-center py-3 text-muted">No branches found.</div>');
+            $.ajax({
+                url: "{{ route('branches.updateGroup') }}",
+                type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    group,
+                    branches: selectedBranches
+                },
+                success: function(response) {
+                    toastr.success('Group updated successfully!', 'Success');
+                    $('#manage_group').modal('hide');
+                    location.reload();
+                },
+                error: function() {
+                    toastr.error('Something went wrong. Please try again.', 'Error');
                 }
-            },
-            error: function (xhr, status, error) {
-                console.error('AJAX Error:', error);
-                $('#branch-container').html(
-                    '<div class="alert alert-danger text-center">Something went wrong. Please try again.</div>'
-                );
-            }
+            });
         });
-
-    }
-
-    $('#groupSelect').on('change', function () {
-        const group = $(this).val();
-
-        $('#branchesSection').addClass('d-none');
-        $('#saveGroupChanges').prop('disabled', true);
-
-        $.ajax({
-            url: "{{ route('branches.getByGroup') }}",
-            type: "GET",
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: { group },
-            success: function (response) {
-                $('#branchesSelect').empty();
- 
-                response.assigned.forEach(branch => {
-                    $('#branchesSelect').append(
-                        `<option value="${branch.id}" selected>${branch.name}</option>`
-                    );
-                }); 
-                response.unassigned.forEach(branch => {
-                    $('#branchesSelect').append(
-                        `<option value="${branch.id}">${branch.name}</option>`
-                    );
-                });
-
-                $('#branchesSection').removeClass('d-none');
-                $('#branchesSelect').trigger('change'); 
-                $('#saveGroupChanges').prop('disabled', false);
-            }
-        });
-    });
-
-    $('#saveGroupChanges').on('click', function () {
-        const group = $('#groupSelect').val();
-        const selectedBranches = $('#branchesSelect').val();
-
-        $.ajax({
-            url: "{{ route('branches.updateGroup') }}",
-            type: "POST",
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                group,
-                branches: selectedBranches
-            },
-            success: function (response) {
-                toastr.success('Group updated successfully!', 'Success');
-                $('#manage_group').modal('hide');
-                location.reload();
-            },
-            error: function () {
-                toastr.error('Something went wrong. Please try again.', 'Error');
-            }
-        });
-    });
-
     </script>
 @endpush
