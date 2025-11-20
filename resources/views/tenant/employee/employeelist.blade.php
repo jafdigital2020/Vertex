@@ -1044,45 +1044,65 @@
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <form id="topupCreditsForm">
                     @csrf
-                    <div class="modal-content">
-                        <div class="modal-header bg-light">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar avatar-md bg-primary text-white rounded-circle me-3">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header text-white position-relative overflow-hidden" 
+                             style="background: linear-gradient(135deg, #008080 0%, #12515D 100%); border: none;">
+                            <!-- Decorative background elements -->
+                            <div style="position: absolute; right: -30px; top: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+                            <div style="position: absolute; right: 20px; bottom: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.08);"></div>
+                            
+                            <div class="d-flex align-items-center" style="z-index: 2;">
+                                <div class="avatar avatar-md text-white rounded-circle me-3" 
+                                     style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);">
                                     <i class="ti ti-wallet"></i>
                                 </div>
                                 <div>
-                                    <h5 class="modal-title mb-0" id="topupCreditsLabel">Top Up Employee Credits</h5>
-                                    <small class="text-muted">Add more employee slots to your account</small>
+                                    <h5 class="modal-title mb-0 text-white" id="topupCreditsLabel">Top Up Employee Credits</h5>
+                                    <small style="color: rgba(255,255,255,0.8);">Add more employee slots to your account</small>
                                 </div>
                             </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
                                 <i class="ti ti-x"></i>
                             </button>
                         </div>
                         <div class="modal-body p-4">
                             <!-- Current Credits Display -->
-                            <div class="row mb-4">
+                            <div class="row g-3 mb-4">
                                 <div class="col-md-6">
-                                    <div class="card border-0 bg-light-primary">
-                                        <div class="card-body text-center py-3">
-                                            <div class="d-flex align-items-center justify-content-center mb-2">
-                                                <i class="ti ti-users text-primary fs-24 me-2"></i>
-                                                <span class="text-primary fw-semibold">Current Credits</span>
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body d-flex align-items-center p-3">
+                                            <div class="avatar avatar-lg rounded-circle me-3 flex-shrink-0"
+                                                 style="background: linear-gradient(135deg, #008080 0%, #12515D 100%);">
+                                                <i class="ti ti-wallet text-white fs-20"></i>
                                             </div>
-                                            <h3 class="mb-0 text-primary" id="current-credits-display">--</h3>
-                                            <small class="text-muted">Available employee slots</small>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <h6 class="mb-1 fw-semibold text-gray-700">Current Credits</h6>
+                                                        <h4 class="mb-0 fw-bold text-gray-900" id="current-credits-display">--</h4>
+                                                        <small class="text-muted">Available slots</small>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="card border-0 bg-light-success">
-                                        <div class="card-body text-center py-3">
-                                            <div class="d-flex align-items-center justify-content-center mb-2">
-                                                <i class="ti ti-user-check text-success fs-24 me-2"></i>
-                                                <span class="text-success fw-semibold">Active Employees</span>
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body d-flex align-items-center p-3">
+                                            <div class="avatar avatar-lg rounded-circle me-3 flex-shrink-0"
+                                                 style="background: linear-gradient(135deg, #ed7464 0%, #b53654 100%);">
+                                                <i class="ti ti-user-check text-white fs-20"></i>
                                             </div>
-                                            <h3 class="mb-0 text-success">{{ $employees->filter(function ($e) { return $e->employmentDetail && $e->employmentDetail->status == 1; })->count() }}</h3>
-                                            <small class="text-muted">Currently employed</small>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <h6 class="mb-1 fw-semibold text-gray-700">Active Employees</h6>
+                                                        <h4 class="mb-0 fw-bold text-gray-900">{{ $employees->filter(function ($e) { return $e->employmentDetail && $e->employmentDetail->status == 1; })->count() }}</h4>
+                                                        <small class="text-muted">Currently employed</small>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1101,119 +1121,136 @@
                                 <small class="text-muted">Choose the business to add credits to</small>
                             </div>
 
-                            <!-- Credit Purchase Options -->
+                            <!-- Credit Amount -->
                             <div class="mb-4">
-                                <label class="form-label fw-semibold">
-                                    <i class="ti ti-shopping-cart me-1"></i>Credit Packages
+                                <label class="form-label fw-semibold d-flex align-items-center mb-3">
+                                    <span class="avatar avatar-sm rounded-circle me-2" style="background: linear-gradient(135deg, #FFB400 0%, #ed7464 100%);">
+                                        <i class="ti ti-shopping-cart text-white fs-12"></i>
+                                    </span>
+                                    <span style="color: #FFB400;">Credits to Purchase</span>
                                 </label>
-                                <div class="row g-2 mb-3">
-                                    <div class="col-md-3">
-                                        <div class="card border credit-package" data-credits="5" data-price="25.00" style="cursor: pointer;">
-                                            <div class="card-body text-center py-2">
-                                                <div class="fw-bold text-primary">5 Credits</div>
-                                                <small class="text-muted">$25.00</small>
-                                                <div class="badge bg-light text-dark mt-1">$5.00 each</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card border credit-package" data-credits="10" data-price="45.00" style="cursor: pointer;">
-                                            <div class="card-body text-center py-2">
-                                                <div class="fw-bold text-primary">10 Credits</div>
-                                                <small class="text-muted">$45.00</small>
-                                                <div class="badge bg-warning text-dark mt-1">$4.50 each</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card border credit-package" data-credits="25" data-price="100.00" style="cursor: pointer;">
-                                            <div class="card-body text-center py-2">
-                                                <div class="fw-bold text-primary">25 Credits</div>
-                                                <small class="text-muted">$100.00</small>
-                                                <div class="badge bg-success text-white mt-1">$4.00 each</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card border credit-package" data-credits="50" data-price="175.00" style="cursor: pointer;">
-                                            <div class="card-body text-center py-2">
-                                                <div class="fw-bold text-primary">50 Credits</div>
-                                                <small class="text-muted">$175.00</small>
-                                                <div class="badge bg-success text-white mt-1">$3.50 each</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 
-                                <!-- Custom Amount -->
-                                <div class="d-flex align-items-center justify-content-between p-3 border rounded bg-light">
-                                    <div>
-                                        <div class="fw-semibold">Custom Amount</div>
-                                        <small class="text-muted">Enter your preferred number of credits</small>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <input type="number" min="1" step="1" class="form-control form-control-sm me-2" 
-                                               id="topup_amount" name="amount" placeholder="Credits" style="width: 100px;" required>
-                                        <span class="text-muted">@ $5.00 each</span>
+                                <div class="card border-0 shadow-sm" style="border-left: 4px solid #FFB400 !important;">
+                                    <div class="card-body p-4">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-7">
+                                                <div class="mb-3">
+                                                    <h6 class="fw-semibold text-gray-900 mb-2">Enter Number of Credits</h6>
+                                                    <p class="text-gray-600 mb-0">
+                                                        <i class="ti ti-info-circle me-1" style="color: #FFB400;"></i>
+                                                        Each credit allows you to add one employee to your account
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <div class="flex-grow-1">
+                                                        <label class="form-label small fw-medium text-gray-600 mb-1">Credits</label>
+                                                        <input type="number" min="1" step="1" class="form-control form-control-lg text-center fw-bold border-2" 
+                                                               id="topup_amount" name="amount" placeholder="0" 
+                                                               style="border-color: #FFB400; color: #008080; font-size: 1.1rem;" required>
+                                                    </div>
+                                                    <div class="text-center">
+                                                        <div class="small text-gray-500 mb-1">Price each</div>
+                                                        <div class="badge px-3 py-2" style="background: linear-gradient(135deg, #FFB40015 0%, #ed746415 100%); color: #008080; font-size: 0.9rem;">
+                                                            ₱49.00
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Quick Selection Buttons -->
+                                        <div class="mt-3 pt-3 border-top">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <small class="text-gray-500 fw-medium">Quick select:</small>
+                                            </div>
+                                            <div class="d-flex gap-2 flex-wrap">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm quick-select" data-credits="1">
+                                                    1 Credit
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm quick-select" data-credits="5">
+                                                    5 Credits
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm quick-select" data-credits="10">
+                                                    10 Credits
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm quick-select" data-credits="20">
+                                                    20 Credits
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm quick-select" data-credits="50">
+                                                    50 Credits
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Order Summary -->
-                            <div class="card border-0 bg-light mb-3">
-                                <div class="card-header bg-transparent border-bottom-0 py-2">
-                                    <h6 class="mb-0">
-                                        <i class="ti ti-receipt me-2"></i>Order Summary
+                            <div class="card border-0 shadow-sm mb-3" style="border-left: 4px solid #008080 !important;">
+                                <div class="card-header border-bottom-0 py-3" style="background: linear-gradient(90deg, #00808015 0%, #12515D15 100%);">
+                                    <h6 class="mb-0 d-flex align-items-center">
+                                        <span class="avatar avatar-sm rounded-circle me-2" style="background: linear-gradient(135deg, #008080 0%, #12515D 100%);">
+                                            <i class="ti ti-receipt text-white fs-12"></i>
+                                        </span>
+                                        <span style="color: #008080; font-weight: 600;">Order Summary</span>
                                     </h6>
                                 </div>
-                                <div class="card-body pt-2">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>Credits to add:</span>
-                                        <span class="fw-semibold" id="summary-credits">0</span>
+                                <div class="card-body pt-3">
+                                    <div class="d-flex justify-content-between mb-3 p-3 rounded" style="background: linear-gradient(90deg, #00808008 0%, #12515D08 100%);">
+                                        <span class="fw-medium text-gray-700">Credits to add:</span>
+                                        <span class="fw-bold" style="color: #008080;" id="summary-credits">0</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span>Price per credit:</span>
-                                        <span class="fw-semibold" id="summary-price-per">$5.00</span>
+                                        <span class="text-gray-600">Price per credit:</span>
+                                        <span class="fw-semibold text-gray-900" id="summary-price-per">₱49.00</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span>Subtotal:</span>
-                                        <span class="fw-semibold" id="summary-subtotal">$0.00</span>
+                                        <span class="text-gray-600">Subtotal:</span>
+                                        <span class="fw-semibold text-gray-900" id="summary-subtotal">₱0.00</span>
                                     </div>
-                                    <div class="d-flex justify-content-between mb-2 text-muted">
-                                        <small>Processing fee:</small>
-                                        <small id="summary-fee">$0.00</small>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <small class="text-gray-500">VAT (12%):</small>
+                                        <small class="text-gray-600" id="summary-fee">₱0.00</small>
                                     </div>
-                                    <hr class="my-2">
-                                    <div class="d-flex justify-content-between">
-                                        <span class="fw-bold">Total:</span>
-                                        <span class="fw-bold text-primary fs-18" id="summary-total">$0.00</span>
+                                    <div class="border-top pt-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold fs-16 text-gray-900">Total Amount:</span>
+                                            <span class="fw-bold fs-18" style="color: #008080;" id="summary-total">₱0.00</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Information Alert -->
-                            <div class="alert alert-info border-0" role="alert">
+                            <div class="alert border-0 shadow-sm" style="background: linear-gradient(90deg, #b5365415 0%, #ed746415 100%); border-left: 4px solid #b53654 !important;" role="alert">
                                 <div class="d-flex">
-                                    <i class="ti ti-info-circle me-2 mt-1"></i>
+                                    <span class="avatar avatar-sm rounded-circle me-3 flex-shrink-0" style="background: linear-gradient(135deg, #b53654 0%, #ed7464 100%);">
+                                        <i class="ti ti-info-circle text-white fs-12"></i>
+                                    </span>
                                     <div>
-                                        <div class="fw-semibold mb-1">About Employee Credits</div>
-                                        <ul class="mb-0 ps-3">
+                                        <div class="fw-semibold mb-2" style="color: #b53654;">About Employee Credits</div>
+                                        <ul class="mb-0 ps-3 small text-gray-600">
                                             <li>Each credit allows you to add one employee to your account</li>
                                             <li>Credits never expire and can be used anytime</li>
-                                            <li>Bulk purchases offer better rates per credit</li>
+                                            <li>All prices are inclusive of 12% VAT</li>
                                             <li>Credits are automatically applied to your selected business</li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer border-top bg-light">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                                <i class="ti ti-x me-1"></i>Cancel
-                            </button>
-                            <button type="submit" class="btn btn-primary" id="topupSubmitBtn" disabled>
-                                <i class="ti ti-credit-card me-1"></i>Proceed to Payment
-                            </button>
+                        <div class="modal-footer border-top-0 pt-0">
+                            <div class="d-flex gap-3 w-100">
+                                <button type="button" class="btn btn-outline-secondary flex-fill py-2" data-bs-dismiss="modal">
+                                    <i class="ti ti-x me-1"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn text-white flex-fill py-2" id="topupSubmitBtn" disabled 
+                                        style="background: linear-gradient(135deg, #008080 0%, #12515D 100%); border: none; box-shadow: 0 2px 4px rgba(0, 128, 128, 0.2);">
+                                    <i class="ti ti-credit-card me-1"></i>Proceed to Payment
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -1603,39 +1640,146 @@
     </script>
 
     <script>
-        $('#topupCreditsForm').on('submit', function (e) {
-            e.preventDefault();
+        // Enhanced Top-up Credits Modal Functionality
+        $(document).ready(function() {
+            // Update current credits display when modal opens
+            $('#topup_credits').on('show.bs.modal', function() {
+                const currentCredits = $('#employee-credits-count').text() || '00';
+                $('#current-credits-display').text(currentCredits);
+                
+                // Set default branch
+                const currentBranchFilter = $('#branch_filter').val();
+                if (currentBranchFilter) {
+                    $('#topup_branch_id').val(currentBranchFilter);
+                }
+                
+                updateOrderSummary();
+            });
 
-            const branchId = $('#topup_branch_id').val();
-            const additionalCredits = parseInt($('#topup_amount').val(), 10);
+            // Handle amount input
+            $('#topup_amount').on('input', function() {
+                updateOrderSummary();
+                updateQuickSelectButtons();
+            });
 
-            if (!branchId || additionalCredits < 1) {
-                toastr.error('Please select a branch and enter valid credits.');
-                return;
+            // Handle quick select buttons
+            $('.quick-select').on('click', function() {
+                const credits = $(this).data('credits');
+                $('#topup_amount').val(credits);
+                updateOrderSummary();
+                updateQuickSelectButtons();
+            });
+
+            // Update quick select button states
+            function updateQuickSelectButtons() {
+                const currentValue = parseInt($('#topup_amount').val()) || 0;
+                $('.quick-select').removeClass('btn-primary').addClass('btn-outline-secondary');
+                $('.quick-select').each(function() {
+                    if ($(this).data('credits') === currentValue) {
+                        $(this).removeClass('btn-outline-secondary').addClass('btn-primary');
+                    }
+                });
             }
 
-            const endpoint = `/api/subscriptions/${branchId}/add-employee-credits`;
+            // Update order summary
+            function updateOrderSummary() {
+                const credits = parseInt($('#topup_amount').val()) || 0;
+                const pricePerCredit = 49.00;
+                const subtotal = credits * pricePerCredit;
+                const vatAmount = credits > 0 ? subtotal * 0.12 : 0;
+                const finalTotal = subtotal + vatAmount;
 
-            $.ajax({
-                url: endpoint,
-                method: 'POST',
-                data: JSON.stringify({ additional_credits: additionalCredits }),
-                contentType: 'application/json',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function (res) {
-                    if (res.success && res.checkoutUrl) {
-                        window.location.href = res.checkoutUrl;
-                    } else {
-                        toastr.success(res.message || 'Top-up initiated.');
-                        $('#topup_credits').modal('hide');
-                    }
-                },
-                error: function (xhr) {
-                    const msg = xhr.responseJSON?.message || 'Failed to top up credits.';
-                    toastr.error(msg);
+                // Update display
+                $('#summary-credits').text(credits);
+                $('#summary-price-per').text('₱' + pricePerCredit.toFixed(2));
+                $('#summary-subtotal').text('₱' + subtotal.toFixed(2));
+                $('#summary-fee').text('₱' + vatAmount.toFixed(2));
+                $('#summary-total').text('₱' + finalTotal.toFixed(2));
+
+                // Enable/disable submit button
+                $('#topupSubmitBtn').prop('disabled', credits <= 0);
+            }
+
+            // Handle branch change
+            $('#topup_branch_id').on('change', function() {
+                const branchId = $(this).val();
+                if (branchId) {
+                    // Fetch current credits for selected branch
+                    $.ajax({
+                        url: "{{ route('api.employee-credits') }}",
+                        type: 'GET',
+                        data: { branch_id: branchId },
+                        success: function (response) {
+                            const credits = parseInt(response.employee_credits ?? 0, 10);
+                            $('#current-credits-display').text(credits.toString().padStart(2, '0'));
+                        },
+                        error: function () {
+                            $('#current-credits-display').text('--');
+                        }
+                    });
                 }
+            });
+
+            // Handle form submission
+            $('#topupCreditsForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const branchId = $('#topup_branch_id').val();
+                const additionalCredits = parseInt($('#topup_amount').val(), 10);
+                const totalAmount = parseFloat($('#summary-total').text().replace('₱', '').replace(',', ''));
+
+                if (!branchId || additionalCredits < 1) {
+                    toastr.error('Please select a branch and enter valid credits.');
+                    return;
+                }
+
+                // Show loading state
+                const $submitBtn = $('#topupSubmitBtn');
+                const originalText = $submitBtn.html();
+                $submitBtn.prop('disabled', true).html('<i class="spinner-border spinner-border-sm me-1"></i>Processing...');
+
+                const endpoint = `/api/subscriptions/${branchId}/add-employee-credits`;
+
+                $.ajax({
+                    url: endpoint,
+                    method: 'POST',
+                    data: JSON.stringify({ 
+                        additional_credits: additionalCredits,
+                        total_amount: totalAmount,
+                        price_per_credit: parseFloat($('#summary-price-per').text().replace('₱', '').replace(',', ''))
+                    }),
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function (res) {
+                        if (res.success && res.checkoutUrl) {
+                            // Redirect to payment
+                            window.location.href = res.checkoutUrl;
+                        } else {
+                            toastr.success(res.message || 'Credits added successfully!');
+                            $('#topup_credits').modal('hide');
+                            
+                            // Refresh credits display
+                            fetchEmployeeCredits(branchId);
+                        }
+                    },
+                    error: function (xhr) {
+                        const msg = xhr.responseJSON?.message || 'Failed to process credit top-up.';
+                        toastr.error(msg);
+                        
+                        // Reset button
+                        $submitBtn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+
+            // Reset modal when closed
+            $('#topup_credits').on('hidden.bs.modal', function() {
+                $('#topup_amount').val('');
+                updateOrderSummary();
+                updateQuickSelectButtons();
+                $('#topupSubmitBtn').prop('disabled', true).html('<i class="ti ti-credit-card me-1"></i>Proceed to Payment');
             });
         });
     </script>
