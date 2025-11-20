@@ -82,129 +82,188 @@
                 </div>
                 <!-- /Breadcrumb -->
 
-                <div class="row">
-                    <div class="col-lg-3 col-md-6 d-flex">
-                        <div class="card flex-fill">
-                            <div class="card-body d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center overflow-hidden">
-                                    <div>
-                                        <span class="avatar avatar-lg bg-dark rounded-circle"><i class="ti ti-users"></i></span>
-                                    </div>
-                                    <div class="ms-2 overflow-hidden">
-                                        <p class="fs-12 fw-medium mb-1 text-truncate">Total Employee</p>
-                                        <h4>{{ str_pad($employees->count(), 2, '0', STR_PAD_LEFT) }}</h4>
-                                    </div>
-                                </div>
-
+            <div class="row g-3 mb-4">
+                <!-- Total Employee -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #0f8b8d 0%, #0b6b67 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Total Employee</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($employees->count(), 2, '0', STR_PAD_LEFT) }}</h2>
+                                <small class="text-white-75">Employees</small>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 d-flex">
-                        <div class="card flex-fill">
-                            <div class="card-body d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center overflow-hidden">
-                                    <div>
-                                        <span class="avatar avatar-lg bg-success rounded-circle"><i
-                                                class="ti ti-user-share"></i></span>
-                                    </div>
-                                    <div class="ms-2 overflow-hidden">
-                                        <p class="fs-12 fw-medium mb-1 text-truncate">Active Employees</p>
-                                        <h4>{{ str_pad(
-        $employees->filter(function ($e) {
-            return $e->employmentDetail && $e->employmentDetail->status == 1;
-        })->count(),
-        2,
-        '0',
-        STR_PAD_LEFT,
-    ) }}
-                                        </h4>
 
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-users" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                </div>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-users" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6 d-flex">
-                        <div class="card flex-fill">
-                            <div class="card-body d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center overflow-hidden">
-                                    <div>
-                                        <span class="avatar avatar-lg bg-danger rounded-circle"><i
-                                                class="ti ti-user-pause"></i></span>
-                                    </div>
-                                    <div class="ms-2 overflow-hidden">
-                                        <p class="fs-12 fw-medium mb-1 text-truncate">InActive Employees</p>
-                                        <h4>{{ str_pad(
-        $employees->filter(function ($e) {
-            return $e->employmentDetail && $e->employmentDetail->status == 0;
-        })->count(),
-        2,
-        '0',
-        STR_PAD_LEFT,
-    ) }}
-                                        </h4>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    @if(auth()->check() && auth()->user()->employmentDetail?->branch_id)
-                        <div class="col-lg-3 col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center overflow-hidden">
-                                        <div>
-                                            <span class="avatar avatar-lg bg-info rounded-circle"><i
-                                                    class="ti ti-user-plus"></i></span>
-                                        </div>
-                                        <div class="ms-2 overflow-hidden">
-                                            <p class="fs-12 fw-medium mb-1 text-truncate">Employee Credits</p>
-                                            <h4><span id="employee-credits-count"></span></h4>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                                <div class="col-lg-3 col-md-6 d-flex">
-                                    <div class="card flex-fill">
-                                        <div class="card-body d-flex align-items-center justify-content-between">
-                                            <div class="d-flex align-items-center overflow-hidden">
-                                                <div>
-                                                    <span class="avatar avatar-lg bg-info rounded-circle"><i
-                                                            class="ti ti-user-plus"></i></span>
-                                                </div>
-                                                <div class="ms-2 overflow-hidden">
-                                                    <p class="fs-12 fw-medium mb-1 text-truncate">New Joiners</p>
-                                                    <h4>
-                                                        {{ str_pad(
-            $employees->filter(function ($e) {
-                return $e->employmentDetail && \Carbon\Carbon::parse($e->employmentDetail->date_hired)->isSameMonth(now());
-            })->count(),
-            2,
-            '0',
-            STR_PAD_LEFT,
-        ) }}
-                                                    </h4>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                    @endif
                 </div>
-                <!-- Remove extra closing divs and margin -->
-                <div class="card mb-0">
+                <!-- Active Employees -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #21c48a 0%, #14a86a 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Active Employees</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad(
+                                        $employees->filter(function ($e) {
+                                                return $e->employmentDetail && $e->employmentDetail->status == 1;
+                                            })->count(),
+                                        2,
+                                        '0',
+                                        STR_PAD_LEFT,
+                                    ) }}
+                                </h2>
+                                <small class="text-white-75">Employees</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-share" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                </div>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-share" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Inactive Employees -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #a33658 0%, #8b2c48 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Inactive Employees</p>
+                                <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad(
+                                        $employees->filter(function ($e) {
+                                                return $e->employmentDetail && $e->employmentDetail->status == 0;
+                                            })->count(),
+                                        2,
+                                        '0',
+                                        STR_PAD_LEFT,
+                                    ) }}
+                                </h2>
+                                <small class="text-white-75">Employees</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-pause" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                </div>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-pause" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if(auth()->check() && auth()->user()->employmentDetail?->branch_id)
+                    <!-- Employee Credits -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card text-white position-relative overflow-hidden"
+                            style="border-radius:10px; background: linear-gradient(135deg, #f6b21a 0%, #f09f00 100%); min-height:120px;">
+                            <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                <div class="me-3" style="z-index:3;">
+                                    <p class="fs-12 fw-medium mb-1 text-white-75">Employee Credits</p>
+                                    <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;"><span id="employee-credits-count"></span></h2>
+                                    <small class="text-white-75">Credits</small>
+                                </div>
+
+                                <!-- Right icon circle group -->
+                                <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                    <div
+                                        style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                        <i class="ti ti-user-plus" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                    </div>
+                                    <div
+                                        style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                        <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                            <i class="ti ti-user-plus" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <!-- New Joiners -->
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card text-white position-relative overflow-hidden"
+                            style="border-radius:10px; background: linear-gradient(135deg, #f6b21a 0%, #f09f00 100%); min-height:120px;">
+                            <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                <div class="me-3" style="z-index:3;">
+                                    <p class="fs-12 fw-medium mb-1 text-white-75">New Joiners</p>
+                                    <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                        {{ str_pad(
+                                            $employees->filter(function ($e) {
+                                                    return $e->employmentDetail &&
+                                                        $e->employmentDetail->date_hired &&
+                                                        \Carbon\Carbon::parse($e->employmentDetail->date_hired)->isSameMonth(now());
+                                                })->count(),
+                                            2,
+                                            '0',
+                                            STR_PAD_LEFT,
+                                        ) }}
+                                    </h2>
+                                    <small class="text-white-75">Employees</small>
+                                </div>
+
+                                <!-- Right icon circle group -->
+                                <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                    <div
+                                        style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                        <i class="ti ti-user-plus" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                    </div>
+                                    <div
+                                        style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                        <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                            <i class="ti ti-user-plus" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="card">
                     <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                         <h5>Employee List</h5>
                         <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                             <div class="form-group me-2">
-                                <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();" style="width:200px;">
-                                    @foreach ($branches as $i => $branch)
-                                        <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>{{ $branch->name }}
-                                        </option>
+                                <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                    oninput="filter();" style="width:200px;">
+                                    <option value="" selected>All Branches</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -982,42 +1041,179 @@
 
         <!-- Credits Top Up Modal -->
         <div class="modal fade" id="topup_credits" tabindex="-1" aria-labelledby="topupCreditsLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
                 <form id="topupCreditsForm">
                     @csrf
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="topupCreditsLabel">Top Up Employee Credits</h5>
+                        <div class="modal-header bg-light">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-md bg-primary text-white rounded-circle me-3">
+                                    <i class="ti ti-wallet"></i>
+                                </div>
+                                <div>
+                                    <h5 class="modal-title mb-0" id="topupCreditsLabel">Top Up Employee Credits</h5>
+                                    <small class="text-muted">Add more employee slots to your account</small>
+                                </div>
+                            </div>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                                 <i class="ti ti-x"></i>
                             </button>
                         </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Business</label>
+                        <div class="modal-body p-4">
+                            <!-- Current Credits Display -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light-primary">
+                                        <div class="card-body text-center py-3">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <i class="ti ti-users text-primary fs-24 me-2"></i>
+                                                <span class="text-primary fw-semibold">Current Credits</span>
+                                            </div>
+                                            <h3 class="mb-0 text-primary" id="current-credits-display">--</h3>
+                                            <small class="text-muted">Available employee slots</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light-success">
+                                        <div class="card-body text-center py-3">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <i class="ti ti-user-check text-success fs-24 me-2"></i>
+                                                <span class="text-success fw-semibold">Active Employees</span>
+                                            </div>
+                                            <h3 class="mb-0 text-success">{{ $employees->filter(function ($e) { return $e->employmentDetail && $e->employmentDetail->status == 1; })->count() }}</h3>
+                                            <small class="text-muted">Currently employed</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Business Selection -->
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="ti ti-building me-1"></i>Select Business
+                                </label>
                                 <select id="topup_branch_id" name="branch_id" class="form-select" required>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted">Defaults to your current business or selected filter.</small>
+                                <small class="text-muted">Choose the business to add credits to</small>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Credits to add</label>
-                                <input type="number" min="1" step="1" class="form-control" id="topup_amount" name="amount"
-                                    required>
-                                <small class="text-muted">Enter how many credits you want to add.</small>
+                            <!-- Credit Purchase Options -->
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="ti ti-shopping-cart me-1"></i>Credit Packages
+                                </label>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-3">
+                                        <div class="card border credit-package" data-credits="5" data-price="25.00" style="cursor: pointer;">
+                                            <div class="card-body text-center py-2">
+                                                <div class="fw-bold text-primary">5 Credits</div>
+                                                <small class="text-muted">$25.00</small>
+                                                <div class="badge bg-light text-dark mt-1">$5.00 each</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border credit-package" data-credits="10" data-price="45.00" style="cursor: pointer;">
+                                            <div class="card-body text-center py-2">
+                                                <div class="fw-bold text-primary">10 Credits</div>
+                                                <small class="text-muted">$45.00</small>
+                                                <div class="badge bg-warning text-dark mt-1">$4.50 each</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border credit-package" data-credits="25" data-price="100.00" style="cursor: pointer;">
+                                            <div class="card-body text-center py-2">
+                                                <div class="fw-bold text-primary">25 Credits</div>
+                                                <small class="text-muted">$100.00</small>
+                                                <div class="badge bg-success text-white mt-1">$4.00 each</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border credit-package" data-credits="50" data-price="175.00" style="cursor: pointer;">
+                                            <div class="card-body text-center py-2">
+                                                <div class="fw-bold text-primary">50 Credits</div>
+                                                <small class="text-muted">$175.00</small>
+                                                <div class="badge bg-success text-white mt-1">$3.50 each</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Custom Amount -->
+                                <div class="d-flex align-items-center justify-content-between p-3 border rounded bg-light">
+                                    <div>
+                                        <div class="fw-semibold">Custom Amount</div>
+                                        <small class="text-muted">Enter your preferred number of credits</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <input type="number" min="1" step="1" class="form-control form-control-sm me-2" 
+                                               id="topup_amount" name="amount" placeholder="Credits" style="width: 100px;" required>
+                                        <span class="text-muted">@ $5.00 each</span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="alert alert-info d-flex align-items-center" role="alert">
-                                <i class="ti ti-info-circle me-2"></i>
-                                <span>Credits increase the allowed number of employees you can add.</span>
+                            <!-- Order Summary -->
+                            <div class="card border-0 bg-light mb-3">
+                                <div class="card-header bg-transparent border-bottom-0 py-2">
+                                    <h6 class="mb-0">
+                                        <i class="ti ti-receipt me-2"></i>Order Summary
+                                    </h6>
+                                </div>
+                                <div class="card-body pt-2">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Credits to add:</span>
+                                        <span class="fw-semibold" id="summary-credits">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Price per credit:</span>
+                                        <span class="fw-semibold" id="summary-price-per">$5.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span class="fw-semibold" id="summary-subtotal">$0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2 text-muted">
+                                        <small>Processing fee:</small>
+                                        <small id="summary-fee">$0.00</small>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold">Total:</span>
+                                        <span class="fw-bold text-primary fs-18" id="summary-total">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Information Alert -->
+                            <div class="alert alert-info border-0" role="alert">
+                                <div class="d-flex">
+                                    <i class="ti ti-info-circle me-2 mt-1"></i>
+                                    <div>
+                                        <div class="fw-semibold mb-1">About Employee Credits</div>
+                                        <ul class="mb-0 ps-3">
+                                            <li>Each credit allows you to add one employee to your account</li>
+                                            <li>Credits never expire and can be used anytime</li>
+                                            <li>Bulk purchases offer better rates per credit</li>
+                                            <li>Credits are automatically applied to your selected business</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary" id="topupSubmitBtn">Add Credits</button>
+                        <div class="modal-footer border-top bg-light">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <i class="ti ti-x me-1"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="topupSubmitBtn" disabled>
+                                <i class="ti ti-credit-card me-1"></i>Proceed to Payment
+                            </button>
                         </div>
                     </div>
                 </form>
