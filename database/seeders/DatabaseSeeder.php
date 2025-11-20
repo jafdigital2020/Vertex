@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             GlobalUserTableSeeder::class,
             MenuTableSeeder::class,
             ModulesTableSeeder::class,
+            ModulesTableSeeder2::class,
             OTTable::class,
             PhilhealthContribution::class,
             RoleTableSeeder::class,
