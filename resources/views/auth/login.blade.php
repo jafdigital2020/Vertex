@@ -12,7 +12,7 @@
                             <div
                                 class="authen-overlay-item border w-100 d-flex flex-column align-items-center justify-content-center">
                                 <div class="d-flex align-items-center justify-content-center">
-                                    <img src="{{ URL::asset('build/img/bg/TIMORA2.1.gif') }}" alt="Img" class="w-100"
+                                    <img src="{{ URL::asset('build/img/bg/1.gif') }}" alt="Img" class="w-100"
                                         style="object-fit: cover; width:100%;">
                                 </div>
                             </div>
@@ -66,8 +66,7 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="form-check form-check-md mb-0">
                                                     <input class="form-check-input" id="remember_me" name="remember"
-                                                        type="checkbox" value="1"
-                                                        {{ old('remember') ? 'checked' : '' }}>
+                                                        type="checkbox" value="1" {{ old('remember') ? 'checked' : '' }}>
                                                     <label for="remember_me" class="form-check-label mt-0">Remember
                                                         Me</label>
                                                 </div>
@@ -108,8 +107,8 @@
                                         </div>
                                     </div>
                                     <div class="mt-5 pb-4 text-center">
-                                        <img class="img-fluid" src="{{ URL::asset('build/img/gdpr-image.png') }}"
-                                            alt="GDPR" style="max-height:100px;">
+                                        <img class="img-fluid" src="{{ URL::asset('build/img/gdpr-image.png') }}" alt="GDPR"
+                                            style="max-height:100px;">
                                         <p class="mb-0 text-gray-9">Copyright &copy; 2025 - JAF Digital Group Inc.</p>
                                     </div>
                                 </div>
@@ -126,7 +125,7 @@
 @push('scripts')
     <script src="{{ asset('build/js/login.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             localStorage.clear();
             sessionStorage.clear();
             ['laravel_session', 'XSRF-TOKEN', 'remember_web', 'remember_global'].forEach(name => {

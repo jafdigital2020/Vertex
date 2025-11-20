@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Employee
@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
+                        {{-- <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,7 +41,7 @@
                                     </li>
                                 </ul>
                             </div>
-                        </div>
+                        </div> --}}
                     @endif
                     <div class="d-flex gap-2 mb-2">
                         @if (in_array('Create', $permission))
@@ -50,8 +50,8 @@
                                 Holiday</a>
                         @endif
                         @if (in_array('Create', $permission) || in_array('Update', $permission) || in_array('Delete', $permission))
-                            <a href="{{ route('holiday-exception') }}"
-                                class="btn btn-secondary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>
+                            <a href="{{ route('holiday-exception') }}" class="btn btn-secondary d-flex align-items-center"><i
+                                    class="ti ti-circle-plus me-2"></i>
                                 Holiday Exceptions</a>
                         @endif
                     </div>
@@ -67,8 +67,8 @@
 
 
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Holidays List</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Holidays List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
@@ -170,24 +170,18 @@
                                                 <td class="text-center">
                                                     <div class="action-icon d-inline-flex">
                                                         @if (in_array('Update', $permission))
-                                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                data-bs-target="#edit_holiday"
-                                                                data-id="{{ $holiday->id }}"
-                                                                data-name="{{ $holiday->name }}"
+                                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_holiday"
+                                                                data-id="{{ $holiday->id }}" data-name="{{ $holiday->name }}"
                                                                 data-holiday-type="{{ $holiday->type }}"
                                                                 data-recurring="{{ $holiday->recurring ? '1' : '0' }}"
-                                                                data-month-day="{{ $holiday->month_day }}"
-                                                                data-date="{{ $holiday->date }}"
+                                                                data-month-day="{{ $holiday->month_day }}" data-date="{{ $holiday->date }}"
                                                                 data-is-paid="{{ $holiday->is_paid ? '1' : '0' }}"
-                                                                data-status="{{ $holiday->status }}"><i
-                                                                    class="ti ti-edit"></i></a>
+                                                                data-status="{{ $holiday->status }}"><i class="ti ti-edit"></i></a>
                                                         @endif
                                                         @if (in_array('Delete', $permission))
-                                                            <a href="javascript:void(0);" data-bs-toggle="modal"
-                                                                class="btn-delete" data-bs-target="#delete_holiday"
-                                                                data-id="{{ $holiday->id }}"
-                                                                data-name="{{ $holiday->name }}"><i
-                                                                    class="ti ti-trash"></i></a>
+                                                            <a href="javascript:void(0);" data-bs-toggle="modal" class="btn-delete"
+                                                                data-bs-target="#delete_holiday" data-id="{{ $holiday->id }}"
+                                                                data-name="{{ $holiday->name }}"><i class="ti ti-trash"></i></a>
                                                         @endif
                                                     </div>
                                                 </td>
@@ -218,29 +212,28 @@
 @endsection
 
 @push('scripts')
-
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const holidayDate = document.getElementById("holidayDate");
-        const holidayRecurring = document.getElementById("holidayRecurring");
+        document.addEventListener("DOMContentLoaded", function () {
+            const holidayDate = document.getElementById("holidayDate");
+            const holidayRecurring = document.getElementById("holidayRecurring");
 
-        function updateDateRestriction() {
-            const today = new Date().toISOString().split("T")[0];
+            function updateDateRestriction() {
+                const today = new Date().toISOString().split("T")[0];
 
-            if (holidayRecurring.checked) { 
-                holidayDate.removeAttribute("min");
-                holidayDate.removeAttribute("max");
-            } else { 
-                holidayDate.min = today;
-                holidayDate.removeAttribute("max"); 
-                if (holidayDate.value && holidayDate.value < today) {
-                    holidayDate.value = today;
+                if (holidayRecurring.checked) {
+                    holidayDate.removeAttribute("min");
+                    holidayDate.removeAttribute("max");
+                } else {
+                    holidayDate.min = today;
+                    holidayDate.removeAttribute("max");
+                    if (holidayDate.value && holidayDate.value < today) {
+                        holidayDate.value = today;
+                    }
                 }
             }
-        } 
-        updateDateRestriction(); 
-        holidayRecurring.addEventListener("change", updateDateRestriction);
-    });
+            updateDateRestriction();
+            holidayRecurring.addEventListener("change", updateDateRestriction);
+        });
     </script>
     {{-- Add Holiday --}}
     <script>
@@ -269,13 +262,13 @@
     </script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
             const addHolidayForm = document.getElementById('addHolidayForm');
             if (addHolidayForm) {
-                addHolidayForm.addEventListener('submit', async function(e) {
+                addHolidayForm.addEventListener('submit', async function (e) {
                     e.preventDefault();
                     const form = e.target;
                     const fd = new FormData(form);
@@ -298,9 +291,11 @@
 
                         if (!res.ok) {
                             if (json.errors) {
-                                Object.values(json.errors).flat().forEach(msg => toastr.error("Please check: " + msg));
+                                Object.values(json.errors).flat().forEach(msg => toastr.error(
+                                    "Please check: " + msg));
                             } else {
-                                toastr.error(json.message || 'Sorry, something went wrong. Please try again.');
+                                toastr.error(json.message ||
+                                    'Sorry, something went wrong. Please try again.');
                             }
                             return;
                         }
@@ -315,7 +310,8 @@
 
                     } catch (err) {
                         console.error(err);
-                        toastr.error('Oops! Something went wrong. Please check your details and try again.');
+                        toastr.error(
+                            'Oops! Something went wrong. Please check your details and try again.');
                     }
                 });
             }
@@ -324,12 +320,12 @@
 
     {{-- Edit Holiday --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
             // 🌟 1. Delegate click events for edit buttons
-            document.addEventListener("click", function(e) {
+            document.addEventListener("click", function (e) {
                 const button = e.target.closest('[data-bs-target="#edit_holiday"]');
                 if (!button) return;
 
@@ -375,7 +371,7 @@
             });
 
             // 🌟 2. Handle update button click
-            document.getElementById("updateHolidayBtn").addEventListener("click", async function(e) {
+            document.getElementById("updateHolidayBtn").addEventListener("click", async function (e) {
                 e.preventDefault();
 
                 const editId = document.getElementById("holidayId").value;
@@ -434,7 +430,7 @@
 
     {{-- Delete Holiday --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
@@ -443,7 +439,7 @@
             const holidayPlaceHolder = document.getElementById('holidayPlaceHolder');
 
             // Use delegation to listen for delete button clicks
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 const button = e.target.closest('.btn-delete');
                 if (!button) return;
 
@@ -456,18 +452,18 @@
             });
 
             // Confirm delete
-            holidayDeleteBtn?.addEventListener('click', function() {
+            holidayDeleteBtn?.addEventListener('click', function () {
                 if (!holidayDeleteId) return;
 
                 fetch(`/api/holidays/delete/${holidayDeleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                })
                     .then(response => {
                         if (response.ok) {
                             toastr.success("Holiday deleted successfully.");
@@ -504,7 +500,7 @@
                     paid: paid,
                     holidayType: holidayType
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
                         $('#holidayTable').DataTable().destroy();
                         $('#holidayTableBody').html(response.html);
@@ -513,7 +509,7 @@
                         toastr.error(response.message || 'Something went wrong.');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     let message = 'An unexpected error occurred.';
                     if (xhr.status === 403) {
                         message = 'You are not authorized to perform this action.';

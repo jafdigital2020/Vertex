@@ -43,6 +43,9 @@ class LeaveAdminController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
+        // Get authenticated user's branch
+        $authUserBranchId = optional($authUser->employmentDetail)->branch_id;
+
         $dateRange = $request->input('dateRange');
         $status = $request->input('status');
         $leavetype = $request->input('leavetype');
@@ -78,16 +81,35 @@ class LeaveAdminController extends Controller
 
         $leaveRequests = $query->get();
 
-        $approvedLeavesCount = $leaveRequests
+        // Count leaves filtered by auth user's branch (this year)
+        $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'approved')
+            ->whereYear('start_date', Carbon::now()->year)
+            ->when($authUserBranchId, function ($query) use ($authUserBranchId) {
+                $query->whereHas('user.employmentDetail', function ($q) use ($authUserBranchId) {
+                    $q->where('branch_id', $authUserBranchId);
+                });
+            })
             ->count();
 
-        $rejectedLeavesCount = $leaveRequests
+        $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'rejected')
+            ->whereYear('start_date', Carbon::now()->year)
+            ->when($authUserBranchId, function ($query) use ($authUserBranchId) {
+                $query->whereHas('user.employmentDetail', function ($q) use ($authUserBranchId) {
+                    $q->where('branch_id', $authUserBranchId);
+                });
+            })
             ->count();
 
-        $pendingLeavesCount = $leaveRequests
+        $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'pending')
+            ->whereYear('start_date', Carbon::now()->year)
+            ->when($authUserBranchId, function ($query) use ($authUserBranchId) {
+                $query->whereHas('user.employmentDetail', function ($q) use ($authUserBranchId) {
+                    $q->where('branch_id', $authUserBranchId);
+                });
+            })
             ->count();
 
         foreach ($leaveRequests as $lr) {
@@ -122,7 +144,7 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
- 
+
 
         $html = view('tenant.leave.adminleave_filter', compact('leaveRequests', 'permission'))->render();
 
@@ -147,6 +169,9 @@ class LeaveAdminController extends Controller
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
+        // Get authenticated user's branch
+        $authUserBranchId = optional($authUser->employmentDetail)->branch_id;
+
         $leaveRequests = $accessData['leaveRequests']
             ->where('tenant_id', $tenantId)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
@@ -154,20 +179,36 @@ class LeaveAdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // total Approved leave for this year
-        $approvedLeavesCount = $leaveRequests
-            ->where('status', 'approved') 
+        // Count leaves filtered by auth user's branch (from this year)
+        $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'approved')
+            ->whereYear('start_date', Carbon::now()->year)
+            ->when($authUserBranchId, function ($query) use ($authUserBranchId) {
+                $query->whereHas('user.employmentDetail', function ($q) use ($authUserBranchId) {
+                    $q->where('branch_id', $authUserBranchId);
+                });
+            })
             ->count();
 
-        // total Rejected leave for this year
         $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'rejected') 
+            ->where('status', 'rejected')
+            ->whereYear('start_date', Carbon::now()->year)
+            ->when($authUserBranchId, function ($query) use ($authUserBranchId) {
+                $query->whereHas('user.employmentDetail', function ($q) use ($authUserBranchId) {
+                    $q->where('branch_id', $authUserBranchId);
+                });
+            })
             ->count();
 
-        // total Pending leave for this year
         $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'pending') 
-            ->count(); 
+            ->where('status', 'pending')
+            ->whereYear('start_date', Carbon::now()->year)
+            ->when($authUserBranchId, function ($query) use ($authUserBranchId) {
+                $query->whereHas('user.employmentDetail', function ($q) use ($authUserBranchId) {
+                    $q->where('branch_id', $authUserBranchId);
+                });
+            })
+            ->count();
 
         $entitledTypeIds = LeaveEntitlement::where('period_start', '<=', $today)
             ->where('period_end', '>=', $today)

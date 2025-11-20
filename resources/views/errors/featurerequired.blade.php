@@ -675,7 +675,7 @@
         </div>
 
         <div class="cta-section">
-            <a href="https://wizard.timora.ph/subscription" class="primary-button">
+            <a href="https://timora.ph/#pricing" class="primary-button">
                 <span>Upgrade Now</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">

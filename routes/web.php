@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayslipController;
 use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Models\User;
@@ -302,6 +303,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
 
+    // Thirteenth Month Payslip (Admin)
+    Route::get('/thirteenth-month-payslip', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipadminIndex'])->name('thirteenthMonthPayslipadminIndex');
+    Route::get('/thirteenth-month-payslip/{id}', [ThirteenthMonthPayslipController::class, 'generatedPayslips'])->name('thirteenthMonthPayslipView');
+
     // Payroll Batch
     Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users')->middleware(CheckAddon::class . ':4');
     Route::get('/payroll/batch/users_filter', [PayrollBatchController::class, 'payrollBatchUsersFilter'])->name('payroll-batch-users-filter');
@@ -322,6 +327,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     //User Payslip
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('user-payslip');
     Route::get('/payslip/view/{id}', [PayslipController::class, 'userGeneratedPayslip'])->name('userGeneratedPayslip');
+
+    Route::get('/thirteenth-month-payslip-user', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipIndex'])->name('thirteenthMonthPayslipIndex');
+    Route::get('/thirteenth-month-payslip/view/{id}', [ThirteenthMonthPayslipController::class, 'userGeneratedPayslip'])->name('userThirteenthMonthPayslipView');
+
 
     // Notifications
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.ajaxMarkAsRead');

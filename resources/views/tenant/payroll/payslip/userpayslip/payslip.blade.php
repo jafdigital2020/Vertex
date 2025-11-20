@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Employee
@@ -23,25 +23,25 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
 
-                        <div class="me-2 mb-2">
-                            <div class="dropdown">
-                                <a href="javascript:void(0);"
-                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                    data-bs-toggle="dropdown">
-                                    <i class="ti ti-file-export me-1"></i>Export
-                                </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                    </li>
-                                </ul>
-                            </div>
+                    <div class="me-2 mb-2">
+                        <div class="dropdown">
+                            <a href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
+                                <i class="ti ti-file-export me-1"></i>Export
+                            </a>
+                            <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                </li>
+                            </ul>
                         </div>
+                    </div>
 
 
                     <div class="head-icons ms-2">
@@ -56,7 +56,7 @@
 
             <div class="row">
 
-                <div class="d-flex mb-2 align-items-center gap-2">
+                <div class="d-flex mb-2 align-items-center gap-2 mb-3">
                     <select id="summary-range" class="form-select form-select-sm w-auto">
                         <option value="monthly">Monthly</option>
                         <option value="yearly">Yearly</option>
@@ -68,72 +68,132 @@
                 <!-- Total Exponses -->
                 <div class="col-xl-6 d-flex">
                     <div class="row flex-fill">
-                        <div class="col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <div
-                                        class="d-flex align-items-center justify-content-between bg-light border rounded p-2 mb-2">
-                                        <div>
-                                            <span class="fs-14 fw-normal text-truncate mb-1">Total Earnings</span>
-                                            <h5 id="total-earnings">₱0.00</h5>
-                                        </div>
-                                        <a href="#"
-                                            class="avatar avatar-md avatar-rounded bg-transparent-primary border border-primary">
-                                            <span class="text-primary"><i class="ti ti-brand-shopee"></i></span>
-                                        </a>
+
+                        <div class="col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #12515D 0%, #2A9D8F 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Total Earnings</p>
+                                        <h2 id="total-earnings" class="mb-1 fw-bold text-white mt-3"
+                                            style="font-size:28px;">
+                                            ₱0.00
+                                        </h2>
+                                        <small class="text-white-75">This Period</small>
                                     </div>
 
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <div
-                                        class="d-flex align-items-center justify-content-between bg-light border rounded p-2 mb-2">
-                                        <div>
-                                            <span class="fs-14 fw-normal text-truncate mb-1">Total Deductions</span>
-                                            <h5 id="total-deductions">₱0.00</h5>
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-brand-shopee"
+                                                style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <a href="#"
-                                            class="avatar avatar-md avatar-rounded bg-transparent-danger border border-danger">
-                                            <span class="text-danger"><i class="ti ti-brand-shopee"></i></span>
-                                        </a>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-brand-shopee"
+                                                    style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <div
-                                        class="d-flex align-items-center justify-content-between bg-light border rounded p-2 mb-2">
-                                        <div class="">
-                                            <span class="fs-14 fw-normal text-truncate mb-1">Total Payroll</span>
-                                            <h5 id="total-payroll"></h5>
+                        <div class="col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #b53654 0%, #f2848c 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Total Deductions</p>
+                                        <h2 id="total-deductions" class="mb-1 fw-bold text-white mt-3"
+                                            style="font-size:28px;">
+                                            ₱0.00
+                                        </h2>
+                                        <small class="text-white-75">This Period</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-arrow-narrow-down"
+                                                style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <a href="#"
-                                            class="avatar avatar-md avatar-rounded bg-transparent-success border border-success">
-                                            <span class="text-success"><i class="ti ti-brand-shopee"></i></span>
-                                        </a>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-arrow-narrow-down"
+                                                    style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <div
-                                        class="d-flex align-items-center justify-content-between bg-light border rounded p-2 mb-2">
-                                        <div class="">
-                                            <span class="fs-14 fw-normal text-truncate mb-1">Total Net Pay</span>
-                                            <h5 id="total-net-pay">₱0.00</h5>
+
+                        <div class="col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #ffb400 0%, #e68a00 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Total Payroll</p>
+                                        <h2 id="total-payroll" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            Payrolls: 0
+                                        </h2>
+                                        <small class="text-white-75">This Period</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-chart-area-line"
+                                                style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <a href="#"
-                                            class="avatar avatar-md avatar-rounded bg-transparent-skyblue border border-skyblue">
-                                            <span class="text-skyblue"><i class="ti ti-brand-shopee"></i></span>
-                                        </a>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-chart-area-line"
+                                                    style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Total Net Pay</p>
+                                        <h2 id="total-net-pay" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                            ₱0.00
+                                        </h2>
+                                        <small class="text-white-75">This Period</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-currency-peso"
+                                                style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                        </div>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div
+                                                style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-currency-peso"
+                                                    style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -159,8 +219,13 @@
                     </div>
                 </div>
                 <!-- /Total Exponses -->
+            </div>
 
-
+            {{-- Page Links --}}
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('user-payslip') }}" class="btn btn-white active border me-2">Payslip</a>
+                <a href="{{ route('thirteenthMonthPayslipIndex') }}" class="btn btn-white  border me-2">Thirteenth Month
+                    Payslips</a>
             </div>
 
             <!-- Generated Payslip list -->
@@ -181,8 +246,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item text-danger" href="javascript:void(0);"
-                                        id="bulkDeletePayroll">
+                                    <a class="dropdown-item text-danger" href="javascript:void(0);" id="bulkDeletePayroll">
                                         <i class="ti ti-trash me-1"></i>Delete
                                     </a>
                                 </li>
@@ -267,8 +331,7 @@
                                         <td class="text-center">{{ $payslip->payment_date }}</td>
                                         <td class="text-center">
                                             @if ($payslip->status === 'Paid')
-                                                <span
-                                                    class="badge d-inline-flex align-items-center badge-xs badge-success">
+                                                <span class="badge d-inline-flex align-items-center badge-xs badge-success">
                                                     <i class="ti ti-point-filled me-1"></i>{{ $payslip->status ?? 'N/A' }}
                                                 </span>
                                             @else
@@ -310,8 +373,9 @@
     {{-- Payroll Chart --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    {{-- <script>
-        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+    {{--
+    <script>
+        $('#dateRange_filter').on('apply.daterangepicker', function (ev, picker) {
             filter();
         });
 
@@ -322,22 +386,22 @@
             var designation = $('#designation_filter').val();
 
             $.ajax({
-                url: '{{ route('generatedPayslipIndex-filter') }}',
+                url: '{{ route('generatedPayslipIndex- filter') }}',
                 type: 'GET',
                 data: {
-                    branch: branch,
-                    department: department,
-                    designation: designation,
-                    dateRange: dateRange,
-                },
-                success: function(response) {
+                branch: branch,
+                department: department,
+                designation: designation,
+                dateRange: dateRange,
+            },
+                success: function (response) {
                     if (response.status === 'success') {
                         $('#generatedPayslipsTableBody').html(response.html);
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     let message = 'An unexpected error occurred.';
                     if (xhr.status === 403) {
                         message = 'You are not authorized to perform this action.';
@@ -346,8 +410,8 @@
                     }
                     toastr.error(message);
                 }
-            });
-        }
+                    });
+                }
     </script> --}}
 
     <script>
@@ -359,14 +423,14 @@
             });
         }
 
-        $(document).ready(function() {
+        $(document).ready(function () {
 
-            $('#branch_filter').on('input', function() {
+            $('#branch_filter').on('input', function () {
                 const branchId = $(this).val();
 
                 $.get('/api/filter-from-branch', {
                     branch_id: branchId
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         populateDropdown($('#department_filter'), res.departments, 'Departments');
                         populateDropdown($('#designation_filter'), res.designations,
@@ -376,14 +440,14 @@
             });
 
 
-            $('#department_filter').on('input', function() {
+            $('#department_filter').on('input', function () {
                 const departmentId = $(this).val();
                 const branchId = $('#branch_filter').val();
 
                 $.get('/api/filter-from-department', {
                     department_id: departmentId,
                     branch_id: branchId,
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         if (res.branch_id) {
                             $('#branch_filter').val(res.branch_id).trigger('change');
@@ -394,7 +458,7 @@
                 });
             });
 
-            $('#designation_filter').on('change', function() {
+            $('#designation_filter').on('change', function () {
                 const designationId = $(this).val();
                 const branchId = $('#branch_filter').val();
                 const departmentId = $('#department_filter').val();
@@ -403,7 +467,7 @@
                     designation_id: designationId,
                     branch_id: branchId,
                     department_id: departmentId
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         if (designationId === '') {
                             populateDropdown($('#designation_filter'), res.designations,
@@ -421,7 +485,7 @@
 
     {{-- Payroll Summaries --}}
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // --- 1. Populate Year & Month Dropdowns ---
             const $year = $('#summary-year');
             const $month = $('#summary-month');
@@ -442,7 +506,7 @@
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'
             ];
-            months.forEach(function(m, idx) {
+            months.forEach(function (m, idx) {
                 $month.append(`<option value="${idx + 1}">${m}</option>`);
             });
             $month.val(currentMonth);
@@ -471,22 +535,22 @@
                 };
                 if (range === 'monthly') params.month = month;
 
-                $.get('/api/payslip/payroll-summary', params, function(res) {
+                $.get('/api/payslip/payroll-summary', params, function (res) {
                     $('#total-earnings').text('₱' + parseFloat(res.totalEarnings).toLocaleString(
                         undefined, {
-                            minimumFractionDigits: 2
-                        }));
+                        minimumFractionDigits: 2
+                    }));
                     $('#total-deductions').text('₱' + parseFloat(res.totalDeductions).toLocaleString(
                         undefined, {
-                            minimumFractionDigits: 2
-                        }));
+                        minimumFractionDigits: 2
+                    }));
                     // Add this if you have a net salary card
                     $('#total-net-pay').text('₱' + parseFloat(res.totalNetSalary).toLocaleString(
                         undefined, {
-                            minimumFractionDigits: 2
-                        }));
+                        minimumFractionDigits: 2
+                    }));
 
-                    $('#total-payroll').text('Payrolls: ' + res.totalPayrollCount);
+                    $('#total-payroll').text(res.totalPayrollCount);
                     // Optionally update a sub-label:
                     let label = (range === 'yearly') ?
                         res.year :
@@ -506,7 +570,7 @@
                 };
                 if (range === 'monthly') params.month = month;
 
-                $.get('/api/payslip/payroll-chart', params, function(response) {
+                $.get('/api/payslip/payroll-chart', params, function (response) {
                     // response should have: months (x-axis) and totals (y-axis)
                     var options = {
                         chart: {
@@ -520,7 +584,7 @@
                         xaxis: {
                             categories: response.months
                         },
-                        colors: ['#ff6384'],
+                        colors: ['#008080'],
                         dataLabels: {
                             enabled: false
                         },
@@ -538,7 +602,7 @@
                         },
                         tooltip: {
                             y: {
-                                formatter: function(val) {
+                                formatter: function (val) {
                                     return "₱ " + parseFloat(val).toLocaleString();
                                 }
                             }
@@ -559,5 +623,4 @@
             fetchPayrollSummary();
         });
     </script>
-
 @endpush

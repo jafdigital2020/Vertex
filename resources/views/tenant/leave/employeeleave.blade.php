@@ -64,36 +64,32 @@
             <div class="row">
                 @foreach ($leaveTypes as $lt)
                     @php
-                        $colors = ['black', 'blue', 'pink', 'purple'];
-                        $color = $colors[$loop->index % count($colors)];
-                        $bgcolors = [
-                            'badge-secondary-transparent',
-                            'bg-info-transparent',
-                            'bg-purple-transparent',
-                            'bg-pink-transparent',
-                        ];
-                        $bgcolor = $bgcolors[$loop->index % count($bgcolors)];
+                        $bgClasses = ['bg-primary', 'bg-raspberry', 'bg-coral', 'bg-mustard'];
+                        $bg = $bgClasses[$loop->index % count($bgClasses)];
                     @endphp
 
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card bg-{{ $color }}-le">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="text-start">
-                                        <p class="mb-1">{{ $lt->name }}s</p>
-                                        <h4>{{ $lt->current_balance }}</h4>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card text-white position-relative overflow-hidden {{ $bg }}" style="border-radius:10px; min-height:120px;">
+                            <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                <div class="me-3" style="z-index:3;">
+                                    <p class="fs-12 fw-medium mb-1 text-white-75">{{ $lt->name }}s</p>
+                                    <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                        {{ $lt->current_balance ?? 0 }}
+                                    </h2>
+                                    <small class="text-white-75">Remaining</small>
+                                </div>
+
+                                <!-- Right icon circle group -->
+                                <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                    <div style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                        <i class="ti ti-calendar-event" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                     </div>
-                                    <div class="d-flex">
-                                        <div class="flex-shrink-0 me-2">
-                                            <span class="avatar avatar-md d-flex">
-                                                <i class="ti ti-calendar-event fs-32"></i>
-                                            </span>
+                                    <div style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                        <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                            <i class="ti ti-calendar-event" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
                                         </div>
                                     </div>
                                 </div>
-                                <span class="badge {{ $bgcolor }}">
-                                    Remaining Leaves: {{ $lt->current_balance }}
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -103,9 +99,9 @@
 
             <!-- Leaves list -->
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
                     <div class="d-flex">
-                        <h5 class="me-2">Leave List</h5>
+                        <h5 class="me-2 text-white">Leave List</h5>
                     </div>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                          <div class="me-3">
@@ -276,8 +272,8 @@
         console.log('📦 availableLeaveTypes:', window.availableLeaveTypes);
     </script>
     <script>
-        if ($('.bookingrange-filtered').length > 0) { 
-        
+        if ($('.bookingrange-filtered').length > 0) {
+
             var start = moment().startOf('year');
             var end = moment().endOf('year');
 
@@ -310,7 +306,7 @@
     function filter() {
         const dateRange = $('#dateRange_filter').val();
         const status = $('#status_filter').val();
-        const leavetype = $('#leavetype_filter').val();
+        const leavetype = $('#leaveType_filter').val();
         $.ajax({
             url: '{{ route('leave-employees-filter') }}',
             type: 'GET',
@@ -321,10 +317,10 @@
             },
             success: function(response) {
                 if (response.status === 'success') {
-                    $('#employeeLeaveTable').DataTable().destroy();  
+                    $('#employeeLeaveTable').DataTable().destroy();
                     $('#employeeLeaveTableBody').html(response.html);
-                    $('#employeeLeaveTable').DataTable(); 
-                   
+                    $('#employeeLeaveTable').DataTable();
+
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }

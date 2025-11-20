@@ -60,64 +60,91 @@
 
             <!-- Leaves Info -->
             <div class="row">
-                <div class="col-xl-4 col-md-6">
-                    <div class="card bg-pink-img">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span
-                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                            <i class="ti ti-user-edit text-pink fs-18"></i>
-                                        </span>
-                                    </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #12515D 0%, #2A9D8F 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Approved Leaves</p>
+                                <h2 id="approvedLeavesCount" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($approvedLeavesCount, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">This Month</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-check" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div class="text-end">
-                                    <p class="mb-1">Approved Leaves</p>
-                                    <h4 id="approvedLeavesCount">{{ $approvedLeavesCount }}</h4>
-                                    <small class="text-muted">This Month</small>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-check"
+                                            style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-4 col-md-6">
-                    <div class="card bg-yellow-img">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span
-                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                            <i class="ti ti-user-exclamation text-warning fs-18"></i>
-                                        </span>
-                                    </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #b53654 0%, #f2848c 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Rejected Leaves</p>
+                                <h2 id="rejectedLeavesCount" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($rejectedLeavesCount, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">This Month</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-x" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div class="text-end">
-                                    <p class="mb-1">Rejected Leaves</p>
-                                    <h4 id="rejectedLeavesCount">{{ $rejectedLeavesCount }}</h4>
-                                    <small class="text-muted">This Month</small>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-x" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-4 col-md-6">
-                    <div class="card bg-blue-img">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span
-                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                            <i class="ti ti-user-question text-info fs-18"></i>
-                                        </span>
-                                    </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card text-white position-relative overflow-hidden"
+                        style="border-radius:10px; background: linear-gradient(135deg, #ed7464 0%, #f9c6b8 100%); min-height:120px;">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="me-3" style="z-index:3;">
+                                <p class="fs-12 fw-medium mb-1 text-white-75">Pending Requests</p>
+                                <h2 id="pendingLeavesCount" class="mb-1 fw-bold text-white mt-3" style="font-size:28px;">
+                                    {{ str_pad($pendingLeavesCount, 2, '0', STR_PAD_LEFT) }}
+                                </h2>
+                                <small class="text-white-75">This Month</small>
+                            </div>
+
+                            <!-- Right icon circle group -->
+                            <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                <div
+                                    style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-user-question"
+                                        style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
-                                <div class="text-end">
-                                    <p class="mb-1">Pending Requests</p>
-                                    <h4 id="pendingLeavesCount">{{ $pendingLeavesCount }}</h4>
-                                    <small class="text-muted">This Month</small>
+                                <div
+                                    style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-question"
+                                            style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -128,8 +155,8 @@
 
             <!-- Leaves list -->
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Leave List</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Leave List</h5>
 
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <!-- Bulk Actions Dropdown -->
@@ -153,6 +180,15 @@
                                         <span>Reject</span>
                                     </a>
                                 </li>
+                                @if (in_array('Delete', $permission))
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center"
+                                            id="bulkDelete">
+                                            <i class="ti ti-trash me-2 text-danger"></i>
+                                            <span>Delete</span>
+                                        </a>
+                                    </li>
+                                @endif
                             </ul>
                         </div>
 
@@ -438,7 +474,7 @@
         function filter() {
             const dateRange = $('#dateRange_filter').val();
             const status = $('#status_filter').val();
-            const leavetype = $('#leaveType_filter').val();
+            const leavetype = $('#leavetype_filter').val();
             $.ajax({
                 url: '{{ route('leave-admin-filter') }}',
                 type: 'GET',
@@ -796,6 +832,7 @@
             const selectAllCheckbox = document.getElementById('select-all');
             const bulkApproveBtn = document.getElementById('bulkApprove');
             const bulkRejectBtn = document.getElementById('bulkReject');
+            const bulkDeleteBtn = document.getElementById('bulkDelete');
             const bulkActionsDropdown = document.getElementById('bulkActionsDropdown');
 
             // ✅ Select All / Deselect All functionality
@@ -906,16 +943,46 @@
                 }
             });
 
+            // Bulk Delete Handler
+            bulkDeleteBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const selectedIds = getSelectedLeaveIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one leave request.');
+                    return;
+                }
+
+                // Show confirmation dialog with warning
+                const confirmDelete = confirm(
+                    ` WARNING: Are you sure you want to permanently delete ${selectedIds.length} leave request(s)? This action cannot be undone.`
+                );
+
+                if (confirmDelete) {
+                    processBulkAction('delete', selectedIds);
+                }
+            });
+
             // ✅ Process bulk action
             async function processBulkAction(action, leaveIds) {
                 const token = document.querySelector('meta[name="csrf-token"]').content;
 
                 try {
                     // Show loading state
-                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
-                    const originalText = actionBtn.innerHTML;
-                    actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
-                    actionBtn.style.pointerEvents = 'none';
+                    let actionBtn;
+                    if (action === 'approve') {
+                        actionBtn = bulkApproveBtn;
+                    } else if (action === 'reject') {
+                        actionBtn = bulkRejectBtn;
+                    } else if (action === 'delete') {
+                        actionBtn = bulkDeleteBtn;
+                    }
+
+                    if (actionBtn) {
+                        const originalText = actionBtn.innerHTML;
+                        actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
+                        actionBtn.style.pointerEvents = 'none';
+                    }
 
                     const response = await fetch('/api/leave/bulk-action', {
                         method: 'POST',
@@ -949,9 +1016,21 @@
                     toastr.error(error.message || 'An error occurred while processing the bulk action.');
                 } finally {
                     // Reset button state
-                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
-                    actionBtn.innerHTML = originalText;
-                    actionBtn.style.pointerEvents = 'auto';
+                    let actionBtn;
+                    if (action === 'approve') {
+                        actionBtn = bulkApproveBtn;
+                    } else if (action === 'reject') {
+                        actionBtn = bulkRejectBtn;
+                    } else if (action === 'delete') {
+                        actionBtn = bulkDeleteBtn;
+                    }
+
+                    if (actionBtn) {
+                        actionBtn.innerHTML = actionBtn.getAttribute('data-original-text') || actionBtn
+                            .innerHTML.replace('<i class="ti ti-loader ti-spin me-2"></i>Processing...',
+                                action === 'approve' ? 'Approve' : action === 'reject' ? 'Reject' : 'Delete');
+                        actionBtn.style.pointerEvents = 'auto';
+                    }
                 }
             }
 

@@ -2,946 +2,1211 @@
 
 @extends('layout.mainlayout')
 @section('content')
-    <!-- Page Wrapper -->
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
-    <!-- Ensure jQuery is loaded before any script uses $ -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    <div class="container-fuild">
-        <div class="content">
+        .wizard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            background-color: #ffffff;
+        }
 
-            <div class="text-center my-4">
-                <div class="text-center mb-4">
-                    <img src="{{ asset('build/img/Timora-logo.png') }}" alt="Timora Logo" style="height: 50px;">
+        .wizard-header {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
+        .wizard-logo {
+            width: 50px;
+            height: 50px;
+            background: #008080;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .wizard-header-content h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .wizard-header-content p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .wizard-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wizard-step-indicator {
+            background: #ffffff;
+            color: #1a202c;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid #e8ecef;
+        }
+
+        .step-circle {
+            width: 48px;
+            height: 48px;
+            background: #008080;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .step-info h2 {
+            margin: 0;
+            font-size: 0.875rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .step-info h3 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .wizard-content {
+            padding: 2.5rem;
+            background-color: #ffffff;
+        }
+
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .subscription-card {
+            background: #fff;
+            border: 1px solid #e8ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .subscription-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.08);
+            border-color: rgba(0, 128, 128, 0.2);
+        }
+
+        .subscription-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a202c;
+        }
+
+        .subscription-card p {
+            color: #718096;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .employee-input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .employee-input-group label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .employee-input-group label small {
+            font-weight: 400;
+            color: #718096;
+        }
+
+        .employee-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .employee-input:focus {
+            outline: none;
+            border-color: #008080;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
+        }
+
+        .employee-input:hover {
+            border-color: #cbd5e0;
+        }
+
+        .features-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1a202c;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .feature-category h5 {
+            font-weight: 600;
+            color: #e53e3e;
+            margin-bottom: 0.75rem;
+            font-size: 0.9375rem;
+        }
+
+        .feature-category.owner h5 {
+            color: #dd6b20;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .feature-item i {
+            color: #008080;
+        }
+
+        .price-display {
+            background: linear-gradient(135deg, #008080 0%, #006666 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: white;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .price-display .label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+        }
+
+        .price-display .amount {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .price-display .period {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Sidebar */
+        .sidebar-section {
+            position: sticky;
+            top: 2rem;
+        }
+
+        .addon-section {
+            background: linear-gradient(to bottom, #ffffff, #fafbfc);
+            border: 1px solid #e8ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .addon-section:hover {
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.08);
+            border-color: rgba(0, 128, 128, 0.2);
+        }
+
+        .addon-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a202c;
+        }
+
+        .addon-section > p {
+            color: #718096;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .addon-badge {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #78350f;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+            }
+            50% {
+                box-shadow: 0 2px 8px rgba(251, 191, 36, 0.5);
+            }
+        }
+
+        .addon-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f7fafc;
+        }
+
+        .addon-item:last-child {
+            border-bottom: none;
+        }
+
+        .addon-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .addon-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #008080;
+            transition: transform 0.2s ease;
+        }
+
+        .addon-checkbox:hover {
+            transform: scale(1.1);
+        }
+
+        .addon-checkbox:checked {
+            transform: scale(1.05);
+        }
+
+        .addon-label label {
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .addon-price {
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 0.875rem;
+        }
+
+        .pricing-summary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #e8ecef;
+            box-shadow: 0 2px 8px rgba(0, 128, 128, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .pricing-summary:hover {
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.08);
+            border-color: rgba(0, 128, 128, 0.2);
+        }
+
+        .pricing-summary h5 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a202c;
+        }
+
+        .pricing-summary p {
+            color: #718096;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .pricing-row.total {
+            border-top: 2px solid #e2e8f0;
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1a202c;
+        }
+
+        .pricing-row.total {
+            background: linear-gradient(135deg, rgba(0, 128, 128, 0.05), rgba(0, 128, 128, 0.1));
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin: 0 -1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .pricing-row.total .amount {
+            color: #008080;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        /* Step 2 Styles */
+        .form-section {
+            background: #fffbeb;
+            border-left: 3px solid #fbbf24;
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .form-section h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #78350f;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .referral-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .referral-input-group input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: #f8f9fa;
+        }
+
+        .btn-verify {
+            background: linear-gradient(135deg, #008080, #006666);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 128, 128, 0.2);
+        }
+
+        .btn-verify:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+        }
+
+        .btn-verify:active {
+            transform: translateY(0);
+        }
+
+        .details-section {
+            background: #fff;
+            border: 1px solid #e8ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .details-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2d3748;
+            font-size: 0.875rem;
+        }
+
+        .form-group label i {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:hover {
+            border-color: #cbd5e0;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #008080;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
+        }
+
+        .form-group input.is-invalid {
+            border-color: #e53e3e;
+            background: #fff5f5;
+        }
+
+        .invalid-feedback {
+            color: #e53e3e;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .form-group input.is-invalid + .invalid-feedback {
+            display: block;
+        }
+
+        .two-column-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Navigation */
+        .wizard-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn-prev {
+            background: white;
+            color: #4a5568;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-prev:hover {
+            border-color: #008080;
+            background: rgba(0, 128, 128, 0.05);
+            color: #008080;
+            transform: translateX(-2px);
+        }
+
+        .btn-prev:active {
+            transform: translateX(0);
+        }
+
+        .btn-prev:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-prev:disabled:hover {
+            border-color: #e2e8f0;
+            background: white;
+            color: #4a5568;
+        }
+
+        .step-counter {
+            color: #718096;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-next, .btn-submit {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn-next:hover, .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+        }
+
+        .btn-next:active, .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .wizard-step {
+            display: none;
+        }
+
+        .wizard-step.active {
+            display: block;
+        }
+
+        @media (max-width: 1024px) {
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-section {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .wizard-content {
+                padding: 1.5rem;
+            }
+
+            .two-column-form {
+                grid-template-columns: 1fr;
+            }
+
+            .wizard-navigation {
+                padding: 1rem 1.5rem;
+            }
+        }
+    </style>
+
+    <div class="wizard-container">
+        <!-- Header -->
+        <div class="wizard-header">
+            <div class="wizard-logo">T</div>
+            <div class="wizard-header-content">
+                <h1>Timora</h1>
+                <p>Business Registration</p>
+            </div>
+        </div>
+
+        <!-- Wizard Card -->
+        <div class="wizard-card">
+            <!-- Step Indicator -->
+            <div class="wizard-step-indicator">
+                <div class="step-circle">
+                    <span id="stepNumber">1</span>
+                </div>
+                <div class="step-info">
+                    <h2>Step <span id="currentStep">1</span> of 2</h2>
+                    <h3 id="stepTitle">Plan Summary</h3>
                 </div>
             </div>
 
-            <div class="row justify-content-center">
-                <div class="col-lg-9 col-xl-8">
-                    <div class="card shadow-lg border-0">
-                        <div class="card-header bg-primary text-white py-3">
-                            <div class="d-flex align-items-center">
-                                <div class="wizard-circle bg-white text-primary me-3"
-                                    style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;">
-                                    <span id="wizardStepCircle">1</span>
-                                </div>
-                                <div>
-                                    <h5 class="mb-0 text-white">Business Registration Wizard</h5>
-                                    <small id="wizardStepTitle" class="text-white-50">Step 1: Plan Summary</small>
+            <!-- Form -->
+            <form id="registrationForm" method="POST" action="{{ route('affiliate-branch-register') }}">
+                @csrf
+                <input type="hidden" name="role_id" value="2">
+                <input type="hidden" name="billing_period" value="monthly">
+                <input type="hidden" name="is_trial" value="1">
+                <input type="hidden" name="plan_slug" value="starter">
 
+                <!-- Step 1: Plan Summary -->
+                <div class="wizard-step active" data-step="1">
+                    <div class="wizard-content">
+                        <!-- Section Header -->
+                        <div style="margin-bottom: 2rem;">
+                            <h2 style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin-bottom: 0.5rem;">Plan Summary</h2>
+                        </div>
+
+                        <div class="two-column-layout">
+                            <!-- Left Column - Your Subscription and Add-ons -->
+                            <div>
+                                <!-- Your Subscription Card -->
+                                <div class="subscription-card" style="margin-bottom: 2rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                                        <div>
+                                            <h3 style="font-size: 1.125rem; font-weight: 600; color: #1a202c; margin-bottom: 0.25rem;">Your Subscription</h3>
+                                            <p style="font-size: 0.875rem; color: #718096; margin: 0;">Customize your HR & Payroll needs</p>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 0.75rem; color: #718096; margin-bottom: 0.125rem;">Monthly Total</div>
+                                            <div style="font-size: 1.75rem; font-weight: 700; color: #008080;" id="monthlyTotal">₱61.47</div>
+                                            <div style="font-size: 0.75rem; color: #718096;">VAT Inclusive</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="employee-input-group">
+                                        <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                            <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; color: #2d3748;">
+                                                <i class="bi bi-people"></i> Employees:
+                                            </span>
+                                            <small style="font-weight: 400; color: #718096;">₱40 per additional</small>
+                                        </label>
+                                        <input type="number" class="employee-input" id="totalEmployees"
+                                               name="total_employees" value="1" min="1"
+                                               data-price-per-user="49">
+                                    </div>
+                                </div>
+
+                                <!-- Add-on Features Card -->
+                                <div class="subscription-card">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                                        <h3 style="font-size: 1.125rem; font-weight: 600; color: #1a202c; margin: 0;">Add-on Features</h3>
+                                        <span style="background: #fbbf24; color: #78350f; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Optional</span>
+                                    </div>
+
+                                    <div id="addonsList">
+                                        <div class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status" style="color: #008080 !important;">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column - Included Features and Pricing Summary -->
+                            <div class="sidebar-section">
+                                <!-- Included Features Card -->
+                                <div class="subscription-card" style="margin-bottom: 1.5rem;">
+                                    <h3 style="font-size: 1.125rem; font-weight: 600; color: #1a202c; margin-bottom: 1.25rem;">Included Features</h3>
+
+                                    <div style="margin-bottom: 1.5rem;">
+                                        <h5 style="font-weight: 600; color: #e53e3e; margin-bottom: 0.75rem; font-size: 0.9375rem;">Employee Access</h5>
+                                        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #e53e3e; margin-top: 0.125rem;">•</span>
+                                                <span>Time Keeping (Check-in & Check-out)</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #e53e3e; margin-top: 0.125rem;">•</span>
+                                                <span>Payslip View & Download</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #e53e3e; margin-top: 0.125rem;">•</span>
+                                                <span>Attendance Photo Capture</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #e53e3e; margin-top: 0.125rem;">•</span>
+                                                <span>Leave and Overtime Filing</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h5 style="font-weight: 600; color: #dd6b20; margin-bottom: 0.75rem; font-size: 0.9375rem;">Owner Access</h5>
+                                        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
+                                                <span>Government Report Generator</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
+                                                <span>Employee List View</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
+                                                <span>Payroll Process</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
+                                                <span>Create Employee</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
+                                                <span>Geotagging + Location Tracking</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
+                                                <span>Earnings & Deductions</span>
+                                            </li>
+                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
+                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
+                                                <span>Flexible Shift Scheduling</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pricing Summary Card -->
+                                <div class="pricing-summary">
+                                    <h5>Pricing Summary</h5>
+
+                                    <div class="pricing-row" style="margin-bottom: 0.5rem;">
+                                        <span style="font-size: 0.875rem;">Base Price</span>
+                                        <span id="basePrice" style="font-weight: 600;">₱54.88</span>
+                                    </div>
+                                    <div class="pricing-row" style="margin-bottom: 0.5rem;">
+                                        <span style="font-size: 0.875rem;">Employees (<span id="empCount">0</span>)</span>
+                                        <span id="empPrice" style="font-weight: 600;">₱0.00</span>
+                                    </div>
+                                    <div class="pricing-row" style="margin-bottom: 0.5rem;">
+                                        <span style="font-size: 0.875rem;">Add-ons (<span id="addonCount">0</span>)</span>
+                                        <span id="addonPrice" style="font-weight: 600;">₱0.00</span>
+                                    </div>
+
+                                    <div style="border-top: 1px solid #e2e8f0; margin: 0.75rem 0; padding-top: 0.75rem;">
+                                        <div class="pricing-row" style="margin-bottom: 0.5rem;">
+                                            <span style="font-size: 0.875rem;">Subtotal</span>
+                                            <span id="subtotal" style="font-weight: 600;">₱54.88</span>
+                                        </div>
+                                        <div class="pricing-row" style="margin-bottom: 0.75rem;">
+                                            <span style="font-size: 0.875rem;">VAT (12%)</span>
+                                            <span id="vat" style="font-weight: 600;">₱6.59</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="pricing-row total">
+                                        <span style="font-weight: 600;">Total Monthly</span>
+                                        <span class="amount" id="totalPrice">₱61.47</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="card-body px-4 py-2" style="min-height: 540px; display: flex; flex-direction: column;">
-                            <form id="addBranchForm" enctype="multipart/form-data"
-                                style="flex:1;display:flex;flex-direction:column;" method="POST"
-                                action="{{ route('affiliate-branch-register') }}">
-                                @csrf
-
-                                <!-- STEP 1: Plan Summary (NON-BLOCKING) -->
-                                <div class="wizard-step" data-step="1" style="min-height:340px;">
-                                    <div class="container-fluid py-3">
-                                        <div class="row justify-content-center">
-                                            <!-- Left Section -->
-                                            <h2 class="my-2">Plan Summary</h2>
-                                            <div class="col-lg-7 mb-2">
-
-
-                                                <div class="card shadow-sm mb-4">
-                                                    <div class="card-body">
-                                                        <h5>Your Subscription</h5>
-                                                        <p>Customize your plan to match your HR & Payroll needs.</p>
-
-                                                        <div class="form-group mb-3">
-                                                            <div
-                                                                class="d-flex justify-content-between align-items-center mb-1">
-                                                                <label for="totalEmployees" class="mb-0"><strong>Total
-                                                                        Employees:</strong></label>
-                                                                <small class="text-muted">₱49.00 per additional user</small>
-                                                            </div>
-                                                            <input type="number" id="totalEmployees" class="form-control"
-                                                                name="total_employees" value="1" min="0" step="1"
-                                                                data-included="0" data-price-per-user="49">
-
-                                                        </div>
-
-                                                        <h3 class="mt-3 mb-2">Included Features:</h3>
-
-                                                        <div class="d-flex flex-wrap gap-3">
-                                                            <!-- Employee Access Card -->
-                                                            <div class="flex-fill" style="min-width: 300px;">
-
-                                                                <div class="mb-3">
-                                                                    <div class="mb-3">
-                                                                        <strong>Employee Access</strong>
-                                                                        <div class="d-flex flex-column mt-2 gap-2">
-                                                                            <!-- Time Keeping Card -->
-                                                                            <div class="card py-2 px-3 mb-1 border"
-                                                                                style="border-color: #064857; border-radius: 0.5rem;">
-                                                                                <div
-                                                                                    class="d-flex align-items-center text-primary">
-                                                                                    <i class="bi bi-clock me-2"></i>
-                                                                                    <span>Time Keeping (Clock-in &
-                                                                                        Clock-out)</span>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <!-- Payslip View Card -->
-                                                                            <div class="card py-2 px-3 mb-1 border"
-                                                                                style="border-color: #064857; border-radius: 0.5rem;">
-                                                                                <div
-                                                                                    class="d-flex align-items-center text-primary">
-                                                                                    <i class="bi bi-eye me-2"></i>
-                                                                                    <span>Payslip View & Download</span>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <!-- Attendance Photo Capture Card -->
-                                                                            <div class="card py-2 px-3 mb-1 border"
-                                                                                style="border-color: #064857; border-radius: 0.5rem;">
-                                                                                <div
-                                                                                    class="d-flex align-items-center text-primary">
-                                                                                    <i class="bi bi-camera me-2"></i>
-                                                                                    <span>Attendance Photo Capture</span>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <!-- Leave and Overtime Filing Card -->
-                                                                            <div class="card py-2 px-3 border"
-                                                                                style="border-color: #064857; border-radius: 0.5rem;">
-                                                                                <div
-                                                                                    class="d-flex align-items-center text-primary">
-                                                                                    <i
-                                                                                        class="bi bi-calendar-check me-2"></i>
-                                                                                    <span>Leave and Overtime Filing</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                            </div>
-
-                                                            <!-- Owner Access Card -->
-                                                            <div class="flex-fill" style="min-width: 300px;">
-                                                                <div class="mb-3">
-                                                                    <strong>Owner Access:</strong>
-                                                                    <div class="d-flex flex-column mt-2 gap-2">
-                                                                        <!-- Government Report Generator -->
-                                                                        <div class="card py-2 px-3 mb-1 border"
-                                                                            style="border-color: #064857; border-radius: 0.5rem;">
-                                                                            <div
-                                                                                class="d-flex align-items-center text-primary">
-                                                                                <i class="bi bi-building me-2"></i>
-                                                                                <span>Government Report Generator</span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Employee List View -->
-                                                                        <div class="card py-2 px-3 mb-1 border"
-                                                                            style="border-color: #064857; border-radius: 0.5rem;">
-                                                                            <div
-                                                                                class="d-flex align-items-center text-primary">
-                                                                                <i class="bi bi-eye me-2"></i>
-                                                                                <span>Employee List View</span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Payroll Process -->
-                                                                        <div class="card py-2 px-3 mb-1 border"
-                                                                            style="border-color: #064857; border-radius: 0.5rem;">
-                                                                            <div
-                                                                                class="d-flex align-items-center text-primary">
-                                                                                <i class="bi bi-cash me-2"></i>
-                                                                                <span>Payroll Process</span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Create Employee -->
-                                                                        <div class="card py-2 px-3 mb-1 border"
-                                                                            style="border-color: #064857; border-radius: 0.5rem;">
-                                                                            <div
-                                                                                class="d-flex align-items-center text-primary">
-                                                                                <i class="bi bi-person-plus me-2"></i>
-                                                                                <span>Create Employee</span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Geotagging + Location Tracking -->
-                                                                        <div class="card py-2 px-3 mb-1 border"
-                                                                            style="border-color: #064857; border-radius: 0.5rem;">
-                                                                            <div
-                                                                                class="d-flex align-items-center text-primary">
-                                                                                <i class="bi bi-geo-alt me-2"></i>
-                                                                                <span>Geotagging + Location Tracking</span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Earnings & Deductions -->
-                                                                        <div class="card py-2 px-3 mb-1 border"
-                                                                            style="border-color: #064857; border-radius: 0.5rem;">
-                                                                            <div
-                                                                                class="d-flex align-items-center text-primary">
-                                                                                <i class="bi bi-calculator me-2"></i>
-                                                                                <span>Earnings & Deductions</span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Flexible Shift Scheduling -->
-                                                                        <div class="card py-2 px-3 border"
-                                                                            style="border-color: #064857; border-radius: 0.5rem;">
-                                                                            <div
-                                                                                class="d-flex align-items-center text-primary">
-                                                                                <i class="bi bi-calendar-range me-2"></i>
-                                                                                <span>Flexible Shift Scheduling</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <hr>
-                                                        <div>
-                                                            <div class="d-flex align-items-center justify-content-between px-4 py-3 rounded"
-                                                                style="background: linear-gradient(to right, #064857, #2ca8a8); color: white;">
-                                                                <div class="w-100 d-flex align-items-center justify-content-between"
-                                                                    style="min-height: 70px; width: 100%;">
-                                                                    <div class="flex-grow-1">
-                                                                        <div class="small">Monthly (VAT Inclusive)</div>
-                                                                        <strong id="leftMonthly"
-                                                                            style="font-size: 1.25rem;">₱49.00 /
-                                                                            month</strong>
-                                                                    </div>
-                                                                    <div>
-                                                                        <i class="bi bi-cash"
-                                                                            style="font-size: 2.5rem;"></i>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            {{-- <span><strong id="leftYearly">₱588.00 /
-                                                                    year</strong></span> --}}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Right Section -->
-                                            <div class="col-lg-5">
-                                                <div class="card mb-4">
-                                                       <div class="card-body">
-
-                                                                    <h5>Features</h5>
-                                                                    <p>Use checkboxes to add more features.</p>
-
-                                                                    <div id="addons-list">
-                                                                        <div class="text-center py-4">
-                                                                            <div class="spinner-border text-primary" role="status">
-                                                                                <span class="visually-hidden">Loading...</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <script>
-                                                                        // Map addon_key to icon class
-                                                                        const addonIcons = {
-                                                                            employee_official_business: 'bi-briefcase',
-                                                                            asset_management_tracking: 'bi-hdd-network',
-                                                                            bank_data_export_csv: 'bi-file-earmark-spreadsheet',
-                                                                            payroll_batch_processing: 'bi-stack',
-                                                                            policy_upload: 'bi-upload',
-                                                                            custom_holiday: 'bi-calendar-heart'
-                                                                        };
-
-                                                                        function slugify(text) {
-                                                                            return text.toString().toLowerCase()
-                                                                                .replace(/\s+/g, '-')           // Replace spaces with -
-                                                                                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-                                                                                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-                                                                                .replace(/^-+/, '')             // Trim - from start of text
-                                                                                .replace(/-+$/, '');            // Trim - from end of text
-                                                                        }
-
-                                                                        $(function () {
-                                                                            $.get('{{ route("api.affiliate-addons") }}', function (data) {
-                                                                                let html = '';
-                                                                                if (data && Array.isArray(data.addons) && data.addons.length) {
-                                                                                    data.addons.forEach(function (addon) {
-                                                                                        const id = slugify(addon.name);
-                                                                                        const icon = addonIcons[addon.addon_key] || 'bi-box';
-                                                                                        html += `
-                                                                                                                            <div class="d-flex align-items-center justify-content-between p-3 mb-2 border rounded" style="border-color: #064857;">
-                                                                                                                                <div class="d-flex align-items-center">
-                                                                                                                                    <input class="form-check-input me-2 feature-checkbox" type="checkbox"
-                                                                                                                                        id="${id}" name="features[]" value="${addon.addon_key}"
-                                                                                                                                        data-addon-key="${addon.addon_key}" data-price="${addon.price}">
-
-                                                                                                                                    <div class="me-3">
-                                                                                                                                        <i class="bi ${icon}"></i>
-                                                                                                                                    </div>
-                                                                                                                                    <label class="form-check-label fw-bold mb-0" for="${id}">
-                                                                                                                                        ${addon.name}
-                                                                                                                                    </label>
-                                                                                                                                </div>
-                                                                                                                                <div class="text-end fw-semibold">
-                                                                                                                                    ₱${parseFloat(addon.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}/mo
-                                                                                                                                </div>
-                                                                                                                            </div>
-                                                                                                                        `;
-                                                                                    });
-                                                                                } else {
-                                                                                    html = `<div class="alert alert-warning mb-0">No add-on features available.</div>`;
-                                                                                }
-                                                                                $('#addons-list').html(html);
-
-                                                                                // Bind change event after rendering checkboxes
-                                                                                $(document).on('change', 'input.feature-checkbox', computePricing);
-
-                                                                                // Store addon_key as data attribute for each checkbox
-                                                                                data.addons.forEach(function (addon) {
-                                                                                    const id = slugify(addon.name);
-                                                                                    setTimeout(function () {
-                                                                                        $('#' + id).attr('data-addon-key', addon.addon_key);
-                                                                                    }, 0);
-                                                                                });
-                                                                            }).fail(function () {
-                                                                                $('#addons-list').html('<div class="alert alert-danger mb-0">Failed to load add-on features.</div>');
-                                                                            });
-                                                                        });
-                                                                    </script>
-                                                                </div> 
-                                                </div>
-
-                                                <div class="card shadow-sm">
-                                                    <div class="card-body"
-                                                        style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
-                                                        <h5 style="color: #064857;">Pricing Summary</h5>
-                                                        <p style="color: #064857;">Plan: <strong>Starter</strong></p>
-                                                        <div class="mb-2" style="color: #064857;">
-                                                            <span>Added Employees:</span>
-                                                            <span id="sumEmployees" class="float-end">₱490.00</span>
-                                                        </div>
-                                                        <div class="mb-2" style="color: #064857;">
-                                                            <span>Added Features:</span>
-                                                            <span id="sumFeatures" class="float-end">₱0.00</span>
-                                                        </div>
-                                                        <div class="mb-2" style="color: #064857;">
-                                                            <span>Subtotal:</span>
-                                                            <span id="sumSubtotal" class="float-end">₱490.00</span>
-                                                        </div>
-                                                        <div class="mb-2" style="color: #064857;">
-                                                            <span>VAT (12%):</span>
-                                                            <span id="sumVat" class="float-end">₱0.00</span>
-                                                        </div>
-                                                        <hr style="border-color: #064857;">
-                                                        <div class="mb-2 d-flex justify-content-between align-items-center"
-                                                            style="color: #064857; font-size: 1rem;">
-                                                            <span><strong>Total Monthly (VAT Inclusive):</strong></span>
-                                                            <span id="sumTotalMonthly" style="font-weight: 600;">₱490.00 /
-                                                                month</span>
-                                                        </div>
-
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- STEP 2: Basic Information (YOUR EXISTING FIELDS) -->
-                                <div class="wizard-step d-none" data-step="2" style="min-height:340px;">
-                                    <div class="row mb-4">
-                                        <div class="col-12">
-                                            <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-link me-2"></i>Referral
-                                                Code <span class="text-danger">*</span></h6>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <div class="input-group">
-                                                <input name="referral_code" id="referral_code" class="form-control"
-                                                    type="text" required placeholder="Enter referral code">
-                                                <button type="button" id="verifyReferralCode"
-                                                    class="btn btn-info">Verify</button>
-                                            </div>
-                                            <span id="referralStatus" class="text-success d-none ms-2">Referral code is
-                                                valid.</span>
-                                            <span id="referralError" class="text-danger d-none ms-2">Invalid referral
-                                                code.</span>
-                                        </div>
-                                    </div>
-
-                                    <hr>
-                                    <div class="row mb-4">
-                                        <div class="col-12">
-                                            <h6 class="mb-3 text-primary fw-bold">
-                                                <i class="fas fa-user-circle me-2"></i> User Details
-                                            </h6>
-                                        </div>
-                                        <div class="col-12 mb-3">
-                                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
-                                            <input name="full_name" class="form-control" required
-                                                placeholder="Enter your full name">
-                                        </div>
-                    <div class="col-12 mb-3">
-                        <label class="form-label">Username <span class="text-danger">*</span></label>
-                        <input name="username" class="form-control" required>
-                        <div class="invalid-feedback" id="error-username"></div>
                     </div>
+                </div>
 
-                    <div class="col-12 mb-3">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input name="email" type="email" class="form-control" required>
-                        <div class="invalid-feedback" id="error-email"></div>
-                    </div>
+                <!-- Step 2: Basic Information -->
+                <div class="wizard-step" data-step="2">
+                    <div class="wizard-content">
+                        <!-- Referral Code Section (Full Width) -->
+                        <div class="form-section" style="margin-bottom: 1.5rem;">
+                            <h4>Referral Code (Optional)</h4>
+                            <div class="referral-input-group">
+                                <input type="text" name="referral_code" id="referralCode"
+                                       placeholder="Enter referral code">
+                                <button type="button" class="btn-verify" id="verifyBtn">Verify</button>
+                            </div>
+                            <div id="referralStatus" class="text-success d-none mt-2" style="font-size: 0.875rem;"></div>
+                            <div id="referralError" class="text-danger d-none mt-2" style="font-size: 0.875rem;"></div>
+                        </div>
 
-                                        <div class="col-12 mb-3">
-                                            <label class="form-label">Password <span class="text-danger">*</span></label>
-                                            <input name="password" type="password" class="form-control" required>
-                                        </div>
-                                        <div class="col-12 mb-3">
-                                            <label class="form-label">Confirm Password <span
-                                                    class="text-danger">*</span></label>
-                                            <input name="confirm_password" type="password" class="form-control" required>
-                                        </div>
-                                        <div class="col-12 mb-3">
-                                            <label class="form-label">Phone Number <span
-                                                    class="text-danger">*</span></label>
-                                            <input name="phone_number" class="form-control" required>
-                                        </div>
-                                        <input name="role_id" type="hidden" value="2">
-                                        <input type="hidden" name="billing_period" id="billing_period" value="monthly">
-                                        <input type="hidden" name="is_trial" id="is_trial" value="1">
-                                        <input type="hidden" name="plan_slug" id="plan_slug" value="starter">
+                        <!-- Two Column Layout -->
+                        <div class="two-column-layout">
+                            <!-- Left Column - User Details -->
+                            <div class="subscription-card">
+                                <h3>User Details</h3>
+
+                                <div class="form-group">
+                                    <label><i class="bi bi-person"></i> Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="full_name" required placeholder="Enter your full name">
+                                    <div class="invalid-feedback">Full name is required</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label><i class="bi bi-person-badge"></i> Username <span class="text-danger">*</span></label>
+                                    <input type="text" name="username" required placeholder="Enter username">
+                                    <div class="invalid-feedback" id="errorUsername">Username is required</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label><i class="bi bi-envelope"></i> Email <span class="text-danger">*</span></label>
+                                    <input type="email" name="email" required placeholder="Enter email address">
+                                    <div class="invalid-feedback" id="errorEmail">Email is required</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label><i class="bi bi-lock"></i> Password <span class="text-danger">*</span></label>
+                                    <input type="password" name="password" required placeholder="Enter password">
+                                    <div class="invalid-feedback">Password is required</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label><i class="bi bi-lock-fill"></i> Confirm Password <span class="text-danger">*</span></label>
+                                    <input type="password" name="confirm_password" required placeholder="Re-enter password">
+                                    <div class="invalid-feedback">Passwords must match</div>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label><i class="bi bi-phone"></i> Phone Number <span class="text-danger">*</span></label>
+                                    <input type="tel" name="phone_number" required placeholder="Enter phone number">
+                                    <div class="invalid-feedback">Phone number is required</div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="sidebar-section">
+                                <!-- Business Information -->
+                                <div class="subscription-card" style="margin-bottom: 1.5rem;">
+                                    <h3>Business Information</h3>
+
+                                    <div class="form-group">
+                                        <label><i class="bi bi-shop"></i> Company Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="branch_name" required placeholder="Enter company name">
+                                        <div class="invalid-feedback">Company name is required</div>
                                     </div>
-                                    <hr>
-                                    <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-building me-2"></i>Business
-                                        Information</h6>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Company Name <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="branchName" name="branch_name"
-                                                required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Address <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="branchLocation"
-                                                name="branch_location" required>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4 d-flex justify-content-end">
-                                        <div class="col-md-6 mb-3">
-                                            <div class="d-flex align-items-center justify-content-between px-4 py-3 rounded"
-                                                style="background: linear-gradient(to right, #064857, #2ca8a8); color: white;">
-                                                <div class="w-100 d-flex align-items-center justify-content-between"
-                                                    style="min-height: 70px; width: 100%;">
-                                                    <div class="flex-grow-1">
-                                                        <div class="small">Monthly (VAT Inclusive)</div>
-                                                        <strong id="sumTotalMonthlyStep2" style="font-size: 1.25rem;">₱49.00
-                                                            / month</strong>
-                                                    </div>
-                                                    <div>
-                                                        <i class="bi bi-cash" style="font-size: 2.5rem;"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label><i class="bi bi-geo-alt"></i> Address <span class="text-danger">*</span></label>
+                                        <input type="text" name="branch_location" required placeholder="Enter company address">
+                                        <div class="invalid-feedback">Address is required</div>
                                     </div>
                                 </div>
 
+                                <!-- Pricing Summary -->
+                                <div class="pricing-summary">
+                                    <h5>Pricing Summary</h5>
+                                    <p>Plan: <strong>Starter</strong></p>
 
-                                <!-- Wizard Navigation -->
-                                <div class="d-flex justify-content-between align-items-center mt-4">
-                                    <button type="button" class="btn btn-outline-secondary px-4" id="wizardPrev" disabled>
-                                        <i class="fas fa-arrow-left me-2"></i>Previous
-                                    </button>
-                                    <button type="button" class="btn btn-primary px-4" id="wizardNext">
-                                        Next<i class="fas fa-arrow-right ms-2"></i>
-                                    </button>
-                                    <button type="submit" class="btn btn-success px-4 d-none" id="wizardSubmit">
-                                        <i class="fas fa-save me-2"></i>Save Company
-                                    </button>
+                                    <div class="pricing-row">
+                                        <span>Base Price</span>
+                                        <span id="basePrice2">₱54.88</span>
+                                    </div>
+                                    <div class="pricing-row">
+                                        <span>Employees (<span id="empCount2">0</span>)</span>
+                                        <span id="empPrice2">₱0.00</span>
+                                    </div>
+                                    <div class="pricing-row">
+                                        <span>Add-ons (<span id="addonCount2">0</span>)</span>
+                                        <span id="addonPrice2">₱0.00</span>
+                                    </div>
+                                    <div class="pricing-row">
+                                        <span>Subtotal</span>
+                                        <span id="subtotal2">₱54.88</span>
+                                    </div>
+                                    <div class="pricing-row">
+                                        <span>VAT (12%)</span>
+                                        <span id="vat2">₱6.59</span>
+                                    </div>
+                                    <div class="pricing-row total">
+                                        <span>Total Monthly</span>
+                                        <span class="amount" id="totalPrice2">₱61.47</span>
+                                    </div>
                                 </div>
-
-                                <!-- Wizard Progress -->
-                                <div class="progress mt-4" style="height: 8px;">
-                                    <div class="progress-bar bg-primary" id="wizardProgressBar" role="progressbar"
-                                        style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <div class="text-center mt-2">
-                                    <small id="wizardStepText" class="text-primary fw-bold">Step 1 of 2</small>
-
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-
-            <script>
-                // Wizard header updater
-                function updateWizardHeader(step) {
-                    $('#wizardStepCircle').text(step);
-                    const titles = [
-                        'Step 1: Plan Summary',
-                        'Step 2: Basic Information',
-                        'Step 3: Confirmation'
-                    ];
-                    $('#wizardStepTitle').text(titles[step - 1] || '');
-                }
-
-                // Core step switcher
-                function showStep(step) {
-                    $('.wizard-step').addClass('d-none');
-                    $('.wizard-step[data-step="' + step + '"]').removeClass('d-none');
-                    $('#wizardPrev').prop('disabled', step === 1);
-                    const totalSteps = window.totalSteps || 3;
-                    $('#wizardNext').toggleClass('d-none', step === totalSteps);
-                    $('#wizardSubmit').toggleClass('d-none', step !== totalSteps);
-
-                    // Progress bar + text
-                    let percent = Math.round((step / totalSteps) * 100);
-                    $('#wizardProgressBar').css('width', percent + '%').attr('aria-valuenow', percent);
-                    $('#wizardStepText').text('Step ' + step + ' of ' + totalSteps);
-
-                    updateWizardHeader(step);
-
-                    // Normalize heights after switch
-                    setTimeout(setWizardStepHeight, 100);
-                }
-
-                // Height normalization for visible step
-                function setWizardStepHeight() {
-                    let max = 0;
-                    $('.wizard-step').each(function () {
-                        $(this).css('min-height', '0');
-                        if (!$(this).hasClass('d-none')) {
-                            max = Math.max(max, $(this).outerHeight());
-                        }
-                    });
-                    if (max < 340) max = 340;
-                    $('.wizard-step').css('min-height', max + 'px');
-                }
-
-                // Validation for Step 2 (Basic Info)
-                function validateStep2() {
-                    let valid = true;
-                    const $scope = $('.wizard-step[data-step="2"]');
-
-                    $scope.find('[required]').each(function () {
-                        if (!$(this).val()) {
-                            $(this).addClass('is-invalid');
-                            valid = false;
-                        } else {
-                            $(this).removeClass('is-invalid');
-                        }
-                    });
-
-                    // Password match check
-                    let pw = $('[name="password"]').val();
-                    let cpw = $('[name="confirm_password"]').val();
-                    if (pw !== cpw) {
-                        $('[name="confirm_password"]').addClass('is-invalid');
-                        valid = false;
-                    } else {
-                        $('[name="confirm_password"]').removeClass('is-invalid');
-                    }
-                    return valid;
-                }
-
-                // Wire up once DOM ready
-                $(function () {
-                    window.currentStep = 1;
-                    window.totalSteps = 3;
-
-                    // Initial render
-                    showStep(window.currentStep);
-                    $(window).on('resize', setWizardStepHeight);
-
-                    // Step navigation
-                    $('#wizardNext').on('click', function () {
-                        // Only validate on Step 2
-                        if (window.currentStep === 2) {
-                            if (!validateStep2()) {
-                                toastr?.error?.('Please complete all required fields and ensure passwords match.');
-                                return;
-                            }
-                        }
-
-                        if (window.currentStep < window.totalSteps) {
-                            window.currentStep++;
-                            showStep(window.currentStep);
-
-                            // Populate confirmation on final step
-                            if (window.currentStep === window.totalSteps) {
-                                const html = `
-                                            <ul class="list-group">
-                                             <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Selected Features:</strong> ${($('input[name="features[]"]:checked').map(function () { return $(this).val(); }).get().join(', ') || 'None')
-                                    }</li>
-                                             <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
-                                             <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
-                                                                        </ul>
-                                                                        `;
-                                $('#confirmationDetails').html(html);
-                            }
-                        }
-                    });
-
-                    $('#wizardPrev').on('click', function () {
-                        if (window.currentStep > 1) {
-                            window.currentStep--;
-                            showStep(window.currentStep);
-                        }
-                    });
-
-                    // Remove is-invalid on input (Step 2 only)
-                    $('.wizard-step[data-step="2"] input[required]').on('input', function () {
-                        if ($(this).val()) {
-                            $(this).removeClass('is-invalid');
-                            // AJAX submit
-                            $('#addBranchForm').on('submit', function (e) {
-                                e.preventDefault();
-                                let form = $('#addBranchForm')[0];
-                                let formData = new FormData(form);
-
-                                // Collect selected features as objects with addon_key, start_date, end_date
-                                let features = [];
-                                $('input[name="features[]"]:checked').each(function () {
-                                    let addonKey = $(this).data('addon-key');
-                                    // You can set start_date and end_date here if needed, for now leave blank or set to null
-                                    if (addonKey) {
-                                        features.push({
-                                            addon_key: addonKey,
-                                            start_date: null,
-                                            end_date: null
-                                        });
-                                    }
-                                });
-
-                                // Remove existing features[] from FormData
-                                formData.delete('features[]');
-                                formData.delete('features');
-                                // Append features as array of objects (not JSON string)
-                                features.forEach(function (feature, idx) {
-                                    for (const key in feature) {
-                                        if (feature[key] !== undefined && feature[key] !== null) {
-                                            formData.append(`features[${idx}][${key}]`, feature[key]);
-                                        }
-                                    }
-                                });
-
-                                // Fix is_trial to boolean true/false
-                                formData.set('is_trial', '1');
-
-                                $.ajax({
-                                    url: "{{ url('/api/affiliate/branch/register') }}",
-                                    type: "POST",
-                                    data: formData,
-                                    processData: false,
-                                    contentType: false,
-                                    headers: {}, // no CSRF header for API endpoint
-                                    success: function (response) {
-                                        if (response.status === 'success') {
-                                            toastr?.success?.(response.message || 'Branch saved successfully!');
-                                            $('#addBranchForm')[0].reset();
-                                            $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully!</div>');
-                                            // reset wizard
-                                            window.currentStep = 1;
-                                            showStep(window.currentStep);
-
-                                            // Redirect to payment checkout if URL is present
-                                            if (response.payment_checkout_url) {
-                                                window.location.href = response.payment_checkout_url;
-                                            }
-                                        } else {
-                                            toastr?.error?.(response.message || 'An error occurred.');
-                                        }
-                                    },
-                                    error: function (xhr) {
-                                        let errors = xhr.responseJSON?.errors || {};
-                                        if (xhr.responseJSON?.message) {
-                                            toastr?.error?.(xhr.responseJSON.message);
-                                        }
-                                        for (const key in errors) {
-                                            toastr?.error?.(errors[key][0]);
-                                        }
-                                    }
-                                });
-                            });
-                            toastr?.error?.(xhr.responseJSON.message);
-                        }
-                        for (const key in errors) {
-                            toastr?.error?.(errors[key][0]);
-                        }
-                    }
-                 });
-
-                // Height equalization on first paint
-                $(function () { setTimeout(setWizardStepHeight, 120); });
-            </script>
-
+                <!-- Navigation -->
+                <div class="wizard-navigation">
+                    <button type="button" class="btn-prev" id="prevBtn" disabled>
+                        <i class="bi bi-arrow-left"></i> Previous
+                    </button>
+                    <div class="step-counter">
+                        Step <span id="navStep">1</span> of 2
+                    </div>
+                    <button type="button" class="btn-next" id="nextBtn">
+                        Next Step <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <button type="submit" class="btn-submit d-none" id="submitBtn">
+                        <i class="bi bi-check-circle"></i> Save Company
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-@endsection
-@push('scripts')
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // ================== Wizard (2 steps) ==================
-        let currentStep = 1;
-        const totalSteps = 2; // <-- only 2 steps now
+        $(document).ready(function() {
+            let currentStep = 1;
+            const totalSteps = 2;
 
-        function updateWizardHeader(step) {
-            $('#wizardStepCircle').text(step);
-            const titles = [
-                'Step 1: Plan Summary',
-                'Step 2: Basic Information',
-            ];
-            $('#wizardStepTitle').text(titles[step - 1] || '');
-        }
+            // Load add-ons
+            function loadAddons() {
+                $.get('{{ route("api.affiliate-addons") }}', function(data) {
+                    let html = '';
+                    if (data && Array.isArray(data.addons) && data.addons.length) {
+                        data.addons.forEach(function(addon) {
+                            const price = parseFloat(addon.price).toLocaleString('en-PH', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                            html += `
+                                <div class="addon-item">
+                                    <div class="addon-label">
+                                        <input type="checkbox" class="addon-checkbox"
+                                               name="features[]" value="${addon.addon_key}"
+                                               data-addon-key="${addon.addon_key}"
+                                               data-price="${addon.price}">
+                                        <label>${addon.name}</label>
+                                    </div>
+                                    <div class="addon-price">₱${price}</div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html = '<p class="text-muted text-center">No add-ons available</p>';
+                    }
+                    $('#addonsList').html(html);
 
-        function setWizardStepHeight() {
-            let max = 0;
-            $('.wizard-step').each(function () {
-                $(this).css('min-height', '0');
-                if (!$(this).hasClass('d-none')) max = Math.max(max, $(this).outerHeight());
-            });
-            if (max < 340) max = 340;
-            $('.wizard-step').css('min-height', max + 'px');
-        }
-
-        function showStep(step) {
-            $('.wizard-step').addClass('d-none');
-            $('.wizard-step[data-step="' + step + '"]').removeClass('d-none');
-
-            // Prev/Next/Submit visibility
-            $('#wizardPrev').prop('disabled', step === 1);
-            $('#wizardNext').toggleClass('d-none', step === totalSteps);    // hide Next on last step
-            $('#wizardSubmit').toggleClass('d-none', step !== totalSteps);  // show Submit on last step
-
-            // Progress + copy
-            const percent = Math.round((step / totalSteps) * 100);
-            $('#wizardProgressBar').css('width', percent + '%').attr('aria-valuenow', percent);
-            $('#wizardStepText').text('Step ' + step + ' of ' + totalSteps);
-
-            updateWizardHeader(step);
-            setTimeout(setWizardStepHeight, 100);
-        }
-
-        function validateStep2() {
-            let valid = true;
-            const $scope = $('.wizard-step[data-step="2"]');
-
-            $scope.find('[required]').each(function () {
-                if (!$(this).val()) { $(this).addClass('is-invalid'); valid = false; }
-                else { $(this).removeClass('is-invalid'); }
-            });
-
-            // Password match
-            const pw = $('[name="password"]').val();
-            const cpw = $('[name="confirm_password"]').val();
-            if (pw !== cpw) { $('[name="confirm_password"]').addClass('is-invalid'); valid = false; }
-            else { $('[name="confirm_password"]').removeClass('is-invalid'); }
-
-            return valid;
-        }
-
-        // ================== Pricing helpers (unchanged) ==================
-        function formatPHP(amount) {
-            try {
-                return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(amount);
-            } catch (_) {
-                return '₱' + (Math.round(amount * 100) / 100).toFixed(2);
+                    // Bind change event
+                    $('.addon-checkbox').on('change', calculatePricing);
+                }).fail(function() {
+                    $('#addonsList').html('<p class="text-danger text-center">Failed to load add-ons</p>');
+                });
             }
-        }
 
-        function updatePricingSummary() {
-            const employeesMonthly = parseFloat($('#sumEmployees').text().replace(/[₱,]/g, '')) || 0;
-            const featuresMonthly = parseFloat($('#sumFeatures').text().replace(/[₱,]/g, '')) || 0;
-            const vatMonthly = parseFloat($('#sumVat').text().replace(/[₱,]/g, '')) || 0;
-            const totalMonthly = employeesMonthly + featuresMonthly + vatMonthly;
+            // Calculate pricing
+            function calculatePricing() {
+                const basePrice = 54.88;
+                const employees = parseInt($('#totalEmployees').val()) || 1;
+                const pricePerUser = 49;
 
-            // If you still show a confirmation box somewhere, you can render numbers here.
-            // Otherwise safe to keep for any preview you have.
-            $('#confirmationDetails').html(`
-                      <ul class="list-group">
-                        <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
-                        <li class="list-group-item"><strong>Added Features:</strong> ₱${featuresMonthly.toFixed(2)}</li>
-                        <li class="list-group-item"><strong>VAT (12%):</strong> ₱${vatMonthly.toFixed(2)}</li>
-                        <li class="list-group-item"><strong>Total Monthly:</strong> <strong>₱${totalMonthly.toFixed(2)}</strong></li>
-                      </ul>
-                    `);
-        }
+                // Calculate employee cost (first employee included in base)
+                const employeeCost = Math.max(0, employees - 1) * pricePerUser;
 
-        function computePricing() {
-            const $emp = $('#totalEmployees');
-            const totalEmployees = Math.max(0, parseInt($emp.val(), 10) || 0);
-            const included = parseInt($emp.data('included'), 10) || 0;
-            const perUser = parseFloat($emp.data('price-per-user')) || 49;
+                // Calculate addons cost
+                let addonsCost = 0;
+                let addonCount = 0;
+                $('.addon-checkbox:checked').each(function() {
+                    addonsCost += parseFloat($(this).data('price')) || 0;
+                    addonCount++;
+                });
 
-            const billableUsers = Math.max(0, totalEmployees - included);
-            const employeesMonthly = billableUsers * perUser;
+                const subtotal = basePrice + employeeCost + addonsCost;
+                const vat = subtotal * 0.12;
+                const total = subtotal + vat;
 
-            let featuresMonthly = 0;
-            const lines = [];
-            $('input[name="features[]"]:checked').each(function () {
-                const name = $(this).val();
-                const p = parseFloat($(this).data('price')) || 0;
-                featuresMonthly += p;
-                lines.push(`<li>${name}: <strong>${formatPHP(p)}</strong>/mo</li>`);
-            });
+                // Update display
+                function formatPrice(amount) {
+                    return '₱' + amount.toLocaleString('en-PH', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                }
 
-            const subtotalMonthly = employeesMonthly + featuresMonthly;
-            const vatMonthly = +(subtotalMonthly * 0.12).toFixed(2);
-            const totalMonthly = subtotalMonthly + vatMonthly;
-            const subtotalYearly = subtotalMonthly * 12;
+                $('#basePrice, #basePrice2').text(formatPrice(basePrice));
+                $('#empCount, #empCount2').text(employees - 1);
+                $('#empPrice, #empPrice2').text(formatPrice(employeeCost));
+                $('#addonCount, #addonCount2').text(addonCount);
+                $('#addonPrice, #addonPrice2').text(formatPrice(addonsCost));
+                $('#subtotal, #subtotal2').text(formatPrice(subtotal));
+                $('#vat, #vat2').text(formatPrice(vat));
+                $('#totalPrice, #totalPrice2, #monthlyTotal').text(formatPrice(total));
+            }
 
-            // Left summary (VAT-inclusive monthly)
-            const vatInclusiveMonthly = subtotalMonthly + (subtotalMonthly * 0.12);
-            $('#leftMonthly').text(`${formatPHP(vatInclusiveMonthly)} / month`);
-            // $('#leftYearly').text(`${formatPHP(subtotalYearly)} / year`); // only if you show it
+            // Step navigation
+            function updateStep(step) {
+                currentStep = step;
 
-            // Right summary
-            $('#sumEmployees').text(formatPHP(employeesMonthly));
-            $('#sumFeatures').text(formatPHP(featuresMonthly));
-            $('#sumSubtotal').text(formatPHP(subtotalMonthly));
-            $('#sumVat').text(formatPHP(vatMonthly));
-            $('#sumTotalMonthly').text(`${formatPHP(totalMonthly)} / month`);
+                // Update visibility
+                $('.wizard-step').removeClass('active');
+                $(`.wizard-step[data-step="${step}"]`).addClass('active');
 
-            // Optional breakdown UI
-            $('#featuresBreakdown').html(
-                lines.length ? `<ul class="mb-0 ps-3">${lines.join('')}</ul>` : `<em>No add-ons selected</em>`
-            );
+                // Update indicators
+                $('#stepNumber, #currentStep, #navStep').text(step);
+                $('#stepTitle').text(step === 1 ? 'Plan Summary' : 'Basic Information');
 
-            // Hidden fields for backend (optional)
-            $('#pricingMonthly').val(subtotalMonthly.toFixed(2));
-            $('#pricingYearly').val(subtotalYearly.toFixed(2));
-            $('#pricingVat').val(vatMonthly.toFixed(2));
-            $('#pricingFeatures').val(featuresMonthly.toFixed(2));
-
-            updatePricingSummary();
-        }
-
-        // Compute pricing for Step 2 summary
-        function computeStep2PricingSummary() {
-            // Get employee count and features from form
-            const $emp = $('#totalEmployees');
-            const totalEmployees = Math.max(0, parseInt($emp.val(), 10) || 0);
-            const included = parseInt($emp.data('included'), 10) || 0;
-            const perUser = parseFloat($emp.data('price-per-user')) || 49;
-
-            const billableUsers = Math.max(0, totalEmployees - included);
-            const employeesMonthly = billableUsers * perUser;
-
-            let featuresMonthly = 0;
-            $('input[name="features[]"]:checked').each(function () {
-                const p = parseFloat($(this).data('price')) || 0;
-                featuresMonthly += p;
-            });
-
-            const subtotalMonthly = employeesMonthly + featuresMonthly;
-            const vatMonthly = +(subtotalMonthly * 0.12).toFixed(2);
-            const totalMonthly = subtotalMonthly + vatMonthly;
-
-            // Format PHP currency
-            function formatPHP(amount) {
-                try {
-                    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(amount);
-                } catch (_) {
-                    return '₱' + (Math.round(amount * 100) / 100).toFixed(2);
+                // Update buttons
+                $('#prevBtn').prop('disabled', step === 1);
+                if (step === totalSteps) {
+                    $('#nextBtn').addClass('d-none');
+                    $('#submitBtn').removeClass('d-none');
+                } else {
+                    $('#nextBtn').removeClass('d-none');
+                    $('#submitBtn').addClass('d-none');
                 }
             }
 
-            $('#sumTotalMonthlyStep2').text(`${formatPHP(totalMonthly)} / month`);
-        }
+            // Validation
+            function validateStep2() {
+                let valid = true;
+                $('.wizard-step[data-step="2"] input[required]').each(function() {
+                    if (!$(this).val()) {
+                        $(this).addClass('is-invalid');
+                        valid = false;
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
 
-        // Bind to changes in employees/features and on step switch
-        $(function () {
-            $('#totalEmployees').on('input change', computeStep2PricingSummary);
-            $(document).on('change', 'input[name="features[]"]', computeStep2PricingSummary);
-
-            // Also update when showing step 2
-            function onStepChange() {
-                if ($('.wizard-step[data-step="2"]').is(':visible')) {
-                    computeStep2PricingSummary();
+                // Password match
+                const pw = $('input[name="password"]').val();
+                const cpw = $('input[name="confirm_password"]').val();
+                if (pw !== cpw) {
+                    $('input[name="confirm_password"]').addClass('is-invalid');
+                    valid = false;
                 }
+
+                return valid;
             }
-            // Listen for wizard step changes
-            $('#wizardNext, #wizardPrev').on('click', function () {
-                setTimeout(onStepChange, 120);
-            });
 
-            // Initial compute if step 2 is visible
-            if ($('.wizard-step[data-step="2"]').is(':visible')) {
-                computeStep2PricingSummary();
-            }
-        });
-
-        // ================== Bindings ==================
-        $(function () {
-            // Initial paint
-            showStep(currentStep);
-            setTimeout(setWizardStepHeight, 120);
-            $(window).on('resize', setWizardStepHeight);
-
-            // Nav
-            $('#wizardNext').off('click').on('click', function () {
-                // Step 1 → Step 2 (no validation here)
+            // Events
+            $('#nextBtn').click(function() {
                 if (currentStep < totalSteps) {
-                    currentStep++;
-                    showStep(currentStep);
-                    // No Step 3 anymore
+                    updateStep(currentStep + 1);
                 }
             });
 
-            $('#wizardPrev').off('click').on('click', function () {
-                if (currentStep > 1) { currentStep--; showStep(currentStep); }
+            $('#prevBtn').click(function() {
+                if (currentStep > 1) {
+                    updateStep(currentStep - 1);
+                }
             });
 
-            // Remove invalid state on typing (step 2)
-            $('.wizard-step[data-step="2"] input[required]').on('input', function () {
-                if ($(this).val()) $(this).removeClass('is-invalid');
+            $('#totalEmployees').on('input change', calculatePricing);
+
+            // Remove validation on input
+            $('input[required]').on('input', function() {
+                if ($(this).val()) {
+                    $(this).removeClass('is-invalid');
+                }
             });
 
-            // Pricing
-            $('#totalEmployees').on('input change', computePricing);
-            $(document).on('change', 'input[name="features[]"]', computePricing);
-            computePricing();
+            // Configure toastr options
+            if (typeof toastr !== 'undefined') {
+                toastr.options = {
+                    closeButton: true,
+                    progressBar: true,
+                    positionClass: 'toast-top-right',
+                    timeOut: 3000,
+                    showMethod: 'fadeIn',
+                    hideMethod: 'fadeOut'
+                };
+            }
 
-            // Submit (AJAX as you already do)
-            $('#addBranchForm').off('submit').on('submit', function (e) {
-                // Validate Step 2 before final submit
+            // Referral code verification
+            $('#verifyBtn').click(function() {
+                const code = $('#referralCode').val() || 'AFLJDGI'; // Use default if empty
+
+                $.ajax({
+                    url: '{{ route("verify.referral.code") }}',
+                    type: 'POST',
+                    data: { referral_code: code, _token: '{{ csrf_token() }}' },
+                    success: function(response) {
+                        if (response.success) {
+                            const displayCode = $('#referralCode').val() ? code : 'default referral code';
+                            $('#referralStatus').text('Referral code is valid (' + displayCode + ')').removeClass('d-none');
+                            $('#referralError').addClass('d-none');
+
+                            // Show success toast
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success('Referral code verified successfully!', 'Success');
+                            }
+                        } else {
+                            $('#referralError').text(response.message).removeClass('d-none');
+                            $('#referralStatus').addClass('d-none');
+
+                            // Show error toast
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(response.message || 'Invalid referral code', 'Error');
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        const errorMessage = xhr.responseJSON?.message || 'Invalid referral code';
+                        $('#referralError').text(errorMessage).removeClass('d-none');
+                        $('#referralStatus').addClass('d-none');
+
+                        // Show error toast
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(errorMessage, 'Error');
+                        }
+                    }
+                });
+            });
+
+            // Form submission
+            $('#registrationForm').submit(function(e) {
+                e.preventDefault();
+
                 if (currentStep === 2 && !validateStep2()) {
-                    e.preventDefault();
-                    // toastr?.error?.('Please complete all required fields and ensure passwords match.');
                     return;
                 }
 
-                e.preventDefault();
-                const form = this;
-                const formData = new FormData(form);
+                const formData = new FormData(this);
 
-                // Collect selected features as objects with addon_key
+                // Collect features
+                formData.delete('features[]');
                 let features = [];
-                $('input[name="features[]"]:checked').each(function () {
-                    const addonKey = $(this).data('addon-key');
-                    if (addonKey) features.push({ addon_key: addonKey, start_date: null, end_date: null });
+                $('.addon-checkbox:checked').each(function() {
+                    features.push({
+                        addon_key: $(this).data('addon-key'),
+                        start_date: null,
+                        end_date: null
+                    });
                 });
 
-                // Remove features[] and replace with objects for backend
-                formData.delete('features[]');
-                formData.delete('features');
-                features.forEach(function (feature, idx) {
+                features.forEach(function(feature, idx) {
                     for (const key in feature) {
                         if (feature[key] !== undefined && feature[key] !== null) {
                             formData.append(`features[${idx}][${key}]`, feature[key]);
@@ -949,141 +1214,39 @@
                     }
                 });
 
-                // Ensure boolean is_trial
-                formData.set('is_trial', '1');
-
                 $.ajax({
                     url: "{{ url('/api/affiliate/branch/register') }}",
                     type: "POST",
                     data: formData,
                     processData: false,
                     contentType: false,
-                    headers: {},
-                    success: function (response) {
+                    success: function(response) {
                         if (response.status === 'success') {
-                            form.reset();
-                            $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully!</div>');
-                            currentStep = 1;
-                            showStep(currentStep);
-                            computePricing();
-
                             if (response.payment_checkout_url) {
                                 window.location.href = response.payment_checkout_url;
                             }
-                        } else {
-                            // toastr?.error?.(response.message || 'An error occurred.');
                         }
                     },
-                 error: function (xhr) {
-                        // Clear old errors
-                        $('#error-username').text('');
-                        $('#error-email').text('');
-                        $('[name="username"], [name="email"]').removeClass('is-invalid');
-
+                    error: function(xhr) {
                         const errors = xhr.responseJSON?.errors || {};
-
                         if (errors.username) {
-                            $('[name="username"]').addClass('is-invalid');
-                            $('#error-username').text(errors.username[0]).show();
+                            $('input[name="username"]').addClass('is-invalid');
+                            $('#errorUsername').text(errors.username[0]).show();
                         }
-
                         if (errors.email) {
-                            $('[name="email"]').addClass('is-invalid');
-                            $('#error-email').text(errors.email[0]).show();
+                            $('input[name="email"]').addClass('is-invalid');
+                            $('#errorEmail').text(errors.email[0]).show();
                         }
-                    }
-
-                });
-            });
-        });
-
-        $('input[name="username"], input[name="email"]').on('input', function () {
-                $(this).removeClass('is-invalid');
-                $('#error-' + this.name).text('');
-            });
-
-        // ================== Referral Code Checker (unchanged) ==================
-        $(document).ready(function () {
-            $('#verifyReferralCode').on('click', function () {
-                const referralCode = $('#referral_code').val();
-                if (!referralCode) {
-                    $('#referralError').text("Please enter a referral code.").removeClass('d-none');
-                    $('#referralStatus').addClass('d-none');
-                    return;
-                }
-                $.ajax({
-                    url: '{{ route("verify.referral.code") }}',
-                    type: 'POST',
-                    data: { referral_code: referralCode, _token: '{{ csrf_token() }}' },
-                    success: function (response) {
-                        if (response.success) {
-                            $('#referralStatus').removeClass('d-none').text("Referral code is valid.");
-                            $('#referralError').addClass('d-none');
-                        } else {
-                            $('#referralError').removeClass('d-none').text(response.message);
-                            $('#referralStatus').addClass('d-none');
-                        }
-                    },
-                    error: function () {
-                        $('#referralError').removeClass('d-none').text('Invalid referral code. Please ask your affiliate for a valid code or try again.');
-                        $('#referralStatus').addClass('d-none');
                     }
                 });
             });
-        });
 
-        $(function () {
-            // Get referral code from URL param (?invite/ref=CODE or ?referral_code=CODE)
-            function getReferralCodeFromUrl() {
-                const url = new URL(window.location.href);
-                let code = url.searchParams.get('referral_code');
-                if (!code) {
-                    // Support ?invite/ref=CODE in path
-                    const pathMatch = window.location.pathname.match(/invite\/ref=([^\/\?]+)/i);
-                    if (pathMatch) code = pathMatch[1];
-                }
-                if (!code) {
-                    // Support ?invite/ref=CODE in query string
-                    const params = new URLSearchParams(window.location.search);
-                    for (const [key, value] of params.entries()) {
-                        if (key === 'invite/ref') {
-                            code = value;
-                            break;
-                        }
-                    }
-                }
-                return code;
-            }
-
-            const referralCode = getReferralCodeFromUrl();
-            if (referralCode) {
-                $('#referral_code')
-                    .val(referralCode)
-                    .prop('readonly', true)
-                    .css({
-                        'background-color': '#f1f1f1',
-                        'color': '#888'
-                    });
-                // Trigger verification
-                $.ajax({
-                    url: '{{ route("verify.referral.code") }}',
-                    type: 'POST',
-                    data: { referral_code: referralCode, _token: '{{ csrf_token() }}' },
-                    success: function (response) {
-                        if (response.success) {
-                            $('#referralStatus').removeClass('d-none').text("Referral code is valid.");
-                            $('#referralError').addClass('d-none');
-                        } else {
-                            $('#referralError').removeClass('d-none').text(response.message || 'Invalid referral code.');
-                            $('#referralStatus').addClass('d-none');
-                        }
-                    },
-                    error: function () {
-                        $('#referralError').removeClass('d-none').text('Invalid referral code. Please ask your affiliate for a valid code or try again.');
-                        $('#referralStatus').addClass('d-none');
-                    }
-                });
-            }
+            // Initialize
+            loadAddons();
+            calculatePricing();
         });
     </script>
-@endpush
+
+    <!-- Toastr JS (fallback if not loaded in layout) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+@endsection

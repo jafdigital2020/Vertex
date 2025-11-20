@@ -37,9 +37,14 @@ class MicroBusinessController extends Controller
 
     public function verifyReferralCode(Request $request)
     {
+        // Set default referral code if not provided
+        if (empty($request->input('referral_code'))) {
+            $request->merge(['referral_code' => 'AFLJDGI']);
+        }
+
         // Validate the input
         $validator = Validator::make($request->all(), [
-            'referral_code' => 'required|string|exists:tenants,tenant_code',
+            'referral_code' => 'nullable|string|exists:tenants,tenant_code',
         ]);
 
         if ($validator->fails()) {
@@ -60,8 +65,13 @@ class MicroBusinessController extends Controller
 
     public function registerBranchWithVat(Request $request)
     {
+        // Set default referral code if not provided
+        if (empty($request->input('referral_code'))) {
+            $request->merge(['referral_code' => 'AFLJDGI']);
+        }
+
         $validator = Validator::make($request->all(), [
-            'referral_code'   => 'required|string|exists:tenants,tenant_code',
+            'referral_code'   => 'nullable|string|exists:tenants,tenant_code',
             'full_name'       => 'required|string|max:255',
             'middle_name'     => 'nullable|string|max:255',
             'suffix'          => 'nullable|string|max:255',
@@ -106,7 +116,7 @@ class MicroBusinessController extends Controller
             }
 
             $branch = $this->createBranch($tenant->id, $request->branch_name, $request->phone_number, $request->branch_location);
-           
+
             $roles = $this->createRolesForBranch($tenant->id, $branch->id);
 
             $user = $this->createUser($request, $tenant->id);
@@ -299,7 +309,7 @@ class MicroBusinessController extends Controller
                     'branch_id'   => $branchId,
                     'prefix_name' => $branchName
                         ? strtoupper(substr(preg_replace('/\s+/', '', $branchName), 0, 4))
-                        : 'BRCH', 
+                        : 'BRCH',
                     'remarks'     => $remarks,
                 ]);
             }
@@ -326,7 +336,7 @@ class MicroBusinessController extends Controller
 
     public function createRolesForBranch($tenant_id, $branch_id)
     {
-        $affiliateRoles = new AffiliatePredefinedRoles(); 
+        $affiliateRoles = new AffiliatePredefinedRoles();
         $request = new Request();
 
         return $affiliateRoles->store($request, $tenant_id, $branch_id);
@@ -420,7 +430,7 @@ class MicroBusinessController extends Controller
             'department_code'     => $departmentCode,
             'department_name'     => $departmentName,
             'status'              => 'active',
-            'head_of_department'  => $userId, 
+            'head_of_department'  => $userId,
         ]);
     }
 
@@ -632,7 +642,7 @@ class MicroBusinessController extends Controller
         try {
             $client = new \GuzzleHttp\Client();
             $hitpayPayload = [
-                'amount'           => $amount,
+                'amount'           => 1,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
@@ -823,8 +833,8 @@ class MicroBusinessController extends Controller
             $totalActiveEmployee = 0;
             if ($tenantId && $branchId) {
                 $totalActiveEmployee = \App\Models\User::whereHas('employmentDetail', function ($query) use ($branchId) {
-                        $query->where('branch_id', $branchId);
-                    })
+                    $query->where('branch_id', $branchId);
+                })
                     ->where('tenant_id', $tenantId)
                     ->where('active_subscription', true)
                     ->count();
@@ -858,7 +868,7 @@ class MicroBusinessController extends Controller
         ]);
     }
 
-    
+
     public function addOnFeatures()
     {
         // Use the Addon model instead of DB::table for Eloquent features and casting
@@ -924,7 +934,7 @@ class MicroBusinessController extends Controller
         // ✅ Create invoice
         $invoice = Invoice::create([
             'branch_id'             => $branchId,
-            'branch_subscription_id'=> $subscription->id,
+            'branch_subscription_id' => $subscription->id,
             'invoice_number'        => $reference,
             'amount_due'            => $finalAmount,
             'amount_paid'           => 0,
@@ -1080,9 +1090,9 @@ class MicroBusinessController extends Controller
                     if ($personalInfo) {
                         $billToFullName = trim(
                             $personalInfo->first_name . ' ' .
-                            ($personalInfo->middle_name ? $personalInfo->middle_name . ' ' : '') .
-                            $personalInfo->last_name .
-                            ($personalInfo->suffix ? ' ' . $personalInfo->suffix : '')
+                                ($personalInfo->middle_name ? $personalInfo->middle_name . ' ' : '') .
+                                $personalInfo->last_name .
+                                ($personalInfo->suffix ? ' ' . $personalInfo->suffix : '')
                         );
                     }
                 }
@@ -1129,8 +1139,8 @@ class MicroBusinessController extends Controller
             $totalActiveEmployee = 0;
             if ($tenantId && $branchId) {
                 $totalActiveEmployee = \App\Models\User::whereHas('employmentDetail', function ($query) use ($branchId) {
-                        $query->where('branch_id', $branchId);
-                    })
+                    $query->where('branch_id', $branchId);
+                })
                     ->where('tenant_id', $tenantId)
                     ->where('active_subscription', true)
                     ->count();
@@ -1171,5 +1181,4 @@ class MicroBusinessController extends Controller
             'subscriptions' => $formatted,
         ]);
     }
-
 }

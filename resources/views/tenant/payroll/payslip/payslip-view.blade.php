@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Payslip</li>
                         </ol>
@@ -20,8 +20,9 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="mb-2">
-                        <a href="#" class="btn btn-dark d-flex align-items-center"><i
-                                class="ti ti-download me-2"></i>Download</a>
+                        <a href="#" id="downloadBtn" class="btn btn-dark d-flex align-items-center">
+                            <i class="ti ti-download me-2"></i>Download
+                        </a>
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -40,10 +41,11 @@
                     <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
                         <div class="d-flex align-items-center">
                             @if (
-                                $payslips->user &&
+                                    $payslips->user &&
                                     $payslips->user->employmentDetail &&
                                     $payslips->user->employmentDetail->branch &&
-                                    $payslips->user->employmentDetail->branch->branch_logo)
+                                    $payslips->user->employmentDetail->branch->branch_logo
+                                )
                                 <img src="{{ asset('storage/' . $payslips->user->employmentDetail->branch->branch_logo) }}"
                                     alt="Logo" class="me-3" style="max-height: 70px;">
                             @else
@@ -52,7 +54,8 @@
                             @endif
                             <div>
                                 <h4 class="mb-0">
-                                    {{ $payslips->user->employmentDetail->branch->name ?? 'Company Name' }}</h4>
+                                    {{ $payslips->user->employmentDetail->branch->name ?? 'Company Name' }}
+                                </h4>
                                 <div class="text-muted small"><i class="ti ti-map-pin"></i>
                                     {{ $payslips->user->employmentDetail->branch->location ?? '' }}</div>
                                 <div class="text-muted small"><i class="ti ti-phone"></i>
@@ -92,9 +95,9 @@
                                     <td class="text-muted">Payroll Type:</td>
                                     <td>
                                         @if ($payslips->payroll_type == 'normal_payroll')
-                                            Head Office Payroll
+                                            Normal Payroll
                                         @elseif ($payslips->payroll_type == 'bulk_attendance_payroll')
-                                            Security Guards Payroll
+                                            Normal Payroll
                                         @else
                                             {{ ucfirst($payslips->payroll_type) }}
                                         @endif
@@ -166,11 +169,26 @@
                                     @if (!empty($payslips->earnings))
                                         @foreach (json_decode($payslips->earnings, true) as $item)
                                             @if (
-                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
-                                                (isset($item['earning_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
-                                            )
+                                                    (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['earning_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
+                                                )
                                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                                     {{ $item['label'] ?? $item['earning_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    @endif
+
+                                    {{-- Dynamic Allowance --}}
+                                    @if (!empty($payslips->allowance))
+                                        @foreach (is_array($payslips->allowance) ? $payslips->allowance : json_decode($payslips->allowance, true) as $item)
+                                            @if (
+                                                    (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['allowance_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
+                                                )
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ $item['label'] ?? $item['allowance_name'] }}
                                                     <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
@@ -181,9 +199,9 @@
                                     @if (!empty($payslips->deminimis))
                                         @foreach (is_array($payslips->deminimis) ? $payslips->deminimis : json_decode($payslips->deminimis, true) as $item)
                                             @if (
-                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
-                                                (isset($item['deminimis_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
-                                            )
+                                                    (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['deminimis_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
+                                                )
                                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                                     {{ $item['label'] ?? $item['deminimis_type_name'] }} (De Minimis)
                                                     <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
@@ -246,8 +264,7 @@
                                     @if (!empty($payslips->loan_deductions))
                                         @foreach (json_decode($payslips->loan_deductions, true) as $item)
                                             @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
-                                                <li
-                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
                                                     {{ $item['label'] }} (Loan)
                                                     <span>{{ number_format($item['amount'], 2) }}</span>
                                                 </li>
@@ -257,10 +274,10 @@
                                     {{-- Other Deductions --}}
                                     @if (!empty($payslips->deductions))
                                         @foreach (json_decode($payslips->deductions, true) as $item)
-                                             @if (
-                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
-                                                (isset($item['deduction_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
-                                            )
+                                            @if (
+                                                    (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['deduction_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
+                                                )
                                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                                     {{ $item['label'] ?? $item['deduction_type_name'] }}
                                                     <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
@@ -369,3 +386,54 @@
 
     </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function () {
+            var content = document.querySelector('.printable-area');
+
+            html2canvas(content, {
+                useCORS: true,
+                scale: 1.5, // Reduced from 2 to 1.5 for smaller file size
+                logging: false,
+                allowTaint: true,
+                backgroundColor: '#ffffff'
+            }).then(function (canvas) {
+                try {
+                    // Use JPEG format with compression for smaller file size
+                    var imgData = canvas.toDataURL('image/jpeg', 0.85); // 85% quality
+                    const {
+                        jsPDF
+                    } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'pt',
+                        format: 'a4',
+                        compress: true // Enable PDF compression
+                    });
+
+                    //  fit A4 page
+                    var pageWidth = doc.internal.pageSize.getWidth();
+                    var pageHeight = doc.internal.pageSize.getHeight();
+                    var imgWidth = canvas.width;
+                    var imgHeight = canvas.height;
+                    var ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+
+                    var imgX = (pageWidth - imgWidth * ratio) / 2;
+                    var imgY = 20;
+
+                    doc.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio, undefined, 'FAST'); // Use JPEG and FAST compression
+
+                    doc.save('payslip-{{ $payslips->id }}.pdf');
+                } catch (error) {
+                    console.error('Error capturing the printable area:', error);
+                }
+            }).catch(function (error) {
+                console.error('html2canvas failed:', error);
+            });
+        });
+    </script>
+@endpush
