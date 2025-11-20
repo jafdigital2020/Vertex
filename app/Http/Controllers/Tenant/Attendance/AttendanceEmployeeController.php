@@ -289,7 +289,7 @@ class AttendanceEmployeeController extends Controller
 
         // Check AWOL state before clock-in
         $employmentDetail = $user->employmentDetail;
-        if ($employmentDetail && isset($employmentDetail->employment_state) && ($employmentDetail->employment_state === 'AWOL' || $employmentDetail->employment_state === 'Floating')) {
+        if ($employmentDetail && isset($employmentDetail->employment_state) && ($employmentDetail->employment_state === 'AWOL' || $employmentDetail->employment_state === 'Floating' || $employmentDetail->employment_state === 'Suspended')) {
             $state = $employmentDetail->employment_state;
             return response()->json(['message' => "You cannot clock in while in {$state} state."], 403);
         }
