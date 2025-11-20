@@ -38,7 +38,12 @@ class CheckAddon
                     'addon_id' => $addonId,
                     'route' => $request->path()
                 ]);
-                return response()->view('errors.featurerequired', [], 403);
+
+                // Store in session for modal display
+                session()->flash('addon_redirect', 'errors.featurerequired');
+
+                // Continue to the page and let the modal show via JavaScript
+                return $next($request);
             }
         } else {
             // Look up addon by addon_key
@@ -50,7 +55,12 @@ class CheckAddon
                     'addon_key' => $addonIdentifier,
                     'route' => $request->path()
                 ]);
-                return response()->view('errors.featurerequired', [], 403);
+
+                // Store in session for modal display
+                session()->flash('addon_redirect', 'errors.featurerequired');
+
+                // Continue to the page and let the modal show via JavaScript
+                return $next($request);
             }
 
             $addonId = $addon->id;
