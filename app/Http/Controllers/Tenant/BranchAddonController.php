@@ -76,6 +76,31 @@ class BranchAddonController extends Controller
             $branch = Branch::findOrFail($request->branch_id);
             $user = Auth::user();
 
+            // Check if addon already exists for this branch (active or pending payment)
+            $existingBranchAddon = BranchAddon::where('branch_id', $branch->id)
+                ->where('addon_id', $addon->id)
+                ->first();
+
+            // If addon exists with pending payment, redirect to billing page
+            if ($existingBranchAddon && !$existingBranchAddon->active) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'redirect' => true,
+                    'redirect_url' => url('/billing'),
+                    'message' => 'You have a pending payment for this addon. Please complete the payment in the billing page.'
+                ], 409); // 409 Conflict status code
+            }
+
+            // If addon is already active
+            if ($existingBranchAddon && $existingBranchAddon->active) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This addon is already active for your branch.'
+                ], 400);
+            }
+
             // Calculate price based on billing cycle
             $price = $addon->price;
             $billingCycle = $request->billing_cycle;

@@ -951,6 +951,34 @@
                             }
                             throw new Error(response.message || 'Payment initialization failed');
                         }).catch(error => {
+                            // Check if it's a redirect response (pending payment exists)
+                            if (error.status === 409 && error.responseJSON?.redirect) {
+                                Swal.close();
+                                Swal.fire({
+                                    title: 'Pending Payment Found',
+                                    html: `
+                                        <div style="text-align: center; padding: 1rem;">
+                                            <div style="font-size: 3rem; color: #FFB400; margin-bottom: 1rem;">
+                                                <i class="ti ti-clock-hour-4"></i>
+                                            </div>
+                                            <p style="color: #12515D; font-size: 1rem; margin-bottom: 1.5rem;">
+                                                ${error.responseJSON.message}
+                                            </p>
+                                            <p style="color: #6c757d; font-size: 0.875rem;">
+                                                You will be redirected to the billing page where you can complete your payment.
+                                            </p>
+                                        </div>
+                                    `,
+                                    icon: 'info',
+                                    confirmButtonText: 'Go to Billing',
+                                    confirmButtonColor: '#008080',
+                                    allowOutsideClick: false
+                                }).then(() => {
+                                    window.location.href = error.responseJSON.redirect_url;
+                                });
+                                return;
+                            }
+
                             Swal.showValidationMessage(
                                 `Request failed: ${error.responseJSON?.message || error.message}`
                             );

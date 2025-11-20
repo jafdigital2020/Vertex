@@ -68,9 +68,22 @@ class CheckAddon
                 'route' => $request->path()
             ]);
 
-            // Store redirect info in session for delayed redirect
+            // Determine the error view based on addon category
             $errorView = $addon->addon_category === 'addon' ? 'errors.addonrequired' : 'errors.featurerequired';
+
+            // For AJAX/API requests, return JSON response
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Access denied. This feature requires an active addon subscription.',
+                    'addon_required' => true,
+                    'addon_category' => $addon->addon_category
+                ], 403);
+            }
+
+            // Store in session for modal display - let JavaScript show the modal
             session()->flash('addon_redirect', $errorView);
+
+            // Continue to the page and let the modal show via JavaScript in footer-scripts
         }
 
         return $next($request);
