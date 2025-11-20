@@ -102,13 +102,12 @@
     <div class="header">
         <div class="company-info">
             @php
-$path = public_path('build/img/Timora-logo.png');
-$type = pathinfo($path, PATHINFO_EXTENSION);
-$data = file_get_contents($path);
-$base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                $path = public_path('build/img/jaf.png');
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
             @endphp
-            <img src="{{ $base64 }}" alt="Timora Logo"
-                style="height: 60px; margin-bottom: 10px;">
+            <img src="{{ $base64 }}" alt="Timora Logo" style="height: 60px; margin-bottom: 10px;">
             {{-- <h2>{{ $company['name'] }}</h2> --}}
             <p style="margin: 2px 0;">{{ $company['address'] }}</p>
             <p style="margin: 2px 0;">{{ $company['email'] }}</p>
@@ -145,60 +144,60 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         </thead>
         <tbody>
             <tr>
-            @php
-// existing
-$sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
+                @php
+                    // existing
+                    $sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
 
-$plan = data_get($sub, 'plan', 'starter');
-$totalEmployees = data_get($sub, 'plan_details.total_employees') ?? data_get($sub, 'total_employee');
-$addons = data_get($sub, 'plan_details.addons', []);
-$addonNames = collect($addons)->pluck('name')->filter()->implode(', ');
+                    $plan = data_get($sub, 'plan', 'starter');
+                    $totalEmployees = data_get($sub, 'plan_details.total_employees') ?? data_get($sub, 'total_employee');
+                    $addons = data_get($sub, 'plan_details.addons', []);
+                    $addonNames = collect($addons)->pluck('name')->filter()->implode(', ');
 
-// 1) Collect and NORMALIZE payment metas
-$metas = collect(data_get($invoice, 'payments', []))
-    ->map(function ($p) {
-        $m = data_get($p, 'meta');
-        if (is_string($m)) {
-            $decoded = json_decode($m, true);
-            if (is_string($decoded))
-                $decoded = json_decode($decoded, true); // double-encoded
-            return is_array($decoded) ? $decoded : null;
-        }
-        return is_array($m) ? $m : (is_object($m) ? (array) $m : null);
-    })
-    ->filter()
-    ->values();
+                    // 1) Collect and NORMALIZE payment metas
+                    $metas = collect(data_get($invoice, 'payments', []))
+                        ->map(function ($p) {
+                            $m = data_get($p, 'meta');
+                            if (is_string($m)) {
+                                $decoded = json_decode($m, true);
+                                if (is_string($decoded))
+                                    $decoded = json_decode($decoded, true); // double-encoded
+                                return is_array($decoded) ? $decoded : null;
+                            }
+                            return is_array($m) ? $m : (is_object($m) ? (array) $m : null);
+                        })
+                        ->filter()
+                        ->values();
 
-// 2) Prefer meta that matches this invoice id
-$meta = $metas->firstWhere('invoice_id', data_get($invoice, 'id')) ?? $metas->first();
+                    // 2) Prefer meta that matches this invoice id
+                    $meta = $metas->firstWhere('invoice_id', data_get($invoice, 'id')) ?? $metas->first();
 
-// 3) Build the line title (NAME ONLY changes)
-$lineTitle = ucfirst($plan) . ' Plan';
-if ($meta && !empty($meta['type'])) {
-    $type = $meta['type'];
+                    // 3) Build the line title (NAME ONLY changes)
+                    $lineTitle = ucfirst($plan) . ' Plan';
+                    if ($meta && !empty($meta['type'])) {
+                        $type = $meta['type'];
 
-    if ($type === 'employee_credits') {
-        $extra = isset($meta['additional_credits']) ? ' (+' . $meta['additional_credits'] . ')' : '';
-        $lineTitle = ucfirst($plan) . ' - Credits' . $extra;
-    } elseif ($type === 'renewal') {
-        $lineTitle = ucfirst($plan) . ' - Renewal';
-    } elseif (is_string($type) && Str::startsWith($type, 'monthly_')) {
-        $lineTitle = ucfirst($plan) . ' - Monthly';
-    }
-}
-            @endphp
-            
-            <td>
-                <strong>{{ $lineTitle }}</strong><br>
-                @if(!is_null($totalEmployees))
-                    <small>Total Employees: {{ $totalEmployees }}</small><br>
-                @endif
-                @if(!empty($addonNames))
-                    <small>Add-ons: {{ $addonNames }}</small>
-                @else
-                    <small>Add-ons: None</small>
-                @endif
-            </td>
+                        if ($type === 'employee_credits') {
+                            $extra = isset($meta['additional_credits']) ? ' (+' . $meta['additional_credits'] . ')' : '';
+                            $lineTitle = ucfirst($plan) . ' - Credits' . $extra;
+                        } elseif ($type === 'renewal') {
+                            $lineTitle = ucfirst($plan) . ' - Renewal';
+                        } elseif (is_string($type) && Str::startsWith($type, 'monthly_')) {
+                            $lineTitle = ucfirst($plan) . ' - Monthly';
+                        }
+                    }
+                @endphp
+
+                <td>
+                    <strong>{{ $lineTitle }}</strong><br>
+                    @if(!is_null($totalEmployees))
+                        <small>Total Employees: {{ $totalEmployees }}</small><br>
+                    @endif
+                    @if(!empty($addonNames))
+                        <small>Add-ons: {{ $addonNames }}</small>
+                    @else
+                        <small>Add-ons: None</small>
+                    @endif
+                </td>
                 <td>
                     {{ $invoice->period_start ? \Carbon\Carbon::parse($invoice->period_start)->format('M d, Y') : 'N/A' }}
                     -
@@ -288,28 +287,28 @@ if ($meta && !empty($meta['type'])) {
         $amountPaid = (float) ($invoice->amount_paid ?? 0);
         $balance = max(round($totalDue - $amountPaid, 2), 0);
     @endphp
-<div class="totals">
-    <div class="total-row">
-        <span>Subtotal:</span>
-        <span>&#8369;{{ number_format($subtotal, 2) }}</span>
+    <div class="totals">
+        <div class="total-row">
+            <span>Subtotal:</span>
+            <span>&#8369;{{ number_format($subtotal, 2) }}</span>
+        </div>
+        <div class="total-row">
+            <span>Tax (VAT):</span>
+            <span>&#8369;{{ number_format($tax, 2) }}</span>
+        </div>
+        <div class="total-row">
+            <span>Total:</span>
+            <span>&#8369;{{ number_format($totalDue, 2) }}</span>
+        </div>
+        <div class="total-row">
+            <span>Amount Paid:</span>
+            <span>&#8369;{{ number_format($amountPaid, 2) }}</span>
+        </div>
+        <div class="total-row" style="border-top: 1px solid #ddd; padding-top: 5px; font-weight: bold;">
+            <span>Balance Due:</span>
+            <span>&#8369;{{ number_format($balance, 2) }}</span>
+        </div>
     </div>
-    <div class="total-row">
-        <span>Tax (VAT):</span>
-        <span>&#8369;{{ number_format($tax, 2) }}</span>
-    </div>
-    <div class="total-row">
-        <span>Total:</span>
-        <span>&#8369;{{ number_format($totalDue, 2) }}</span>
-    </div>
-    <div class="total-row">
-        <span>Amount Paid:</span>
-        <span>&#8369;{{ number_format($amountPaid, 2) }}</span>
-    </div>
-    <div class="total-row" style="border-top: 1px solid #ddd; padding-top: 5px; font-weight: bold;">
-        <span>Balance Due:</span>
-        <span>&#8369;{{ number_format($balance, 2) }}</span>
-    </div>
-</div>
 
 
     <div class="clear"></div>
