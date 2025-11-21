@@ -259,12 +259,36 @@
                 <p class="text-dark fw-medium mb-2">Terms & Conditions:</p>
                 <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
                   <i class="ti ti-point-filled text-primary me-1"></i>
-                  All payments must be made according to the agreed schedule.
+                  All subscription payments are non-refundable.
                 </p>
                 <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
                   <i class="ti ti-point-filled text-primary me-1"></i>
+                  Cancellations must be made through formal written communication at least thirty (30) days before the
+                  next billing cycle.
+                </p>
+                  <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+                  <i class="ti ti-point-filled text-primary me-1"></i>
                   Add-on charges apply for additional features or services purchased during the billing period.
                 </p>
+                <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+                  <i class="ti ti-point-filled text-primary me-1"></i>
+                  Payments must be settled at least seven (7) days before the billing due date.
+                </p>
+                <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+                  <i class="ti ti-point-filled text-primary me-1"></i>
+                  If payment is not settled by the due date, the Client is granted a ten (10)-day grace period.
+                </p>
+                <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+                  <i class="ti ti-point-filled text-primary me-1"></i>
+                  If fail to settle payment after the grace period, access to timekeeping and payroll processing shall be
+                  automatically suspended.
+                </p>
+                <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+                  <i class="ti ti-point-filled text-primary me-1"></i>
+                  After thirty (30) days of unpaid balance, a six percent (6%) penalty will be added to the outstanding
+                  amount.
+                </p>
+   
                 <p class="fs-12 fw-normal d-flex align-items-baseline">
                   <i class="ti ti-point-filled text-primary me-1"></i>
                   We are not liable for any indirect, incidental, or consequential damages, including loss of profits,
@@ -401,44 +425,44 @@
             // --- View/PDF group
             const downloadLink = inv.id
               ? `
-                            <div class="btn-group" role="group">
-                              <a href="#"
-                                 class="btn btn-outline-primary btn-sm view-invoice-btn"
-                                 data-bs-toggle="modal"
-                                 data-bs-target="#view_invoice"
-                                 data-invoice-id="${inv.id}"
-                                 data-invoice-number="${inv.invoice_number}"
-                                 data-amount-due="${inv.amount_due}"
-                                 data-amount-paid="${inv.amount_paid}"
-                                 data-status="${inv.status}"
-                                 data-bill-to-name="${payment.bill_to_full_name ?? '—'}"
-                                 data-bill-to-address="${payment.bill_to_address ?? '—'}"
-                                 data-bill-to-email="${payment.bill_to_email ?? '—'}"
-                                 data-period-start="${inv.period_start}"
-                                 data-period-end="${inv.period_end}"
-                                 data-issued-at="${inv.issued_at}"
-                                 data-due-date="${inv.due_date}"
-                                 data-subscription='${JSON.stringify(inv.subscription || {})}'
-                                 data-meta='${JSON.stringify(meta || {})}'>
-                                <i class="ti ti-eye me-1"></i>View
-                              </a>
-                              <a href="{{ url('/invoice') }}/${inv.id}/download" class="btn btn-success btn-sm" target="_blank">
-                                <i class="ti ti-download me-1"></i>PDF
-                              </a>
-                            </div>`
+                                <div class="btn-group" role="group">
+                                  <a href="#"
+                                     class="btn btn-outline-primary btn-sm view-invoice-btn"
+                                     data-bs-toggle="modal"
+                                     data-bs-target="#view_invoice"
+                                     data-invoice-id="${inv.id}"
+                                     data-invoice-number="${inv.invoice_number}"
+                                     data-amount-due="${inv.amount_due}"
+                                     data-amount-paid="${inv.amount_paid}"
+                                     data-status="${inv.status}"
+                                     data-bill-to-name="${payment.bill_to_full_name ?? '—'}"
+                                     data-bill-to-address="${payment.bill_to_address ?? '—'}"
+                                     data-bill-to-email="${payment.bill_to_email ?? '—'}"
+                                     data-period-start="${inv.period_start}"
+                                     data-period-end="${inv.period_end}"
+                                     data-issued-at="${inv.issued_at}"
+                                     data-due-date="${inv.due_date}"
+                                     data-subscription='${JSON.stringify(inv.subscription || {})}'
+                                     data-meta='${JSON.stringify(meta || {})}'>
+                                    <i class="ti ti-eye me-1"></i>View
+                                  </a>
+                                  <a href="{{ url('/invoice') }}/${inv.id}/download" class="btn btn-success btn-sm" target="_blank">
+                                    <i class="ti ti-download me-1"></i>PDF
+                                  </a>
+                                </div>`
               : `<span class="text-muted">No Invoice</span>`;
 
             return `
-                          <tr>
-                            <td>📄 ${payment.transaction_reference ?? payment.payment_id}</td>
-                            <td>${date}</td>
-                            <td><span class="badge bg-${statusClass}">${s ? s.charAt(0).toUpperCase() + s.slice(1) : '-'}</span></td>
-                            <td>₱${displayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td>${type}</td>
-                            <td>${payBtn}</td>
-                            <td>${downloadLink}</td>
-                          </tr>
-                        `;
+                              <tr>
+                                <td>📄 ${payment.transaction_reference ?? payment.payment_id}</td>
+                                <td>${date}</td>
+                                <td><span class="badge bg-${statusClass}">${s ? s.charAt(0).toUpperCase() + s.slice(1) : '-'}</span></td>
+                                <td>₱${displayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                <td>${type}</td>
+                                <td>${payBtn}</td>
+                                <td>${downloadLink}</td>
+                              </tr>
+                            `;
           }).join('');
 
           tableInfo.textContent = `Showing ${start + 1} to ${Math.min(end, payments.length)} of ${payments.length} entries`;
@@ -452,20 +476,20 @@
           }
           let html = '';
           html += `<li class="page-item${currentPage === 1 ? ' disabled' : ''}">
-                                <a class="page-link" href="#" tabindex="-1" aria-disabled="${currentPage === 1}" data-page="${currentPage - 1}">
-                                  <i class="ti ti-chevron-left"></i>
-                                </a>
-                              </li>`;
+                                    <a class="page-link" href="#" tabindex="-1" aria-disabled="${currentPage === 1}" data-page="${currentPage - 1}">
+                                      <i class="ti ti-chevron-left"></i>
+                                    </a>
+                                  </li>`;
           for (let i = 1; i <= totalPages; i++) {
             html += `<li class="page-item${currentPage === i ? ' active' : ''}">
-                                   <a class="page-link" href="#" data-page="${i}">${i}</a>
-                                 </li>`;
+                                       <a class="page-link" href="#" data-page="${i}">${i}</a>
+                                     </li>`;
           }
           html += `<li class="page-item${currentPage === totalPages ? ' disabled' : ''}">
-                                <a class="page-link" href="#" aria-disabled="${currentPage === totalPages}" data-page="${currentPage + 1}">
-                                  <i class="ti ti-chevron-right"></i>
-                                </a>
-                              </li>`;
+                                    <a class="page-link" href="#" aria-disabled="${currentPage === totalPages}" data-page="${currentPage + 1}">
+                                      <i class="ti ti-chevron-right"></i>
+                                    </a>
+                                  </li>`;
           pagination.innerHTML = html;
         }
 
@@ -653,26 +677,26 @@
           }).join('');
 
           const detailsHtml = (kind === 'credits') ? '' : `
-                        ${emp != null ? `<div class="small text-muted">Total employees: ${escapeHtml(emp)}</div>` : ''}
-                        ${addons.length
+                            ${emp != null ? `<div class="small text-muted">Total employees: ${escapeHtml(emp)}</div>` : ''}
+                            ${addons.length
               ? `<div class="small text-muted mt-1">Add-ons:</div><ul class="mb-0 ps-3 small">${addonItems}</ul>`
               : `<div class="small text-muted mt-1">Add-ons: None</div>`}
-                      `;
+                          `;
 
           // Items table
           const tbody = document.getElementById('inv-items');
           tbody.innerHTML = `
-                        <tr>
-                          <td>
-                            <div><strong>${escapeHtml(lineTitle)}</strong></div>
-                            ${detailsHtml}
-                          </td>
-                          <td>${d.periodStart ? new Date(d.periodStart).toLocaleDateString() : '—'} - ${d.periodEnd ? new Date(d.periodEnd).toLocaleDateString() : '—'}</td>
-                          <td>${qty}</td>
-                          <td>${fmt(rate)}</td>
-                          <td class="text-end">${fmt(rate * qty)}</td>
-                        </tr>
-                      `;
+                            <tr>
+                              <td>
+                                <div><strong>${escapeHtml(lineTitle)}</strong></div>
+                                ${detailsHtml}
+                              </td>
+                              <td>${d.periodStart ? new Date(d.periodStart).toLocaleDateString() : '—'} - ${d.periodEnd ? new Date(d.periodEnd).toLocaleDateString() : '—'}</td>
+                              <td>${qty}</td>
+                              <td>${fmt(rate)}</td>
+                              <td class="text-end">${fmt(rate * qty)}</td>
+                            </tr>
+                          `;
 
           // Totals
           document.getElementById('inv-subtotal').textContent = fmt(subtotal);

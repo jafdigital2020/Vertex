@@ -695,8 +695,8 @@
       const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
       $.ajax({
-        // ✅ Updated to match your route definition
-        url: '/api/shift-management/shift-assignment/delete/' + empId,
+        // ✅ Corrected route to match API definition: /user/{userId}
+        url: '/api/shift-management/shift-assignment/user/' + empId,
         type: 'DELETE',
         headers: { 'X-CSRF-TOKEN': csrfToken },
         success: function(res) {
@@ -705,10 +705,35 @@
           fetchFilteredData(); // Refresh the table dynamically
         },
         error: function(xhr) {
-          console.error(xhr.responseText);
+          console.error('Delete Shift Assignment Error:', xhr);
+
           let message = 'Failed to delete shift assignment.';
-          if (xhr.status === 403) message = 'You do not have permission to delete.';
+
+          // Try to get detailed error from response
+          if (xhr.responseJSON) {
+            console.error('Error Details:', xhr.responseJSON);
+
+            // Show the actual error message from backend
+            if (xhr.responseJSON.error) {
+              message = xhr.responseJSON.error;
+
+              // Log debug information if available
+              if (xhr.responseJSON.debug) {
+                console.error('Error Location:', xhr.responseJSON.debug);
+                console.error(`File: ${xhr.responseJSON.debug.file}, Line: ${xhr.responseJSON.debug.line}`);
+              }
+            } else if (xhr.responseJSON.message) {
+              message = xhr.responseJSON.message;
+            }
+          }
+
+          // Special handling for permission errors
+          if (xhr.status === 403) {
+            message = 'You do not have permission to delete.';
+          }
+
           toastr.error(message);
+          console.error('Full Error Message Shown to User:', message);
         }
       });
     });

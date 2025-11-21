@@ -318,12 +318,36 @@
             <ul class="terms-list">
                 <li class="terms-item">
                     <span class="terms-bullet">&#8226;</span>
-                    <span>All payments must be made according to the agreed schedule.</span>
+                    <span>All subscription payments are non-refundable.</span>
                 </li>
                 <li class="terms-item">
                     <span class="terms-bullet">&#8226;</span>
-                    <span>Add-on charges apply for additional features or services purchased during the billing
+                    <span>Cancellations must be made through formal written communication at least thirty (30) days
+                        before the next billing cycle.</span>
+                </li>
+                <li class="terms-item">
+                    <span class="terms-bullet">&#8226;</span>
+                    span>Add-on charges apply for additional features or services purchased during the billing
+                    period.</span>
+                </li>
+                <li class="terms-item">
+                    <span class="terms-bullet">&#8226;</span>
+                    <span>Payments must be settled at least seven (7) days before the billing due date.</span>
+                </li>
+                <li class="terms-item">
+                    <span class="terms-bullet">&#8226;</span>
+                    <span>If payment is not settled by the due date, the Client is granted a ten (10)-day grace
                         period.</span>
+                </li>
+                <li class="terms-item">
+                    <span class="terms-bullet">&#8226;</span>
+                    <span>If fail to settle payment after the grace period, access to timekeeping and payroll processing
+                        shall be automatically suspended.</span>
+                </li>
+                <li class="terms-item">
+                    <span class="terms-bullet">&#8226;</span>
+                    <span>After thirty (30) days of unpaid balance, a six percent (6%) penalty will be added to the
+                        outstanding amount.</span>
                 </li>
                 <li class="terms-item">
                     <span class="terms-bullet">&#8226;</span>

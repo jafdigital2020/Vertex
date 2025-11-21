@@ -201,8 +201,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/settings/geofence/create', [GeofenceController::class, 'geofenceStore'])->name('api.geofenceStore');
     Route::put('/settings/geofence/update/{id}', [GeofenceController::class, 'geofenceUpdate'])->name('api.geofenceUpdate');
     Route::delete('/settings/geofence/delete/{id}', [GeofenceController::class, 'geofenceDelete'])->name('api.geofenceDelete');
-    Route::delete('/shift-management/shift-assignment/user/{userId}', [ShiftManagementController::class, 'deleteAssignShift'])->name('api.deleteUserShiftAssignments');
-
 
     // ============ Biometrics Settings ================== //
     Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('api.biometrics');
@@ -218,11 +216,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============ Attendance API ================== //
     Route::get('/attendance-employee', [AttendanceEmployeeController::class, 'employeeAttendanceIndex'])->name('api.attendance-employee');
-    Route::post('/attendance/clock-in', [AttendanceEmployeeController::class, 'employeeAttendanceClockIn'])->name('api.attendance-clock-in');
-    Route::post('/attendance/clock-out', [AttendanceEmployeeController::class, 'employeeAttendanceClockOut'])->name('api.attendance-clock-out');
+    Route::post('/attendance/clock-in', [AttendanceEmployeeController::class, 'employeeAttendanceClockIn'])->name('api.attendance-clock-in')->middleware('check.subscription');
+    Route::post('/attendance/clock-out', [AttendanceEmployeeController::class, 'employeeAttendanceClockOut'])->name('api.attendance-clock-out')->middleware('check.subscription');
 
-    Route::post('/attendance/break-in', [AttendanceEmployeeController::class, 'breakIn'])->name('attendance.break-in');
-    Route::post('/attendance/break-out', [AttendanceEmployeeController::class, 'breakOut'])->name('attendance.break-out');
+    Route::post('/attendance/break-in', [AttendanceEmployeeController::class, 'breakIn'])->name('attendance.break-in')->middleware('check.subscription');
+    Route::post('/attendance/break-out', [AttendanceEmployeeController::class, 'breakOut'])->name('attendance.break-out')->middleware('check.subscription');
     Route::get('/attendance/break-status', [AttendanceEmployeeController::class, 'breakStatus'])->name('attendance.break-status');
     
     Route::get('/attendance-admin', [AttendanceAdminController::class, 'adminAttendanceIndex'])->name('api.attendance-admin');

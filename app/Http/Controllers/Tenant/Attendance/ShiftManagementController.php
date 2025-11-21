@@ -1286,9 +1286,12 @@ class ShiftManagementController extends Controller
 
     public function deleteAssignShift($userId)
     {
+        Log::info("deleteAssignShift called", ['user_id' => $userId]);
+
         $permission = PermissionHelper::get(16);
 
         if (!in_array('Delete', $permission)) {
+            Log::warning("Permission denied for deleteAssignShift", ['user_id' => $userId]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
@@ -1297,8 +1300,10 @@ class ShiftManagementController extends Controller
 
         try {
             $assignments = ShiftAssignment::where('user_id', $userId)->get();
+            Log::info("Found assignments", ['user_id' => $userId, 'count' => $assignments->count()]);
 
             if ($assignments->isEmpty()) {
+                Log::info("No assignments found for user", ['user_id' => $userId]);
                 return response()->json([
                     'message' => 'No shift assignments found for this user.',
                 ], 404);
@@ -1307,6 +1312,11 @@ class ShiftManagementController extends Controller
             $deletedCount = 0;
 
             foreach ($assignments as $assignment) {
+                Log::info("Processing assignment for deletion", [
+                    'assignment_id' => $assignment->id,
+                    'user_id' => $userId
+                ]);
+
                 $oldData = $assignment->toArray();
 
                 // Logging Start
@@ -1318,6 +1328,11 @@ class ShiftManagementController extends Controller
                 } elseif (Auth::guard('global')->check()) {
                     $globalUserId = Auth::guard('global')->id();
                 }
+
+                Log::info("Auth user info", [
+                    'auth_user_id' => $authUserId,
+                    'global_user_id' => $globalUserId
+                ]);
 
                 // ✨ Log the action
                 UserLog::create([
@@ -1333,17 +1348,33 @@ class ShiftManagementController extends Controller
 
                 $assignment->delete();
                 $deletedCount++;
+                Log::info("Assignment deleted", ['assignment_id' => $assignment->id]);
             }
+
+            Log::info("deleteAssignShift completed successfully", [
+                'user_id' => $userId,
+                'deleted_count' => $deletedCount
+            ]);
 
             return response()->json([
                 'message' => "Successfully deleted {$deletedCount} shift assignment(s) for user ID: {$userId}."
             ], 200);
         } catch (Exception $e) {
-            Log::error('Shift assignment deletion failed', ['user_id' => $userId, 'error' => $e->getMessage()]);
+            Log::error('Shift assignment deletion failed', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return response()->json([
                 'message' => 'Failed to delete shift assignments.',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'debug' => [
+                    'file' => basename($e->getFile()),
+                    'line' => $e->getLine()
+                ]
             ], 500);
         }
     }
