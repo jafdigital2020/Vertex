@@ -13,7 +13,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Payroll Process</li>
                         </ol>
@@ -87,356 +87,307 @@
             <div class="row">
                 <div class="col-12">
                     <div class="card shadow-sm border-0 mb-4">
-                        <div class="card-header bg-gradient-primary text-white py-3">
-                            <h5 class="card-title mb-0 fw-semibold">
-                                <i class="ti ti-calculator me-2"></i>Payroll Processing Form
-                            </h5>
+                        <div class="card-header bg-gradient-primary text-white py-4 bg-primary">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-white rounded-3 p-3 d-flex align-items-center justify-content-center me-3"
+                                    style="width:56px; height:56px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                                    <i class="ti ti-calendar-event fs-22 text-primary" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-1 fw-semibold text-white">Payroll Processing Form</h5>
+                                    <small class="text-white-40">Configure and process payroll for your employees</small>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body p-4">
                             <form id="payrollProcessForm">
                                 <div class="row g-4">
-                                    <!-- Left Column - Payroll Details -->
+                                    <!-- Left Column - Payroll Details (styled card) -->
                                     <div class="col-xl-4">
-                                        <div class="border-end pe-xl-4">
-                                            <h6 class="text-primary fw-semibold mb-3 pb-2 border-bottom">
-                                                <i class="ti ti-file-invoice me-2"></i>Payroll Details
-                                            </h6>
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-start mb-3">
+                                                    <div class="me-3" style="width:6px; height:36px; background:#05a; border-radius:4px;"></div>
+                                                    <div>
+                                                        <h6 class="text-primary fw-semibold mb-1">Payroll Details</h6>
+                                                        <small class="text-muted">Configure payroll type and period</small>
+                                                    </div>
+                                                </div>
 
-                                            <div class="mb-3">
-                                                <label for="payrollType" class="form-label fw-medium">Payroll Type <span
-                                                        class="text-danger">*</span></label>
-                                                <select class="form-select form-select-lg" name="payroll_type"
-                                                    id="payrollType" required>
-                                                    <option value="" disabled selected>Select Payroll Type</option>
-                                                    <option value="normal_payroll">Normal Payroll</option>
-                                                    <option value="13th_month">13th Month Pay</option>
-                                                    {{-- <option value="final_pay">Final Pay</option> --}}
-                                                </select>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="yearSelect" class="form-label fw-medium">Year <span
-                                                            class="text-danger">*</span></label>
-                                                    <select class="form-select" name="year" id="yearSelect" required>
-                                                        <option value="" disabled>Select Year</option>
-                                                        @for ($year = $currentYear - 5; $year <= $currentYear + 5; $year++)
-                                                            <option value="{{ $year }}"
-                                                                {{ $year == $currentYear ? 'selected' : '' }}>
-                                                                {{ $year }}
-                                                            </option>
-                                                        @endfor
+                                                <div class="mb-3">
+                                                    <label for="payrollType" class="form-label fw-medium">Payroll Type <span class="text-danger">*</span></label>
+                                                    <select class="form-select form-select-lg" name="payroll_type" id="payrollType" required>
+                                                        <option value="" disabled selected>Select Payroll Type</option>
+                                                        <option value="normal_payroll">Normal Payroll</option>
+                                                        <option value="13th_month">13th Month Pay</option>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="monthSelect" class="form-label fw-medium">Month <span
-                                                            class="text-danger">*</span></label>
-                                                    <select class="form-select" name="month" id="monthSelect" required>
-                                                        <option value="" disabled>Select Month</option>
-                                                        @foreach (range(1, 12) as $month)
-                                                            <option value="{{ $month }}"
-                                                                {{ $month == $currentMonth ? 'selected' : '' }}>
-                                                                {{ date('F', mktime(0, 0, 0, $month, 1)) }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                            </div>
 
-                                            <!-- Payroll Type Specific Fields -->
-                                            <div id="dateFieldsContainer">
-                                                <!-- Normal Payroll: Period Start/End -->
-                                                <div id="periodDateFields">
-                                                    <div class="mb-3">
-                                                        <label for="startDate" class="form-label fw-medium">Period Start
-                                                            <span class="text-danger">*</span></label>
-                                                        <input type="date" class="form-control" name="start_date"
-                                                            id="startDate">
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="yearSelect" class="form-label fw-medium">Year <span class="text-danger">*</span></label>
+                                                        <select class="form-select" name="year" id="yearSelect" required>
+                                                            <option value="" disabled>Select Year</option>
+                                                            @for ($year = $currentYear - 5; $year <= $currentYear + 5; $year++)
+                                                                <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>{{ $year }}</option>
+                                                            @endfor
+                                                        </select>
                                                     </div>
-
-                                                    <div class="mb-3">
-                                                        <label for="endDate" class="form-label fw-medium">Period End <span
-                                                                class="text-danger">*</span></label>
-                                                        <input type="date" class="form-control" name="end_date"
-                                                            id="endDate">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="monthSelect" class="form-label fw-medium">Month <span class="text-danger">*</span></label>
+                                                        <select class="form-select" name="month" id="monthSelect" required>
+                                                            <option value="" disabled>Select Month</option>
+                                                            @foreach (range(1, 12) as $month)
+                                                                <option value="{{ $month }}" {{ $month == $currentMonth ? 'selected' : '' }}>
+                                                                    {{ date('F', mktime(0, 0, 0, $month, 1)) }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
                                                     </div>
                                                 </div>
 
-                                                <!-- 13th Month: From/To Month -->
-                                                <div id="monthRangeFields" style="display: none;">
-                                                    <div class="alert alert-info mb-3">
-                                                        <i class="ti ti-info-circle me-2"></i>
-                                                        <small>Select the 12-month coverage period for 13th month pay.
-                                                            Example: December 2024 to November 2025.</small>
-                                                    </div>
-
-                                                    <div class="row">
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="fromYear" class="form-label fw-medium">From Year
-                                                                <span class="text-danger">*</span></label>
-                                                            <select class="form-select" name="from_year" id="fromYear">
-                                                                <option value="">Select Year</option>
-                                                                @for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
-                                                                    <option value="{{ $year }}"
-                                                                        {{ $year == $currentYear - 1 ? 'selected' : '' }}>
-                                                                        {{ $year }}
-                                                                    </option>
-                                                                @endfor
-                                                            </select>
+                                                <div id="dateFieldsContainer">
+                                                    <div id="periodDateFields">
+                                                        <div class="mb-3">
+                                                            <label for="startDate" class="form-label fw-medium">Period Start <span class="text-danger">*</span></label>
+                                                            <input type="date" class="form-control" name="start_date" id="startDate">
                                                         </div>
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="fromMonth" class="form-label fw-medium">From Month
-                                                                <span class="text-danger">*</span></label>
-                                                            <select class="form-select" name="from_month" id="fromMonth">
-                                                                <option value="">Select Month</option>
-                                                                @foreach (range(1, 12) as $month)
-                                                                    <option value="{{ $month }}"
-                                                                        {{ $month == 12 ? 'selected' : '' }}>
-                                                                        {{ date('F', mktime(0, 0, 0, $month, 1)) }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+
+                                                        <div class="mb-3">
+                                                            <label for="endDate" class="form-label fw-medium">Period End <span class="text-danger">*</span></label>
+                                                            <input type="date" class="form-control" name="end_date" id="endDate">
                                                         </div>
                                                     </div>
 
-                                                    <div class="row">
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="toYear" class="form-label fw-medium">To Year
-                                                                <span class="text-danger">*</span></label>
-                                                            <select class="form-select" name="to_year" id="toYear">
-                                                                <option value="">Select Year</option>
-                                                                @for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
-                                                                    <option value="{{ $year }}"
-                                                                        {{ $year == $currentYear ? 'selected' : '' }}>
-                                                                        {{ $year }}
-                                                                    </option>
-                                                                @endfor
-                                                            </select>
+                                                    <div id="monthRangeFields" style="display: none;">
+                                                        <div class="alert alert-info mb-3 py-2">
+                                                            <i class="ti ti-info-circle me-2"></i>
+                                                            <small>Select the 12-month coverage period for 13th month pay. Example: December 2024 to November 2025.</small>
                                                         </div>
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="toMonth" class="form-label fw-medium">To Month
-                                                                <span class="text-danger">*</span></label>
-                                                            <select class="form-select" name="to_month" id="toMonth">
-                                                                <option value="">Select Month</option>
-                                                                @foreach (range(1, 12) as $month)
-                                                                    <option value="{{ $month }}"
-                                                                        {{ $month == 11 ? 'selected' : '' }}>
-                                                                        {{ date('F', mktime(0, 0, 0, $month, 1)) }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="fromYear" class="form-label fw-medium">From Year <span class="text-danger">*</span></label>
+                                                                <select class="form-select" name="from_year" id="fromYear">
+                                                                    <option value="">Select Year</option>
+                                                                    @for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
+                                                                        <option value="{{ $year }}" {{ $year == $currentYear - 1 ? 'selected' : '' }}>{{ $year }}</option>
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="fromMonth" class="form-label fw-medium">From Month <span class="text-danger">*</span></label>
+                                                                <select class="form-select" name="from_month" id="fromMonth">
+                                                                    <option value="">Select Month</option>
+                                                                    @foreach (range(1, 12) as $month)
+                                                                        <option value="{{ $month }}" {{ $month == 12 ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $month, 1)) }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="toYear" class="form-label fw-medium">To Year <span class="text-danger">*</span></label>
+                                                                <select class="form-select" name="to_year" id="toYear">
+                                                                    <option value="">Select Year</option>
+                                                                    @for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
+                                                                        <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>{{ $year }}</option>
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="toMonth" class="form-label fw-medium">To Month <span class="text-danger">*</span></label>
+                                                                <select class="form-select" name="to_month" id="toMonth">
+                                                                    <option value="">Select Month</option>
+                                                                    @foreach (range(1, 12) as $month)
+                                                                        <option value="{{ $month }}" {{ $month == 11 ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $month, 1)) }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="mb-3">
-                                                <label for="transactionDate" class="form-label fw-medium">Transaction Date
-                                                    <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control" name="transaction_date"
-                                                    id="transactionDate" value="{{ $currentDate }}" required>
+                                                <div class="mb-3 mt-2">
+                                                    <label for="transactionDate" class="form-label fw-medium">Transaction Date <span class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control" name="transaction_date" id="transactionDate" value="{{ $currentDate }}" required>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Middle Column - Assignment -->
+                                    <!-- Middle Column - Assignment (styled card) -->
                                     <div class="col-xl-5">
-                                        <div class="border-end pe-xl-4">
-                                            <h6 class="text-primary fw-semibold mb-3 pb-2 border-bottom">
-                                                <i class="ti ti-users me-2"></i>Employee Assignment
-                                            </h6>
-
-                                            <div class="mb-3">
-                                                <label for="assignmentType" class="form-label fw-medium">Assignment Type
-                                                    <span class="text-danger">*</span></label>
-                                                <select name="assignment_type" id="assignmentType"
-                                                    class="form-select form-select-lg" required>
-                                                    <option value="">Select Assignment Type</option>
-                                                    <option value="payroll_batch">Payroll Batch</option>
-                                                    <option value="manual">Manual Selection</option>
-                                                </select>
-                                            </div>
-
-                                            {{-- Payroll Batch --}}
-                                            <div class="payroll-batch" style="display: none;">
-                                                <div class="alert alert-info py-2 mb-3">
-                                                    <i class="ti ti-info-circle me-1"></i>
-                                                    <small>Select a pre-configured payroll batch</small>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-medium">Payroll Batch <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="payroll_batch_id" id="payrollBatchId"
-                                                        class="form-select">
-                                                        <option value="" disabled selected>Select Payroll Batch
-                                                        </option>
-                                                        @foreach ($payrollBatches as $payrollBatch)
-                                                            <option value="{{ $payrollBatch->id }}">
-                                                                {{ $payrollBatch->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            {{-- Manual Assigning --}}
-                                            <div class="manual-assigning" style="display: none;">
-                                                <div class="alert alert-info py-2 mb-3">
-                                                    <i class="ti ti-info-circle me-1"></i>
-                                                    <small>Filter employees by branch, department, and designation</small>
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-start mb-3">
+                                                    <div class="me-3" style="width:6px; height:36px; background:#ff6b6b; border-radius:4px;"></div>
+                                                    <div>
+                                                        <h6 class="text-primary fw-semibold mb-1">Employee Assignment</h6>
+                                                        <small class="text-muted">Choose how employees will be included</small>
+                                                    </div>
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <label for="payrollProcessBranchId"
-                                                        class="form-label fw-medium">Branch <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="branch_id[]" id="payrollProcessBranchId"
-                                                        class="form-select select2 branch-select" multiple required>
-                                                        <option value="">All Branches</option>
-                                                        @foreach ($branches as $branch)
-                                                            <option value="{{ $branch->id }}">{{ $branch->name }}
-                                                            </option>
-                                                        @endforeach
+                                                    <label for="assignmentType" class="form-label fw-medium">Assignment Type <span class="text-danger">*</span></label>
+                                                    <select name="assignment_type" id="assignmentType" class="form-select form-select-lg" required>
+                                                        <option value="">Select Assignment Type</option>
+                                                        <option value="payroll_batch">Payroll Batch</option>
+                                                        <option value="manual">Manual Selection</option>
                                                     </select>
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <label for="payrollProcessDepartmentId"
-                                                        class="form-label fw-medium">Department <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="department_id[]" id="payrollProcessDepartmentId"
-                                                        class="form-select select2 department-select" multiple required>
-                                                        <option value="">All Departments</option>
-                                                        @foreach ($departments as $department)
-                                                            <option value="{{ $department->id }}">
-                                                                {{ $department->department_name }}</option>
-                                                        @endforeach
-                                                    </select>
+                                                <div class="payroll-batch" style="display: none;">
+                                                    <div class="alert alert-info py-2 mb-3">
+                                                        <i class="ti ti-info-circle me-1"></i>
+                                                        <small>Select a pre-configured payroll batch</small>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-medium">Payroll Batch <span class="text-danger">*</span></label>
+                                                        <select name="payroll_batch_id" id="payrollBatchId" class="form-select">
+                                                            <option value="" disabled selected>Select Payroll Batch</option>
+                                                            @foreach ($payrollBatches as $payrollBatch)
+                                                                <option value="{{ $payrollBatch->id }}">{{ $payrollBatch->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <label for="payrollProcessDesignationId"
-                                                        class="form-label fw-medium">Designation <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="designation_id[]" id="payrollProcessDesignationId"
-                                                        class="form-select select2 designation-select" multiple required>
-                                                        <option value="">All Designations</option>
-                                                        @foreach ($designations as $designation)
-                                                            <option value="{{ $designation->id }}">
-                                                                {{ $designation->designation_name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
+                                                <div class="manual-assigning" style="display: none;">
+                                                    <div class="alert alert-info py-2 mb-3">
+                                                        <i class="ti ti-info-circle me-1"></i>
+                                                        <small>Filter employees by branch, department, and designation</small>
+                                                    </div>
 
-                                                <div class="mb-3">
-                                                    <label for="payrollProcessUserId"
-                                                        class="form-label fw-medium">Employee <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="user_id[]" id="payrollProcessUserId"
-                                                        class="form-select select2 employee-select" multiple required>
-                                                        <option value="">All Employees</option>
-                                                    </select>
+                                                    <div class="mb-3">
+                                                        <label for="payrollProcessBranchId" class="form-label fw-medium">Branch <span class="text-danger">*</span></label>
+                                                        <select name="branch_id[]" id="payrollProcessBranchId" class="form-select select2 branch-select" multiple required>
+                                                            <option value="">All Branches</option>
+                                                            @foreach ($branches as $branch)
+                                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="payrollProcessDepartmentId" class="form-label fw-medium">Department <span class="text-danger">*</span></label>
+                                                        <select name="department_id[]" id="payrollProcessDepartmentId" class="form-select select2 department-select" multiple required>
+                                                            <option value="">All Departments</option>
+                                                            @foreach ($departments as $department)
+                                                                <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="payrollProcessDesignationId" class="form-label fw-medium">Designation <span class="text-danger">*</span></label>
+                                                        <select name="designation_id[]" id="payrollProcessDesignationId" class="form-select select2 designation-select" multiple required>
+                                                            <option value="">All Designations</option>
+                                                            @foreach ($designations as $designation)
+                                                                <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="payrollProcessUserId" class="form-label fw-medium">Employee <span class="text-danger">*</span></label>
+                                                        <select name="user_id[]" id="payrollProcessUserId" class="form-select select2 employee-select" multiple required>
+                                                            <option value="">All Employees</option>
+                                                        </select>
+                                                    </div>
+
+
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Right Column - Government Mandates & Actions -->
+                                    <!-- Right Column - Government Mandates & Actions (styled card) -->
                                     <div class="col-xl-3">
-                                        <h6 class="text-primary fw-semibold mb-3 pb-2 border-bottom">
-                                            <i class="ti ti-shield-check me-2"></i>Government Contributions
-                                        </h6>
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-start mb-3">
+                                                    <div class="me-3" style="width:6px; height:36px; background:#f6c800; border-radius:4px;"></div>
+                                                    <div>
+                                                        <h6 class="text-primary fw-semibold mb-1">Government Contributions</h6>
+                                                        <small class="text-muted">Choose contribution options</small>
+                                                    </div>
+                                                </div>
 
-                                        <div class="mb-4">
-                                            <label class="form-label fw-medium d-block mb-2">SSS Contribution <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="btn-group w-100" role="group" aria-label="SSS Contribution Options">
-                                                <input type="radio" class="btn-check" name="sss_option" id="sssYes" value="yes" required>
-                                                <label class="btn btn-outline-primary me-2" for="sssYes">Half</label>
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-medium d-block mb-2">SSS Contribution <span class="text-danger">*</span></label>
+                                                    <div class="btn-group w-100" role="group" aria-label="SSS Contribution Options">
+                                                        <input type="radio" class="btn-check" name="sss_option" id="sssYes" value="half" required>
+                                                        <label class="btn btn-outline-success me-2" for="sssYes">Half</label>
 
-                                                <input type="radio" class="btn-check" name="sss_option" id="sssNo" value="no" required>
-                                                <label class="btn btn-outline-primary me-2" for="sssNo">None</label>
+                                                        <input type="radio" class="btn-check" name="sss_option" id="sssNo" value="none" required>
+                                                        <label class="btn btn-outline-success me-2" for="sssNo">None</label>
 
-                                                <input type="radio" class="btn-check" name="sss_option" id="sssFull" value="full" required>
-                                                <label class="btn btn-outline-primary" for="sssFull">Full</label>
+                                                        <input type="radio" class="btn-check" name="sss_option" id="sssFull" value="full" required>
+                                                        <label class="btn btn-outline-success" for="sssFull">Full</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-medium d-block mb-2">PhilHealth Contribution <span class="text-danger">*</span></label>
+                                                    <div class="btn-group w-100" role="group" aria-label="PhilHealth Contribution Options">
+                                                        <input type="radio" class="btn-check" name="philhealth_option" id="philhealthYes" value="half" required>
+                                                        <label class="btn btn-outline-success me-2" for="philhealthYes">Half</label>
+
+                                                        <input type="radio" class="btn-check" name="philhealth_option" id="philhealthNo" value="none" required>
+                                                        <label class="btn btn-outline-success me-2" for="philhealthNo">None</label>
+
+                                                        <input type="radio" class="btn-check" name="philhealth_option" id="philhealthFull" value="full" required>
+                                                        <label class="btn btn-outline-success" for="philhealthFull">Full</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-medium d-block mb-2">Pag-IBIG Contribution <span class="text-danger">*</span></label>
+                                                    <div class="btn-group w-100" role="group" aria-label="Pag-IBIG Contribution Options">
+                                                        <input type="radio" class="btn-check" name="pagibig_option" id="pagibigYes" value="half" required>
+                                                        <label class="btn btn-outline-success me-2" for="pagibigYes">Half</label>
+
+                                                        <input type="radio" class="btn-check" name="pagibig_option" id="pagibigNo" value="none" required>
+                                                        <label class="btn btn-outline-success me-2" for="pagibigNo">None</label>
+
+                                                        <input type="radio" class="btn-check" name="pagibig_option" id="pagibigFull" value="full" required>
+                                                        <label class="btn btn-outline-success" for="pagibigFull">Full</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-4 pb-3 border-bottom">
+                                                    <label class="form-label fw-medium d-block mb-2">Cut-off Period <span class="text-danger">*</span></label>
+                                                    <div class="btn-group w-100" role="group" aria-label="Cutoff Options">
+                                                        <input type="radio" class="btn-check" name="cutoff_period" id="cutoffOne" value="1" required>
+                                                        <label class="btn btn-outline-success me-2" for="cutoffOne">1st Half</label>
+
+                                                        <input type="radio" class="btn-check" name="cutoff_period" id="cutoffTwo" value="2" required>
+                                                        <label class="btn btn-outline-success me-2" for="cutoffTwo">2nd Half</label>
+                                                    </div>
+                                                </div>
+
+                                                @if (in_array('Create', $permission))
+                                                    <div class="d-grid gap-2 mt-3">
+                                                        <button type="submit" class="btn btn-primary btn-lg py-3" id="processPayrollBtn" disabled>
+                                                            <span class="btn-text">
+                                                                <i class="ti ti-calendar-check me-2"></i>
+                                                                Process Payroll
+                                                            </span>
+                                                            <span class="btn-loading d-none">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                                Processing payroll, please wait...
+                                                            </span>
+                                                        </button>
+                                                        <small class="text-muted text-center mt-2 d-block">
+                                                            <i class="ti ti-info-circle me-1"></i>
+                                                            All fields marked with <span class="text-danger">*</span> are required
+                                                        </small>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
-
-                                        <div class="mb-4">
-                                            <label class="form-label fw-medium d-block mb-2">PhilHealth Contribution <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="btn-group w-100" role="group" aria-label="PhilHealth Contribution Options">
-                                                <input type="radio" class="btn-check" name="philhealth_option"
-                                                    id="philhealthYes" value="yes" required>
-                                                <label class="btn btn-outline-primary me-2" for="philhealthYes">Half</label>
-
-                                                <input type="radio" class="btn-check" name="philhealth_option"
-                                                    id="philhealthNo" value="no" required>
-                                                <label class="btn btn-outline-primary me-2" for="philhealthNo">None</label>
-
-                                                <input type="radio" class="btn-check" name="philhealth_option"
-                                                    id="philhealthFull" value="full" required>
-                                                <label class="btn btn-outline-primary" for="philhealthFull">Full</label>
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-4">
-                                            <label class="form-label fw-medium d-block mb-2">Pag-IBIG Contribution <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="btn-group w-100" role="group" aria-label="Pag-IBIG Contribution Options">
-                                                <input type="radio" class="btn-check" name="pagibig_option"
-                                                    id="pagibigYes" value="yes" required>
-                                                <label class="btn btn-outline-primary me-2" for="pagibigYes">Half</label>
-
-                                                <input type="radio" class="btn-check" name="pagibig_option"
-                                                    id="pagibigNo" value="no" required>
-                                                <label class="btn btn-outline-primary me-2" for="pagibigNo">None</label>
-
-                                                <input type="radio" class="btn-check" name="pagibig_option"
-                                                    id="pagibigFull" value="full" required>
-                                                <label class="btn btn-outline-primary" for="pagibigFull">Full</label>
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-4 pb-3 border-bottom">
-                                            <label class="form-label fw-medium d-block mb-2">Cut-off Period <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="btn-group w-100" role="group">
-                                                <input type="radio" class="btn-check" name="cutoff_period"
-                                                    id="cutoffOne" value="1" required>
-                                                <label class="btn btn-outline-primary me-2" for="cutoffOne">1st Half</label>
-
-                                                <input type="radio" class="btn-check" name="cutoff_period"
-                                                    id="cutoffTwo" value="2" required>
-                                                <label class="btn btn-outline-primary me-2" for="cutoffTwo">2nd Half</label>
-
-                                                {{-- <input type="radio" class="btn-check" name="cutoff_period"
-                                                    id="cutoffWeekly" value="weekly" required disabled>
-                                                <label class="btn btn-outline-secondary" for="cutoffWeekly">Weekly</label> --}}
-                                            </div>
-                                        </div>
-
-                                        @if (in_array('Create', $permission))
-                                            <div class="d-grid gap-2">
-                                                <button type="submit" class="btn btn-primary btn-lg py-3"
-                                                    id="processPayrollBtn" disabled>
-                                                    <!-- Default State -->
-                                                    <span class="btn-text">
-                                                        <i class="ti ti-checks me-2"></i>
-                                                        Process Payroll
-                                                    </span>
-                                                    <!-- Loading State (hidden by default) -->
-                                                    <span class="btn-loading d-none">
-                                                        <span class="spinner-border spinner-border-sm me-2" role="status"
-                                                            aria-hidden="true"></span>
-                                                        Processing payroll, please wait...
-                                                    </span>
-                                                </button>
-                                                <small class="text-muted text-center mt-2">
-                                                    <i class="ti ti-info-circle me-1"></i>
-                                                    All fields marked with <span class="text-danger">*</span> are required
-                                                </small>
-                                            </div>
-                                        @endif
                                     </div>
                                 </div>
                             </form>
@@ -448,14 +399,14 @@
             {{-- Normal Payroll Table --}}
             @if ($payrolls->count() > 0 || $payrolls->where('status', 'Pending')->count() > 0)
                 <div class="card">
-                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                        <h5 class="mb-0 fw-semibold">Processed Payroll</h5>
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                        <h5 class="mb-0 fw-semibold text-white">Processed Payroll</h5>
                         <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
 
                             <!-- Bulk Actions Dropdown -->
                             <div class="dropdown me-2">
-                                <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                <button class="btn btn-outline-white dropdown-toggle text-white" type="button"
                                     id="bulkActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     Bulk Actions
                                 </button>
@@ -641,14 +592,14 @@
             {{-- 13th Month Pay Pending Table --}}
             @if ($thirteenthMonthPayrolls->count() > 0)
                 <div class="card mt-4">
-                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                        <h5 class="mb-0 fw-semibold">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                        <h5 class="mb-0 fw-semibold text-white">
                             <i class="ti ti-calendar-dollar me-2"></i>13th Month Pay - Pending
                         </h5>
                         <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                             <!-- Bulk Actions Dropdown -->
                             <div class="dropdown me-2">
-                                <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                <button class="btn btn-outline-white dropdown-toggle text-white" type="button"
                                     id="bulk13thMonthActions" data-bs-toggle="dropdown" aria-expanded="false">
                                     Bulk Actions
                                 </button>
