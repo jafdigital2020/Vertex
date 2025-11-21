@@ -609,21 +609,12 @@ class MicroBusinessController extends Controller
 
     private function calculateTrialAndSubscriptionWindows($request, $billingPeriod)
     {
-        $isTrial = (bool) $request->boolean('is_trial', true);
-        if ($isTrial) {
-            $trialStart = now();
-            $trialEnd   = now()->addDays(7);
-            // For trial, subscription starts and ends with the trial period (7 days)
-            $subStart   = $trialStart;
-            $subEnd     = $trialEnd;
-        } else {
-            $trialStart = null;
-            $trialEnd   = null;
-            $subStart   = now();
-            $subEnd = $billingPeriod === 'annual'
-                ? (clone $subStart)->addYear()
-                : (clone $subStart)->addMonth();
-        }
+        $isTrial = false; // No trial period
+        $trialStart = null;
+        $trialEnd   = null;
+
+        $subStart = now();
+        $subEnd = (clone $subStart)->addMonth();
 
         return [$trialStart, $trialEnd, $subStart, $subEnd, $isTrial];
     }
