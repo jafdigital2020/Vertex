@@ -4,983 +4,457 @@
 @section('content')
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'timora-teal': '#008080',
+                        'timora-dark': '#12515D',
+                        'timora-orange': '#ed7464',
+                        'timora-yellow': '#FFB400',
+                        'employee-red': '#b53654'
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
-        body {
-            background-color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .wizard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-            background-color: #ffffff;
-        }
-
-        .wizard-header {
-            background: #fff;
-            border-radius: 12px;
-            padding: 1.5rem 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .wizard-logo {
-            width: 50px;
-            height: 50px;
-            background: #008080;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
-
-        .wizard-header-content h1 {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1a202c;
-        }
-
-        .wizard-header-content p {
-            margin: 0;
-            font-size: 0.875rem;
-            color: #718096;
-        }
-
-        .wizard-card {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-            overflow: hidden;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .wizard-step-indicator {
-            background: #ffffff;
-            color: #1a202c;
-            padding: 1.5rem 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            border-bottom: 1px solid #e8ecef;
-        }
-
-        .step-circle {
-            width: 48px;
-            height: 48px;
-            background: #008080;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.25rem;
-        }
-
-        .step-info h2 {
-            margin: 0;
-            font-size: 0.875rem;
-            font-weight: 400;
-            opacity: 0.9;
-        }
-
-        .step-info h3 {
-            margin: 0;
-            font-size: 1.125rem;
-            font-weight: 600;
-        }
-
-        .wizard-content {
-            padding: 2.5rem;
-            background-color: #ffffff;
-        }
-
-        .two-column-layout {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 2rem;
-        }
-
-        .subscription-card {
-            background: #fff;
-            border: 1px solid #e8ecef;
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        }
-
-        .subscription-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.08);
-            border-color: rgba(0, 128, 128, 0.2);
-        }
-
-        .subscription-card h3 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #1a202c;
-        }
-
-        .subscription-card p {
-            color: #718096;
-            margin-bottom: 1.5rem;
-            font-size: 0.875rem;
-        }
-
-        .employee-input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .employee-input-group label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #2d3748;
-        }
-
-        .employee-input-group label small {
-            font-weight: 400;
-            color: #718096;
-        }
-
-        .employee-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            background: #f8f9fa;
-            transition: all 0.3s ease;
-        }
-
-        .employee-input:focus {
-            outline: none;
-            border-color: #008080;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
-        }
-
-        .employee-input:hover {
-            border-color: #cbd5e0;
-        }
-
-        .features-section h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #1a202c;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .feature-category h5 {
-            font-weight: 600;
-            color: #e53e3e;
-            margin-bottom: 0.75rem;
-            font-size: 0.9375rem;
-        }
-
-        .feature-category.owner h5 {
-            color: #dd6b20;
-        }
-
-        .feature-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0;
-            font-size: 0.875rem;
-            color: #4a5568;
-        }
-
-        .feature-item i {
-            color: #008080;
-        }
-
-        .price-display {
-            background: linear-gradient(135deg, #008080 0%, #006666 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            color: white;
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-
-        .price-display .label {
-            font-size: 0.875rem;
-            opacity: 0.9;
-            margin-bottom: 0.25rem;
-        }
-
-        .price-display .amount {
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        .price-display .period {
-            font-size: 0.875rem;
-            opacity: 0.9;
-        }
-
-        /* Sidebar */
-        .sidebar-section {
-            position: sticky;
-            top: 2rem;
-        }
-
-        .addon-section {
-            background: linear-gradient(to bottom, #ffffff, #fafbfc);
-            border: 1px solid #e8ecef;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .addon-section:hover {
-            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.08);
-            border-color: rgba(0, 128, 128, 0.2);
-        }
-
-        .addon-section h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #1a202c;
-        }
-
-        .addon-section > p {
-            color: #718096;
-            font-size: 0.875rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .addon-badge {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #78350f;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
-            }
-            50% {
-                box-shadow: 0 2px 8px rgba(251, 191, 36, 0.5);
-            }
-        }
-
-        .addon-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #f7fafc;
-        }
-
-        .addon-item:last-child {
-            border-bottom: none;
-        }
-
-        .addon-label {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex: 1;
-        }
-
-        .addon-checkbox {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #008080;
-            transition: transform 0.2s ease;
-        }
-
-        .addon-checkbox:hover {
-            transform: scale(1.1);
-        }
-
-        .addon-checkbox:checked {
-            transform: scale(1.05);
-        }
-
-        .addon-label label {
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #2d3748;
-            margin: 0;
-        }
-
-        .addon-price {
-            font-weight: 600;
-            color: #1a202c;
-            font-size: 0.875rem;
-        }
-
-        .pricing-summary {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid #e8ecef;
-            box-shadow: 0 2px 8px rgba(0, 128, 128, 0.04);
-            transition: all 0.3s ease;
-        }
-
-        .pricing-summary:hover {
-            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.08);
-            border-color: rgba(0, 128, 128, 0.2);
-        }
-
-        .pricing-summary h5 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #1a202c;
-        }
-
-        .pricing-summary p {
-            color: #718096;
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        .pricing-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
-            font-size: 0.875rem;
-            color: #4a5568;
-        }
-
-        .pricing-row.total {
-            border-top: 2px solid #e2e8f0;
-            margin-top: 0.5rem;
-            padding-top: 1rem;
-            font-weight: 700;
-            font-size: 1rem;
-            color: #1a202c;
-        }
-
-        .pricing-row.total {
-            background: linear-gradient(135deg, rgba(0, 128, 128, 0.05), rgba(0, 128, 128, 0.1));
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            margin: 0 -1rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-
-        .pricing-row.total .amount {
-            color: #008080;
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        /* Step 2 Styles */
-        .form-section {
-            background: #fffbeb;
-            border-left: 3px solid #fbbf24;
-            border-radius: 8px;
-            padding: 1.25rem 1.5rem;
-        }
-
-        .form-section h4 {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #78350f;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .referral-input-group {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .referral-input-group input {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            background: #f8f9fa;
-        }
-
-        .btn-verify {
-            background: linear-gradient(135deg, #008080, #006666);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 128, 128, 0.2);
-        }
-
-        .btn-verify:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
-        }
-
-        .btn-verify:active {
-            transform: translateY(0);
-        }
-
-        .details-section {
-            background: #fff;
-            border: 1px solid #e8ecef;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .details-section h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: #1a202c;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #2d3748;
-            font-size: 0.875rem;
-        }
-
-        .form-group label i {
-            color: #718096;
-            font-size: 1rem;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            background: #f8f9fa;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:hover {
-            border-color: #cbd5e0;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #008080;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
-        }
-
-        .form-group input.is-invalid {
-            border-color: #e53e3e;
-            background: #fff5f5;
-        }
-
-        .invalid-feedback {
-            color: #e53e3e;
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-            display: none;
-        }
-
-        .form-group input.is-invalid + .invalid-feedback {
-            display: block;
-        }
-
-        .two-column-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        /* Navigation */
-        .wizard-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 2.5rem;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .btn-prev {
-            background: white;
-            color: #4a5568;
-            padding: 0.75rem 1.5rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .btn-prev:hover {
-            border-color: #008080;
-            background: rgba(0, 128, 128, 0.05);
-            color: #008080;
-            transform: translateX(-2px);
-        }
-
-        .btn-prev:active {
-            transform: translateX(0);
-        }
-
-        .btn-prev:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-prev:disabled:hover {
-            border-color: #e2e8f0;
-            background: white;
-            color: #4a5568;
-        }
-
-        .step-counter {
-            color: #718096;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .btn-next, .btn-submit {
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            color: white;
-            padding: 0.75rem 2rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
-        }
-
-        .btn-next:hover, .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
-        }
-
-        .btn-next:active, .btn-submit:active {
-            transform: translateY(0);
-        }
-
-        .wizard-step {
-            display: none;
-        }
-
-        .wizard-step.active {
-            display: block;
-        }
-
-        @media (max-width: 1024px) {
-            .two-column-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar-section {
-                position: relative;
-                top: 0;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .wizard-content {
-                padding: 1.5rem;
-            }
-
-            .two-column-form {
-                grid-template-columns: 1fr;
-            }
-
-            .wizard-navigation {
-                padding: 1rem 1.5rem;
-            }
+        .wizard-step { display: none; }
+        .wizard-step.active { display: block; }
+        .addon-item.selected { 
+            border-left: 3px solid #008080 !important; 
+            background: white !important; 
         }
     </style>
 
-    <div class="wizard-container">
-        <!-- Header -->
-        <div class="wizard-header">
-            <div class="wizard-logo">T</div>
-            <div class="wizard-header-content">
-                <h1>Timora</h1>
-                <p>Business Registration</p>
+    <!-- Header -->
+    <header class="w-full shadow-md border-b border-gray-200 bg-white">
+        <div class="flex items-center justify-between px-4 sm:px-6 lg:px-16 xl:px-20 py-3">
+            <!-- Logo -->
+            <div onclick="window.location.href = 'https://jafdigital.co'" class="cursor-pointer">
+                <img src="https://jafdigital.co/wp-content/uploads/2023/05/JAF-New-logo-300x300.png" alt="JAF Digital" class="h-8 w-auto">
+            </div>
+
+            <!-- Help link -->
+            <div onclick="window.open('https://jafdigital.co/contact-us/')" class="text-xs sm:text-sm md:text-base text-gray-700 hover:underline cursor-pointer">
+                Need Help?
             </div>
         </div>
+    </header>
 
-        <!-- Wizard Card -->
-        <div class="wizard-card">
-            <!-- Step Indicator -->
-            <div class="wizard-step-indicator">
-                <div class="step-circle">
-                    <span id="stepNumber">1</span>
-                </div>
-                <div class="step-info">
-                    <h2>Step <span id="currentStep">1</span> of 2</h2>
-                    <h3 id="stepTitle">Plan Summary</h3>
+    <div class="min-h-screen bg-gray-50 flex items-center justify-center p-3 sm:p-6">
+        <div class="w-full max-w-6xl">
+            <!-- Header -->
+            <div class="mb-4 sm:mb-8">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-timora-teal rounded-lg flex items-center justify-center text-white font-semibold text-base sm:text-lg">T</div>
+                    <div>
+                        <div class="text-lg sm:text-xl font-semibold text-timora-dark">Timora</div>
+                        <div class="text-xs text-gray-500">Business Registration</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Form -->
-            <form id="registrationForm" method="POST" action="{{ route('affiliate-branch-register') }}">
-                @csrf
-                <input type="hidden" name="role_id" value="2">
-                <input type="hidden" name="billing_period" value="monthly">
-                <input type="hidden" name="is_trial" value="1">
-                <input type="hidden" name="plan_slug" value="starter">
-
-                <!-- Step 1: Plan Summary -->
-                <div class="wizard-step active" data-step="1">
-                    <div class="wizard-content">
-                        <!-- Section Header -->
-                        <div style="margin-bottom: 2rem;">
-                            <h2 style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin-bottom: 0.5rem;">Plan Summary</h2>
+            <!-- Step Content -->
+            <div class="bg-white border border-gray-200 shadow-2xl rounded-lg">
+                <!-- Step Indicator -->
+                <div class="px-3 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 bg-timora-teal rounded-lg flex items-center justify-center text-white text-xs sm:text-sm font-medium">
+                            <span id="stepNumber">1</span>
                         </div>
+                        <div>
+                            <div class="text-xs sm:text-sm text-gray-500">Step <span id="currentStep">1</span> of 2</div>
+                            <div class="text-sm sm:font-medium text-timora-dark" id="stepTitle">Plan Summary</div>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="two-column-layout">
-                            <!-- Left Column - Your Subscription and Add-ons -->
-                            <div>
-                                <!-- Your Subscription Card -->
-                                <div class="subscription-card" style="margin-bottom: 2rem;">
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-                                        <div>
-                                            <h3 style="font-size: 1.125rem; font-weight: 600; color: #1a202c; margin-bottom: 0.25rem;">Your Subscription</h3>
-                                            <p style="font-size: 0.875rem; color: #718096; margin: 0;">Customize your HR & Payroll needs</p>
+                <!-- Form -->
+                <form id="registrationForm" method="POST" action="{{ route('affiliate-branch-register') }}">
+                    @csrf
+                    <input type="hidden" name="role_id" value="2">
+                    <input type="hidden" name="billing_period" value="monthly">
+                    <input type="hidden" name="is_trial" value="1">
+                    <input type="hidden" name="plan_slug" value="starter">
+
+                    <!-- Step 1: Plan Summary -->
+                    <div class="wizard-step active" data-step="1">
+                        <div class="p-3 sm:p-4">
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
+                                <!-- Left Column - Plan Summary & Add-on Features -->
+                                <div class="lg:col-span-7 space-y-3 sm:space-y-4">
+                                    <!-- Plan Summary -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 space-y-2 sm:space-y-0">
+                                            <div>
+                                                <div class="font-medium mb-1 text-timora-dark text-sm sm:text-base">Your Subscription</div>
+                                                <div class="text-xs text-gray-500">Customize your HR & Payroll needs</div>
+                                            </div>
+                                            <div class="text-left sm:text-right">
+                                                <div class="text-xs text-gray-500 mb-1">Monthly Total</div>
+                                                <div class="text-xl sm:text-2xl font-semibold text-timora-teal" id="monthlyTotal">₱54.88</div>
+                                                <div class="text-xs text-gray-400">VAT Inclusive</div>
+                                            </div>
                                         </div>
-                                        <div style="text-align: right;">
-                                            <div style="font-size: 0.75rem; color: #718096; margin-bottom: 0.125rem;">Monthly Total</div>
-                                            <div style="font-size: 1.75rem; font-weight: 700; color: #008080;" id="monthlyTotal">₱61.47</div>
-                                            <div style="font-size: 0.75rem; color: #718096;">VAT Inclusive</div>
+                                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-sm bg-gray-50 p-3 rounded border border-gray-100">
+                                            <div class="flex items-center gap-2">
+                                                <i class="bi bi-people text-gray-400"></i>
+                                                <span class="text-gray-600">Employees:</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" min="1" value="1" 
+                                                       class="w-16 px-2 py-1 border border-gray-200 rounded text-center font-medium focus:outline-none focus:border-gray-400 text-sm text-timora-dark"
+                                                       id="totalEmployees" name="total_employees" data-price-per-user="49">
+                                                <span class="text-xs text-gray-400">₱49 per additional</span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="employee-input-group">
-                                        <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                            <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; color: #2d3748;">
-                                                <i class="bi bi-people"></i> Employees:
-                                            </span>
-                                            <small style="font-weight: 400; color: #718096;">₱40 per additional</small>
-                                        </label>
-                                        <input type="number" class="employee-input" id="totalEmployees"
-                                               name="total_employees" value="1" min="1"
-                                               data-price-per-user="49">
+                                    <!-- Add-on Features -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 space-y-2 sm:space-y-0">
+                                            <h3 class="font-semibold text-timora-dark text-sm sm:text-base">Add-on Features</h3>
+                                            <span class="text-xs font-medium px-2 py-1 rounded-full text-white bg-timora-yellow w-fit">Optional</span>
+                                        </div>
+                                        <div class="space-y-1.5" id="addonsList">
+                                            <div class="text-center py-4">
+                                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-timora-teal"></div>
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Add-on Features Card -->
-                                <div class="subscription-card">
-                                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                                        <h3 style="font-size: 1.125rem; font-weight: 600; color: #1a202c; margin: 0;">Add-on Features</h3>
-                                        <span style="background: #fbbf24; color: #78350f; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Optional</span>
+                                <!-- Right Column - Included Features & Pricing Summary -->
+                                <div class="lg:col-span-5 space-y-3 sm:space-y-4">
+                                    <!-- Included Features -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                                        <h3 class="font-semibold text-timora-dark mb-3 text-sm sm:text-base">Included Features</h3>
+                                        <div class="space-y-2">
+                                            <!-- Employee Access -->
+                                            <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-employee-red">
+                                                <div class="text-xs font-medium mb-2 text-employee-red">Employee Access</div>
+                                                <div class="space-y-1.5">
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-employee-red"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Time Keeping (Check-in & Check-out)</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-employee-red"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Payslip View & Download</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-employee-red"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Attendance Photo Capture</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-employee-red"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Leave and Overtime Filing</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Owner Access -->
+                                            <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-timora-orange">
+                                                <div class="text-xs font-medium mb-2 text-timora-orange">Owner Access</div>
+                                                <div class="space-y-1.5">
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-timora-orange"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Government Report Generator</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-timora-orange"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Employee List View</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-timora-orange"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Payroll Process</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-timora-orange"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Create Employee</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-timora-orange"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Geotagging + Location Tracking</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-timora-orange"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Earnings & Deductions</span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="w-1 h-1 rounded-full mt-1.5 flex-shrink-0 bg-timora-orange"></div>
+                                                        <span class="text-xs text-gray-600 leading-tight">Flexible Shift Scheduling</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div id="addonsList">
-                                        <div class="text-center py-4">
-                                            <div class="spinner-border text-primary" role="status" style="color: #008080 !important;">
-                                                <span class="visually-hidden">Loading...</span>
+                                    <!-- Pricing Summary -->
+                                    <div class="bg-gradient-to-r from-timora-dark to-timora-teal rounded-lg p-3 shadow-lg transform lg:-translate-y-1">
+                                        <div class="font-medium mb-3 text-sm text-white">Pricing Summary</div>
+                                        <div class="space-y-2 text-xs">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-gray-200">Base Price</span>
+                                                <span class="text-white" id="basePrice">₱49.00</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-gray-200">Employees (<span id="empCount">0</span>)</span>
+                                                <span class="text-white" id="empPrice">₱0.00</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-gray-200">Add-ons (<span id="addonCount">0</span>)</span>
+                                                <span class="text-white" id="addonPrice">₱0.00</span>
+                                            </div>
+                                            <div class="border-t border-gray-400 pt-2 mt-2">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-gray-300">Subtotal</span>
+                                                    <span class="text-gray-100" id="subtotal">₱49.00</span>
+                                                </div>
+                                                <div class="flex justify-between items-center mt-1">
+                                                    <span class="text-gray-300">VAT (12%)</span>
+                                                    <span class="text-gray-100" id="vat">₱5.88</span>
+                                                </div>
+                                            </div>
+                                            <div class="border-t-2 border-gray-300 pt-2 mt-2">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="font-medium text-white text-sm">Total Monthly</span>
+                                                    <div class="text-right">
+                                                        <div class="text-xl font-semibold text-timora-yellow" id="totalPrice">₱54.88</div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Right Column - Included Features and Pricing Summary -->
-                            <div class="sidebar-section">
-                                <!-- Included Features Card -->
-                                <div class="subscription-card" style="margin-bottom: 1.5rem;">
-                                    <h3 style="font-size: 1.125rem; font-weight: 600; color: #1a202c; margin-bottom: 1.25rem;">Included Features</h3>
-
-                                    <div style="margin-bottom: 1.5rem;">
-                                        <h5 style="font-weight: 600; color: #e53e3e; margin-bottom: 0.75rem; font-size: 0.9375rem;">Employee Access</h5>
-                                        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #e53e3e; margin-top: 0.125rem;">•</span>
-                                                <span>Time Keeping (Check-in & Check-out)</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #e53e3e; margin-top: 0.125rem;">•</span>
-                                                <span>Payslip View & Download</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #e53e3e; margin-top: 0.125rem;">•</span>
-                                                <span>Attendance Photo Capture</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #e53e3e; margin-top: 0.125rem;">•</span>
-                                                <span>Leave and Overtime Filing</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    <div>
-                                        <h5 style="font-weight: 600; color: #dd6b20; margin-bottom: 0.75rem; font-size: 0.9375rem;">Owner Access</h5>
-                                        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
-                                                <span>Government Report Generator</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
-                                                <span>Employee List View</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
-                                                <span>Payroll Process</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
-                                                <span>Create Employee</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
-                                                <span>Geotagging + Location Tracking</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
-                                                <span>Earnings & Deductions</span>
-                                            </li>
-                                            <li style="display: flex; align-items: start; gap: 0.5rem; font-size: 0.875rem; color: #4a5568;">
-                                                <span style="color: #dd6b20; margin-top: 0.125rem;">•</span>
-                                                <span>Flexible Shift Scheduling</span>
-                                            </li>
-                                        </ul>
-                                    </div>
+                            <!-- Footer Navigation -->
+                            <div class="mt-4 sm:mt-6 pt-3 sm:pt-5 border-t-2 flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+                                <button type="button" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-400 opacity-50 cursor-not-allowed" disabled id="prevBtn">
+                                    ← Previous
+                                </button>
+                                <div class="flex items-center gap-2">
+                                    <div class="text-sm text-gray-500">Step <span id="navStep">1</span> of 2</div>
                                 </div>
+                                <button type="button" class="w-full sm:w-auto text-white hover:opacity-90 shadow-lg px-6 sm:px-8 py-2 rounded-md transition-all bg-timora-orange" id="nextBtn">
+                                    Next Step →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-                                <!-- Pricing Summary Card -->
-                                <div class="pricing-summary">
-                                    <h5>Pricing Summary</h5>
+                    <!-- Step 2: Basic Information -->
+                    <div class="wizard-step" data-step="2">
+                        <div class="p-3 sm:p-4">
+                            <!-- Referral Code Section -->
+                            <div class="mb-3 p-3 rounded-lg border-l-4 border-timora-yellow border border-gray-200 bg-gray-50">
+                                <label class="text-xs font-medium mb-2 block text-timora-yellow">Referral Code (Optional)</label>
+                                <div class="flex flex-col sm:flex-row gap-2">
+                                    <input placeholder="Enter referral code" name="referral_code" id="referralCode"
+                                        class="flex-1 h-9 text-sm px-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200">
+                                    <button type="button" class="text-white px-4 hover:opacity-90 h-9 text-sm rounded-md bg-timora-teal whitespace-nowrap" id="verifyBtn">
+                                        Verify
+                                    </button>
+                                </div>
+                                <div id="referralStatus" class="text-success d-none mt-2 text-sm"></div>
+                                <div id="referralError" class="text-danger d-none mt-2 text-sm"></div>
+                            </div>
 
-                                    <div class="pricing-row" style="margin-bottom: 0.5rem;">
-                                        <span style="font-size: 0.875rem;">Base Price</span>
-                                        <span id="basePrice" style="font-weight: 600;">₱54.88</span>
-                                    </div>
-                                    <div class="pricing-row" style="margin-bottom: 0.5rem;">
-                                        <span style="font-size: 0.875rem;">Employees (<span id="empCount">0</span>)</span>
-                                        <span id="empPrice" style="font-weight: 600;">₱0.00</span>
-                                    </div>
-                                    <div class="pricing-row" style="margin-bottom: 0.5rem;">
-                                        <span style="font-size: 0.875rem;">Add-ons (<span id="addonCount">0</span>)</span>
-                                        <span id="addonPrice" style="font-weight: 600;">₱0.00</span>
-                                    </div>
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
+                                <!-- Left Column - User Details -->
+                                <div class="lg:col-span-5">
+                                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                                        <h3 class="font-semibold text-timora-dark mb-4 text-sm sm:text-base">User Details</h3>
+                                        
+                                        <div class="space-y-3">
+                                            <!-- Full Name -->
+                                            <div class="form-group">
+                                                <label class="text-sm font-medium flex items-center gap-2">
+                                                    <i class="bi bi-person text-gray-400"></i>
+                                                    Full Name *
+                                                </label>
+                                                <input placeholder="Enter your full name" name="full_name" required
+                                                    class="mt-1.5 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 border-gray-300">
+                                                <div class="invalid-feedback hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+                                                    <span>⚠</span>
+                                                    <span>Full name is required</span>
+                                                </div>
+                                            </div>
 
-                                    <div style="border-top: 1px solid #e2e8f0; margin: 0.75rem 0; padding-top: 0.75rem;">
-                                        <div class="pricing-row" style="margin-bottom: 0.5rem;">
-                                            <span style="font-size: 0.875rem;">Subtotal</span>
-                                            <span id="subtotal" style="font-weight: 600;">₱54.88</span>
+                                            <!-- Username -->
+                                            <div class="form-group">
+                                                <label class="text-sm font-medium flex items-center gap-2">
+                                                    <i class="bi bi-person text-gray-400"></i>
+                                                    Username *
+                                                </label>
+                                                <input placeholder="Enter username" name="username" required
+                                                    class="mt-1.5 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 border-gray-300">
+                                                <div class="invalid-feedback hidden text-xs text-red-600 mt-1 flex items-center gap-1" id="errorUsername">
+                                                    <span>⚠</span>
+                                                    <span>Username is required</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Email -->
+                                            <div class="form-group">
+                                                <label class="text-sm font-medium flex items-center gap-2">
+                                                    <i class="bi bi-envelope text-gray-400"></i>
+                                                    Email *
+                                                </label>
+                                                <input type="email" placeholder="Enter email address" name="email" required
+                                                    class="mt-1.5 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 border-gray-300">
+                                                <div class="invalid-feedback hidden text-xs text-red-600 mt-1 flex items-center gap-1" id="errorEmail">
+                                                    <span>⚠</span>
+                                                    <span>Email is required</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Password -->
+                                            <div class="form-group">
+                                                <label class="text-sm font-medium flex items-center gap-2">
+                                                    <i class="bi bi-lock text-gray-400"></i>
+                                                    Password *
+                                                </label>
+                                                <input type="password" placeholder="Enter password" name="password" required
+                                                    class="mt-1.5 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 border-gray-300">
+                                                <div class="invalid-feedback hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+                                                    <span>⚠</span>
+                                                    <span>Password is required</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Confirm Password -->
+                                            <div class="form-group">
+                                                <label class="text-sm font-medium flex items-center gap-2">
+                                                    <i class="bi bi-lock text-gray-400"></i>
+                                                    Confirm Password *
+                                                </label>
+                                                <input type="password" placeholder="Re-enter password" name="confirm_password" required
+                                                    class="mt-1.5 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 border-gray-300">
+                                                <div class="invalid-feedback hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+                                                    <span>⚠</span>
+                                                    <span>Passwords must match</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Phone Number -->
+                                            <div class="form-group">
+                                                <label class="text-sm font-medium flex items-center gap-2">
+                                                    <i class="bi bi-phone text-gray-400"></i>
+                                                    Phone Number *
+                                                </label>
+                                                <input type="tel" placeholder="Enter phone number" name="phone_number" required
+                                                    class="mt-1.5 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 border-gray-300">
+                                                <div class="invalid-feedback hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+                                                    <span>⚠</span>
+                                                    <span>Phone number is required</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="pricing-row" style="margin-bottom: 0.75rem;">
-                                            <span style="font-size: 0.875rem;">VAT (12%)</span>
-                                            <span id="vat" style="font-weight: 600;">₱6.59</span>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column - Business Information & Pricing -->
+                                <div class="lg:col-span-7 space-y-3">
+                                    <!-- Business Information -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                                        <h3 class="font-semibold text-timora-dark mb-3 text-sm sm:text-base">Business Information</h3>
+
+                                        <div class="space-y-3">
+                                            <!-- Company Name -->
+                                            <div class="form-group">
+                                                <label class="text-sm font-medium flex items-center gap-2">
+                                                    <i class="bi bi-shop text-gray-400"></i>
+                                                    Company Name *
+                                                </label>
+                                                <input placeholder="Enter company name" name="branch_name" required
+                                                    class="mt-1.5 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 border-gray-300">
+                                                <div class="invalid-feedback hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+                                                    <span>⚠</span>
+                                                    <span>Company name is required</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Address -->
+                                            <div class="form-group">
+                                                <label class="text-sm font-medium flex items-center gap-2">
+                                                    <i class="bi bi-geo-alt text-gray-400"></i>
+                                                    Address *
+                                                </label>
+                                                <input placeholder="Enter company address" name="branch_location" required
+                                                    class="mt-1.5 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 border-gray-300">
+                                                <div class="invalid-feedback hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+                                                    <span>⚠</span>
+                                                    <span>Address is required</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="pricing-row total">
-                                        <span style="font-weight: 600;">Total Monthly</span>
-                                        <span class="amount" id="totalPrice">₱61.47</span>
+                                    <!-- Pricing Display -->
+                                    <div class="bg-gradient-to-r from-timora-dark to-timora-teal rounded-lg p-3">
+                                        <div class="font-medium mb-3 text-sm text-white">Pricing Summary</div>
+                                        <div class="space-y-2 text-xs">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-gray-200">Base Price</span>
+                                                <span class="text-white" id="basePrice2">₱49.00</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-gray-200">Employees (<span id="empCount2">0</span>)</span>
+                                                <span class="text-white" id="empPrice2">₱0.00</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-gray-200">Add-ons (<span id="addonCount2">0</span>)</span>
+                                                <span class="text-white" id="addonPrice2">₱0.00</span>
+                                            </div>
+                                            <div class="border-t border-gray-400 pt-2 mt-2">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-gray-300">Subtotal</span>
+                                                    <span class="text-gray-100" id="subtotal2">₱49.00</span>
+                                                </div>
+                                                <div class="flex justify-between items-center mt-1">
+                                                    <span class="text-gray-300">VAT (12%)</span>
+                                                    <span class="text-gray-100" id="vat2">₱5.88</span>
+                                                </div>
+                                            </div>
+                                            <div class="border-t-2 border-gray-300 pt-2 mt-2">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="font-medium text-white text-sm">Total Monthly</span>
+                                                    <div class="text-right">
+                                                        <div class="text-xl font-semibold text-timora-yellow" id="totalPrice2">₱54.88</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Footer Navigation -->
+                            <div class="mt-4 sm:mt-6 pt-3 sm:pt-5 border-t-2 flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+                                <button type="button" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 shadow-sm" id="prevBtn2">
+                                    ← Previous
+                                </button>
+                                <div class="text-sm text-gray-500">Step 2 of 2</div>
+                                <button type="submit" class="w-full sm:w-auto text-white px-6 sm:px-8 py-2 hover:opacity-90 shadow-lg transition-all rounded-md bg-timora-orange" id="submitBtn">
+                                    Proceed to Payment
+                                </button>
+                                <button type="button" class="w-full sm:w-auto text-white px-6 sm:px-8 py-2 hover:opacity-90 shadow-lg transition-all rounded-md bg-timora-orange d-none" id="nextBtn2">
+                                    Next Step →
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Step 2: Basic Information -->
-                <div class="wizard-step" data-step="2">
-                    <div class="wizard-content">
-                        <!-- Referral Code Section (Full Width) -->
-                        <div class="form-section" style="margin-bottom: 1.5rem;">
-                            <h4>Referral Code (Optional)</h4>
-                            <div class="referral-input-group">
-                                <input type="text" name="referral_code" id="referralCode"
-                                       placeholder="Enter referral code">
-                                <button type="button" class="btn-verify" id="verifyBtn">Verify</button>
-                            </div>
-                            <div id="referralStatus" class="text-success d-none mt-2" style="font-size: 0.875rem;"></div>
-                            <div id="referralError" class="text-danger d-none mt-2" style="font-size: 0.875rem;"></div>
-                        </div>
-
-                        <!-- Two Column Layout -->
-                        <div class="two-column-layout">
-                            <!-- Left Column - User Details -->
-                            <div class="subscription-card">
-                                <h3>User Details</h3>
-
-                                <div class="form-group">
-                                    <label><i class="bi bi-person"></i> Full Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="full_name" required placeholder="Enter your full name">
-                                    <div class="invalid-feedback">Full name is required</div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label><i class="bi bi-person-badge"></i> Username <span class="text-danger">*</span></label>
-                                    <input type="text" name="username" required placeholder="Enter username">
-                                    <div class="invalid-feedback" id="errorUsername">Username is required</div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label><i class="bi bi-envelope"></i> Email <span class="text-danger">*</span></label>
-                                    <input type="email" name="email" required placeholder="Enter email address">
-                                    <div class="invalid-feedback" id="errorEmail">Email is required</div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label><i class="bi bi-lock"></i> Password <span class="text-danger">*</span></label>
-                                    <input type="password" name="password" required placeholder="Enter password">
-                                    <div class="invalid-feedback">Password is required</div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label><i class="bi bi-lock-fill"></i> Confirm Password <span class="text-danger">*</span></label>
-                                    <input type="password" name="confirm_password" required placeholder="Re-enter password">
-                                    <div class="invalid-feedback">Passwords must match</div>
-                                </div>
-
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label><i class="bi bi-phone"></i> Phone Number <span class="text-danger">*</span></label>
-                                    <input type="tel" name="phone_number" required placeholder="Enter phone number">
-                                    <div class="invalid-feedback">Phone number is required</div>
-                                </div>
-                            </div>
-
-                            <!-- Right Column -->
-                            <div class="sidebar-section">
-                                <!-- Business Information -->
-                                <div class="subscription-card" style="margin-bottom: 1.5rem;">
-                                    <h3>Business Information</h3>
-
-                                    <div class="form-group">
-                                        <label><i class="bi bi-shop"></i> Company Name <span class="text-danger">*</span></label>
-                                        <input type="text" name="branch_name" required placeholder="Enter company name">
-                                        <div class="invalid-feedback">Company name is required</div>
-                                    </div>
-
-                                    <div class="form-group" style="margin-bottom: 0;">
-                                        <label><i class="bi bi-geo-alt"></i> Address <span class="text-danger">*</span></label>
-                                        <input type="text" name="branch_location" required placeholder="Enter company address">
-                                        <div class="invalid-feedback">Address is required</div>
-                                    </div>
-                                </div>
-
-                                <!-- Pricing Summary -->
-                                <div class="pricing-summary">
-                                    <h5>Pricing Summary</h5>
-                                    <p>Plan: <strong>Starter</strong></p>
-
-                                    <div class="pricing-row">
-                                        <span>Base Price</span>
-                                        <span id="basePrice2">₱54.88</span>
-                                    </div>
-                                    <div class="pricing-row">
-                                        <span>Employees (<span id="empCount2">0</span>)</span>
-                                        <span id="empPrice2">₱0.00</span>
-                                    </div>
-                                    <div class="pricing-row">
-                                        <span>Add-ons (<span id="addonCount2">0</span>)</span>
-                                        <span id="addonPrice2">₱0.00</span>
-                                    </div>
-                                    <div class="pricing-row">
-                                        <span>Subtotal</span>
-                                        <span id="subtotal2">₱54.88</span>
-                                    </div>
-                                    <div class="pricing-row">
-                                        <span>VAT (12%)</span>
-                                        <span id="vat2">₱6.59</span>
-                                    </div>
-                                    <div class="pricing-row total">
-                                        <span>Total Monthly</span>
-                                        <span class="amount" id="totalPrice2">₱61.47</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Navigation -->
-                <div class="wizard-navigation">
-                    <button type="button" class="btn-prev" id="prevBtn" disabled>
-                        <i class="bi bi-arrow-left"></i> Previous
-                    </button>
-                    <div class="step-counter">
-                        Step <span id="navStep">1</span> of 2
-                    </div>
-                    <button type="button" class="btn-next" id="nextBtn">
-                        Next Step <i class="bi bi-arrow-right"></i>
-                    </button>
-                    <button type="submit" class="btn-submit d-none" id="submitBtn">
-                        <i class="bi bi-check-circle"></i> Save Company
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -1001,33 +475,49 @@
                                 maximumFractionDigits: 2
                             });
                             html += `
-                                <div class="addon-item">
-                                    <div class="addon-label">
-                                        <input type="checkbox" class="addon-checkbox"
+                                <div class="addon-item flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer hover:border-gray-400 bg-gray-50 border-gray-200 mb-1.5" data-addon="${addon.addon_key}">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <input type="checkbox" class="addon-checkbox w-4 h-4 rounded border-gray-300"
                                                name="features[]" value="${addon.addon_key}"
                                                data-addon-key="${addon.addon_key}"
                                                data-price="${addon.price}">
-                                        <label>${addon.name}</label>
+                                        <span class="text-xs sm:text-sm text-gray-700">${addon.name}</span>
                                     </div>
-                                    <div class="addon-price">₱${price}</div>
+                                    <span class="text-xs sm:text-sm font-medium text-gray-900">₱${price}</span>
                                 </div>
                             `;
                         });
                     } else {
-                        html = '<p class="text-muted text-center">No add-ons available</p>';
+                        html = '<p class="text-gray-500 text-center text-sm">No add-ons available</p>';
                     }
                     $('#addonsList').html(html);
 
-                    // Bind change event
-                    $('.addon-checkbox').on('change', calculatePricing);
+                    // Bind change event for checkboxes and item clicks
+                    $('.addon-checkbox').on('change', function() {
+                        const $item = $(this).closest('.addon-item');
+                        if ($(this).is(':checked')) {
+                            $item.addClass('selected');
+                        } else {
+                            $item.removeClass('selected');
+                        }
+                        calculatePricing();
+                    });
+
+                    // Make entire addon item clickable
+                    $('.addon-item').on('click', function(e) {
+                        if (!$(e.target).is('input')) {
+                            const $checkbox = $(this).find('.addon-checkbox');
+                            $checkbox.prop('checked', !$checkbox.is(':checked')).trigger('change');
+                        }
+                    });
                 }).fail(function() {
-                    $('#addonsList').html('<p class="text-danger text-center">Failed to load add-ons</p>');
+                    $('#addonsList').html('<p class="text-red-500 text-center text-sm">Failed to load add-ons</p>');
                 });
             }
 
             // Calculate pricing
             function calculatePricing() {
-                const basePrice = 54.88;
+                const basePrice = 49;
                 const employees = parseInt($('#totalEmployees').val()) || 1;
                 const pricePerUser = 49;
 
@@ -1077,34 +567,40 @@
                 $('#stepTitle').text(step === 1 ? 'Plan Summary' : 'Basic Information');
 
                 // Update buttons
-                $('#prevBtn').prop('disabled', step === 1);
-                if (step === totalSteps) {
-                    $('#nextBtn').addClass('d-none');
-                    $('#submitBtn').removeClass('d-none');
-                } else {
-                    $('#nextBtn').removeClass('d-none');
-                    $('#submitBtn').addClass('d-none');
-                }
+                $('#prevBtn').prop('disabled', step === 1).toggleClass('opacity-50 cursor-not-allowed', step === 1);
+                $('#prevBtn2').toggle(step === 2);
+                $('#nextBtn').toggle(step === 1);
+                $('#submitBtn').toggle(step === 2);
             }
 
             // Validation
             function validateStep2() {
                 let valid = true;
                 $('.wizard-step[data-step="2"] input[required]').each(function() {
+                    const $feedback = $(this).siblings('.invalid-feedback');
                     if (!$(this).val()) {
-                        $(this).addClass('is-invalid');
+                        $(this).removeClass('border-gray-300').addClass('border-red-500 bg-red-50');
+                        $feedback.removeClass('hidden').addClass('flex');
                         valid = false;
                     } else {
-                        $(this).removeClass('is-invalid');
+                        $(this).removeClass('border-red-500 bg-red-50').addClass('border-gray-300');
+                        $feedback.removeClass('flex').addClass('hidden');
                     }
                 });
 
                 // Password match
                 const pw = $('input[name="password"]').val();
                 const cpw = $('input[name="confirm_password"]').val();
+                const $cpwField = $('input[name="confirm_password"]');
+                const $cpwFeedback = $cpwField.siblings('.invalid-feedback');
+                
                 if (pw !== cpw) {
-                    $('input[name="confirm_password"]').addClass('is-invalid');
+                    $cpwField.removeClass('border-gray-300').addClass('border-red-500 bg-red-50');
+                    $cpwFeedback.removeClass('hidden').addClass('flex');
                     valid = false;
+                } else if (cpw) {
+                    $cpwField.removeClass('border-red-500 bg-red-50').addClass('border-gray-300');
+                    $cpwFeedback.removeClass('flex').addClass('hidden');
                 }
 
                 return valid;
@@ -1117,7 +613,7 @@
                 }
             });
 
-            $('#prevBtn').click(function() {
+            $('#prevBtn2').click(function() {
                 if (currentStep > 1) {
                     updateStep(currentStep - 1);
                 }
@@ -1128,7 +624,8 @@
             // Remove validation on input
             $('input[required]').on('input', function() {
                 if ($(this).val()) {
-                    $(this).removeClass('is-invalid');
+                    $(this).removeClass('border-red-500 bg-red-50').addClass('border-gray-300');
+                    $(this).siblings('.invalid-feedback').removeClass('flex').addClass('hidden');
                 }
             });
 
@@ -1230,12 +727,14 @@
                     error: function(xhr) {
                         const errors = xhr.responseJSON?.errors || {};
                         if (errors.username) {
-                            $('input[name="username"]').addClass('is-invalid');
-                            $('#errorUsername').text(errors.username[0]).show();
+                            $('input[name="username"]').removeClass('border-gray-300').addClass('border-red-500 bg-red-50');
+                            $('#errorUsername span:last-child').text(errors.username[0]);
+                            $('#errorUsername').removeClass('hidden').addClass('flex');
                         }
                         if (errors.email) {
-                            $('input[name="email"]').addClass('is-invalid');
-                            $('#errorEmail').text(errors.email[0]).show();
+                            $('input[name="email"]').removeClass('border-gray-300').addClass('border-red-500 bg-red-50');
+                            $('#errorEmail span:last-child').text(errors.email[0]);
+                            $('#errorEmail').removeClass('hidden').addClass('flex');
                         }
                     }
                 });
@@ -1249,4 +748,125 @@
 
     <!-- Toastr JS (fallback if not loaded in layout) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 text-gray-700">
+        <!-- Top Section -->
+        <div class="px-6 md:px-20 py-16 flex flex-col md:flex-row justify-between items-start gap-12">
+            <!-- Left: Logo & Description -->
+            <div class="md:w-1/2 max-w-md">
+                <div onclick="window.location.href='https://jafdigital.co/'" class="flex items-center mb-4 cursor-pointer">
+                    <img src="https://jafdigital.co/wp-content/uploads/2023/05/JAF-New-logo-300x300.png" alt="OneJAF Logo" class="h-8 w-auto">
+                </div>
+                <p class="text-sm leading-relaxed text-gray-600">
+                    A foundation system by JAF Digital that simplifies and automates HR,
+                    payroll, and inventory operations for businesses in the Philippines.
+                </p>
+            </div>
+
+            <!-- Right: Navigation & Contact (Grouped tightly) -->
+            <div class="flex flex-col sm:flex-row gap-32 text-sm">
+                <!-- Services -->
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">Services</h4>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="https://jafdigital.co/custom-software-development/" class="hover:text-red-500 transition">
+                                Custom Software Development
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://jafdigital.co/it-infrastructure-technical-support/" class="hover:text-red-500 transition">
+                                IT Infrastructure and Technical Support
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://jafdigital.co/digital-marketing-advertising-solutions/" class="hover:text-red-500 transition">
+                                Digital Marketing and Advertising Solutions
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://jafdigital.co/web-and-mobile-applications/" class="hover:text-red-500 transition">
+                                Web and Mobile Applications
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://jafdigital.co/system-integration-and-automation/" class="hover:text-red-500 transition">
+                                System Integration and Automation
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Products -->
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">Our Products</h4>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="https://jafdigital.co/timora/" class="hover:text-red-500 transition">
+                                Timora
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">Contact Us</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-center">
+                            <a href="tel:+639171883359" class="flex items-center hover:text-red-500 transition">
+                                <i class="bi bi-telephone mr-2 text-gray-500"></i>
+                                +63 917 188 3359
+                            </a>
+                        </li>
+                        <li class="flex items-center">
+                            <a href="mailto:sales@jafdigital.co" class="flex items-center hover:text-red-500 transition">
+                                <i class="bi bi-envelope mr-2 text-gray-500"></i>
+                                sales@jafdigital.co
+                            </a>
+                        </li>
+                        <li class="flex items-start">
+                            <a href="https://www.google.com/maps/place/JAF+Digital/@14.5590245,121.019474,19z/data=!3m1!4b1!4m6!3m5!1s0x3397c9c1f6dfce91:0x43ec0af73b03fe22!8m2!3d14.5590245!4d121.019474!16s%2Fg%2F11n0pn3pzv?entry=ttu&g_ep=EgoyMDI1MDcyNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" class="flex items-start hover:text-red-500 transition">
+                                <i class="bi bi-geo-alt mr-2 mt-1 text-gray-500"></i>
+                                <span>
+                                    Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner
+                                    V.A. Rufino St, Makati City, Metro Manila, Philippines
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Social Icons -->
+                    <div class="flex space-x-4 mt-6 text-gray-500">
+                        <a href="https://www.facebook.com/OneJAFCustomizableSystemDevelopment" class="hover:text-red-500 transition">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@jafdigitalofficial" class="hover:text-blue-400 transition">
+                            <i class="bi bi-youtube"></i>
+                        </a>
+                        <a href="https://ph.linkedin.com/company/jafdigital" class="hover:text-blue-700 transition">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="https://www.instagram.com/jafdigitalofficial/" class="hover:text-pink-500 transition">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="border-t border-gray-200 py-6 px-6 md:px-20 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+            <div>&copy; 2025 Powered by JAF Digital Group Inc.</div>
+            <div class="flex space-x-6 mt-4 md:mt-0">
+                <a href="https://jafdigital.co/privacy-policy/" class="hover:text-gray-700 transition">
+                    Privacy Policy
+                </a>
+                <a href="https://jafdigital.co/terms-and-conditions/" class="hover:text-gray-700 transition">
+                    Terms & Conditions
+                </a>
+            </div>
+        </div>
+    </footer>
 @endsection
