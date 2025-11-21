@@ -942,14 +942,14 @@ class MicroBusinessController extends Controller
             $client = new \GuzzleHttp\Client();
 
             $hitpayPayload = [
-                'amount'           => $finalAmount,
+                'amount'           => 1,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
                 'phone'            => $buyerPhone,
                 'purpose'          => $purpose,
                 'reference_number' => $reference,
-                'redirect_url'     => env('HITPAY_SUCCESS_URL'),
+                'redirect_url'     => env('HITPAY_TOPUP_CREDITS_URL'),
                 'webhook'          => env('HITPAY_WEBHOOK_URL'),
                 'send_email'       => true,
                 'meta'             => json_encode([

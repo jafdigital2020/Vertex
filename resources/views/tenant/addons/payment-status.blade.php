@@ -1,4 +1,4 @@
-<?php $page = 'employees'; ?>
+<?php $page = 'addons'; ?>
 @extends('layout.mainlayout')
 @section('content')
     @php
@@ -15,7 +15,7 @@
                         <i class="ti ti-check"></i>
                     </span>
                     <h2 class="mb-2 text-success fw-bold">Payment Successful!</h2>
-                    <p class="mb-0 text-secondary">Thank you for your payment.<br>Your transaction was completed successfully.
+                    <p class="mb-0 text-secondary">Thank you for your payment.<br>Your addon will be activated shortly.
                     </p>
                 @elseif($isCanceled)
                     <span class="avatar avatar-xl bg-danger text-white mb-3 shadow"
@@ -34,7 +34,7 @@
                 @endif
             </div>
             <div class="mt-4">
-                <a href="{{ url('/employees') }}" class="btn btn-primary w-100">Go to Employees</a>
+                <a href="{{ route('addons.purchase') }}" class="btn btn-primary w-100">Go to Add-ons</a>
             </div>
             <div class="mt-3">
                 <small class="text-muted">
@@ -52,7 +52,7 @@
             timer.textContent = seconds;
             if (seconds <= 0) {
                 clearInterval(interval);
-                window.location.href = "{{ url('/employees') }}";
+                window.location.href = "{{ route('addons.purchase') }}";
             }
         }, 1000);
     </script>

@@ -41,11 +41,11 @@
                                             <i class="ti ti-file-type-xls me-1"></i>Export as Excel
                                         </a>
                                     </li>
-                                    <li>
+                                    {{-- <li>
                                         <a href="{{ route('downloadEmployeeTemplate') }}" class="dropdown-item rounded-1">
                                             <i class="ti ti-file-type-xls me-1"></i>Download Template
                                         </a>
-                                    </li>
+                                    </li> --}}
                                 </ul>
                             </div>
                         </div>
@@ -495,11 +495,11 @@
                                                         @endforeach
                                                     </select>
                                                 </div>
-                                                <span>-</span>
-                                                <div class="col-md-4">
+                                                {{-- <span>-</span> --}}
+                                                {{-- <div class="col-md-4">
                                                     <input type="text" id="monthYear" name="month_year" class="form-control"
                                                         value="{{ date('m') . '-' . date('Y') }}">
-                                                </div>
+                                                </div> --}}
                                                 <span>-</span>
                                                 <div class="col-md-3">
                                                     <input type="text" class="form-control" name="employee_id"
@@ -1416,9 +1416,9 @@
                                     );
                                     $('#errorList').append(
                                         `<div class="alert alert-warning small">
-                                                        <strong>Row:</strong> ${err.row}<br>
-                                                        <strong>Error:</strong> ${err.error}
-                                                    </div>`
+                                                                            <strong>Row:</strong> ${err.row}<br>
+                                                                            <strong>Error:</strong> ${err.error}
+                                                                        </div>`
                                     );
                                 });
                             }
@@ -1498,9 +1498,9 @@
     <script>
         function fetchNextEmployeeId() {
             const prefix = $('#empIdPrefix').val();
-            const monthYear = $('#monthYear').val();
+            const monthYear = $('#monthYear').length ? $('#monthYear').val() : null;
 
-            if (!prefix || !monthYear) {
+            if (!prefix) {
                 $('#employeeId').val('');
                 return;
             }

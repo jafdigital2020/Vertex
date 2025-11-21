@@ -11571,7 +11571,7 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form id="editBranchForm">
+                <form id="editBranchForm" enctype="multipart/form-data">
                     <div class="modal-body pb-0">
                         <div class="row">
                             <div class="col-md-12">

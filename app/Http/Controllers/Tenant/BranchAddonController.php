@@ -178,11 +178,11 @@ class BranchAddonController extends Controller
             // Link invoice to branch addon
             $branchAddon->update(['invoice_id' => $invoice->id]);
 
-            // Create HitPay payment request
-            $returnUrl = route('addon.payment.callback', ['invoice' => $invoice->id]);
+            // Create HitPay payment request - redirect to payment status page
+            $returnUrl = env('HITPAY_ADDON_PAYMENT_URL', route('addon.payment.status'));
 
             $hitpayPayload = [
-                'amount' => number_format($totalAmount, 2, '.', ''),
+                'amount' => 1,
                 'currency' => env('HITPAY_CURRENCY', 'PHP'),
                 'email' => $user->email ?? 'customer@example.com',
                 'name' => $branch->name ?? 'Customer',
@@ -289,8 +289,7 @@ class BranchAddonController extends Controller
             $payment = Payment::where('invoice_id', $invoice->id)->latest()->first();
 
             if (!$payment) {
-                return redirect()->route('addons.purchase')
-                    ->with('error', 'Payment record not found.');
+                return redirect()->route('addon.payment.status', ['status' => 'failed', 'message' => 'Payment record not found']);
             }
 
             // Check payment status
@@ -300,25 +299,30 @@ class BranchAddonController extends Controller
             // Note: Addon activation is handled by HitPay webhook (processAddonPayment)
             // This callback is just for user redirect and confirmation
 
-            if ($status === 'completed') {
-                return redirect()->route('addons.purchase')
-                    ->with('success', 'Payment completed! Your addon will be activated shortly.');
-            } elseif ($status === 'failed' || $status === 'canceled') {
-                return redirect()->route('addons.purchase')
-                    ->with('error', 'Payment was ' . $status . '. Please try again.');
-            }
-
-            return redirect()->route('addons.purchase')
-                ->with('info', 'Payment status: ' . ($status ?? 'pending'));
+            // Redirect to payment status page with status
+            return redirect()->route('addon.payment.status', [
+                'status' => $status ?? 'pending',
+                'reference' => $reference
+            ]);
         } catch (\Exception $e) {
             Log::error('Addon Payment Callback Error', [
                 'error' => $e->getMessage(),
                 'invoice_id' => $invoiceId
             ]);
 
-            return redirect()->route('addons.purchase')
-                ->with('error', 'An error occurred processing your payment.');
+            return redirect()->route('addon.payment.status', [
+                'status' => 'failed',
+                'message' => 'An error occurred processing your payment.'
+            ]);
         }
+    }
+
+    /**
+     * Show payment status page for addon purchases
+     */
+    public function showPaymentStatus(Request $request)
+    {
+        return view('tenant.addons.payment-status');
     }
 
     /**

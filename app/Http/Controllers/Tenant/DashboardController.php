@@ -143,6 +143,10 @@ class DashboardController extends Controller
         // Nearest Birthday (Future Dates)
         $nearestBirthdays = User::where('tenant_id', $tenantId)
             ->join('employment_personal_information as personal_information', 'users.id', '=', 'personal_information.user_id')
+            ->when($branchId, function ($query) use ($branchId) {
+                $query->join('employment_details', 'users.id', '=', 'employment_details.user_id')
+                    ->where('employment_details.branch_id', $branchId);
+            })
             ->where(function ($query) {
                 $query->where(function ($q) {
                     // Remaining days in current month (after today)
@@ -223,6 +227,42 @@ class DashboardController extends Controller
             }])
             ->get(['id', 'branch_name']);
 
+        // 🔹 Birthday users per branch (today and upcoming)
+        $birthdayStatsByBranch = Branch::where('tenant_id', $tenantId)
+            ->withCount([
+                // Birthday today
+                'employmentDetail as birthdays_today' => function ($query) {
+                    $query->whereHas('user.personalInformation', function ($sub) {
+                        $sub->whereMonth('birth_date', now()->month)
+                            ->whereDay('birth_date', now()->day);
+                    });
+                },
+                // Birthdays this month
+                'employmentDetail as birthdays_this_month' => function ($query) {
+                    $query->whereHas('user.personalInformation', function ($sub) {
+                        $sub->whereMonth('birth_date', now()->month);
+                    });
+                },
+                // Upcoming birthdays (next 7 days)
+                'employmentDetail as birthdays_upcoming' => function ($query) {
+                    $query->whereHas('user.personalInformation', function ($sub) {
+                        $sub->where(function ($q) {
+                            // Same month, upcoming days
+                            $q->whereMonth('birth_date', now()->month)
+                                ->whereDay('birth_date', '>', now()->day)
+                                ->whereDay('birth_date', '<=', now()->addDays(7)->day);
+                        })->orWhere(function ($q) {
+                            // Next month (for end-of-month cases)
+                            if (now()->addDays(7)->month > now()->month) {
+                                $q->whereMonth('birth_date', now()->addDays(7)->month)
+                                    ->whereDay('birth_date', '<=', now()->addDays(7)->day);
+                            }
+                        });
+                    });
+                }
+            ])
+            ->get(['id', 'branch_name']);
+
         // 🔹 Return JSON or View
         $data = [
             'permission' => $permission,
@@ -243,6 +283,7 @@ class DashboardController extends Controller
             'presentTodayUsersCount' => $presentTodayUsersCount,
             'lateTodayUsersCount' => $lateTodayUsersCount,
             'branchStats' => $branchStats,
+            'birthdayStatsByBranch' => $birthdayStatsByBranch,
         ];
 
         // Log the dashboard response data

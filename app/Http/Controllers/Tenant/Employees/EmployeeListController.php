@@ -1071,11 +1071,11 @@ class EmployeeListController extends Controller
     {
         $request->validate([
             'prefix' => 'required|string',
-            'month_year' => 'required|string' // format: MM-YYYY
+            'month_year' => 'nullable|string' // format: MM-YYYY
         ]);
 
         $authUser = $this->authUser() ?? null;
-        $basePattern = $request->prefix . '-' . $request->month_year . '-';
+        $basePattern = $request->prefix . ($request->month_year ? '-' . $request->month_year : '') . '-';
 
         $latest = EmploymentDetail::whereHas('user', function ($query) use ($authUser) {
             $query->where('tenant_id', $authUser->tenant_id);

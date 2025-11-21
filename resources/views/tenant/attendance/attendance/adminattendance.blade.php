@@ -240,7 +240,7 @@
                                                                 {{ $userAtt->user->personalInformation->middle_name }}.</a>
                                                         </h6>
                                                         <span
-                                                            class="fs-12 fw-normal ">{{ $userAtt->user->employmentDetail->department->department_name }}</span>
+                                                            class="fs-12 fw-normal ">{{ $userAtt->user->employmentDetail?->department?->department_name ?? '-' }}</span>
                                                     </div>
                                                 </div>
                                             </td>

@@ -391,6 +391,7 @@ Route::get('/addons', [BranchAddonController::class, 'index'])->name('addons.pur
 Route::post('/addons/purchase', [BranchAddonController::class, 'purchase'])->name('addon.purchase');
 Route::post('/addons/cancel', [BranchAddonController::class, 'cancel'])->name('addon.cancel');
 Route::get('/addons/payment/callback/{invoice}', [BranchAddonController::class, 'paymentCallback'])->name('addon.payment.callback');
+Route::get('/addons/payment-status', [BranchAddonController::class, 'showPaymentStatus'])->name('addon.payment.status');
 
 // Addon Access Denied Pages
 Route::get('/addonrequired', function () {
@@ -403,4 +404,4 @@ Route::get('/featurerequired', function () {
     return response()->view('errors.featurerequired', [], 200);
 })->name('feature.required');
 
-Route::get('/employees/topup/success', [EmployeePaymentController::class, 'showPaymentStatus'])->name('employee.paymentstatus');
+Route::get('/employees/topup', [EmployeePaymentController::class, 'showPaymentStatus'])->name('employee.paymentstatus');

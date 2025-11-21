@@ -82,7 +82,7 @@
                             : asset('build/img/company/company-13.svg');
                     @endphp
                     <div class="col-xl-3 col-lg-4 col-md-6">
-                        <div class="card">
+                        <div class="card" data-branch-id="{{ $branch->id }}">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="form-check form-check-md">
@@ -443,6 +443,19 @@
                         if (res.status === 'success') {
                             toastr.success(res.message);
                             $('#edit_branch').modal('hide');
+                            
+                            // Update the branch card image immediately if logo was changed
+                            if (res.data && res.data.branch_logo) {
+                                const baseUrl = "{{ asset('storage') }}/";
+                                const newLogoUrl = baseUrl + res.data.branch_logo;
+                                
+                                // Find and update the branch card image in the grid
+                                $(`[data-branch-id="${id}"]`).find('.avatar-rounded img').attr('src', newLogoUrl);
+                                
+                                // Also update the data attribute for next edit
+                                $(`[data-id="${id}"]`).attr('data-branch-logo', res.data.branch_logo);
+                            }
+                            
                             setTimeout(function() {
                                 window.location.reload();
                             }, 1000);
