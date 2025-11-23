@@ -68,8 +68,8 @@
             <!-- /Breadcrumb -->
 
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Shift List</h5>
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 bg-primary">
+                    <h5 class="text-white">Shift List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:250px;"

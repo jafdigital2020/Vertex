@@ -52,7 +52,7 @@
                         <div class="d-flex gap-2 mb-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#assign_shift_modal"
                                 class="btn btn-primary d-flex align-items-center">
-                                <i class="ti ti-circle-plus me-2"></i>Add Shift
+                                <i class="ti ti-circle-plus me-2"></i>Assign Shift
                             </a>
                             <a href="{{ route('shift-list') }}" class="btn btn-secondary d-flex align-items-center">
                                 <i class="ti ti-arrow-right me-2"></i>Shift List
