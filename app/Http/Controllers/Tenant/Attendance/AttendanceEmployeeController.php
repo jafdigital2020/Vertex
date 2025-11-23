@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Geofence;
+use App\Models\Overtime;
 use App\Models\Attendance;
 use Jenssegers\Agent\Agent;
 use App\Models\GeofenceUser;
@@ -1175,6 +1176,103 @@ class AttendanceEmployeeController extends Controller
         ]);
     }
 
+    // Overtime Create
+    private function createAutomaticOvertime($attendance, $extraMinutes, $user)
+    {
+        // ✅ FIX: Validate attendance has required data
+        if (!$attendance->date_time_in || !$attendance->date_time_out) {
+            Log::error('Cannot create automatic overtime: Missing clock-in or clock-out time', [
+                'attendance_id' => $attendance->id,
+                'date_time_in' => $attendance->date_time_in,
+                'date_time_out' => $attendance->date_time_out
+            ]);
+            return null;
+        }
+
+        // ✅ FIX: Check if shift exists and has maximum_allowed_hours
+        if (!$attendance->shift || !$attendance->shift->maximum_allowed_hours) {
+            Log::error('Cannot create automatic overtime: Missing shift or maximum_allowed_hours', [
+                'attendance_id' => $attendance->id,
+                'shift_id' => $attendance->shift_id,
+                'has_shift' => $attendance->shift ? 'yes' : 'no',
+                'max_hours' => $attendance->shift?->maximum_allowed_hours
+            ]);
+            return null;
+        }
+
+        // Calculate overtime start time (after max allowed hours)
+        $overtimeStart = $attendance->date_time_in->copy()->addMinutes($attendance->shift->maximum_allowed_hours * 60);
+        $overtimeEnd = $attendance->date_time_out->copy();
+
+        // ✅ Validate overtime period
+        if ($overtimeStart->gte($overtimeEnd)) {
+            Log::warning('Invalid overtime period: Start time is after or equal to end time', [
+                'attendance_id' => $attendance->id,
+                'overtime_start' => $overtimeStart->toDateTimeString(),
+                'overtime_end' => $overtimeEnd->toDateTimeString()
+            ]);
+            return null;
+        }
+
+        // Calculate night diff for overtime period only
+        $overtimeNightDiffMinutes = 0;
+        $currentWorkStart = $overtimeStart->copy();
+        $currentWorkEnd = $overtimeEnd->copy();
+
+        while ($currentWorkStart->lt($currentWorkEnd)) {
+            $dayStart = $currentWorkStart->copy()->startOfDay();
+            $nightStart = $dayStart->copy()->setTime(22, 0, 0);
+            $nightEnd = $dayStart->copy()->addDay()->setTime(6, 0, 0);
+
+            $workPeriodStart = max($currentWorkStart->timestamp, $nightStart->timestamp);
+            $workPeriodEnd = min($currentWorkEnd->timestamp, $nightEnd->timestamp);
+
+            if ($workPeriodEnd > $workPeriodStart) {
+                $dayNightDiffMinutes = round(($workPeriodEnd - $workPeriodStart) / 60, 6);
+                $overtimeNightDiffMinutes += $dayNightDiffMinutes;
+            }
+
+            $currentWorkStart = $dayStart->copy()->addDay();
+        }
+
+        $overtimeNightDiffMinutes = max(0, floor($overtimeNightDiffMinutes));
+
+        // Check if it's a rest day or holiday
+        $isRestDay = $attendance->is_rest_day ?? false;
+        $isHoliday = $attendance->is_holiday ?? false;
+
+        // Create overtime record
+        $overtime = Overtime::create([
+            'user_id' => $user->id,
+            'holiday_id' => $attendance->holiday_id ?? null,
+            'overtime_date' => $attendance->attendance_date,
+            'date_ot_in' => $overtimeStart,
+            'date_ot_out' => $overtimeEnd,
+            'total_ot_minutes' => $extraMinutes,
+            'total_night_diff_minutes' => $overtimeNightDiffMinutes,
+            'is_rest_day' => $isRestDay,
+            'is_holiday' => $isHoliday,
+            'status' => 'pending',
+            'ot_login_type' => 'automatic',
+            'reason' => 'Automatic overtime created from excess work hours beyond shift maximum limit',
+            'current_step' => 0,
+        ]);
+
+        Log::info('✅ Automatic overtime created', [
+            'user_id' => $user->id,
+            'attendance_id' => $attendance->id,
+            'overtime_id' => $overtime->id,
+            'total_ot_minutes' => $extraMinutes,
+            'total_night_diff_minutes' => $overtimeNightDiffMinutes,
+            'is_rest_day' => $isRestDay,
+            'is_holiday' => $isHoliday,
+            'date_ot_in' => $overtimeStart->toDateTimeString(),
+            'date_ot_out' => $overtimeEnd->toDateTimeString()
+        ]);
+
+        return $overtime;
+    }
+
     // Clock OUT
     public function employeeAttendanceClockOut(Request $request)
     {
@@ -1226,10 +1324,6 @@ class AttendanceEmployeeController extends Controller
 
         // Log if shift is flexible or not
         $isFlexible = $attendance->shift && $attendance->shift->is_flexible;
-        Log::info('[ClockOut] Shift flexibility check', [
-            'attendance_id' => $attendance->id,
-            'is_flexible'   => $isFlexible,
-        ]);
 
         // Security Check: Don't allow clock-out if next shift is already ongoing
         $todayDay = strtolower($now->format('D'));
@@ -1301,35 +1395,10 @@ class AttendanceEmployeeController extends Controller
                     ->exists();
             });
 
-        // Log next shift information
-        Log::info('[ClockOut] Next shift check', [
-            'user_id' => $user->id,
-            'current_attendance_id' => $attendance->id,
-            'next_shift_assignments_count' => $nextShiftAssignments->count(),
-            'next_shift_assignments' => $nextShiftAssignments->map(function ($assignment) {
-                return [
-                    'assignment_id' => $assignment->id,
-                    'shift_id' => $assignment->shift_id,
-                    'shift_name' => $assignment->shift->name ?? 'N/A',
-                    'shift_start_time' => $assignment->shift->start_time ?? 'N/A',
-                    'is_flexible' => $assignment->shift->is_flexible ?? false,
-                    'grace_period' => $assignment->shift->grace_period ?? 0
-                ];
-            })->toArray()
-        ]);
-
         if ($nextShiftAssignments->isNotEmpty()) {
             $nextShift = $nextShiftAssignments->first();
             $nextShiftName = $nextShift->shift ? ($nextShift->shift->name ?? 'Next Shift') : 'Next Shift';
             $nextShiftStart = $nextShift->shift ? ($nextShift->shift->start_time ?? '') : '';
-
-            Log::warning('[ClockOut] Blocked due to ongoing next shift', [
-                'user_id' => $user->id,
-                'current_attendance_id' => $attendance->id,
-                'next_shift_name' => $nextShiftName,
-                'next_shift_start' => $nextShiftStart,
-                'next_shift_assignment_id' => $nextShift->id
-            ]);
 
             return response()->json([
                 'message' => "You can't clock out yet. Your next shift \"{$nextShiftName}\" (starts at {$nextShiftStart}) has already started and you haven't clocked in for it. Please clock in to your next shift first or ask your admin for help."
@@ -1461,25 +1530,8 @@ class AttendanceEmployeeController extends Controller
             if ($attendance->shift && $attendance->shift->break_minutes > 0) {
                 $breakDuration = $attendance->shift->break_minutes;
 
-                Log::info('[ClockOut] Using configured break minutes from shift', [
-                    'user_id' => $user->id,
-                    'attendance_id' => $attendance->id,
-                    'configured_break_minutes' => $breakDuration,
-                    'shift_id' => $attendance->shift_id,
-                    'shift_name' => $attendance->shift->name ?? 'Unknown',
-                    'break_in' => $attendance->break_in->format('H:i:s'),
-                    'break_out' => $attendance->break_out ? $attendance->break_out->format('H:i:s') : null
-                ]);
-
                 // Deduct break duration from total worked minutes
                 $totalWorkedMinutes = max(0, $totalWorkedMinutes - $breakDuration);
-
-                Log::info('[ClockOut] Total minutes after break deduction', [
-                    'user_id' => $user->id,
-                    'attendance_id' => $attendance->id,
-                    'break_duration' => $breakDuration,
-                    'adjusted_total_minutes' => $totalWorkedMinutes
-                ]);
             }
         } else {
             Log::info('[ClockOut] No break was taken, not deducting break time', [
@@ -1524,9 +1576,37 @@ class AttendanceEmployeeController extends Controller
             ? $attendance->shift->maximum_allowed_hours
             : null;
 
+        $extraMinutes = 0;
+        $overtimeCreated = null;
+
         if ($maxAllowedHours) {
             $capInMin = $maxAllowedHours * 60;
+
             if ($regularMinutes > $capInMin) {
+                $extraMinutes = $regularMinutes - $capInMin;
+
+                // ✅ Check if shift allows automatic overtime creation
+                if ($attendance->shift->allow_extra_hours) {
+                    // ✅ FIX: Only create overtime AFTER attendance is updated with clock-out
+                    // We'll do this after the $attendance->update() call below
+                    Log::info('⏳ Extra hours detected - Will create automatic overtime after attendance update', [
+                        'user_id' => $user->id,
+                        'attendance_id' => $attendance->id,
+                        'extra_minutes' => $extraMinutes,
+                        'max_allowed_hours' => $maxAllowedHours,
+                        'total_worked_minutes' => $regularMinutes
+                    ]);
+                } else {
+                    Log::info('⚠️ Extra hours detected - Automatic overtime NOT created (disabled)', [
+                        'user_id' => $user->id,
+                        'attendance_id' => $attendance->id,
+                        'extra_minutes' => $extraMinutes,
+                        'max_allowed_hours' => $maxAllowedHours,
+                        'allow_extra_hours' => false
+                    ]);
+                }
+
+                // Cap the regular work minutes
                 $regularMinutes = $capInMin;
             }
         }
@@ -1544,12 +1624,6 @@ class AttendanceEmployeeController extends Controller
 
                 if ($end->lt($scheduledEnd)) {
                     $totalUndertime = $end->diffInMinutes($scheduledEnd);
-
-                    Log::info('[Undertime] Under time detected', [
-                        'actualEnd'         => $end->toDateTimeString(),
-                        'scheduledEnd'      => $scheduledEnd->toDateTimeString(),
-                        'totalUndertimeMin' => $totalUndertime,
-                    ]);
                 } else {
                     Log::info('[Undertime] No undertime: clock-out is on or after scheduled end', [
                         'actualEnd'    => $end->toDateTimeString(),
@@ -1573,9 +1647,49 @@ class AttendanceEmployeeController extends Controller
             'total_undertime_minutes'   => $totalUndertime,
         ]);
 
+        // Now create automatic overtime if needed
+        if ($extraMinutes > 0 && $attendance->shift && $attendance->shift->allow_extra_hours) {
+            // Refresh attendance to get latest data
+            $attendance->refresh();
+
+            $overtimeCreated = $this->createAutomaticOvertime($attendance, $extraMinutes, $user);
+
+            if ($overtimeCreated) {
+                Log::info('✅ Automatic overtime created successfully', [
+                    'overtime_id' => $overtimeCreated->id,
+                    'attendance_id' => $attendance->id
+                ]);
+            } else {
+                Log::error('❌ Failed to create automatic overtime', [
+                    'attendance_id' => $attendance->id,
+                    'extra_minutes' => $extraMinutes
+                ]);
+            }
+        }
+
+        $message = 'You have successfully clocked out.';
+        if ($overtimeCreated) {
+            $extraHours = floor($extraMinutes / 60);
+            $extraMins = $extraMinutes % 60;
+            $extraFormatted = [];
+            if ($extraHours > 0) $extraFormatted[] = "{$extraHours} hr";
+            if ($extraMins > 0) $extraFormatted[] = "{$extraMins} min";
+            $extraText = implode(' ', $extraFormatted);
+
+            $message = "You have successfully clocked out. Extra hours ({$extraText}) have been automatically submitted as overtime and are pending approval.";
+        }
+
         return response()->json([
-            'message' => 'You have successfully clocked out.',
+            'message' => $message,
             'data'    => $attendance->fresh(),
+            'overtime_created' => $overtimeCreated ? [
+                'overtime_id' => $overtimeCreated->id,
+                'total_ot_minutes' => $overtimeCreated->total_ot_minutes,
+                'total_ot_formatted' => $overtimeCreated->total_ot_minutes_formatted,
+                'status' => $overtimeCreated->status,
+                'is_rest_day' => $overtimeCreated->is_rest_day,
+                'is_holiday' => $overtimeCreated->is_holiday,
+            ] : null,
         ]);
     }
 
