@@ -1232,9 +1232,11 @@ class ShiftManagementController extends Controller
             'grace_period' => 'nullable|integer|min:0',
             'is_flexible' => 'nullable|boolean',
             'allowed_minutes_before_clock_in' => 'nullable|integer|min:0',
+            'allow_extra_hours' => 'nullable|boolean',
         ]);
 
         $isFlexible = $request->has('is_flexible') ? $request->is_flexible : false;
+        $allowExtraHours = $request->has('allow_extra_hours') ? $request->allow_extra_hours : false;
 
         if ($validator->fails()) {
             return response()->json([
@@ -1259,6 +1261,7 @@ class ShiftManagementController extends Controller
                 'is_flexible' => $isFlexible,
                 'notes' => $request->notes,
                 'allowed_minutes_before_clock_in' => $request->allowed_minutes_before_clock_in ?? 0,
+                'allow_extra_hours' => $allowExtraHours,
                 'created_by_id' => Auth::user()->id,
                 'created_by_type' => get_class(Auth::user()),
             ]);
@@ -1284,7 +1287,6 @@ class ShiftManagementController extends Controller
                 'old_data'       => null,
                 'new_data'       => json_encode($shift->toArray()),
             ]);
-
 
             return response()->json([
                 'message' => 'Shift created successfully!',
@@ -1319,6 +1321,7 @@ class ShiftManagementController extends Controller
             'grace_period' => 'nullable|integer|min:0',
             'is_flexible' => 'nullable|boolean',
             'allowed_minutes_before_clock_in' => 'nullable|integer|min:0',
+            'allow_extra_hours' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -1333,6 +1336,8 @@ class ShiftManagementController extends Controller
             // Flexible check
             $isFlexible = $request->has('is_flexible') ? $request->is_flexible : false;
 
+            $allowExtraHours = $request->has('allow_extra_hours') ? $request->allow_extra_hours : false;
+
             $oldData = $shift->toArray();
 
             $shift->update([
@@ -1346,6 +1351,7 @@ class ShiftManagementController extends Controller
                 'break_minutes' => $request->break_minutes,
                 'notes' => $request->notes,
                 'allowed_minutes_before_clock_in' => $request->allowed_minutes_before_clock_in ?? 0,
+                'allow_extra_hours' => $allowExtraHours,
                 'updated_by_type' => Auth::guard('web')->check() ? 'App\Models\User' : 'App\Models\GlobalUser',
                 'updated_by_id' => Auth::id(),
             ]);

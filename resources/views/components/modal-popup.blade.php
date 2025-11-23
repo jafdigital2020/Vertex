@@ -34841,7 +34841,17 @@
                             <div class="col-md-12">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" name="is_flexible" id="isFlexibleShift">
-                                    <label class="form-check-label" for="isFlexibleShift">Flexible</label>
+                                    <label class="form-check-label mb-0 d-flex align-items-center" for="isFlexibleShift">
+                                        Flexible Hours <i class="ti ti-info-circle text-info ms-2 fs-15 align-middle" data-bs-toggle="tooltip" data-bs-placement="top" title="Employees can choose their working hours within the defined limits."></i>
+                                    </label>
+                                </div>
+
+                                <div class="form-check d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input" name="allow_extra_hours" id="allowExtraHours">
+                                    <label class="form-check-label mb-0 ms-2 d-flex align-items-center" for="allowExtraHours">
+                                        Allow Extra Hours
+                                        <i class="ti ti-info-circle text-info ms-2 fs-15 align-middle" data-bs-toggle="tooltip" data-bs-placement="top" title="Excess hours will automatically be recorded as overtime with status 'pending'"></i>
+                                    </label>
                                 </div>
                             </div>
 
@@ -34950,7 +34960,17 @@
                             <div class="col-md-12">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" name="is_flexible" id="editIsFlexibleShift">
-                                    <label class="form-check-label" for="editIsFlexibleShift">Flexible</label>
+                                    <label class="form-check-label mb-0 d-flex align-items-center" for="editIsFlexibleShift">
+                                        Flexible Hours <i class="ti ti-info-circle text-info ms-2 fs-15 align-middle" data-bs-toggle="tooltip" data-bs-placement="top" title="Employees can choose their working hours within the defined limits."></i>
+                                    </label>
+                                </div>
+
+                                <div class="form-check d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input" name="allow_extra_hours" id="editAllowExtraHours">
+                                    <label class="form-check-label mb-0 ms-2 d-flex align-items-center" for="editAllowExtraHours">
+                                        Allow Extra Hours
+                                        <i class="ti ti-info-circle text-info ms-2 fs-15 align-middle" data-bs-toggle="tooltip" data-bs-placement="top" title="Excess hours will automatically be recorded as overtime with status 'pending'"></i>
+                                    </label>
                                 </div>
                             </div>
 

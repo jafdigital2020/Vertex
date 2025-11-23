@@ -136,6 +136,7 @@
                                                                 data-maximum-hours="{{ $shift->maximum_allowed_hours }}"
                                                                 data-grace-period="{{ $shift->grace_period }}"
                                                                 data-is-flexible="{{ $shift->is_flexible ? 1 : 0 }}"
+                                                                data-allow-extra-hours="{{ $shift->allow_extra_hours ? 1 : 0 }}"
                                                                 data-allowed-minutes-clockin="{{ $shift->allowed_minutes_before_clock_in }}"><i
                                                                     class="ti ti-edit"></i></a>
                                                         @endif
@@ -254,8 +255,14 @@
                     }
 
                     const formData = new FormData(form);
+
+                    // Flexible checkbox handling
                     const isFlexibleValue = isFlexible.checked ? 1 : 0;
                     formData.append("is_flexible", isFlexibleValue);
+
+                    // Allow extra hours handling
+                    const allowExtraHoursValue = allowExtraHours.checked ? 1 : 0;
+                    formData.append("allow_extra_hours", allowExtraHoursValue);
 
                     // Prevent default form submission
                     event.preventDefault();
@@ -337,6 +344,8 @@
                     document.getElementById('editNotes').value = btn.getAttribute('data-notes') || '';
                     document.getElementById('editAllowedMinutesBeforeClockIn').value = btn.getAttribute(
                         'data-allowed-minutes-clockin') || '';
+                    document.getElementById('editAllowExtraHours').checked = btn.getAttribute(
+                        'data-allow-extra-hours') === '1';
 
                     const branchId = btn.getAttribute("data-branch-id");
                     const editBranchSelect = document.getElementById("editShiftListBranchId");
@@ -378,6 +387,7 @@
                     notes: document.getElementById('editNotes').value,
                     allowed_minutes_before_clock_in: document.getElementById(
                         'editAllowedMinutesBeforeClockIn').value || 0,
+                    allow_extra_hours: document.getElementById('editAllowExtraHours').checked ? 1 : 0,
                 };
 
                 try {
