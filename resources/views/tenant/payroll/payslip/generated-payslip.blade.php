@@ -150,11 +150,11 @@
                                     <!-- Right icon circle group -->
                                     <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
                                         <div
-                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            style="position:absolute; width:140px; height:140px; right:-55px; top:-30px; display:flex; align-items:center; justify-content:center;">
                                             <i class="ti ti-chart-area-line" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
                                         <div
-                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            style="position:absolute; right:-60px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
                                             <div
                                                 style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
                                                 <i class="ti ti-chart-area-line" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
@@ -180,11 +180,11 @@
                                     <!-- Right icon circle group -->
                                     <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
                                         <div
-                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            style="position:absolute; width:140px; height:140px; right:-25px; top:-30px; display:flex; align-items:center; justify-content:center;">
                                             <i class="ti ti-currency-peso" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
                                         <div
-                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            style="position:absolute; right:-25px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
                                             <div
                                                 style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
                                                 <i class="ti ti-currency-peso" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
