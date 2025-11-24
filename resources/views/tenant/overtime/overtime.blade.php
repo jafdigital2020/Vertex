@@ -534,7 +534,8 @@
                                                                 data-total-ot="{{ $ot->total_ot_minutes }}"
                                                                 data-file-attachment="{{ $ot->file_attachment }}"
                                                                 data-offset-date="{{ $ot->offset_date }}"
-                                                                data-status="{{ $ot->status }}"><i
+                                                                data-status="{{ $ot->status }}"
+                                                                data-reason="{{ $ot->reason }}"><i
                                                                     class="ti ti-edit"></i></a>
                                                         @endif
                                                         @if (in_array('Delete', $permission))
@@ -796,6 +797,7 @@
                 $('#overtimeUserId').val($(this).data('user-id'));
                 $('#editAdminOvertimeDateOtIn').val($(this).data('ot-in'));
                 $('#editAdminOvertimeDateOtOut').val($(this).data('ot-out'));
+                $('#editAdminOvertimeReason').val($(this).data('reason'));
 
                 // Total OT minutes
                 let mins = parseInt($(this).data('total-ot')) || 0;

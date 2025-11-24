@@ -6544,13 +6544,13 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Start Time <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control" id="editAdminOvertimeDateOtIn" name="date_ot_in">
+                                    <input type="datetime-local" step="1" class="form-control" id="editAdminOvertimeDateOtIn" name="date_ot_in">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">End Time <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control" id="editAdminOvertimeDateOtOut" name="date_ot_out">
+                                    <input type="datetime-local" step="1" class="form-control" id="editAdminOvertimeDateOtOut" name="date_ot_out">
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -6571,6 +6571,12 @@
                                 <div class="mb-3">
                                     <label class="form-label">Offset Date</label>
                                     <input type="date" class="form-control" id="editAdminOvertimeOffsetDate" name="offset_date">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason for Overtime</label>
+                                    <textarea class="form-control" id="editAdminOvertimeReason" name="reason" rows="3"></textarea>
                                 </div>
                             </div>
                         </div>

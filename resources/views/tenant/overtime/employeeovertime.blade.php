@@ -94,7 +94,8 @@
                                 </div>
                                 <div
                                     style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
-                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
                                         <i class="ti ti-user-edit" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
                                     </div>
                                 </div>
@@ -118,12 +119,15 @@
                             <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
                                 <div
                                     style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
-                                    <i class="ti ti-user-exclamation" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                    <i class="ti ti-user-exclamation"
+                                        style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
                                 <div
                                     style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
-                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
-                                        <i class="ti ti-user-exclamation" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-exclamation"
+                                            style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
                                     </div>
                                 </div>
                             </div>
@@ -146,12 +150,15 @@
                             <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
                                 <div
                                     style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
-                                    <i class="ti ti-user-exclamation" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
+                                    <i class="ti ti-user-exclamation"
+                                        style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                 </div>
                                 <div
                                     style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
-                                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
-                                        <i class="ti ti-user-exclamation" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                    <div
+                                        style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                        <i class="ti ti-user-exclamation"
+                                            style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
                                     </div>
                                 </div>
                             </div>
@@ -176,7 +183,8 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                oninput="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="approved">Approved</option>
                                 <option value="rejected">Rejected</option>
@@ -227,7 +235,16 @@
                                             {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
                                         </td>
 
-                                        <td class="text-center">{{ $ot->total_ot_minutes_formatted }}</td>
+                                        <td class="text-center">
+                                            <div>
+                                                <span class="d-block">
+                                                    <strong>OT:</strong> {{ $ot->total_ot_minutes_formatted }}
+                                                </span>
+                                                <span class="d-block">
+                                                    <strong>ND:</strong> {{ $ot->total_night_diff_minutes_formatted }}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td class="text-center">
                                             @if ($ot->file_attachment)
                                                 <a href="{{ asset('storage/' . $ot->file_attachment) }}"
@@ -835,7 +852,7 @@
                                     $field.addClass('is-invalid');
                                     $field.after(
                                         `<div class="invalid-feedback d-block">${messages[0]}</div>`
-                                        );
+                                    );
                                 }
                             });
 

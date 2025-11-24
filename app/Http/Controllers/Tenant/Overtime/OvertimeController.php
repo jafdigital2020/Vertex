@@ -440,6 +440,7 @@ class OvertimeController extends Controller
             'total_ot_minutes'   => 'required|numeric',
             'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'offset_date'        => 'nullable|date',
+            'reason'             => 'nullable|string|max:500',
         ]);
 
         $overtime = Overtime::findOrFail($id);
@@ -472,6 +473,7 @@ class OvertimeController extends Controller
         $overtime->date_ot_out = $request->date_ot_out;
         $overtime->total_ot_minutes = $request->total_ot_minutes;
         $overtime->offset_date = $request->offset_date;
+        $overtime->reason = $request->reason;
 
         $overtime->save();
 
