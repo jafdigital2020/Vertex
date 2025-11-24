@@ -659,24 +659,13 @@
 
                                 <div class="addon-header">
                                     <div class="addon-icon-wrapper">
-                                        @php
-                                            $iconMap = [
-                                                'employee_official_business' => 'briefcase',
-                                                'asset_management_tracking' => 'device-desktop',
-                                                'bank_data_export_csv' => 'file-spreadsheet',
-                                                'payroll_batch_processing' => 'circle-check',
-                                                'policy_upload' => 'upload',
-                                                'custom_holiday' => 'calendar-heart'
-                                            ];
-                                            $icon = $iconMap[$addon->addon_key] ?? 'puzzle';
-                                        @endphp
-                                        <i class="ti ti-{{ $icon }}"></i>
+                                        <i class="ti ti-{{ $addon->icon ?? 'puzzle' }}"></i>
                                     </div>
                                     <h3 class="addon-title">{{ $addon->name }}</h3>
                                     <p class="addon-description">{{ $addon->description }}</p>
                                     <div class="addon-price">
                                         ₱{{ number_format($monthlyPrice, 2) }}
-                                        <small>/month</small>
+                                        <small>{{ $addon->type === 'one_time' ? ' (one-time)' : '/month' }}</small>
                                     </div>
                                 </div>
 
@@ -686,7 +675,11 @@
                                             @foreach ($addon->features ?? [] as $feature)
                                                 <li>
                                                     <i class="ti ti-circle-check-filled"></i>
-                                                    <span>{{ $feature }}</span>
+                                                    <span data-bs-toggle="tooltip" data-bs-placement="top"
+                                                          title="{{ is_array($feature) ? ($feature['tooltip'] ?? '') : '' }}"
+                                                          style="cursor: help;">
+                                                        {{ is_array($feature) ? $feature['title'] : $feature }}
+                                                    </span>
                                                 </li>
                                             @endforeach
                                         </ul>
@@ -757,24 +750,13 @@
 
                             <div class="addon-header">
                                 <div class="addon-icon-wrapper">
-                                    @php
-                                        $iconMap = [
-                                            'employee_official_business' => 'briefcase',
-                                            'asset_management_tracking' => 'device-desktop',
-                                            'bank_data_export_csv' => 'file-spreadsheet',
-                                            'payroll_batch_processing' => 'circle-check',
-                                            'policy_upload' => 'upload',
-                                            'custom_holiday' => 'calendar-heart'
-                                        ];
-                                        $icon = $iconMap[$addon->addon_key] ?? 'puzzle';
-                                    @endphp
-                                    <i class="ti ti-{{ $icon }}"></i>
+                                    <i class="ti ti-{{ $addon->icon ?? 'puzzle' }}"></i>
                                 </div>
                                 <h3 class="addon-title">{{ $addon->name }}</h3>
                                 <p class="addon-description">{{ $addon->description }}</p>
                                 <div class="addon-price">
                                     ₱{{ number_format($monthlyPrice, 2) }}
-                                    <small>/month</small>
+                                    <small>{{ $addon->type === 'one_time' ? ' (one-time)' : '/month' }}</small>
                                 </div>
                             </div>
 
@@ -784,7 +766,11 @@
                                         @foreach ($addon->features ?? [] as $feature)
                                             <li>
                                                 <i class="ti ti-circle-check-filled"></i>
-                                                <span>{{ $feature }}</span>
+                                                <span data-bs-toggle="tooltip" data-bs-placement="top"
+                                                      title="{{ is_array($feature) ? ($feature['tooltip'] ?? '') : '' }}"
+                                                      style="cursor: help;">
+                                                    {{ is_array($feature) ? $feature['title'] : $feature }}
+                                                </span>
                                             </li>
                                         @endforeach
                                     </ul>
@@ -885,6 +871,12 @@
         });
 
         $(document).ready(function () {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
             // View Toggle Functionality
             $('.view-toggle-btn').on('click', function () {
                 const view = $(this).data('view');

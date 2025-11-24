@@ -79,7 +79,9 @@ class CheckAddon
             ]);
 
             // Determine the error view based on addon category
-            $errorView = $addon->addon_category === 'addon' ? 'errors.addonrequired' : 'errors.featurerequired';
+            // 'addon' category → show 'errors.addonrequired' modal
+            // 'upgrade' category → show 'errors.featurerequired' modal
+            $errorView = $addon->addon_category === 'upgrade' ? 'errors.featurerequired' : 'errors.addonrequired';
 
             // For AJAX/API requests, return JSON response
             if ($request->expectsJson()) {

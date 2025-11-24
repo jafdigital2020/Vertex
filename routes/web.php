@@ -205,9 +205,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     //Settings
     Route::get('/settings/attendance-settings', [AttendanceSettingsController::class, 'attendanceSettingsIndex'])->name('attendance-settings')->middleware(CheckPermission::class . ':18');
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('leave-type')->middleware(CheckPermission::class . ':43');
-    Route::get('/settings/approval-steps', [ApprovalController::class, 'approvalIndex'])->name('approval-steps')->middleware(CheckPermission::class . ':43');
+    Route::get('/settings/approval-steps', [ApprovalController::class, 'approvalIndex'])->name('approval-steps')->middleware(CheckPermission::class . ':43')->middleware(CheckAddon::class . ':advanced_approval_settings');
     Route::get('/settings/custom-fields', [CustomfieldController::class, 'customfieldIndex'])->name('custom-fields');
-    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('biometrics')->middleware(CheckPermission::class . ':58')->middleware(CheckAddon::class . ':zkteco_biometrics');
+    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('biometrics')->middleware(CheckPermission::class . ':58')->middleware(CheckAddon::class . ':biometric_installation');
 
 
     // Geofence
@@ -248,7 +248,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('branch-grid')->middleware(CheckPermission::class . ':8');;
 
     // Policy
-    Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12')->middleware(CheckAddon::class . ':5');
+    Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12')->middleware(CheckAddon::class . ':policies_management');
     Route::get('/policy-filter', [PolicyController::class, 'filter'])->name('policy_filter');
     // Resignation
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('resignation')->middleware(CheckPermission::class . ':22');
@@ -340,12 +340,12 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
 
     // Official Business
-    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin')->middleware(CheckPermission::class . ':47')->middleware(CheckAddon::class . ':1');
+    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin')->middleware(CheckPermission::class . ':47')->middleware(CheckAddon::class . ':employee_official_business');
     Route::get('/official-business/admin-filter', [AdminOfficialBusinessController::class, 'filter'])->name('ob-admin-filter');
-    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee')->middleware(CheckPermission::class . ':48')->middleware(CheckAddon::class . ':1');
+    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee')->middleware(CheckPermission::class . ':48')->middleware(CheckAddon::class . ':employee_official_business');
     Route::get('/official-business/employee-filter', [OfficialBusinessController::class, 'filter'])->name('ob-employee-filter');
 
-    Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':49')->middleware(CheckAddon::class . ':2');
+    Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':49')->middleware(CheckAddon::class . ':assets_management_upgrade');
     Route::get('/employee-assets-filter', [AssetsController::class, 'employeeAssetsFilter'])->name('employee-assets-filter');
     Route::get('/employee-assets/by-category/{id}', [AssetsController::class, 'getAssetsByCategory'])->name('assets-by-category');
     Route::get('/employee-assets/{id}', [AssetsController::class, 'getEmployeeAssets'])->name('employee.assets');
