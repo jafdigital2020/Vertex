@@ -35094,9 +35094,9 @@
                             <label class="form-label">Shift <span class="text-danger">*</span></label>
                                 <select name="shift_id[]" id="shiftAssignmentShiftId" class="select2 select2-hidden-accessible shift-select" multiple="" placeholder="Select Shift">
                                     <option value="all" disabled>Select Shift</option>
-                                    @if (!empty($shifts) && is_array($shifts))
+                                    @if (!empty($shifts) && count($shifts) > 0)
                                         @foreach ($shifts as $shift)
-                                            <option value="{{ $shift['id'] ?? '' }}">{{ $shift['name'] ?? 'Unnamed Shift' }}</option>
+                                            <option value="{{ $shift->id ?? '' }}">{{ $shift->name ?? 'Unnamed Shift' }}</option>
                                         @endforeach
                                     @else
                                         <option value="">No shifts available</option>
