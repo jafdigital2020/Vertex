@@ -79,8 +79,6 @@ Route::prefix('zkapi')->group(function () {
     Route::any('/devicecmd', [BiometricsController::class, 'deviceCommand']);
     Route::any('/status', [BiometricsController::class, 'deviceStatus']);
 
-    // Test endpoint
-    Route::get('/test-attendance', [BiometricsController::class, 'testAttendance']);
 });
 
 Route::middleware('auth:sanctum')->get('/verify-token', [AuthController::class, 'verifyToken']);
@@ -126,10 +124,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ===========  Employee API ================ //
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('api.employees');
-    Route::post('employees', [EmployeeListController::class, 'employeeStore'])->name('api.employeeStore');
+    Route::post('employees', [EmployeeListController::class, 'employeeAdd'])->name('api.employeeStore');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
     Route::get('/get-branch-data/{branchId}', [EmployeeListController::class, 'getDepartmentsAndEmployeesByBranch']); // and employee
-    Route::put('/employees/update/{id}', [EmployeeListController::class, 'employeeUpdate'])->name('api.employeeUpdate');
+    Route::put('/employees/update/{id}', [EmployeeListController::class, 'employeeEdit'])->name('api.employeeUpdate');
     Route::delete('/employees/delete/{id}', [EmployeeListController::class, 'employeeDelete'])->name('api.employeeDelete');
     Route::put('/employees/deactivate/{id}', [EmployeeListController::class, 'employeeDeactivate'])->name('api.employeeDeactivate');
     Route::put('/employees/activate/{id}', [EmployeeListController::class, 'employeeActivate'])->name('api.employeeActivate');

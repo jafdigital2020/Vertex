@@ -58,6 +58,57 @@ class EmployeeListController extends Controller
         return Auth::user();
     }
 
+    /**
+     * Get all employees
+     *
+     * Retrieves a paginated list of employees with their personal information, employment details, and role assignments.
+     * Supports filtering by branch, department, designation, status, and sorting options.
+     *
+     * @group Employees
+     * @authenticated
+     *
+     * @queryParam branch_id integer Optional. Filter employees by branch ID. Example: 1
+     * @queryParam department_id integer Optional. Filter employees by department ID. Example: 2
+     * @queryParam designation_id integer Optional. Filter employees by designation ID. Example: 3
+     * @queryParam status string Optional. Filter by employment status (0=Inactive, 1=Active). Example: 1
+     * @queryParam sort string Optional. Sort order: "asc" (oldest first), "desc" (newest first), "last_month" (last 30 days), "last_7_days" (last week). Example: desc
+     *
+     * @response 200 scenario="Success" {
+     *   "employees": [
+     *     {
+     *       "user": {
+     *         "id": 1,
+     *         "username": "juan.delacruz",
+     *         "email": "juan@company.com",
+     *         "role": "Employee"
+     *       },
+     *       "employment_detail": {
+     *         "id": 1,
+     *         "employee_id": "EMP-0001",
+     *         "date_hired": "2024-01-15",
+     *         "employment_type": "Regular",
+     *         "employment_status": "Active",
+     *         "branch_id": 1,
+     *         "department_id": 2,
+     *         "designation_id": 3,
+     *         "status": 1
+     *       },
+     *       "personal_information": {
+     *         "first_name": "Juan",
+     *         "last_name": "Dela Cruz",
+     *         "middle_name": "Santos",
+     *         "suffix": "Jr.",
+     *         "phone_number": "09171234567",
+     *         "profile_picture": "profile_images/1234567890_photo.jpg"
+     *       }
+     *     }
+     *   ]
+     * }
+     *
+     * @response 401 scenario="Unauthenticated" {
+     *   "message": "Unauthenticated."
+     * }
+     */
     public function employeeListIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -342,6 +393,94 @@ class EmployeeListController extends Controller
         ]);
     }
 
+    /**
+     * Create a new employee
+     *
+     * Creates a new employee record with personal information, employment details, and salary configuration.
+     * This endpoint performs license validation and may generate overage invoices if license limits are exceeded.
+     *
+     * @group Employees
+     * @authenticated
+     *
+     * @bodyParam first_name string required Employee's first name. Example: Juan
+     * @bodyParam last_name string required Employee's last name. Example: Dela Cruz
+     * @bodyParam middle_name string Optional. Employee's middle name. Example: Santos
+     * @bodyParam suffix string Optional. Name suffix (e.g., Jr., Sr., III). Example: Jr.
+     * @bodyParam profile_picture file Optional. Profile photo (jpeg, jpg, png format, max 2MB).
+     * @bodyParam username string required Unique username for login. Must be unique across the system. Example: juan.delacruz
+     * @bodyParam email string required Unique email address. Must be a valid email format. Example: juan.delacruz@company.com
+     * @bodyParam password string required Password for account (minimum 6 characters). Example: SecurePass123
+     * @bodyParam confirm_password string required Password confirmation. Must match the password field. Example: SecurePass123
+     * @bodyParam role_id integer required Role/Permission template ID. Example: 2
+     * @bodyParam branch_id integer required Branch where employee will be assigned. Must be a valid branch ID. Example: 1
+     * @bodyParam department_id integer required Department assignment. Must be a valid department ID. Example: 2
+     * @bodyParam designation_id integer required Job position/designation. Must be a valid designation ID. Example: 3
+     * @bodyParam date_hired date required Date when employee was hired (format: YYYY-MM-DD). Example: 2024-01-15
+     * @bodyParam emp_prefix string required Employee ID prefix. Example: EMP
+     * @bodyParam employee_id string required Unique employee ID number (will be combined with prefix). Must be unique. Example: 0001
+     * @bodyParam employment_type string required Type of employment (e.g., Regular, Contractual, Probationary). Example: Regular
+     * @bodyParam employment_status string required Current employment status (e.g., Active, On Leave). Example: Active
+     * @bodyParam phone_number string Optional. Contact phone number. Example: 09171234567
+     * @bodyParam reporting_to integer Optional. User ID of the direct supervisor/manager. Example: 5
+     * @bodyParam biometrics_id string Optional. Unique biometrics device ID for attendance tracking. Example: BIO123
+     *
+     * @response 200 scenario="Success" {
+     *   "status": "success",
+     *   "message": "Employee created successfully."
+     * }
+     *
+     * @response 200 scenario="Success with License Overage" {
+     *   "status": "success",
+     *   "message": "Employee created successfully.",
+     *   "overage_warning": {
+     *     "message": "License overage detected. Additional invoice created.",
+     *     "invoice_id": 123,
+     *     "overage_count": 5,
+     *     "overage_amount": 2500.00
+     *   }
+     * }
+     *
+     * @response 402 scenario="Implementation Fee Required" {
+     *   "status": "implementation_fee_required",
+     *   "message": "Implementation fee payment required before adding employees.",
+     *   "data": {
+     *     "implementation_fee": 5000.00,
+     *     "plan_name": "Enterprise Plan"
+     *   }
+     * }
+     *
+     * @response 403 scenario="Plan Upgrade Required" {
+     *   "status": "upgrade_required",
+     *   "message": "Your plan has reached its employee limit. Please upgrade your plan.",
+     *   "data": {
+     *     "current_plan": "Starter",
+     *     "current_limit": 10,
+     *     "active_employees": 10
+     *   }
+     * }
+     *
+     * @response 403 scenario="Insufficient Permissions" {
+     *   "status": "error",
+     *   "message": "You do not have the permission to create."
+     * }
+     *
+     * @response 422 scenario="Validation Error" {
+     *   "message": "The email has already been taken.",
+     *   "errors": {
+     *     "email": [
+     *       "The email has already been taken."
+     *     ],
+     *     "username": [
+     *       "The username has already been taken."
+     *     ]
+     *   }
+     * }
+     *
+     * @response 500 scenario="Server Error" {
+     *   "message": "Error creating employee.",
+     *   "error": "Database connection failed"
+     * }
+     */
     public function employeeAdd(Request $request)
     {
         $permission = PermissionHelper::get(9);
@@ -577,6 +716,61 @@ class EmployeeListController extends Controller
         }
     }
 
+    /**
+     * Update employee details
+     *
+     * Updates an existing employee's personal information, employment details, and role assignments.
+     * All fields except password are required. Password fields are optional and only needed when changing the password.
+     *
+     * @group Employees
+     * @authenticated
+     *
+     * @bodyParam editUserId integer required The ID of the employee to update. Example: 1
+     * @bodyParam first_name string required Employee's first name. Example: Juan
+     * @bodyParam last_name string required Employee's last name. Example: Dela Cruz
+     * @bodyParam middle_name string Optional. Employee's middle name. Example: Santos
+     * @bodyParam suffix string Optional. Name suffix. Example: Jr.
+     * @bodyParam profile_picture file Optional. New profile photo (jpeg, jpg, png format, max 2MB).
+     * @bodyParam username string required Username for login. Example: juan.delacruz
+     * @bodyParam email string required Email address. Example: juan.delacruz@company.com
+     * @bodyParam role_id integer required Role/Permission template ID. Example: 2
+     * @bodyParam password string Optional. New password (minimum 6 characters). Only required when changing password. Example: NewSecurePass123
+     * @bodyParam confirm_password string Optional. Password confirmation. Required when password is provided. Example: NewSecurePass123
+     * @bodyParam designation_id integer required Job position/designation ID. Example: 3
+     * @bodyParam department_id integer required Department ID. Example: 2
+     * @bodyParam branch_id integer required Branch ID. Example: 1
+     * @bodyParam date_hired date required Date when employee was hired (format: YYYY-MM-DD). Example: 2024-01-15
+     * @bodyParam emp_prefix string required Employee ID prefix. Example: EMP
+     * @bodyParam employee_id string required Unique employee ID number. Example: 0001
+     * @bodyParam employment_type string required Type of employment. Example: Regular
+     * @bodyParam employment_status string required Current employment status. Example: Active
+     * @bodyParam phone_number string Optional. Contact phone number. Example: 09171234567
+     * @bodyParam reporting_to integer Optional. User ID of the direct supervisor/manager. Example: 5
+     * @bodyParam biometrics_id string Optional. Unique biometrics device ID. Example: BIO123
+     *
+     * @response 200 scenario="Success" {
+     *   "status": "success",
+     *   "message": "Employee updated successfully."
+     * }
+     *
+     * @response 403 scenario="Insufficient Permissions" {
+     *   "status": "error",
+     *   "message": "You do not have the permission to update."
+     * }
+     *
+     * @response 404 scenario="Employee Not Found" {
+     *   "message": "No query results for model [App\\Models\\User]."
+     * }
+     *
+     * @response 422 scenario="Validation Error" {
+     *   "message": "The email has already been taken."
+     * }
+     *
+     * @response 500 scenario="Server Error" {
+     *   "message": "Error updating employee.",
+     *   "error": "Database error"
+     * }
+     */
     public function employeeEdit(Request $request)
     {
         $permission = PermissionHelper::get(9);
@@ -734,6 +928,31 @@ class EmployeeListController extends Controller
         }
     }
 
+    /**
+     * Delete an employee
+     *
+     * Permanently removes an employee record from the system along with all associated data.
+     * This action cannot be undone. All related records (personal info, employment details, permissions) will be deleted.
+     *
+     * @group Employees
+     * @authenticated
+     *
+     * @bodyParam delete_id integer required The ID of the employee to delete. Example: 1
+     *
+     * @response 200 scenario="Success" {
+     *   "status": "success",
+     *   "message": "User deleted successfully."
+     * }
+     *
+     * @response 403 scenario="Insufficient Permissions" {
+     *   "status": "error",
+     *   "message": "You do not have permission to delete this employee."
+     * }
+     *
+     * @response 404 scenario="Employee Not Found" {
+     *   "message": "No query results for model [App\\Models\\User]."
+     * }
+     */
     public function employeeDelete(Request $request)
     {
         $permission = PermissionHelper::get(9);
@@ -1031,7 +1250,7 @@ class EmployeeListController extends Controller
         }
 
         // Get the most recent file
-        usort($files, function($a, $b) {
+        usort($files, function ($a, $b) {
             return filemtime($b) - filemtime($a);
         });
 
