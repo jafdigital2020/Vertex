@@ -454,7 +454,7 @@
                 depSel.html('<option value="">All Department</option>').trigger('change');
                 desSel.html('<option value="">All Designation</option>').trigger('change');
                 empSel.html('<option value="">All Employee</option>').trigger('change');
-                shiftSel.html('<option value="">All Shifts</option>').trigger('change');
+                shiftSel.html('<option value="" disabled>Select Shifts</option>').trigger('change');
                 modal.removeData('employees');
 
                 if (!branchIds.length) return;
@@ -483,7 +483,7 @@
                         updateEmployeeSelect(modal);
 
                         // populate Shifts (ensure your API now returns data.shifts[])
-                        let sOpts = '<option value="">All Shift</option>';
+                        let sOpts = '<option value="all" disabled>Select Shift</option>';
                         (data.shifts || []).forEach(s => {
                             sOpts += `<option value="${s.id}">${s.name}</option>`;
                         });

@@ -35093,10 +35093,14 @@
                         <div class="col-md-6 mt-3">
                             <label class="form-label">Shift <span class="text-danger">*</span></label>
                                 <select name="shift_id[]" id="shiftAssignmentShiftId" class="select2 select2-hidden-accessible shift-select" multiple="" placeholder="Select Shift">
-                                    <option value="all">All Shift</option>
-                                    @foreach ($shifts as $shift)
-                                         <option value="{{ $shift->id }}">{{ $shift->name }}</option>
-                                    @endforeach
+                                    <option value="all" disabled>Select Shift</option>
+                                    @if (!empty($shifts) && is_array($shifts))
+                                        @foreach ($shifts as $shift)
+                                            <option value="{{ $shift['id'] ?? '' }}">{{ $shift['name'] ?? 'Unnamed Shift' }}</option>
+                                        @endforeach
+                                    @else
+                                        <option value="">No shifts available</option>
+                                    @endif
                                 </select>
                         </div>
                         <!-- Type -->
