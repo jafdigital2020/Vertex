@@ -170,6 +170,7 @@ class EmployeeOvertimeController extends Controller
             'date_ot_in'         => 'required|date',
             'date_ot_out'        => 'required|date|after_or_equal:date_ot_in',
             'total_ot_minutes'   => 'nullable|numeric',
+            'total_night_diff_minutes'   => 'nullable|numeric',
             'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120', // max 5MB
             'offset_date'        => 'nullable|date',
             'reason'             => 'required|string|max:500',
@@ -199,6 +200,7 @@ class EmployeeOvertimeController extends Controller
             'date_ot_in'        => $request->date_ot_in,
             'date_ot_out'       => $request->date_ot_out,
             'total_ot_minutes'  => $request->total_ot_minutes,
+            'total_night_diff_minutes'  => $request->total_night_diff_minutes,
             'file_attachment'   => $filePath,
             'reason'            => $request->reason,
             'offset_date'       => $request->offset_date,
@@ -252,6 +254,7 @@ class EmployeeOvertimeController extends Controller
             'date_ot_in'         => 'required|date',
             'date_ot_out'        => 'required|date|after:date_ot_in',
             'total_ot_minutes'   => 'required|numeric',
+            'total_night_diff_minutes'   => 'nullable|numeric',
             'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'offset_date'        => 'nullable|date',
             'reason'             => 'required|string|max:500',
@@ -292,6 +295,7 @@ class EmployeeOvertimeController extends Controller
         $overtime->date_ot_in = $request->date_ot_in;
         $overtime->date_ot_out = $request->date_ot_out;
         $overtime->total_ot_minutes = $request->total_ot_minutes;
+        $overtime->total_night_diff_minutes = $request->total_night_diff_minutes;
         $overtime->offset_date = $request->offset_date;
         $overtime->reason = $request->reason;
 

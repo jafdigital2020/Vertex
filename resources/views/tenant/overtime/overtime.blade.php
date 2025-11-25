@@ -71,8 +71,7 @@
                             <!-- LEFT TEXT SECTION -->
                             <div>
                                 <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Pending Count</h6>
-                                <h3 class="mb-1 fw-bold mt-4"
-                                    style="line-height: 1; font-size: 20px; color: #212529;">
+                                <h3 class="mb-1 fw-bold mt-4" style="line-height: 1; font-size: 20px; color: #212529;">
                                     {{ $pendingCount }}
                                 </h3>
                                 <p class="fw-medium text-muted mb-0" style="font-size: 12px;">This Month</p>
@@ -120,8 +119,7 @@
                             <!-- LEFT TEXT SECTION -->
                             <div>
                                 <h6 class="fw-medium text-gray-5 mb-1" style="font-size: 14px;">Approved Request</h6>
-                                <h3 class="mb-1 fw-bold mt-4"
-                                    style="line-height: 1; font-size: 20px; color: #212529;">
+                                <h3 class="mb-1 fw-bold mt-4" style="line-height: 1; font-size: 20px; color: #212529;">
                                     {{ $approvedCount }}
                                 </h3>
                                 <p class="fw-medium text-muted mb-0" style="font-size: 12px;">This Month</p>
@@ -270,8 +268,8 @@
 
                         <!-- Bulk Actions Dropdown -->
                         <div class="dropdown me-2">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
-                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                id="bulkActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 Bulk Actions
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
@@ -535,7 +533,8 @@
                                                                 data-file-attachment="{{ $ot->file_attachment }}"
                                                                 data-offset-date="{{ $ot->offset_date }}"
                                                                 data-status="{{ $ot->status }}"
-                                                                data-reason="{{ $ot->reason }}"><i
+                                                                data-reason="{{ $ot->reason }}"
+                                                                data-total-night-diff="{{ $ot->total_night_diff_minutes }}"><i
                                                                     class="ti ti-edit"></i></a>
                                                         @endif
                                                         @if (in_array('Delete', $permission))
@@ -804,6 +803,11 @@
                 $('#editAdminOvertimeTotalOtMinutes').val(formatMinutes(mins));
                 $('#editAdminOvertimeTotalOtMinutesHidden').val(mins);
 
+                // Night Differential minutes
+                let ndMins = parseInt($(this).data('total-night-diff')) || 0;
+                $('#editAdminOvertimeNightDiffMinutes').val(formatMinutes(ndMins));
+                $('#editAdminOvertimeNightDiffMinutesHidden').val(ndMins);
+
                 // File attachment
                 let attachment = $(this).data('file-attachment');
                 let displayHtml = '';
@@ -832,6 +836,40 @@
                 return text.trim();
             }
 
+            // Night Differential computation (10PM-6AM)
+            function calculateNightDifferential(startDateTime, endDateTime) {
+                if (!startDateTime || !endDateTime) return 0;
+                let nightDiffMinutes = 0;
+                let currentStart = new Date(startDateTime);
+                let currentEnd = new Date(endDateTime);
+
+                while (currentStart < currentEnd) {
+                    let dayStart = new Date(currentStart);
+                    dayStart.setHours(0, 0, 0, 0);
+
+                    let nightStart = new Date(dayStart);
+                    nightStart.setHours(22, 0, 0, 0);
+
+                    let nightEnd = new Date(dayStart);
+                    nightEnd.setDate(nightEnd.getDate() + 1);
+                    nightEnd.setHours(6, 0, 0, 0);
+
+                    let workStart = Math.max(currentStart.getTime(), nightStart.getTime());
+                    let workEnd = Math.min(currentEnd.getTime(), nightEnd.getTime());
+
+                    if (workEnd > workStart) {
+                        let dayNightMinutes = Math.floor((workEnd - workStart) / (1000 * 60));
+                        nightDiffMinutes += dayNightMinutes;
+                    }
+
+                    currentStart = new Date(dayStart);
+                    currentStart.setDate(currentStart.getDate() + 1);
+                }
+
+                return Math.max(0, Math.floor(nightDiffMinutes));
+            }
+
+            // Recompute OT and ND when time changes
             function computeOvertimeMinutesEdit() {
                 var start = $('#editAdminOvertimeDateOtIn').val();
                 var end = $('#editAdminOvertimeDateOtOut').val();
@@ -840,16 +878,27 @@
                     var endTime = new Date(end);
                     if (endTime > startTime) {
                         var diffMs = endTime - startTime;
-                        var diffMins = Math.floor(diffMs / 1000 / 60);
-                        $('#editAdminOvertimeTotalOtMinutes').val(formatMinutes(diffMins));
-                        $('#editAdminOvertimeTotalOtMinutesHidden').val(diffMins);
+                        var totalMinutes = Math.floor(diffMs / 1000 / 60);
+
+                        var nightDiffMinutes = calculateNightDifferential(startTime, endTime);
+                        var regularOtMinutes = totalMinutes - nightDiffMinutes;
+
+                        $('#editAdminOvertimeTotalOtMinutes').val(formatMinutes(regularOtMinutes));
+                        $('#editAdminOvertimeTotalOtMinutesHidden').val(regularOtMinutes);
+
+                        $('#editAdminOvertimeNightDiffMinutes').val(formatMinutes(nightDiffMinutes));
+                        $('#editAdminOvertimeNightDiffMinutesHidden').val(nightDiffMinutes);
                     } else {
                         $('#editAdminOvertimeTotalOtMinutes').val('');
                         $('#editAdminOvertimeTotalOtMinutesHidden').val('');
+                        $('#editAdminOvertimeNightDiffMinutes').val('');
+                        $('#editAdminOvertimeNightDiffMinutesHidden').val('');
                     }
                 } else {
                     $('#editAdminOvertimeTotalOtMinutes').val('');
                     $('#editAdminOvertimeTotalOtMinutesHidden').val('');
+                    $('#editAdminOvertimeNightDiffMinutes').val('');
+                    $('#editAdminOvertimeNightDiffMinutesHidden').val('');
                 }
             }
             $('#editAdminOvertimeDateOtIn, #editAdminOvertimeDateOtOut').on('change input',

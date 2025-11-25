@@ -6405,6 +6405,13 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
+                                    <label class="form-label">Overtime Night Differential</label>
+                                    <input type="text" class="form-control" name="total_night_diff_minutes" id="employeeOvertimeNightDiffMinutes" readonly>
+                                    <input type="hidden" name="total_night_diff_minutes" id="employeeOvertimeNightDiffMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                     <label class="form-label">File Attachment</label>
                                     <input type="file" class="form-control" id="employeeOvertimeFileAttachment" name="file_attachment">
                                 </div>
@@ -6454,20 +6461,27 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Start Time <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control" id="editEmployeeOvertimeDateOtIn" name="date_ot_in">
+                                    <input type="datetime-local" step="1" class="form-control" id="editEmployeeOvertimeDateOtIn" name="date_ot_in">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">End Time <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control" id="editEmployeeOvertimeDateOtOut" name="date_ot_out">
+                                    <input type="datetime-local" step="1" class="form-control" id="editEmployeeOvertimeDateOtOut" name="date_ot_out">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Overtime Total Hours</label>
-                                    <input type="text" class="form-control" name="total_ot_minutes" id="editEmployeeOvertimeTotalOtMinutes" readonly>
+                                    <input type="text" class="form-control" name="total_ot_minutes" id="editEmployeeOvertimeTotalOtMinutes">
                                     <input type="hidden" name="total_ot_minutes" id="editEmployeeOvertimeTotalOtMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Overtime Night Differential</label>
+                                    <input type="text" class="form-control" name="total_night_diff_minutes" id="editEmployeeOvertimeNightDiffMinutes">
+                                    <input type="hidden" name="total_night_diff_minutes" id="editEmployeeOvertimeNightDiffMinutesHidden">
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -6560,6 +6574,14 @@
                                     <input type="hidden" name="total_ot_minutes" id="editAdminOvertimeTotalOtMinutesHidden">
                                 </div>
                             </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Overtime Night Differential</label>
+                                    <input type="text" class="form-control" name="total_night_diff_minutes" id="editAdminOvertimeNightDiffMinutes">
+                                    <input type="hidden" name="total_night_diff_minutes" id="editAdminOvertimeNightDiffMinutesHidden">
+                                </div>
+                            </div>
+
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">File Attachment</label>

@@ -307,7 +307,8 @@
                                                             data-file-attachment="{{ $ot->file_attachment }}"
                                                             data-reason="{{ $ot->reason }}"
                                                             data-offset-date="{{ $ot->offset_date }}"
-                                                            data-status="{{ $ot->status }}"><i
+                                                            data-status="{{ $ot->status }}"
+                                                            data-total-night-diff="{{ $ot->total_night_diff_minutes }}"><i
                                                                 class="ti ti-edit"></i></a>
                                                     @endif
                                                     @if (in_array('Delete', $permission))
@@ -371,6 +372,7 @@
 @endsection
 
 @push('scripts')
+    {{-- Date Range Picker and Filtering --}}
     <script>
         if ($('.bookingrange-filtered').length > 0) {
             var start = moment().subtract(29, 'days');
@@ -445,6 +447,8 @@
                 $('.form-control, .form-select').removeClass('is-invalid');
                 $('#employeeOvertimeTotalOtMinutes').val('');
                 $('#employeeOvertimeTotalOtMinutesHidden').val('');
+                $('#employeeOvertimeNightDiffMinutes').val('');
+                $('#employeeOvertimeNightDiffMinutesHidden').val('');
             });
 
             // Clear individual field errors on input
@@ -454,17 +458,56 @@
                     $(this).siblings('.invalid-feedback').remove();
                 });
 
-            // Start time and end time computation
+            // ✅ Helper: Format minutes as "X hr Y min"
             function formatMinutes(mins) {
-                if (isNaN(mins) || mins <= 0) return '';
+                if (isNaN(mins) || mins <= 0) return '0 min';
                 var hr = Math.floor(mins / 60);
                 var min = mins % 60;
                 var text = '';
-                if (hr > 0) text += hr + 'hr' + (hr > 1 ? 's ' : ' ');
-                if (min > 0) text += min + 'min' + (min > 1 ? 's' : '');
+                if (hr > 0) text += hr + ' hr ';
+                if (min > 0) text += min + ' min';
                 return text.trim();
             }
 
+            // ✅ NEW: Calculate night differential (10 PM - 6 AM)
+            function calculateNightDifferential(startDateTime, endDateTime) {
+                if (!startDateTime || !endDateTime) return 0;
+
+                let nightDiffMinutes = 0;
+                let currentStart = new Date(startDateTime);
+                let currentEnd = new Date(endDateTime);
+
+                // Loop through each day in the work period
+                while (currentStart < currentEnd) {
+                    let dayStart = new Date(currentStart);
+                    dayStart.setHours(0, 0, 0, 0);
+
+                    // Night shift window: 22:00 to 06:00 next day
+                    let nightStart = new Date(dayStart);
+                    nightStart.setHours(22, 0, 0, 0);
+
+                    let nightEnd = new Date(dayStart);
+                    nightEnd.setDate(nightEnd.getDate() + 1);
+                    nightEnd.setHours(6, 0, 0, 0);
+
+                    // Find overlap between work period and night period
+                    let workStart = Math.max(currentStart.getTime(), nightStart.getTime());
+                    let workEnd = Math.min(currentEnd.getTime(), nightEnd.getTime());
+
+                    if (workEnd > workStart) {
+                        let dayNightMinutes = Math.floor((workEnd - workStart) / (1000 * 60));
+                        nightDiffMinutes += dayNightMinutes;
+                    }
+
+                    // Move to next day
+                    currentStart = new Date(dayStart);
+                    currentStart.setDate(currentStart.getDate() + 1);
+                }
+
+                return Math.max(0, Math.floor(nightDiffMinutes));
+            }
+
+            // ✅ UPDATED: Compute OT and Night Diff separately
             function computeOvertimeMinutes() {
                 var start = $('#employeeOvertimeDateOtIn').val();
                 var end = $('#employeeOvertimeDateOtOut').val();
@@ -474,20 +517,39 @@
                     var endTime = new Date(end);
 
                     if (endTime > startTime) {
+                        // ✅ Calculate total OT minutes
                         var diffMs = endTime - startTime;
-                        var diffMins = Math.floor(diffMs / 1000 / 60);
+                        var totalMinutes = Math.floor(diffMs / 1000 / 60);
 
-                        $('#employeeOvertimeTotalOtMinutes').val(formatMinutes(diffMins));
-                        $('#employeeOvertimeTotalOtMinutesHidden').val(diffMins);
+                        // ✅ Calculate night differential minutes
+                        var nightDiffMinutes = calculateNightDifferential(startTime, endTime);
 
-                        // Clear any end time errors if valid
+                        // ✅ Regular OT = Total - Night Diff
+                        var regularOtMinutes = totalMinutes - nightDiffMinutes;
+
+                        // ✅ Update fields
+                        $('#employeeOvertimeTotalOtMinutes').val(formatMinutes(regularOtMinutes));
+                        $('#employeeOvertimeTotalOtMinutesHidden').val(regularOtMinutes);
+
+                        $('#employeeOvertimeNightDiffMinutes').val(formatMinutes(nightDiffMinutes));
+                        $('#employeeOvertimeNightDiffMinutesHidden').val(nightDiffMinutes);
+
+                        // Clear errors
                         $('#employeeOvertimeDateOtOut').removeClass('is-invalid');
                         $('#employeeOvertimeDateOtOut').siblings('.invalid-feedback').remove();
+
+                        console.log('✅ OT Computation:', {
+                            total: totalMinutes,
+                            nightDiff: nightDiffMinutes,
+                            regularOt: regularOtMinutes
+                        });
                     } else {
                         $('#employeeOvertimeTotalOtMinutes').val('');
                         $('#employeeOvertimeTotalOtMinutesHidden').val('');
+                        $('#employeeOvertimeNightDiffMinutes').val('');
+                        $('#employeeOvertimeNightDiffMinutesHidden').val('');
 
-                        // Show error for invalid end time
+                        // Show error
                         $('#employeeOvertimeDateOtOut').addClass('is-invalid');
                         $('#employeeOvertimeDateOtOut').siblings('.invalid-feedback').remove();
                         $('#employeeOvertimeDateOtOut').after(
@@ -496,6 +558,8 @@
                 } else {
                     $('#employeeOvertimeTotalOtMinutes').val('');
                     $('#employeeOvertimeTotalOtMinutesHidden').val('');
+                    $('#employeeOvertimeNightDiffMinutes').val('');
+                    $('#employeeOvertimeNightDiffMinutesHidden').val('');
                 }
             }
 
@@ -544,8 +608,8 @@
                     hasError = true;
                 }
 
-                if (!totalMinutes || totalMinutes <= 0) {
-                    toastr.error('Overtime duration must be greater than 0 minutes');
+                if (!totalMinutes || totalMinutes < 0) {
+                    toastr.error('Overtime duration cannot be negative');
                     hasError = true;
                 }
 
@@ -580,20 +644,18 @@
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            // Validation errors from server
                             const errors = xhr.responseJSON.errors;
 
-                            // Map backend field names to frontend field IDs
                             const fieldMapping = {
                                 'overtime_date': '#employeeOvertimeDate',
                                 'date_ot_in': '#employeeOvertimeDateOtIn',
                                 'date_ot_out': '#employeeOvertimeDateOtOut',
                                 'total_ot_minutes': '#employeeOvertimeTotalOtMinutesHidden',
+                                'total_night_diff_minutes': '#employeeOvertimeNightDiffMinutesHidden',
                                 'file_attachment': '#employeeOvertimeFileAttachment',
                                 'offset_date': '#employeeOvertimeOffsetDate'
                             };
 
-                            // Display each validation error below its field
                             $.each(errors, function(field, messages) {
                                 const $field = $(fieldMapping[field]);
                                 if ($field.length) {
@@ -618,7 +680,6 @@
                         }
                     },
                     complete: function() {
-                        // Re-enable submit button
                         $submitBtn.prop('disabled', false).html('Submit');
                     }
                 });
@@ -681,10 +742,15 @@
                 let reason = $(this).data('reason');
                 $('#editEmployeeOvertimeReason').val(reason || '');
 
-                // Calculate & set readable total ot mins
-                let mins = parseInt($(this).data('total-ot')) || 0;
-                $('#editEmployeeOvertimeTotalOtMinutes').val(formatMinutes(mins));
-                $('#editEmployeeOvertimeTotalOtMinutesHidden').val(mins);
+                // ✅ Calculate & set readable total ot mins
+                let otMins = parseInt($(this).data('total-ot')) || 0;
+                $('#editEmployeeOvertimeTotalOtMinutes').val(formatMinutes(otMins));
+                $('#editEmployeeOvertimeTotalOtMinutesHidden').val(otMins);
+
+                // ✅ NEW: Calculate & set readable night diff mins
+                let nightDiffMins = parseInt($(this).data('total-night-diff')) || 0;
+                $('#editEmployeeOvertimeNightDiffMinutes').val(formatMinutes(nightDiffMins));
+                $('#editEmployeeOvertimeNightDiffMinutesHidden').val(nightDiffMins);
 
                 // Attachment logic
                 let attachment = $(this).data('file-attachment');
@@ -699,6 +765,7 @@
                 $('#employeeOvertimeFileAttachment').val('');
             });
 
+
             // Recompute minutes when user changes start/end
             function formatMinutes(mins) {
                 if (isNaN(mins) || mins <= 0) return '';
@@ -708,6 +775,39 @@
                 if (hr > 0) text += hr + 'hr' + (hr > 1 ? 's ' : ' ');
                 if (min > 0) text += min + 'min' + (min > 1 ? 's' : '');
                 return text.trim();
+            }
+
+            function calculateNightDifferential(startDateTime, endDateTime) {
+                if (!startDateTime || !endDateTime) return 0;
+
+                let nightDiffMinutes = 0;
+                let currentStart = new Date(startDateTime);
+                let currentEnd = new Date(endDateTime);
+
+                while (currentStart < currentEnd) {
+                    let dayStart = new Date(currentStart);
+                    dayStart.setHours(0, 0, 0, 0);
+
+                    let nightStart = new Date(dayStart);
+                    nightStart.setHours(22, 0, 0, 0);
+
+                    let nightEnd = new Date(dayStart);
+                    nightEnd.setDate(nightEnd.getDate() + 1);
+                    nightEnd.setHours(6, 0, 0, 0);
+
+                    let workStart = Math.max(currentStart.getTime(), nightStart.getTime());
+                    let workEnd = Math.min(currentEnd.getTime(), nightEnd.getTime());
+
+                    if (workEnd > workStart) {
+                        let dayNightMinutes = Math.floor((workEnd - workStart) / (1000 * 60));
+                        nightDiffMinutes += dayNightMinutes;
+                    }
+
+                    currentStart = new Date(dayStart);
+                    currentStart.setDate(currentStart.getDate() + 1);
+                }
+
+                return Math.max(0, Math.floor(nightDiffMinutes));
             }
 
             function computeOvertimeMinutesEdit() {
@@ -720,18 +820,25 @@
 
                     if (endTime > startTime) {
                         var diffMs = endTime - startTime;
-                        var diffMins = Math.floor(diffMs / 1000 / 60);
-                        $('#editEmployeeOvertimeTotalOtMinutes').val(formatMinutes(diffMins));
-                        $('#editEmployeeOvertimeTotalOtMinutesHidden').val(diffMins);
+                        var totalMinutes = Math.floor(diffMs / 1000 / 60);
 
-                        // Clear errors
+                        var nightDiffMinutes = calculateNightDifferential(startTime, endTime);
+                        var regularOtMinutes = totalMinutes - nightDiffMinutes;
+
+                        $('#editEmployeeOvertimeTotalOtMinutes').val(formatMinutes(regularOtMinutes));
+                        $('#editEmployeeOvertimeTotalOtMinutesHidden').val(regularOtMinutes);
+
+                        $('#editEmployeeOvertimeNightDiffMinutes').val(formatMinutes(nightDiffMinutes));
+                        $('#editEmployeeOvertimeNightDiffMinutesHidden').val(nightDiffMinutes);
+
                         $('#editEmployeeOvertimeDateOtOut').removeClass('is-invalid');
                         $('#editEmployeeOvertimeDateOtOut').siblings('.invalid-feedback').remove();
                     } else {
                         $('#editEmployeeOvertimeTotalOtMinutes').val('');
                         $('#editEmployeeOvertimeTotalOtMinutesHidden').val('');
+                        $('#editEmployeeOvertimeNightDiffMinutes').val('');
+                        $('#editEmployeeOvertimeNightDiffMinutesHidden').val('');
 
-                        // Show error
                         $('#editEmployeeOvertimeDateOtOut').addClass('is-invalid');
                         $('#editEmployeeOvertimeDateOtOut').siblings('.invalid-feedback').remove();
                         $('#editEmployeeOvertimeDateOtOut').after(
@@ -740,6 +847,8 @@
                 } else {
                     $('#editEmployeeOvertimeTotalOtMinutes').val('');
                     $('#editEmployeeOvertimeTotalOtMinutesHidden').val('');
+                    $('#editEmployeeOvertimeNightDiffMinutes').val('');
+                    $('#editEmployeeOvertimeNightDiffMinutesHidden').val('');
                 }
             }
 
