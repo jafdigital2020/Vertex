@@ -5,6 +5,11 @@ use Knuckles\Scribe\Config\Defaults;
 use Knuckles\Scribe\Config\AuthIn;
 use function Knuckles\Scribe\Config\{removeStrategies, configureStrategy};
 
+// In production we install without dev dependencies, so bail out early if Scribe isn't present.
+if (!class_exists(AuthIn::class)) {
+    return [];
+}
+
 // Only the most common configs are shown. See the https://scribe.knuckles.wtf/laravel/reference/config for all.
 
 return [
