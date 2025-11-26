@@ -13,7 +13,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Dashboard
@@ -79,7 +79,7 @@
                     <div class="d-flex align-items-center mb-3">
                         <span class="avatar avatar-xl flex-shrink-0">
                             @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
-                                <img src="{{ asset(Auth::user()->personalInformation->profile_picture) }}"
+                                <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}"
                                     class="rounded-circle" alt="img">
                             @else
                                 <img src="{{ URL::asset('build/img/profiles/avatar-31.jpg') }}" class="rounded-circle"
@@ -298,7 +298,8 @@
                 <!-- Birthdays -->
                 <div class="col-xxl-4 col-xl-6 d-flex">
                     <div class="card flex-fill">
-                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-mustard">
+                        <div
+                            class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-mustard">
                             <h5 class="mb-2 text-white">Birthdays</h5>
                         </div>
                         <div class="card-body pb-1">
@@ -330,7 +331,8 @@
                                     </div>
                                 @endforeach
                             @else
-                                <div class="bg-light-mustard p-3 border border-dashed rounded-top mb-3 text-center text-muted w-100" style="width:100%; min-width:100%;">
+                                <div class="bg-light-mustard p-3 border border-dashed rounded-top mb-3 text-center text-muted w-100"
+                                    style="width:100%; min-width:100%;">
                                     No Birthdays Today
                                 </div>
                             @endif
@@ -366,7 +368,8 @@
                                     </div>
                                 @endforeach
                             @else
-                                <div class="bg-light-mustard p-2 border border-dashed rounded-top mb-3 text-center text-muted w-100" style="width:100%; min-width:100%;">
+                                <div class="bg-light-mustard p-2 border border-dashed rounded-top mb-3 text-center text-muted w-100"
+                                    style="width:100%; min-width:100%;">
                                     No Upcoming Birthdays
                                 </div>
                             @endif
@@ -379,7 +382,8 @@
                 <!-- Attendance Overview -->
                 <div class="col-xxl-4 col-xl-6 d-flex">
                     <div class="card flex-fill">
-                        <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-raspberry">
+                        <div
+                            class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap bg-raspberry">
                             <h5 class="mb-2 text-white">Attendance</h5>
                         </div>
                         <div class="card-body">
