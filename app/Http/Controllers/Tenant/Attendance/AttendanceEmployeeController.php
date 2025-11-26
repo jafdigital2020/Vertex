@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\Attendance;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Geofence;
@@ -21,7 +22,9 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Storage;
+use App\Models\RequestAttendanceApproval;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
 
@@ -2087,9 +2090,54 @@ class AttendanceEmployeeController extends Controller
         );
     }
 
+    // Request Attendance Employee Notification 
+ 
+    public function sendRequestAttendanceNotificationToApprover($authUser, $request_date)
+    {   
+        $employment = $authUser->employmentDetail;
+        $reportingToId = optional($employment)->reporting_to;
+        $branchId = optional($employment)->branch_id;
+
+        $requestor = trim(optional($authUser->personalInformation)->first_name . ' ' .
+                        optional($authUser->personalInformation)->last_name);
+
+        $notifiedUser = null; 
+        if ($reportingToId) {
+            $notifiedUser = User::find($reportingToId);
+        } 
+        else { 
+            $steps = RequestAttendanceApproval::stepsForBranch($branchId);
+            $firstStep = $steps->first();
+
+            if ($firstStep) {
+
+                if ($firstStep->approver_kind === 'department_head') {
+                    $departmentHeadId = optional(optional($employment)->department)->head_of_department;
+
+                    if ($departmentHeadId) {
+                        $notifiedUser = User::find($departmentHeadId);
+                    }
+
+                } elseif ($firstStep->approver_kind === 'user') {
+                    $approverUserId = $firstStep->approver_user_id;
+
+                    if ($approverUserId) {
+                        $notifiedUser = User::find($approverUserId);
+                    }
+                }
+            }
+        } 
+        if ($notifiedUser) {
+            $message = "New attendance request from {$requestor}: {$request_date}. Pending your approval.";
+            $notifiedUser->notify(new UserNotification($message));
+        }
+    }
+
     // Request Attendance (Create/Store)
     public function requestAttendance(Request $request)
-    {
+    {   
+
+        $authUser = $this->authUser();
         // ✅ Block Global admin / global guard users
         if (Auth::guard('global')->check()) {
             return response()->json([
@@ -2182,6 +2230,9 @@ class AttendanceEmployeeController extends Controller
         $attendance->reason = $input['reason'] ?? null;
         $attendance->file_attachment = $attachmentPath;
         $attendance->save();
+
+        $this->sendRequestAttendanceNotificationToApprover($authUser, $input['request_date']);
+ 
 
         // ✅ Optional: Log the action
         UserLog::create([
