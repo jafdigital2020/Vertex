@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
 
@@ -318,6 +319,15 @@ class OvertimeController extends Controller
             });
 
             $overtime->refresh();
+
+            $requester->notify(
+                new UserNotification(
+                    "Your overtime request on {$overtime->overtime_date} was {$data['action']} by " .
+                    $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
+                )
+            );
+
+            
             return response()->json([
                 'success'        => true,
                 'message'        => 'Action recorded.',
@@ -396,9 +406,27 @@ class OvertimeController extends Controller
         });
 
         // 7) Return JSON
-        $overtime->refresh();
+        $overtime->refresh(); 
+        
         $next = OvertimeApproval::nextApproversFor($overtime, $steps);
+ 
+        $requester->notify(
+            new UserNotification("Your overtime request on {$overtime->overtime_date} was {$data['action']} by " .
+                    $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . ".")
+        ); 
 
+        if ($overtime->status === 'pending') {
+            $requesterName = $requester->personalInformation->first_name . ' ' . $requester->personalInformation->last_name;
+
+            foreach ($next as $approver) {
+                $approver->notify(
+                    new UserNotification(
+                        "New overtime request from {$requesterName} ({$overtime->overtime_date}) is pending your approval."
+                    )
+                );
+            }
+        }
+         
         return response()->json([
             'success'        => true,
             'message'        => 'Action recorded.',
