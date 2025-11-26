@@ -2031,10 +2031,10 @@
                             <i class="ti ti-mail"></i>
                         </a>
                     </div> --}}
-                    <div class="me-1 notification_item">
-                        @php
+                     <div class="me-1 notification_item">
+                        @php 
                             $authUser = Auth::user() ?? Auth::guard('global')->user();
-                            $allNotifications = $authUser?->notifications ?? collect();
+                            $allNotifications = $authUser?->notifications ?? collect(); 
                             $unreadCount = $authUser?->unreadNotifications->count() ?? 0;
                         @endphp
 
