@@ -113,6 +113,47 @@ class RequestAttendanceApproval extends Model
         }
     }
 
+    public static function nextApproverUsersFor($leave, $steps = null)
+    {
+     
+        $reportingToId = optional($leave->user->employmentDetail)->reporting_to;
+
+        if ($leave->current_step === 1 && $reportingToId && $leave->status === 'pending') {
+            $manager = User::find($reportingToId);
+            return $manager ? collect([$manager]) : collect();
+        }
+
+     
+        $branchId = optional($leave->user->employmentDetail)->branch_id;
+        $steps = $steps ?: static::stepsForBranch($branchId);
+        $next  = $steps->firstWhere('level', $leave->current_step);
+
+        if (! $next) {
+            return collect();
+        }
+
+        switch ($next->approver_kind) {
+            case 'user':
+                $u = User::find($next->approver_user_id);
+                return $u ? collect([$u]) : collect();
+
+            case 'department_head':
+                $headId = optional($leave->user->employmentDetail->department)->head_of_department;
+                $h = $headId ? User::find($headId) : null;
+                return $h ? collect([$h]) : collect();
+
+            case 'role':
+                return User::whereHas('roles', function ($q) use ($next) {
+                        $q->where('name', $next->approver_value);
+                    })
+                    ->get();
+
+            default:
+                return collect();
+        }
+    }
+
+
     public function setActionAttribute($value)
     {
         $this->attributes['action'] = strtolower($value);

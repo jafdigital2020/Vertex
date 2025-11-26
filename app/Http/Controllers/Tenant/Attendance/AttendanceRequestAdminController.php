@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Storage;
 use App\Models\RequestAttendanceApproval;
 use App\Http\Controllers\DataAccessController;
@@ -311,6 +312,13 @@ class AttendanceRequestAdminController extends Controller
             });
 
             $req->refresh();
+
+            $request_date = Carbon::parse($req->request_date)->toDateString();
+            $requester->notify(
+                new UserNotification(
+                    "Your attendance request ({$request_date}) has been {$data['action']} by {$user->personalInformation->first_name} {$user->personalInformation->last_name}."
+                )
+            );
             return response()->json([
                 'success'        => true,
                 'message'        => 'Action recorded.',
@@ -391,7 +399,23 @@ class AttendanceRequestAdminController extends Controller
 
         // 7) Return JSON
         $req->refresh();
-        $next = RequestAttendanceApproval::nextApproversFor($req, $steps);
+
+        $request_date = Carbon::parse($req->request_date)->toDateString();
+        
+        $requester->notify(
+            new UserNotification(
+                "Your attendance request ({$request_date}) has been {$data['action']} by {$user->personalInformation->first_name} {$user->personalInformation->last_name}."
+            )
+        );
+
+        $next = RequestAttendanceApproval::nextApproversFor($req, $steps); 
+        $nextUsers = RequestAttendanceApproval::nextApproverUsersFor($req);
+         
+        foreach ($nextUsers as $notifiedUser) {
+            $notifiedUser->notify(
+                new UserNotification("New attendance request from {$req->user->personalInformation->first_name} {$req->user->personalInformation->last_name } - {$request_date} pending your approval.")
+            );
+        }
 
         return response()->json([
             'success'        => true,
