@@ -193,7 +193,7 @@
 
                         <!-- Bulk Actions Dropdown -->
                         <div class="dropdown me-2">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
+                            <button class="btn btn-outline-teal dropdown-toggle text-white" type="button" id="bulkActionsDropdown"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 Bulk Actions
                             </button>
