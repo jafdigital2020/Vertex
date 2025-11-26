@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Tenant\OB;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\UserLog;
 use Illuminate\Http\Request;
 use App\Models\OfficialBusiness;
 use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use Illuminate\Database\QueryException;
+use App\Models\OfficialBusinessApproval;
 use App\Http\Controllers\DataAccessController;
 
 class OfficialBusinessController extends Controller
@@ -149,6 +153,49 @@ class OfficialBusinessController extends Controller
         ]);
     }
 
+
+    // OB notification to approver  
+    public function sendOfficialBusinessNotificationToApprover($authUser, $ob_date)
+    {
+        $employment = $authUser->employmentDetail;
+        $reportingToId = optional($employment)->reporting_to;
+        $branchId = optional($employment)->branch_id;
+
+        $requestor = trim(optional($authUser->personalInformation)->first_name . ' ' .
+                        optional($authUser->personalInformation)->last_name);
+
+        $notifiedUser = null;
+ 
+        if ($reportingToId) {
+            $notifiedUser = User::find($reportingToId);
+        } 
+        else { 
+            $steps = OfficialBusinessApproval::stepsForBranch($branchId);
+            $firstStep = $steps->first();
+
+            if ($firstStep) {
+
+                if ($firstStep->approver_kind === 'department_head') {
+                    $departmentHeadId = optional(optional($employment)->department)->head_of_department;
+                    if ($departmentHeadId) {
+                        $notifiedUser = User::find($departmentHeadId);
+                    }
+
+                } elseif ($firstStep->approver_kind === 'user') {
+                    $approverUserId = $firstStep->approver_user_id;
+                    if ($approverUserId) {
+                        $notifiedUser = User::find($approverUserId);
+                    }
+                }
+            }
+        } 
+        if ($notifiedUser) {
+            $message = "New official business request from {$requestor}: {$ob_date}. Pending your approval.";
+            $notifiedUser->notify(new UserNotification($message));
+        }
+    }
+
+
     // Request OB (Employee)
     public function employeeRequestOB(Request $request)
     {
@@ -217,9 +264,12 @@ class OfficialBusinessController extends Controller
                 'purpose'           => $request->purpose,
                 'status'            => 'pending',
             ]);
+            
+            $this->sendOfficialBusinessNotificationToApprover($authUser , $request->ob_date);
 
             return response()->json(['success' => true, 'message' => 'Official business request submitted successfully.']);
         } catch (QueryException $e) {
+            Log::info($e->getMessage());
             if ($e->getCode() == '23000') {
                 return response()->json([
                     'success' => false,
