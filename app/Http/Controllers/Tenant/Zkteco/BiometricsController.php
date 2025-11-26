@@ -831,6 +831,15 @@ class BiometricsController extends Controller
                 $punchState = $transaction['punch_state'] ?? 0;
                 $verifyType = $transaction['verify_type'] ?? null;
 
+                // ✅ Log the punch state received from device
+                Log::info('BioTime punch state received', [
+                    'employee_code' => $employeeCode,
+                    'punch_time' => $punchTime,
+                    'punch_state' => $punchState,
+                    'verify_type' => $verifyType,
+                    'raw_transaction' => $transaction
+                ]);
+
                 if (!$employeeCode || !$punchTime) {
                     Log::debug('Skipping invalid transaction', ['transaction' => $transaction]);
                     continue;
