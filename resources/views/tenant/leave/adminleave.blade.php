@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Employee
@@ -153,7 +153,7 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <!-- Bulk Actions Dropdown -->
                         <div class="dropdown me-2">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
+                            <button class="btn btn-outline-teal dropdown-toggle text-white" type="button" id="bulkActionsDropdown"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 Bulk Actions
                             </button>
