@@ -181,7 +181,7 @@ return [
     'groups' => [
         // Endpoints which don't have a @group will be placed in this default group.
         // We hide this group to only show properly documented endpoints
-        'default' => 'Undocumented',
+        'default' => 'Endpoints',
 
         // By default, Scribe will sort groups alphabetically, and endpoints in the order their routes are defined.
         // You can override this by listing the groups, subgroups and endpoints here in the order you want them.
@@ -189,6 +189,19 @@ return [
         // Note: does not work for `external` docs types
         'order' => [],
     ],
+
+    // Hook to run after generating the docs
+    'afterGenerating' => function() {
+        // Remove the "Endpoints" group YAML file that contains undocumented routes
+        $endpointsFile = base_path('.scribe/endpoints/00.yaml');
+        if (file_exists($endpointsFile)) {
+            $content = file_get_contents($endpointsFile);
+            // Check if this is the "Endpoints" group (undocumented)
+            if (strpos($content, 'name: Endpoints') !== false) {
+                unlink($endpointsFile);
+            }
+        }
+    },
 
     // Custom logo path. This will be used as the value of the src attribute for the <img> tag,
     // so make sure it points to an accessible URL or path. Set to false to not use a logo.

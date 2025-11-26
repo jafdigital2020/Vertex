@@ -368,7 +368,7 @@ endpoints:
         name: security_license_expiration
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -436,7 +436,7 @@ endpoints:
       employment_type: Regular
       employment_status: Active
       security_license_number: architecto
-      security_license_expiration: '2025-11-25T15:01:55'
+      security_license_expiration: '2025-11-26T17:41:55'
       reporting_to: 5
       biometrics_id: BIO123
       emp_prefix: EMP

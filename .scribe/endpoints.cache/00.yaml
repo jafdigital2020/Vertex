@@ -1227,7 +1227,7 @@ endpoints:
         description: 'Must be a valid date.'
         required: true
         example:
-          - '2025-11-25T15:01:55'
+          - '2025-11-26T17:41:55'
         type: 'string[]'
         enumValues: []
         exampleWasSpecified: false
@@ -1252,7 +1252,7 @@ endpoints:
       relationship:
         - g
       birthdate:
-        - '2025-11-25T15:01:55'
+        - '2025-11-26T17:41:55'
       phone_number:
         - zmiyvdljnikhwayk
     fileParameters: []
@@ -1347,7 +1347,7 @@ endpoints:
         name: birthdate
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1357,7 +1357,7 @@ endpoints:
       name: b
       relationship: 'n'
       phone_number: gzmiyvdljnikhway
-      birthdate: '2025-11-25T15:01:55'
+      birthdate: '2025-11-26T17:41:55'
     fileParameters: []
     responses: []
     responseFields: []
@@ -1482,7 +1482,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1493,7 +1493,7 @@ endpoints:
         name: date_to
         description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1502,8 +1502,8 @@ endpoints:
     cleanBodyParameters:
       institution_name: b
       course_or_level: 'n'
-      date_from: '2025-11-25T15:01:55'
-      date_to: '2051-12-19'
+      date_from: '2025-11-26T17:41:55'
+      date_to: '2051-12-20'
     fileParameters: []
     responses: []
     responseFields: []
@@ -1585,7 +1585,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1596,7 +1596,7 @@ endpoints:
         name: date_to
         description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1605,8 +1605,8 @@ endpoints:
     cleanBodyParameters:
       institution_name: b
       course_or_level: 'n'
-      date_from: '2025-11-25T15:01:55'
-      date_to: '2051-12-19'
+      date_from: '2025-11-26T17:41:55'
+      date_to: '2051-12-20'
     fileParameters: []
     responses: []
     responseFields: []
@@ -1731,7 +1731,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1742,7 +1742,7 @@ endpoints:
         name: date_to
         description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
         required: false
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1753,7 +1753,7 @@ endpoints:
         name: is_present
         description: ''
         required: true
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -1762,9 +1762,9 @@ endpoints:
     cleanBodyParameters:
       previous_company: b
       designation: 'n'
-      date_from: '2025-11-25T15:01:55'
-      date_to: '2051-12-19'
-      is_present: true
+      date_from: '2025-11-26T17:41:55'
+      date_to: '2051-12-20'
+      is_present: false
     fileParameters: []
     responses: []
     responseFields: []
@@ -1846,7 +1846,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1857,7 +1857,7 @@ endpoints:
         name: date_to
         description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
         required: false
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1877,8 +1877,8 @@ endpoints:
     cleanBodyParameters:
       previous_company: b
       designation: 'n'
-      date_from: '2025-11-25T15:01:55'
-      date_to: '2051-12-19'
+      date_from: '2025-11-26T17:41:55'
+      date_to: '2051-12-20'
       is_present: true
     fileParameters: []
     responses: []
@@ -2268,7 +2268,7 @@ endpoints:
         name: date_hired
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2323,7 +2323,7 @@ endpoints:
         name: security_license_expiration
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2339,11 +2339,11 @@ endpoints:
       confirm_password: hwaykcmyuwpwlvqwrsitcpscqldzsnrwtujwvlxjklqppw
       designation_id: architecto
       department_id: architecto
-      date_hired: '2025-11-25T15:01:55'
+      date_hired: '2025-11-26T17:41:55'
       employment_type: architecto
       employment_status: architecto
       security_license_number: architecto
-      security_license_expiration: '2025-11-25T15:01:55'
+      security_license_expiration: '2025-11-26T17:41:55'
     fileParameters: []
     responses: []
     responseFields: []
@@ -2391,7 +2391,7 @@ endpoints:
         name: sss_contribution
         description: ''
         required: true
-        example: system
+        example: manual
         type: string
         enumValues:
           - system
@@ -2404,7 +2404,7 @@ endpoints:
         name: philhealth_contribution
         description: ''
         required: true
-        example: system
+        example: manual
         type: string
         enumValues:
           - system
@@ -2417,7 +2417,7 @@ endpoints:
         name: pagibig_contribution
         description: ''
         required: true
-        example: system
+        example: manual
         type: string
         enumValues:
           - system
@@ -2430,7 +2430,7 @@ endpoints:
         name: withholding_tax
         description: ''
         required: true
-        example: manual
+        example: system
         type: string
         enumValues:
           - system
@@ -2494,10 +2494,10 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      sss_contribution: system
-      philhealth_contribution: system
-      pagibig_contribution: system
-      withholding_tax: manual
+      sss_contribution: manual
+      philhealth_contribution: manual
+      pagibig_contribution: manual
+      withholding_tax: system
       sss_contribution_override: 4326.41688
       philhealth_contribution_override: 4326.41688
       pagibig_contribution_override: 4326.41688
@@ -2749,7 +2749,7 @@ endpoints:
         name: effective_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2769,7 +2769,7 @@ endpoints:
     cleanBodyParameters:
       salary_type: daily_rate
       basic_salary: 27
-      effective_date: '2025-11-25T15:01:55'
+      effective_date: '2025-11-26T17:41:55'
       remarks: architecto
     fileParameters: []
     responses: []
@@ -2841,7 +2841,7 @@ endpoints:
         name: effective_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2863,7 +2863,7 @@ endpoints:
         name: salary_type
         description: ''
         required: true
-        example: monthly_fixed
+        example: hourly_rate
         type: string
         enumValues:
           - monthly_fixed
@@ -2874,9 +2874,9 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       basic_salary: 27
-      effective_date: '2025-11-25T15:01:55'
+      effective_date: '2025-11-26T17:41:55'
       remarks: 'n'
-      salary_type: monthly_fixed
+      salary_type: hourly_rate
     fileParameters: []
     responses: []
     responseFields: []
@@ -3018,7 +3018,7 @@ endpoints:
         name: start_time
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: false
-        example: '15:01'
+        example: '17:41'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3029,7 +3029,7 @@ endpoints:
         name: end_time
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: false
-        example: '15:01'
+        example: '17:41'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3084,7 +3084,7 @@ endpoints:
         name: is_flexible
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -3114,13 +3114,13 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       name: b
-      start_time: '15:01'
-      end_time: '15:01'
+      start_time: '17:41'
+      end_time: '17:41'
       break_minutes: 39
       notes: g
       maximum_allowed_hours: 12
       grace_period: 77
-      is_flexible: false
+      is_flexible: true
       allowed_minutes_before_clock_in: 8
       allow_extra_hours: true
     fileParameters: []
@@ -3225,7 +3225,7 @@ endpoints:
         name: is_flexible
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -3259,7 +3259,7 @@ endpoints:
       notes: g
       maximum_allowed_hours: 12
       grace_period: 77
-      is_flexible: false
+      is_flexible: true
       allowed_minutes_before_clock_in: 8
       allow_extra_hours: true
     fileParameters: []
@@ -3415,7 +3415,7 @@ endpoints:
         name: start_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3426,7 +3426,7 @@ endpoints:
         name: end_date
         description: 'Must be a valid date. Must be a date after or equal to <code>start_date</code>.'
         required: false
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3470,7 +3470,7 @@ endpoints:
         name: override
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -3481,7 +3481,7 @@ endpoints:
         name: skip_rest_check
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -3490,11 +3490,11 @@ endpoints:
     cleanBodyParameters:
       user_id: []
       type: recurring
-      start_date: '2025-11-25T15:01:55'
-      end_date: '2051-12-19'
+      start_date: '2025-11-26T17:41:55'
+      end_date: '2051-12-20'
       is_rest_day: false
-      override: true
-      skip_rest_check: true
+      override: false
+      skip_rest_check: false
     fileParameters: []
     responses: []
     responseFields: []
@@ -3829,7 +3829,7 @@ endpoints:
         name: geofence_expiration_date
         description: 'Must be a valid date. Must be a date after or equal to <code>today</code>.'
         required: false
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3841,7 +3841,7 @@ endpoints:
       latitude: -90
       longitude: -179
       geofence_radius: 27
-      geofence_expiration_date: '2051-12-19'
+      geofence_expiration_date: '2051-12-20'
     fileParameters: []
     responses: []
     responseFields: []
@@ -4069,7 +4069,7 @@ endpoints:
         name: assignment_type
         description: ''
         required: true
-        example: exempt
+        example: manual
         type: string
         enumValues:
           - manual
@@ -4079,7 +4079,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       geofence_id: architecto
-      assignment_type: exempt
+      assignment_type: manual
     fileParameters: []
     responses: []
     responseFields: []
@@ -4700,7 +4700,7 @@ endpoints:
         name: request_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4711,7 +4711,7 @@ endpoints:
         name: request_date_in
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4722,7 +4722,7 @@ endpoints:
         name: request_date_out
         description: 'Must be a valid date. Must be a date after <code>request_date_in</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4784,9 +4784,9 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      request_date: '2025-11-25T15:01:55'
-      request_date_in: '2025-11-25T15:01:55'
-      request_date_out: '2051-12-19'
+      request_date: '2025-11-26T17:41:55'
+      request_date_in: '2025-11-26T17:41:55'
+      request_date_out: '2051-12-20'
       total_break_minutes: 39
       total_request_minutes: 84
       total_request_nd_minutes: 12
@@ -4839,7 +4839,7 @@ endpoints:
         name: request_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4850,7 +4850,7 @@ endpoints:
         name: request_date_in
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4861,7 +4861,7 @@ endpoints:
         name: request_date_out
         description: 'Must be a valid date. Must be a date after <code>request_date_in</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4923,9 +4923,9 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      request_date: '2025-11-25T15:01:55'
-      request_date_in: '2025-11-25T15:01:55'
-      request_date_out: '2051-12-19'
+      request_date: '2025-11-26T17:41:55'
+      request_date_in: '2025-11-26T17:41:55'
+      request_date_out: '2051-12-20'
       total_break_minutes: 39
       total_request_minutes: 84
       total_request_nd_minutes: 12
@@ -5104,7 +5104,7 @@ endpoints:
         name: action
         description: ''
         required: true
-        example: approved
+        example: pending
         type: string
         enumValues:
           - approved
@@ -5125,7 +5125,7 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      action: approved
+      action: pending
       comment: architecto
     fileParameters: []
     responses: []
@@ -5967,7 +5967,7 @@ endpoints:
         name: status
         description: ''
         required: true
-        example: active
+        example: inactive
         type: string
         enumValues:
           - active
@@ -5976,7 +5976,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      status: active
+      status: inactive
     fileParameters: []
     responses: []
     responseFields: []
@@ -6198,7 +6198,7 @@ endpoints:
         name: start_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -6209,7 +6209,7 @@ endpoints:
         name: end_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -6250,8 +6250,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       leave_type_id: 16
-      start_date: '2025-11-25T15:01:55'
-      end_date: '2025-11-25T15:01:55'
+      start_date: '2025-11-26T17:41:55'
+      end_date: '2025-11-26T17:41:55'
       days_requested: 4326.41688
       reason: architecto
     fileParameters:
@@ -6669,7 +6669,7 @@ endpoints:
         name: action
         description: ''
         required: true
-        example: CHANGES_REQUESTED
+        example: REJECTED
         type: string
         enumValues:
           - APPROVED
@@ -6690,7 +6690,7 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      action: CHANGES_REQUESTED
+      action: REJECTED
       comment: architecto
     fileParameters: []
     responses: []
@@ -6782,7 +6782,7 @@ endpoints:
         name: action
         description: ''
         required: true
-        example: delete
+        example: approve
         type: string
         enumValues:
           - approve
@@ -6814,7 +6814,7 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      action: delete
+      action: approve
       comment: b
     fileParameters: []
     responses: []
@@ -6902,7 +6902,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -6938,7 +6938,7 @@ endpoints:
         name: recurring
         description: ''
         required: true
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -6946,10 +6946,10 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       name: b
-      date: '2025-11-25T15:01:55'
+      date: '2025-11-26T17:41:55'
       type: special-working
       is_paid: false
-      recurring: false
+      recurring: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -7447,7 +7447,7 @@ endpoints:
         name: 'steps[].approver_kind'
         description: ''
         required: true
-        example: user
+        example: department_head
         type: string
         enumValues:
           - department_head
@@ -7470,7 +7470,7 @@ endpoints:
       steps:
         -
           level: 16
-          approver_kind: user
+          approver_kind: department_head
     fileParameters: []
     responses: []
     responseFields: []
@@ -7890,7 +7890,7 @@ endpoints:
         name: connection_method
         description: ''
         required: true
-        example: biotime
+        example: direct
         type: string
         enumValues:
           - biotime
@@ -7933,7 +7933,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       name: b
-      connection_method: biotime
+      connection_method: direct
       biotime_server_url: 'http://{+'
       biotime_username: 'y'
       biotime_password: v
@@ -8067,7 +8067,7 @@ endpoints:
         name: overtime_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8078,7 +8078,7 @@ endpoints:
         name: date_ot_in
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8089,7 +8089,7 @@ endpoints:
         name: date_ot_out
         description: 'Must be a valid date. Must be a date after <code>date_ot_in</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8133,7 +8133,7 @@ endpoints:
         name: offset_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8151,12 +8151,12 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      overtime_date: '2025-11-25T15:01:55'
-      date_ot_in: '2025-11-25T15:01:55'
-      date_ot_out: '2051-12-19'
+      overtime_date: '2025-11-26T17:41:55'
+      date_ot_in: '2025-11-26T17:41:55'
+      date_ot_out: '2051-12-20'
       total_ot_minutes: 4326.41688
       total_night_diff_minutes: 4326.41688
-      offset_date: '2025-11-25T15:01:55'
+      offset_date: '2025-11-26T17:41:55'
       reason: m
     fileParameters:
       file_attachment: null
@@ -8277,7 +8277,7 @@ endpoints:
         name: overtime_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8288,7 +8288,7 @@ endpoints:
         name: date_ot_in
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8299,7 +8299,7 @@ endpoints:
         name: date_ot_out
         description: 'Must be a valid date. Must be a date after or equal to <code>date_ot_in</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8343,7 +8343,7 @@ endpoints:
         name: offset_date
         description: 'max 5MB. Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8361,12 +8361,12 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      overtime_date: '2025-11-25T15:01:55'
-      date_ot_in: '2025-11-25T15:01:55'
-      date_ot_out: '2051-12-19'
+      overtime_date: '2025-11-26T17:41:55'
+      date_ot_in: '2025-11-26T17:41:55'
+      date_ot_out: '2051-12-20'
       total_ot_minutes: 4326.41688
       total_night_diff_minutes: 4326.41688
-      offset_date: '2025-11-25T15:01:55'
+      offset_date: '2025-11-26T17:41:55'
       reason: m
     fileParameters:
       file_attachment: null
@@ -8416,7 +8416,7 @@ endpoints:
         name: overtime_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8427,7 +8427,7 @@ endpoints:
         name: date_ot_in
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8438,7 +8438,7 @@ endpoints:
         name: date_ot_out
         description: 'Must be a valid date. Must be a date after <code>date_ot_in</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8482,7 +8482,7 @@ endpoints:
         name: offset_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8500,12 +8500,12 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      overtime_date: '2025-11-25T15:01:55'
-      date_ot_in: '2025-11-25T15:01:55'
-      date_ot_out: '2051-12-19'
+      overtime_date: '2025-11-26T17:41:55'
+      date_ot_in: '2025-11-26T17:41:55'
+      date_ot_out: '2051-12-20'
       total_ot_minutes: 4326.41688
       total_night_diff_minutes: 4326.41688
-      offset_date: '2025-11-25T15:01:55'
+      offset_date: '2025-11-26T17:41:55'
       reason: m
     fileParameters:
       file_attachment: null
@@ -8597,7 +8597,7 @@ endpoints:
         name: offset_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -8615,7 +8615,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      offset_date: '2025-11-25T15:01:55'
+      offset_date: '2025-11-26T17:41:55'
       reason: b
     fileParameters:
       file_attachment: null
@@ -8809,7 +8809,7 @@ endpoints:
         name: action
         description: ''
         required: true
-        example: approve
+        example: reject
         type: string
         enumValues:
           - approve
@@ -8841,7 +8841,7 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      action: approve
+      action: reject
       comment: b
     fileParameters: []
     responses: []
@@ -8940,7 +8940,7 @@ endpoints:
         name: branch_type
         description: ''
         required: true
-        example: sub
+        example: main
         type: string
         enumValues:
           - main
@@ -8990,7 +8990,7 @@ endpoints:
         name: philhealth_contribution_type
         description: ''
         required: true
-        example: none
+        example: fixed
         type: string
         enumValues:
           - system
@@ -9104,7 +9104,7 @@ endpoints:
         name: salary_computation_type
         description: ''
         required: true
-        example: monthly
+        example: weekly
         type: string
         enumValues:
           - monthly
@@ -9161,11 +9161,11 @@ endpoints:
     cleanBodyParameters:
       name: b
       contact_number: ngzmiyvdljnikhwa
-      branch_type: sub
+      branch_type: main
       location: 'y'
       sss_contribution_type: system
       fixed_sss_amount: 4326.41688
-      philhealth_contribution_type: none
+      philhealth_contribution_type: fixed
       fixed_philhealth_amount: 4326.41688
       pagibig_contribution_type: fixed
       fixed_pagibig_amount: 4326.41688
@@ -9173,7 +9173,7 @@ endpoints:
       fixed_withholding_tax_amount: 4326.41688
       basic_salary: 77
       salary_type: hourly_rate
-      salary_computation_type: monthly
+      salary_computation_type: weekly
       branch_tin: i
       wage_order: 'y'
       sss_contribution_template: vdlj
@@ -9248,7 +9248,7 @@ endpoints:
         name: branch_type
         description: ''
         required: true
-        example: sub
+        example: main
         type: string
         enumValues:
           - main
@@ -9298,7 +9298,7 @@ endpoints:
         name: philhealth_contribution_type
         description: ''
         required: true
-        example: fixed
+        example: manual
         type: string
         enumValues:
           - system
@@ -9376,7 +9376,7 @@ endpoints:
         name: worked_days_per_year
         description: ''
         required: true
-        example: custom
+        example: '365'
         type: string
         enumValues:
           - '313'
@@ -9414,7 +9414,7 @@ endpoints:
         name: salary_type
         description: ''
         required: false
-        example: monthly_fixed
+        example: daily_rate
         type: string
         enumValues:
           - hourly_rate
@@ -9439,7 +9439,7 @@ endpoints:
         name: salary_computation_type
         description: ''
         required: true
-        example: bi-weekly
+        example: weekly
         type: string
         enumValues:
           - monthly
@@ -9485,21 +9485,21 @@ endpoints:
     cleanBodyParameters:
       name: b
       contact_number: ngzmiyvdljnikhwa
-      branch_type: sub
+      branch_type: main
       location: 'y'
       sss_contribution_type: fixed
       fixed_sss_amount: 4326.41688
-      philhealth_contribution_type: fixed
+      philhealth_contribution_type: manual
       fixed_philhealth_amount: 4326.41688
       pagibig_contribution_type: system
       fixed_pagibig_amount: 4326.41688
       withholding_tax_type: fixed
       fixed_withholding_tax_amount: 4326.41688
-      worked_days_per_year: custom
+      worked_days_per_year: '365'
       custom_worked_days: 4326.41688
       basic_salary: 77
-      salary_type: monthly_fixed
-      salary_computation_type: bi-weekly
+      salary_type: daily_rate
+      salary_computation_type: weekly
       wage_order: i
       branch_tin: 'y'
       sss_contribution_template: vdlj
@@ -9644,7 +9644,7 @@ endpoints:
         name: effective_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -9655,7 +9655,7 @@ endpoints:
         name: target_type
         description: ''
         required: true
-        example: branch
+        example: employee
         type: string
         enumValues:
           - company-wide
@@ -9679,8 +9679,8 @@ endpoints:
     cleanBodyParameters:
       policy_title: b
       policy_content: architecto
-      effective_date: '2025-11-25T15:01:55'
-      target_type: branch
+      effective_date: '2025-11-26T17:41:55'
+      target_type: employee
     fileParameters:
       attachment_path: null
     responses: []
@@ -9838,7 +9838,7 @@ endpoints:
         name: effective_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -9871,7 +9871,7 @@ endpoints:
         name: target_type
         description: ''
         required: false
-        example: company-wide
+        example: department
         type: string
         enumValues:
           - company-wide
@@ -9916,9 +9916,9 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       policy_title: b
-      effective_date: '2025-11-25T15:01:55'
+      effective_date: '2025-11-26T17:41:55'
       policy_content: architecto
-      target_type: company-wide
+      target_type: department
     fileParameters:
       attachment_path: null
     responses: []
@@ -10349,7 +10349,7 @@ endpoints:
         name: benefit_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -10371,7 +10371,7 @@ endpoints:
         - 16
       deminimis_benefit_id: 16
       amount: 39
-      benefit_date: '2025-11-25T15:01:55'
+      benefit_date: '2025-11-26T17:41:55'
       taxable_excess: 84
     fileParameters: []
     responses: []
@@ -10442,7 +10442,7 @@ endpoints:
         name: benefit_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -10464,7 +10464,7 @@ endpoints:
         name: status
         description: ''
         required: true
-        example: active
+        example: inactive
         type: string
         enumValues:
           - active
@@ -10475,9 +10475,9 @@ endpoints:
     cleanBodyParameters:
       deminimis_benefit_id: 16
       amount: 39
-      benefit_date: '2025-11-25T15:01:55'
+      benefit_date: '2025-11-26T17:41:55'
       taxable_excess: 84
-      status: active
+      status: inactive
     fileParameters: []
     responses: []
     responseFields: []
@@ -10755,7 +10755,7 @@ endpoints:
         name: apply_to_all_employees
         description: ''
         required: true
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -10777,7 +10777,7 @@ endpoints:
       calculation_method: architecto
       default_amount: 39
       is_taxable: false
-      apply_to_all_employees: true
+      apply_to_all_employees: false
       description: 'Eius et animi quos velit et.'
     fileParameters: []
     responses: []
@@ -10989,7 +10989,7 @@ endpoints:
         name: effective_start_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -11000,7 +11000,7 @@ endpoints:
         name: effective_end_date
         description: 'Must be a valid date. Must be a date after or equal to <code>effective_start_date</code>.'
         required: false
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -11019,8 +11019,8 @@ endpoints:
         - 16
       amount: 39
       frequency: architecto
-      effective_start_date: '2025-11-25T15:01:55'
-      effective_end_date: '2051-12-19'
+      effective_start_date: '2025-11-26T17:41:55'
+      effective_end_date: '2051-12-20'
     fileParameters: []
     responses: []
     responseFields: []
@@ -11112,7 +11112,7 @@ endpoints:
         name: effective_start_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -11123,7 +11123,7 @@ endpoints:
         name: effective_end_date
         description: 'Must be a valid date. Must be a date after or equal to <code>effective_start_date</code>.'
         required: false
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -11145,8 +11145,8 @@ endpoints:
       earning_type_id: 16
       amount: 39
       frequency: architecto
-      effective_start_date: '2025-11-25T15:01:55'
-      effective_end_date: '2051-12-19'
+      effective_start_date: '2025-11-26T17:41:55'
+      effective_end_date: '2051-12-20'
     fileParameters: []
     responses: []
     responseFields: []
@@ -11298,7 +11298,7 @@ endpoints:
         name: is_taxable
         description: ''
         required: true
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -11309,7 +11309,7 @@ endpoints:
         name: apply_to_all_employees
         description: ''
         required: true
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -11330,8 +11330,8 @@ endpoints:
       name: b
       calculation_method: architecto
       default_amount: 39
-      is_taxable: false
-      apply_to_all_employees: false
+      is_taxable: true
+      apply_to_all_employees: true
       description: 'Eius et animi quos velit et.'
     fileParameters: []
     responses: []
@@ -11424,7 +11424,7 @@ endpoints:
         name: apply_to_all_employees
         description: ''
         required: true
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -11446,7 +11446,7 @@ endpoints:
       calculation_method: architecto
       default_amount: 39
       is_taxable: true
-      apply_to_all_employees: false
+      apply_to_all_employees: true
       description: 'Eius et animi quos velit et.'
     fileParameters: []
     responses: []
@@ -11658,7 +11658,7 @@ endpoints:
         name: effective_start_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -11669,7 +11669,7 @@ endpoints:
         name: effective_end_date
         description: 'Must be a valid date. Must be a date after or equal to <code>effective_start_date</code>.'
         required: false
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -11688,8 +11688,8 @@ endpoints:
         - 16
       amount: 39
       frequency: architecto
-      effective_start_date: '2025-11-25T15:01:55'
-      effective_end_date: '2051-12-19'
+      effective_start_date: '2025-11-26T17:41:55'
+      effective_end_date: '2051-12-20'
     fileParameters: []
     responses: []
     responseFields: []
@@ -11781,7 +11781,7 @@ endpoints:
         name: effective_start_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -11792,7 +11792,7 @@ endpoints:
         name: effective_end_date
         description: 'Must be a valid date. Must be a date after or equal to <code>effective_start_date</code>.'
         required: false
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -11814,8 +11814,8 @@ endpoints:
       deduction_type_id: 16
       amount: 39
       frequency: architecto
-      effective_start_date: '2025-11-25T15:01:55'
-      effective_end_date: '2051-12-19'
+      effective_start_date: '2025-11-26T17:41:55'
+      effective_end_date: '2051-12-20'
     fileParameters: []
     responses: []
     responseFields: []
@@ -12093,7 +12093,7 @@ endpoints:
         name: apply_to_all_employees
         description: ''
         required: true
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -12115,7 +12115,7 @@ endpoints:
       calculation_basis: architecto
       amount: 39
       is_taxable: true
-      apply_to_all_employees: false
+      apply_to_all_employees: true
       description: 'Eius et animi quos velit et.'
     fileParameters: []
     responses: []
@@ -12700,7 +12700,7 @@ endpoints:
         name: transaction_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -12709,7 +12709,7 @@ endpoints:
     cleanBodyParameters:
       payroll_type: architecto
       assignment_type: architecto
-      transaction_date: '2025-11-25T15:01:55'
+      transaction_date: '2025-11-26T17:41:55'
     fileParameters: []
     responses: []
     responseFields: []
@@ -12822,7 +12822,7 @@ endpoints:
         name: payroll_period_start
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -12833,7 +12833,7 @@ endpoints:
         name: payroll_period_end
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -13119,7 +13119,7 @@ endpoints:
         name: payment_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -13139,8 +13139,8 @@ endpoints:
     cleanBodyParameters:
       payroll_type: b
       payroll_period: 'n'
-      payroll_period_start: '2025-11-25T15:01:55'
-      payroll_period_end: '2025-11-25T15:01:55'
+      payroll_period_start: '2025-11-26T17:41:55'
+      payroll_period_end: '2025-11-26T17:41:55'
       total_late_minutes: 4326.41688
       total_undertime_minutes: 4326.41688
       total_overtime_minutes: 4326.41688
@@ -13162,7 +13162,7 @@ endpoints:
       basic_pay: 4326.41688
       gross_pay: 4326.41688
       net_salary: 4326.41688
-      payment_date: '2025-11-25T15:01:55'
+      payment_date: '2025-11-26T17:41:55'
       remarks: architecto
     fileParameters: []
     responses: []
@@ -14677,7 +14677,7 @@ endpoints:
         name: gender
         description: ''
         required: false
-        example: Male
+        example: Female
         type: string
         enumValues:
           - Male
@@ -14690,7 +14690,7 @@ endpoints:
         name: birth_date
         description: 'Must be a valid date.'
         required: false
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -14721,8 +14721,8 @@ endpoints:
     cleanBodyParameters:
       user_id: architecto
       phone_number: 4326.41688
-      gender: Male
-      birth_date: '2025-11-25T15:01:55'
+      gender: Female
+      birth_date: '2025-11-26T17:41:55'
       birth_place: architecto
       complete_address: architecto
     fileParameters: []
@@ -15137,7 +15137,7 @@ endpoints:
         name: birthdate
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15147,7 +15147,7 @@ endpoints:
       name: b
       relationship: 'n'
       phone_number: gzmiyvdljnikhway
-      birthdate: '2025-11-25T15:01:55'
+      birthdate: '2025-11-26T17:41:55'
     fileParameters: []
     responses: []
     responseFields: []
@@ -15223,7 +15223,7 @@ endpoints:
         name: ob_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15234,7 +15234,7 @@ endpoints:
         name: date_ob_in
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15245,7 +15245,7 @@ endpoints:
         name: date_ob_out
         description: 'Must be a valid date. Must be a date after or equal to <code>date_ob_in</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15296,9 +15296,9 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      ob_date: '2025-11-25T15:01:55'
-      date_ob_in: '2025-11-25T15:01:55'
-      date_ob_out: '2051-12-19'
+      ob_date: '2025-11-26T17:41:55'
+      date_ob_in: '2025-11-26T17:41:55'
+      date_ob_out: '2051-12-20'
       ob_break_minutes: 39
       total_ob_minutes: 4326.41688
       purpose: m
@@ -15350,7 +15350,7 @@ endpoints:
         name: ob_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15361,7 +15361,7 @@ endpoints:
         name: date_ob_in
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15372,7 +15372,7 @@ endpoints:
         name: date_ob_out
         description: 'Must be a valid date. Must be a date after <code>date_ob_in</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15423,9 +15423,9 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      ob_date: '2025-11-25T15:01:55'
-      date_ob_in: '2025-11-25T15:01:55'
-      date_ob_out: '2051-12-19'
+      ob_date: '2025-11-26T17:41:55'
+      date_ob_in: '2025-11-26T17:41:55'
+      date_ob_out: '2051-12-20'
       ob_break_minutes: 39
       total_ob_minutes: 4326.41688
       purpose: m
@@ -15685,7 +15685,7 @@ endpoints:
         name: ob_date
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15696,7 +15696,7 @@ endpoints:
         name: date_ob_in
         description: 'Must be a valid date.'
         required: true
-        example: '2025-11-25T15:01:55'
+        example: '2025-11-26T17:41:55'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15707,7 +15707,7 @@ endpoints:
         name: date_ob_out
         description: 'Must be a valid date. Must be a date after <code>date_ob_in</code>.'
         required: true
-        example: '2051-12-19'
+        example: '2051-12-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -15747,9 +15747,9 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      ob_date: '2025-11-25T15:01:55'
-      date_ob_in: '2025-11-25T15:01:55'
-      date_ob_out: '2051-12-19'
+      ob_date: '2025-11-26T17:41:55'
+      date_ob_in: '2025-11-26T17:41:55'
+      date_ob_out: '2051-12-20'
       total_ob_minutes: 4326.41688
       purpose: m
     fileParameters:
@@ -15831,7 +15831,7 @@ endpoints:
         name: action
         description: ''
         required: true
-        example: reject
+        example: approve
         type: string
         enumValues:
           - approve
@@ -15862,7 +15862,7 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      action: reject
+      action: approve
       comment: b
     fileParameters: []
     responses: []
@@ -16112,7 +16112,7 @@ endpoints:
       -
         custom: []
         status: 200
-        content: '{"configured":true,"api_url":"https:\/\/api-staging-admin.timora.ph","authentication":"public","status":"unreachable","health_check":"HTTP 404","last_checked":"2025-11-25T07:01:55.982248Z"}'
+        content: '{"configured":true,"api_url":"https:\/\/api-staging-admin.timora.ph","authentication":"public","status":"unreachable","health_check":"HTTP 404","last_checked":"2025-11-26T09:41:56.228976Z"}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
