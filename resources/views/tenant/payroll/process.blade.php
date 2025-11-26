@@ -318,10 +318,10 @@
                                                 <div class="mb-4">
                                                     <label class="form-label fw-medium d-block mb-2">SSS Contribution <span class="text-danger">*</span></label>
                                                     <div class="btn-group w-100" role="group" aria-label="SSS Contribution Options">
-                                                        <input type="radio" class="btn-check" name="sss_option" id="sssYes" value="half" required>
+                                                        <input type="radio" class="btn-check" name="sss_option" id="sssYes" value="yes" required>
                                                         <label class="btn btn-outline-success me-2" for="sssYes">Half</label>
 
-                                                        <input type="radio" class="btn-check" name="sss_option" id="sssNo" value="none" required>
+                                                        <input type="radio" class="btn-check" name="sss_option" id="sssNo" value="no" required>
                                                         <label class="btn btn-outline-success me-2" for="sssNo">None</label>
 
                                                         <input type="radio" class="btn-check" name="sss_option" id="sssFull" value="full" required>
@@ -332,10 +332,10 @@
                                                 <div class="mb-4">
                                                     <label class="form-label fw-medium d-block mb-2">PhilHealth Contribution <span class="text-danger">*</span></label>
                                                     <div class="btn-group w-100" role="group" aria-label="PhilHealth Contribution Options">
-                                                        <input type="radio" class="btn-check" name="philhealth_option" id="philhealthYes" value="half" required>
+                                                        <input type="radio" class="btn-check" name="philhealth_option" id="philhealthYes" value="yes" required>
                                                         <label class="btn btn-outline-success me-2" for="philhealthYes">Half</label>
 
-                                                        <input type="radio" class="btn-check" name="philhealth_option" id="philhealthNo" value="none" required>
+                                                        <input type="radio" class="btn-check" name="philhealth_option" id="philhealthNo" value="no" required>
                                                         <label class="btn btn-outline-success me-2" for="philhealthNo">None</label>
 
                                                         <input type="radio" class="btn-check" name="philhealth_option" id="philhealthFull" value="full" required>
@@ -346,10 +346,10 @@
                                                 <div class="mb-4">
                                                     <label class="form-label fw-medium d-block mb-2">Pag-IBIG Contribution <span class="text-danger">*</span></label>
                                                     <div class="btn-group w-100" role="group" aria-label="Pag-IBIG Contribution Options">
-                                                        <input type="radio" class="btn-check" name="pagibig_option" id="pagibigYes" value="half" required>
+                                                        <input type="radio" class="btn-check" name="pagibig_option" id="pagibigYes" value="yes" required>
                                                         <label class="btn btn-outline-success me-2" for="pagibigYes">Half</label>
 
-                                                        <input type="radio" class="btn-check" name="pagibig_option" id="pagibigNo" value="none" required>
+                                                        <input type="radio" class="btn-check" name="pagibig_option" id="pagibigNo" value="no" required>
                                                         <label class="btn btn-outline-success me-2" for="pagibigNo">None</label>
 
                                                         <input type="radio" class="btn-check" name="pagibig_option" id="pagibigFull" value="full" required>
