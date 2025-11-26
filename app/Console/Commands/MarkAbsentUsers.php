@@ -83,11 +83,29 @@ class MarkAbsentUsers extends Command
                 }
             } else {
                 // For regular shifts: check if shift has ended
-                $shiftEnd = Carbon::createFromFormat(
-                    'Y-m-d H:i:s',
-                    $today . ' ' . $assign->shift->end_time,
-                    'Asia/Manila'
-                );
+                $startTime = $assign->shift->start_time;
+                $endTime = $assign->shift->end_time;
+
+                // Determine if this is a graveyard shift (crosses midnight)
+                $isGraveyardShift = $endTime < $startTime;
+
+                if ($isGraveyardShift) {
+                    // For graveyard shifts (e.g., 10:00 PM - 6:00 AM)
+                    // The shift ends on the next day
+                    $shiftEnd = Carbon::createFromFormat(
+                        'Y-m-d H:i:s',
+                        $today . ' ' . $endTime,
+                        'Asia/Manila'
+                    )->addDay();
+                } else {
+                    // For regular shifts (e.g., 8:00 AM - 5:00 PM)
+                    // The shift ends on the same day
+                    $shiftEnd = Carbon::createFromFormat(
+                        'Y-m-d H:i:s',
+                        $today . ' ' . $endTime,
+                        'Asia/Manila'
+                    );
+                }
 
                 // skip if the shift hasn't ended yet
                 if ($now->lt($shiftEnd)) {
