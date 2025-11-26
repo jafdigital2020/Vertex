@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Tenant\Overtime;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Overtime;
 use Illuminate\Http\Request;
 use App\Models\HolidayException;
+use App\Models\OvertimeApproval;
 use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use App\Http\Controllers\DataAccessController;
 
 class EmployeeOvertimeController extends Controller
@@ -151,6 +154,47 @@ class EmployeeOvertimeController extends Controller
             'permission' => $permission
         ]);
     }
+    // Manual User Notification to Approver 
+
+    public function sendOvertimeNotificationToApprover($authUser, $overtimeDate)
+    {
+        $employment = $authUser->employmentDetail;
+        $branchId   = $employment->branch_id ?? null;
+        $reportingToId = $employment->reporting_to ?? null;
+        $departmentHead = $employment->department->head_of_department ?? null;
+
+        $requestor = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
+ 
+        $steps = OvertimeApproval::stepsForBranch($branchId);
+        $firstStep = $steps->first();
+
+        $notifiedUser = null; 
+        if ($reportingToId && $firstStep && $firstStep->level == 1) {
+            $notifiedUser = User::find($reportingToId);
+        }
+ 
+        if (!$notifiedUser && $firstStep) {
+
+            if ($firstStep->approver_kind === 'department_head' && $departmentHead) {
+                $notifiedUser = User::find($departmentHead);
+            }
+
+            if ($firstStep->approver_kind === 'user') {
+                $userApproverId = $firstStep->approver_user_id ?? null;
+                $notifiedUser = User::find($userApproverId);
+            }
+        }
+ 
+        if ($notifiedUser) {
+            $notifiedUser->notify(
+                new UserNotification(
+                    "New overtime request from {$requestor}: {$overtimeDate}. Pending your approval."
+                )
+            );
+        }
+    }
+
+
 
     // Manual Overtime Create
     public function overtimeEmployeeManualCreate(Request $request)
@@ -207,7 +251,9 @@ class EmployeeOvertimeController extends Controller
             'status'            => 'pending',
             'ot_login_type'    => 'manual',
         ]);
-
+        
+        $this->sendOvertimeNotificationToApprover($authUser , $request->overtime_date);
+ 
         // Logging Start
         $userId = null;
         $globalUserId = null;

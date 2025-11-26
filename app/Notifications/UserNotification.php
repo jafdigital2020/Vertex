@@ -18,14 +18,14 @@ class UserNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database']; // Save to DB for in-app bell display
+        return ['database']; 
     }
 
     public function toDatabase($notifiable)
     {
         return [
             'message' => $this->message,
-            'url' => url('/some-link') // optional
+            'url' => url('/some-link')  
         ];
     }
 }
