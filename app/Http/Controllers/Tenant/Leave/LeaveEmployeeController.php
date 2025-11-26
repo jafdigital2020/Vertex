@@ -14,6 +14,7 @@ use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\LeaveFiledNotification;
@@ -187,6 +188,47 @@ class LeaveEmployeeController extends Controller
             'permission' => $permission
         ]);
     }
+    public function sendLeaveNotificationToApprover($authUser, $leaveStartDate, $leaveEndDate)
+    {
+        $employment = $authUser->employmentDetail;
+        $reportingToId = optional($employment)->reporting_to;
+        $branchId = optional($employment)->branch_id;
+
+        $requestor = trim(optional($authUser->personalInformation)->first_name.' '.optional($authUser->personalInformation)->last_name);
+
+        $notifiedUser = null;
+ 
+        if ($reportingToId) {
+            $notifiedUser = User::find($reportingToId);
+        } 
+        else { 
+            $steps = LeaveApproval::stepsForBranch($branchId); 
+            $firstStep = $steps->first();
+
+            if ($firstStep) {
+                if ($firstStep->approver_kind === 'department_head') {
+
+                    $departmentHeadId = optional(optional($employment)->department)->head_of_department;
+                    if ($departmentHeadId) {
+                        $notifiedUser = User::find($departmentHeadId);
+                    }
+
+                } elseif ($firstStep->approver_kind === 'user') {
+
+                    $userApproverId = $firstStep->approver_user_id;
+                    if ($userApproverId) {
+                        $notifiedUser = User::find($userApproverId);
+                    }
+
+                }
+            }
+        } 
+        if ($notifiedUser) {
+            $message = "New leave request from {$requestor}: {$leaveStartDate} - {$leaveEndDate}. Pending your approval.";
+            $notifiedUser->notify(new UserNotification($message));
+        }
+    }
+
 
     public function leaveEmployeeRequest(Request $request)
     {
@@ -349,6 +391,8 @@ class LeaveEmployeeController extends Controller
             'reason'          => $data['reason'] ?? null,
         ]);
 
+        $this->sendLeaveNotificationToApprover($authUser ,  $data['start_date'], $data['end_date']);
+        
         // ================= EMAIL NOTIFICATION TO FIRST APPROVER ===================
         $employee = $request->user();
         $branchId = optional($lr->user->employmentDetail)->branch_id;
