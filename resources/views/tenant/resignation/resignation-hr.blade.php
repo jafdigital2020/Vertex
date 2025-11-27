@@ -262,14 +262,13 @@
                                                                             <label for="hr_resignation_attachment_{{ $resignation->id }}" class="form-label fw-bold">
                                                                                 Upload Additional Attachment  <span class="text-danger">*</span>
                                                                             </label>
-                                                                           <input type="file"
+                                                                            <input type="file"
                                                                             name="hr_resignation_attachment[]"
                                                                             id="hr_resignation_attachment_{{ $resignation->id }}"
                                                                             class="form-control"
-                                                                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                                                            multiple>
-
-                                                                            <small class="text-muted d-block mt-1 text-start">You can upload multiple PDF, DOC, or DOCX files.</small>
+                                                                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
+                                                                            multiple> 
+                                                                            <small class="text-muted d-block mt-1 text-start">You can upload multiple PDF, DOC, DOCX or image files.</small>
                                                                         </div>
                                                                         @endif
                                                                     </div>
@@ -710,10 +709,10 @@
                             name="resignation_attachment[]" 
                             id="resignation_attachment" 
                             class="form-control" 
-                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
                             multiple
                         > 
-                        <small class="text-muted">You can upload multiple files (PDF, DOC, DOCX only).</small>
+                        <small class="text-muted">You can upload multiple files (PDF, DOC, DOCX,IMAGES only).</small>
                     </div> 
                 </div> 
                 <div class="modal-footer">
@@ -989,7 +988,7 @@
   
             const formData = new FormData(form);
     
-            const allowedExtensions = ['pdf', 'doc', 'docx'];
+            const allowedExtensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif'];
             const files = form.querySelectorAll('input[type="file"]');
             for (let input of files) {
                 for (let file of input.files) {
@@ -1070,13 +1069,13 @@
 
             const form = $(this);
             const resignationId = form.attr('id').split('-')[1];
-            const fileInput = form.find('input[type="file"]')[0];
-            const allowedExtensions = ['pdf', 'doc', 'docx'];
+            const fileInput = form.find('input[type="file"]')[0]; 
+            const allowedExtensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif'];
  
             for (let file of fileInput.files) {
                 const ext = file.name.split('.').pop().toLowerCase();
                 if (!allowedExtensions.includes(ext)) {
-                    toastr.warning(`Invalid file type: ${file.name}. Only PDF, DOC, and DOCX are allowed.`, 'Warning');
+                    toastr.warning(`Invalid file type: ${file.name}. Only PDF, DOC,DOCX and images are allowed.`, 'Warning');
                     return;
                 }
             }

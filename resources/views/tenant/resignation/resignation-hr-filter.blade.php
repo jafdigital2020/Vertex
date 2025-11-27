@@ -96,14 +96,13 @@
                                                                             <label for="hr_resignation_attachment_{{ $resignation->id }}" class="form-label fw-bold">
                                                                                 Upload Additional Attachment  <span class="text-danger">*</span>
                                                                             </label>
-                                                                           <input type="file"
+                                                                            <input type="file"
                                                                             name="hr_resignation_attachment[]"
                                                                             id="hr_resignation_attachment_{{ $resignation->id }}"
                                                                             class="form-control"
-                                                                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                                                            multiple>
-
-                                                                            <small class="text-muted d-block mt-1 text-start">You can upload multiple PDF, DOC, or DOCX files.</small>
+                                                                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
+                                                                            multiple> 
+                                                                            <small class="text-muted d-block mt-1 text-start">You can upload multiple PDF, DOC, DOCX or image files.</small> 
                                                                         </div>
                                                                         @endif
                                                                     </div>

@@ -960,13 +960,12 @@ class ResignationController extends Controller
     public function acceptByHR(Request $request, $id)
     {
         $authUser = $this->authUser();
-    
-
+            
         $request->validate([
             'accepted_remarks' => 'required|string|max:500',
             'resignation_date' => 'required|date',
             'accepted_instruction' => 'nullable|string|max:1000',
-            'resignation_attachment.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120'
+            'resignation_attachment.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/gif|max:5120'
         ]);
 
         try {
@@ -1048,7 +1047,7 @@ class ResignationController extends Controller
     { 
         $authUser = $this->authUser(); 
         $request->validate([
-            'hr_resignation_attachment.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120'
+            'hr_resignation_attachment.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/gif|max:5120'
         ]);
 
         $resignation = Resignation::findOrFail($id);
