@@ -386,15 +386,15 @@
                                                                                     <label for="attachments-{{ $resignation->id }}" class="form-label fw-bold">
                                                                                         Upload New Files <span class="text-danger">*</span>
                                                                                     </label>
-                                                                                  <input 
-                                                                                        type="file" 
-                                                                                        name="attachments[]" 
-                                                                                        id="attachments-{{ $resignation->id }}" 
-                                                                                        class="form-control" 
-                                                                                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                                                                        multiple
-                                                                                    > 
-                                                                                    <small class="text-muted">You can upload multiple PDF or Word files.</small>
+                                                                               <input 
+                                                                                    type="file" 
+                                                                                    name="attachments[]" 
+                                                                                    id="attachments-{{ $resignation->id }}" 
+                                                                                    class="form-control" 
+                                                                                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
+                                                                                    multiple
+                                                                                > 
+                                                                                <small class="text-muted">You can upload multiple PDF, Word, or image files.</small>
                                                                                 </div> 
 
                                                                                 <div class="text-end">
@@ -1058,31 +1058,63 @@
     } 
     $(document).ready(function() {
 
-        $(document).on('submit', '.uploadAttachmentForm', function(e) {
-            e.preventDefault();
+      $(document).on('submit', '.uploadAttachmentForm', function(e) {
+        e.preventDefault();
 
-            const form = $(this);
-            const url = form.attr('action');
-            const formData = new FormData(this);  
+        const form = $(this);
+        const fileInput = form.find('input[type="file"]')[0];
+    
+        const allowedExtensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif'];
+    
+        for (let file of fileInput.files) {
+            const ext = file.name.split('.').pop().toLowerCase();
 
-            $.ajax({
-                url: url,
-                method: 'POST',
-                data: formData,
-                processData: false,  
-                contentType: false,  
-                success: function(response) {
-                    toastr.success('Files uploaded successfully!');
-                    $('#myUploadsSection').html(response.html);
-                    form[0].reset();  
-                    
-                },
-                error: function(xhr) {
-                    console.error(xhr.responseText);
-                    toastr.error('Failed to upload files. Please try again.');
+            if (!allowedExtensions.includes(ext)) {
+                toastr.error(
+                    `Invalid file type: ${file.name}. Allowed types: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF.`,
+                    'Error'
+                );
+                return; 
+            }
+    
+            if (file.size > 5 * 1024 * 1024) {
+                toastr.error(
+                    `${file.name} exceeds the 5MB limit.`,
+                    'Error'
+                );
+                return;  
+            }
+        }
+    
+        const url = form.attr('action');
+        const formData = new FormData(this);
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                toastr.success('Files uploaded successfully!');
+                $('#myUploadsSection').html(response.html);
+                form[0].reset();
+            },
+            error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    $.each(xhr.responseJSON.errors, function(key, messages) {
+                        messages.forEach(function(message) {
+                            toastr.error(message, 'Error');
+                        });
+                    });
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    toastr.error(xhr.responseJSON.message, 'Error');
+                } else {
+                    toastr.error('An unexpected error occurred.', 'Error');
                 }
-            });
+            }
         });
+    });
 
     }); 
 

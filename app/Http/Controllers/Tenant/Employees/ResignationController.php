@@ -210,9 +210,9 @@ class ResignationController extends Controller
     public function uploadAttachments(Request $request, $id)
     {  
         $authUser = $this->authUser();
-
+        
         $request->validate([
-            'attachments.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120'
+            'attachments.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/gif|max:5120'
         ]);
 
         $resignation = Resignation::findOrFail($id);
