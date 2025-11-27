@@ -83,12 +83,11 @@ class ResignationController extends Controller
                 ], 400);
             }
 
-
             $request->validate([
-                'resignation_letter' => 'required|mimes:pdf,doc,docx|mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120',
+                'resignation_letter' => 'required|mimes:pdf,doc,docx,jpeg,jpg,png,gif|mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/gif|max:5120',
                 'resignation_reason' => 'nullable|string|max:500',
             ]);
-
+ 
             $fileName = time() . '_' . $request->file('resignation_letter')->getClientOriginalName();
             $request->file('resignation_letter')->move(public_path('storage/resignation_letters'), $fileName);
 
@@ -160,7 +159,7 @@ class ResignationController extends Controller
         $resignation = Resignation::findOrFail($id);
 
         $request->validate([
-            'resignation_letter' => 'nullable|mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120',
+            'resignation_letter' => 'nullable|mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/gif|max:5120',
             'resignation_reason' => 'nullable|string|max:500',
         ]);
 

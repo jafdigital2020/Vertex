@@ -599,8 +599,9 @@
                     <div class="modal-body"> 
                         <div class="mb-3">
                             <label class="form-label">Resignation Letter</label>
-                            <input type="file" class="form-control" name="resignation_letter" id="resignation_letter"
-                                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"> 
+                           <input type="file" class="form-control" name="resignation_letter" id="resignation_letter"
+                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                                    image/*"> 
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Reason (optional)</label>
@@ -657,9 +658,8 @@
 
                     <div class="mb-3">
                         <label class="form-label">Resignation Letter</label>
-                       <input type="file" class="form-control" name="resignation_letter" id="edit_resignation_letter"
-                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-
+                        <input type="file" class="form-control" name="resignation_letter" id="edit_resignation_letter"
+                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"> 
                         <small class="text-muted d-block mt-1" id="current_file_info"></small>
                     </div>
 
@@ -775,15 +775,36 @@
         if (fileExtension === 'pdf') {
             iframe.src = fileUrl;
             iframe.style.display = 'block';
+            wordNotice.classList.add('d-none');  
+            const existingImg = document.getElementById('image-preview');
+            if (existingImg) existingImg.remove();
         } else if (fileExtension === 'doc' || fileExtension === 'docx') {
+            const existingImg = document.getElementById('image-preview');
+            if (existingImg) existingImg.remove();
             wordNotice.classList.remove('d-none');
             wordNotice.innerHTML = `
                 <p>This file cannot be previewed directly. Click below to open it in a new tab:</p>
                 <a href="${fileUrl}" target="_blank" class="btn btn-primary">Open Document</a>
             `;
+            iframe.style.display = 'none';
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+            const imgPreview = document.createElement('img');
+            imgPreview.src = fileUrl;
+            imgPreview.style.maxWidth = '100%';
+            imgPreview.style.height = 'auto';
+            wordNotice.classList.add('d-none');  
+            iframe.style.display = 'none'; 
+            const existingImg = document.getElementById('image-preview');
+            if (existingImg) existingImg.remove();
+            imgPreview.id = 'image-preview';
+            iframe.parentNode.insertBefore(imgPreview, iframe.nextSibling);
         } else {
+            const existingImg = document.getElementById('image-preview');
+            if (existingImg) existingImg.remove();
             wordNotice.classList.remove('d-none');
             wordNotice.innerHTML = `<p>Unsupported file format. <a href="${fileUrl}" target="_blank">Download file</a></p>`;
+            iframe.style.display = 'none';
+            
         }
  
         if (reason && reason.trim() !== '') {
