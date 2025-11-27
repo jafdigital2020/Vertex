@@ -1193,7 +1193,29 @@ class LicenseOverageService
         // Calculate implementation fee difference
         $currentImplementationFeePaid = $subscription->implementation_fee_paid ?? 0;
         $newImplementationFee = $newPlan->implementation_fee ?? 0;
-        $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+
+        // ✅ FIXED: For Free → Starter upgrades, only charge implementation fee if user count >= 10
+        $isFreePlan = stripos($currentPlan->name, 'Free') !== false;
+        $isStarterPlan = stripos($newPlan->name, 'Starter') !== false;
+
+        if ($isFreePlan && $isStarterPlan) {
+            // Get current user count
+            $currentUserCount = User::where('tenant_id', $subscription->tenant_id)
+                ->where('active_license', true)
+                ->count();
+
+            // Only charge implementation fee if currently at 10+ users
+            // Starter plan base includes 10 users, so implementation fee is only for 11+
+            if ($currentUserCount >= 10) {
+                $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+            } else {
+                // User count is under 10, no implementation fee needed yet
+                $implementationFeeDifference = 0;
+            }
+        } else {
+            // For all other plan upgrades, calculate normally
+            $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+        }
 
         // Calculate plan price difference
         $currentPlanPrice = $currentPlan->price ?? 0;
@@ -1297,7 +1319,38 @@ class LicenseOverageService
         return $availablePlans->map(function($plan) use ($subscription, $currentPlan, $currentUserCount) {
             $currentImplementationFeePaid = $subscription->implementation_fee_paid ?? 0;
             $newImplementationFee = $plan->implementation_fee ?? 0;
-            $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+
+            // ✅ FIXED: Implementation fee logic for Starter Plan
+            // Check if upgrading from Free Plan to Starter Plan
+            $isFreePlan = stripos($currentPlan->name, 'Free') !== false;
+            $isStarterPlan = stripos($plan->name, 'Starter') !== false;
+
+            // Implementation fee difference calculation
+            if ($isFreePlan && $isStarterPlan) {
+                // ✅ For Free -> Starter: Only charge implementation fee if user count will exceed 10
+                // Starter plan includes 10 base licenses, so implementation fee is only needed
+                // when the user count exceeds this base limit
+
+                // Note: $currentUserCount represents current active users
+                // During upgrade flow, this might be called when:
+                // 1. User manually clicks "Upgrade Plan" button - currentUserCount is actual count
+                // 2. User tries to add employee beyond limit - currentUserCount doesn't include the new user yet
+
+                // The implementation fee for Starter should ONLY be charged if the tenant
+                // currently has or will have MORE than 10 users total
+                if ($currentUserCount >= 10) {
+                    // Already at or exceeding 10 users, implementation fee is required
+                    $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+                } else {
+                    // User count is still under 10, no implementation fee yet
+                    // They can upgrade to Starter without paying implementation fee
+                    // Implementation fee will be charged later when they try to exceed 10 users
+                    $implementationFeeDifference = 0;
+                }
+            } else {
+                // For all other plan combinations, calculate normally
+                $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+            }
 
             $currentPlanPrice = $currentPlan->price ?? 0;
             $newPlanPrice = $plan->price ?? 0;
