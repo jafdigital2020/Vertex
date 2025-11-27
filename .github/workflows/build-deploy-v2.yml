@@ -483,26 +483,28 @@ jobs:
             SUBS_SEEDER_PATH="database/seeders/SubscriptionsTableSeeder.php"
 
             # For now, we'll calculate the plan ID based on the pattern:
-            # Starter monthly=1, Core monthly=2, Pro monthly=3, Elite monthly=4
-            # Starter yearly=5, Core yearly=6, Pro yearly=7, Elite yearly=8
-            if [ "$SELECTED_PLAN" = "starter" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+            # Free=1, Starter monthly=2, Core monthly=3, Pro monthly=4, Elite monthly=5
+            # Starter yearly=6, Core yearly=7, Pro yearly=8, Elite yearly=9
+            if [ "$SELECTED_PLAN" = "free" ]; then
               PLAN_ID=1
-            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+            elif [ "$SELECTED_PLAN" = "starter" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
               PLAN_ID=2
-            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
               PLAN_ID=3
-            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
               PLAN_ID=4
-            elif [ "$SELECTED_PLAN" = "starter" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
               PLAN_ID=5
-            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+            elif [ "$SELECTED_PLAN" = "starter" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
               PLAN_ID=6
-            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
               PLAN_ID=7
-            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
               PLAN_ID=8
+            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+              PLAN_ID=9
             else
-              PLAN_ID=1 # default Starter monthly
+              PLAN_ID=2 # default Starter monthly
             fi
 
             # Update SubscriptionsTableSeeder with the matching plan_id
