@@ -848,12 +848,64 @@ class LicenseOverageService
             ->count();
 
         $planName = $subscription->plan->name;
+        $isFreePlan = stripos($planName, 'Free') !== false;
         $isStarterPlan = stripos($planName, 'Starter') !== false;
         $implementationFeePaid = $subscription->implementation_fee_paid ?? 0;
         $planImplementationFee = $subscription->plan->implementation_fee ?? 0;
 
         // Check if adding user (current + 1)
         $newUserCount = $currentActiveUsers + 1;
+
+        // FREE PLAN LOGIC - No overage allowed, must upgrade after 2 users
+        if ($isFreePlan) {
+            $freePlanLimit = $subscription->plan->employee_limit ?? 2; // Should be 2
+
+            // If trying to add 3rd user, require upgrade
+            if ($newUserCount > $freePlanLimit) {
+                $recommendedPlan = $this->getRecommendedUpgradePlan($subscription);
+                $availablePlans = $this->getAvailableUpgradePlans($subscription);
+
+                // Mark recommended plan
+                $availablePlans = $availablePlans->map(function($plan) use ($recommendedPlan) {
+                    if ($recommendedPlan && $plan['id'] === $recommendedPlan['id']) {
+                        $plan['is_recommended'] = true;
+                    }
+                    return $plan;
+                });
+
+                return [
+                    'status' => 'upgrade_required',
+                    'message' => 'Free Plan allows only up to ' . $freePlanLimit . ' employees. Please upgrade to add more users.',
+                    'data' => [
+                        'current_users' => $currentActiveUsers,
+                        'new_user_count' => $newUserCount,
+                        'current_plan' => $planName,
+                        'current_plan_id' => $subscription->plan_id,
+                        'current_plan_limit' => $freePlanLimit,
+                        'recommended_plan' => $recommendedPlan,
+                        'available_plans' => $availablePlans->toArray(),
+                        'current_implementation_fee_paid' => 0,
+                        'billing_cycle' => $subscription->billing_cycle,
+                        'current_billing_cycle' => $subscription->billing_cycle,
+                        'requires_upgrade' => true,
+                        'is_free_plan' => true
+                    ]
+                ];
+            }
+
+            // Within Free Plan limit - user can be added
+            return [
+                'status' => 'ok',
+                'message' => 'User can be added within Free Plan limit',
+                'data' => [
+                    'current_users' => $currentActiveUsers,
+                    'new_user_count' => $newUserCount,
+                    'current_plan' => $planName,
+                    'current_plan_limit' => $freePlanLimit,
+                    'within_free_plan_limit' => true
+                ]
+            ];
+        }
 
         // STARTER PLAN LOGIC
         if ($isStarterPlan) {
@@ -1218,6 +1270,13 @@ class LicenseOverageService
     /**
      * Get available upgrade plans for the current subscription
      */
+    /**
+     * Get available upgrade plans for a subscription
+     * Includes plans from both monthly and yearly billing cycles to allow switching
+     *
+     * For Free Plan upgrades:
+     * - Shows all paid plans (Starter, Core, Pro, Elite) since employee_minimum > 2
+     */
     public function getAvailableUpgradePlans($subscription)
     {
         $currentPlan = $subscription->plan;
@@ -1228,6 +1287,7 @@ class LicenseOverageService
 
         // ✅ Get plans for BOTH monthly and yearly billing cycles
         // This allows users to switch billing cycles during upgrade
+        // For Free Plan (employee_limit = 2), this will return Starter and above
         $availablePlans = Plan::where('employee_minimum', '>', $currentPlan->employee_limit)
             ->where('is_active', true)
             ->orderBy('employee_minimum', 'asc')
@@ -1272,6 +1332,9 @@ class LicenseOverageService
     /**
      * Get recommended upgrade plan (next tier based on employee_minimum)
      * Prefers same billing cycle but allows switching
+     *
+     * For Free Plan:
+     * - Recommends Starter Monthly Plan as the natural next step
      */
     public function getRecommendedUpgradePlan($subscription)
     {
@@ -1282,6 +1345,7 @@ class LicenseOverageService
             ->count();
 
         // ✅ First try to get next plan with SAME billing cycle (preferred)
+        // For Free Plan (employee_limit = 2), this will recommend Starter Plan
         $nextPlan = Plan::where('billing_cycle', $billingCycle)
             ->where('employee_minimum', '>', $currentPlan->employee_limit)
             ->where('is_active', true)
@@ -1327,10 +1391,11 @@ class LicenseOverageService
     }
 
     /**
-     * Get plan tier name from plan name (Starter, Core, Pro, Elite)
+     * Get plan tier name from plan name (Free, Starter, Core, Pro, Elite)
      */
     private function getPlanTier($planName)
     {
+        if (stripos($planName, 'Free') !== false) return 'Free';
         if (stripos($planName, 'Starter') !== false) return 'Starter';
         if (stripos($planName, 'Core') !== false) return 'Core';
         if (stripos($planName, 'Pro') !== false) return 'Pro';

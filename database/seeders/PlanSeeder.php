@@ -13,6 +13,24 @@ class PlanSeeder extends Seeder
      */
     public function run(): void
     {
+        // Free Plan - No billing cycle needed
+        Plan::create([
+            'name' => 'Free Plan',
+            'description' => 'Free plan for up to 2 employees.',
+            'price' => 0.00,
+            'currency' => 'PHP',
+            'billing_cycle' => 'monthly', // Set to monthly as default
+            'employee_minimum' => 1,
+            'employee_limit' => 2,
+            'employee_price' => 0.00,
+            'trial_days' => 0,
+            'is_active' => true,
+            'price_per_license' => 0.00,
+            'implementation_fee' => 0.00,
+            'vat_percentage' => 12,
+            'base_license_count' => 2,
+        ]);
+
         // Monthly Plans
         Plan::create([
             'name' => 'Starter Monthly Plan',
