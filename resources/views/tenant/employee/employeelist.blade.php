@@ -1350,66 +1350,88 @@
                     </div>
 
                     <div class="row mb-4">
-                        <div class="col-xl-4 col-md-6">
-                            <div class="card bg-pink-img">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-shrink-0 me-2">
-                                                <span
-                                                    class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                                    <i class="ti ti-package text-pink fs-18"></i>
-                                                </span>
-                                            </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #0f8b8d 0%, #0b6b67 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Current Plan</p>
+                                        <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:20px;">
+                                            <span id="upgrade_current_plan_name">-</span>
+                                        </h2>
+                                        <small class="text-white-75" id="upgrade_current_plan_limit">-</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-package" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <div class="text-end">
-                                            <p class="mb-1">Current Plan</p>
-                                            <h4 id="upgrade_current_plan_name">-</h4>
-                                            <small class="text-muted" id="upgrade_current_plan_limit">-</small>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-package" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-xl-4 col-md-6">
-                            <div class="card bg-yellow-img">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-shrink-0 me-2">
-                                                <span
-                                                    class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                                    <i class="ti ti-users text-warning fs-18"></i>
-                                                </span>
-                                            </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #0f8b8d 0%, #0b6b67 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">Current Active Users</p>
+                                        <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:20px;">
+                                            <span id="upgrade_current_users">-</span>
+                                        </h2>
+                                        <small class="text-white-75">Active users</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-users" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <div class="text-end">
-                                            <p class="mb-1">Current Active Users</p>
-                                            <h4 id="upgrade_current_users">-</h4>
-                                            <small class="text-muted">Active users</small>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-users" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-xl-4 col-md-6">
-                            <div class="card bg-blue-img">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-shrink-0 me-2">
-                                                <span
-                                                    class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
-                                                    <i class="ti ti-user-plus text-info fs-18"></i>
-                                                </span>
-                                            </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card text-white position-relative overflow-hidden"
+                                style="border-radius:10px; background: linear-gradient(135deg, #0f8b8d 0%, #0b6b67 100%); min-height:120px;">
+                                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                                    <div class="me-3" style="z-index:3;">
+                                        <p class="fs-12 fw-medium mb-1 text-white-75">After Adding New User</p>
+                                        <h2 class="mb-1 fw-bold text-white mt-3" style="font-size:20px;">
+                                            <span id="upgrade_new_user_count">-</span>
+                                        </h2>
+                                        <small class="text-white-75">Total users</small>
+                                    </div>
+
+                                    <!-- Right icon circle group -->
+                                    <div style="position:relative; width:110px; height:110px; flex-shrink:0; z-index:2;">
+                                        <div
+                                            style="position:absolute; width:140px; height:140px; right:-40px; top:-30px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="ti ti-users" style="font-size:90px; color:rgba(255,255,255,0.07);"></i>
                                         </div>
-                                        <div class="text-end">
-                                            <p class="mb-1">After Adding New User</p>
-                                            <h4 id="upgrade_new_user_count">-</h4>
-                                            <small class="text-muted">Total users</small>
+                                        <div
+                                            style="position:absolute; right:-45px; bottom:-45px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; z-index:4;">
+                                            <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                                <i class="ti ti-users" style="font-size:20px;color:rgba(255,255,255,0.95);"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1470,27 +1492,27 @@
                                         <!-- Implementation Fee Difference (conditionally shown) -->
                                         <div id="summary_impl_fee_row" style="display: none;">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <small class="text-muted">Implementation Fee Difference</small>
+                                                <small class="text-white">Implementation Fee Difference</small>
                                                 <span class="fw-medium" id="summary_impl_fee_difference">-</span>
                                             </div>
                                         </div>
 
                                         <!-- Plan Price Difference -->
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <small class="text-muted">Plan Price Difference</small>
+                                            <small class="text-white">Plan Price Difference</small>
                                             <span class="fw-medium" id="summary_plan_price_difference">-</span>
                                         </div>
 
                                         <!-- Subtotal -->
                                         <div
                                             class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                                            <small class="text-muted">Subtotal</small>
+                                            <small class="text-white">Subtotal</small>
                                             <span class="fw-medium" id="summary_subtotal">-</span>
                                         </div>
 
                                         <!-- VAT -->
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <small class="text-muted">VAT (<span
+                                            <small class="text-white">VAT (<span
                                                     id="summary_vat_percentage">12</span>%)</small>
                                             <span class="fw-medium" id="summary_vat_amount">-</span>
                                         </div>
@@ -1498,10 +1520,10 @@
                                         <!-- Total -->
                                         <div class="border-top pt-2">
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <span class="fw-semibold text-dark">Total Amount Due:</span>
+                                                <span class="fw-semibold text-white">Total Amount Due:</span>
                                                 <h4 class="text-success fw-bold mb-0" id="summary_total_amount">-</h4>
                                             </div>
-                                            <small class="text-muted opacity-75">Implementation fee + plan price
+                                            <small class="text-white opacity-75">Implementation fee + plan price
                                                 difference + VAT</small>
                                         </div>
                                     </div>
