@@ -87,7 +87,15 @@ class AttendanceEmployeeController extends Controller
         ]);
     }
 
-    // Employee attendance index
+    /**
+     * Display the employee's attendance records and summary.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "11/01/2025 - 11/27/2025"
+     * @queryParam status string Optional. Filter attendance by status (e.g., "present", "late", "absent").
+     *
+     * Returns attendance records, summary statistics, shift assignments, and subscription status for the authenticated employee.
+     */
     public function employeeAttendanceIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -460,7 +468,30 @@ class AttendanceEmployeeController extends Controller
         );
     }
 
-    // Clock IN
+    /**
+     * Clock in for the current shift or rest day.
+     *
+     * Allows an employee to clock in for their assigned shift or rest day, with support for geotagging, geofencing, photo capture, and late reason.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @bodyParam clock_in_method string Optional. Device or method used for clock-in. Example: "Timora Mobile App"
+     * @bodyParam time_in_photo file Optional. Photo for clock-in (required if photo capture is enabled).
+     * @bodyParam time_in_latitude float Optional. Latitude for geotagging (required if geotagging/geofencing is enabled). Example: 14.5995
+     * @bodyParam time_in_longitude float Optional. Longitude for geotagging (required if geotagging/geofencing is enabled). Example: 120.9842
+     * @bodyParam time_in_accuracy float Optional. Location accuracy in meters. Example: 5.0
+     * @bodyParam late_status_reason string Optional. Reason for being late (required if late status box is enabled and user is late).
+     *
+     * @response 200 {
+     *   "message": "Clock-In successful for Morning Shift",
+     *   "data": { "attendance_id": 123, ... }
+     * }
+     * @response 403 {
+     *   "message": "Your 7-day trial period has ended. Please contact your administrator."
+     * }
+     * @response 422 {
+     *   "message": "Photo is required before clock-in."
+     * }
+     */
     public function employeeAttendanceClockIn(Request $request)
     {
         $user = Auth::user();
@@ -943,7 +974,35 @@ class AttendanceEmployeeController extends Controller
         return $earthRadius * $c;
     }
 
-    // BREAK IN START A BREAK
+    /**
+     * Start a break for the current shift.
+     *
+     * Allows an employee to start a break during their active shift. Only one break is allowed per shift.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @bodyParam break_type string Optional. Type of break (e.g., "lunch", "rest"). Example: "lunch"
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Break started successfully for Morning Shift.",
+     *   "data": {
+     *     "attendance_id": 123,
+     *     "shift_id": 1,
+     *     "shift_name": "Morning Shift",
+     *     "break_type": "lunch",
+     *     "break_in": "12:00:00",
+     *     "max_break_minutes": 60
+     *   }
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You must be clocked in to start a break."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You have already completed your break for this shift. Only one break is allowed per shift."
+     * }
+     */
     public function breakIn(Request $request)
     {
         $user = Auth::user();
@@ -1022,7 +1081,32 @@ class AttendanceEmployeeController extends Controller
         ]);
     }
 
-    // BREAK OUT END A BREAK
+    /**
+     * End a break for the current shift.
+     *
+     * Allows an employee to end their active break during the current shift. Calculates break duration and flags if the break exceeded the allowed time.
+     *
+     * @param \Illuminate\Http\Request $request
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Break ended successfully for Morning Shift.",
+     *   "data": {
+     *     "attendance_id": 123,
+     *     "shift_id": 1,
+     *     "shift_name": "Morning Shift",
+     *     "break_in": "12:00:00",
+     *     "break_out": "12:45:00",
+     *     "duration_minutes": 45,
+     *     "break_late_minutes": 15,
+     *     "max_break_minutes": 30
+     *   }
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "No active break found for your current shift."
+     * }
+     */
     public function breakOut(Request $request)
     {
         $user = Auth::user();
@@ -1276,7 +1360,38 @@ class AttendanceEmployeeController extends Controller
         return $overtime;
     }
 
-    // Clock OUT
+    /**
+     * Clock out for the current shift.
+     *
+     * Allows an employee to clock out for their active shift, with support for geotagging, geofencing, photo capture, and automatic overtime calculation.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @bodyParam shift_id integer Optional. The shift ID to clock out from. Example: 1
+     * @bodyParam time_out_photo file Required if photo capture is enabled. Photo for clock-out.
+     * @bodyParam time_out_latitude float Required if geotagging/geofencing is enabled. Latitude for geotagging. Example: 14.5995
+     * @bodyParam time_out_longitude float Required if geotagging/geofencing is enabled. Longitude for geotagging. Example: 120.9842
+     * @bodyParam time_out_accuracy float Optional. Location accuracy in meters. Example: 5.0
+     * @bodyParam clock_out_method string Optional. Device or method used for clock-out. Example: "Timora Mobile App"
+     *
+     * @response 200 {
+     *   "message": "You have successfully clocked out.",
+     *   "data": { "attendance_id": 123, ... },
+     *   "overtime_created": {
+     *     "overtime_id": 456,
+     *     "total_ot_minutes": 90,
+     *     "total_ot_formatted": "1 hr 30 min",
+     *     "status": "pending",
+     *     "is_rest_day": false,
+     *     "is_holiday": false
+     *   }
+     * }
+     * @response 403 {
+     *   "message": "We could not find your clock-in record. Please make sure you have clocked in before trying to clock out."
+     * }
+     * @response 422 {
+     *   "message": "A photo is required to clock out. Please upload your photo and try again."
+     * }
+     */
     public function employeeAttendanceClockOut(Request $request)
     {
         // Validate input with user-friendly messages
@@ -1762,7 +1877,34 @@ class AttendanceEmployeeController extends Controller
         ]);
     }
 
-    // Request Attendance Index
+    /**
+     * Display the employee's attendance requests and summary.
+     *
+     * Shows the authenticated employee's attendance requests for the last 30 days, including summary statistics and approver information.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "11/01/2025 - 11/27/2025"
+     * @queryParam status string Optional. Filter requests by status (e.g., "pending", "approved", "rejected").
+     *
+     * @response 200 {
+     *   "status": true,
+     *   "message": "Request Attendance Employee Index",
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "request_date": "2025-11-01",
+     *       "request_date_in": "2025-11-01 08:00:00",
+     *       "request_date_out": "2025-11-01 17:00:00",
+     *       "total_request_minutes": 540,
+     *       "total_request_nd_minutes": 60,
+     *       "reason": "Forgot to clock in",
+     *       "status": "pending",
+     *       "lastApproverName": "Juan Dela Cruz",
+     *       "lastApproverDept": "HR"
+     *     }
+     *   ]
+     * }
+     */
     public function requestAttendanceIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -2090,22 +2232,20 @@ class AttendanceEmployeeController extends Controller
         );
     }
 
-    // Request Attendance Employee Notification 
- 
+    // Request Attendance Employee Notification
     public function sendRequestAttendanceNotificationToApprover($authUser, $request_date)
-    {   
+    {
         $employment = $authUser->employmentDetail;
         $reportingToId = optional($employment)->reporting_to;
         $branchId = optional($employment)->branch_id;
 
         $requestor = trim(optional($authUser->personalInformation)->first_name . ' ' .
-                        optional($authUser->personalInformation)->last_name);
+            optional($authUser->personalInformation)->last_name);
 
-        $notifiedUser = null; 
+        $notifiedUser = null;
         if ($reportingToId) {
             $notifiedUser = User::find($reportingToId);
-        } 
-        else { 
+        } else {
             $steps = RequestAttendanceApproval::stepsForBranch($branchId);
             $firstStep = $steps->first();
 
@@ -2117,7 +2257,6 @@ class AttendanceEmployeeController extends Controller
                     if ($departmentHeadId) {
                         $notifiedUser = User::find($departmentHeadId);
                     }
-
                 } elseif ($firstStep->approver_kind === 'user') {
                     $approverUserId = $firstStep->approver_user_id;
 
@@ -2126,16 +2265,58 @@ class AttendanceEmployeeController extends Controller
                     }
                 }
             }
-        } 
+        }
         if ($notifiedUser) {
             $message = "New attendance request from {$requestor}: {$request_date}. Pending your approval.";
             $notifiedUser->notify(new UserNotification($message));
         }
     }
 
-    // Request Attendance (Create/Store)
+    /**
+     * Submit a new attendance request.
+     *
+     * Allows an employee to submit an attendance request for a specific date, including clock-in/out times, break minutes, night differential, reason, and optional file attachment.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @bodyParam request_date date required The date for the attendance request. Example: "2025-11-01"
+     * @bodyParam request_date_in datetime required Clock-in date and time. Example: "2025-11-01 08:00:00"
+     * @bodyParam request_date_out datetime required Clock-out date and time. Must be after clock-in. Example: "2025-11-01 17:00:00"
+     * @bodyParam total_break_minutes integer Optional. Total break minutes. Example: 60
+     * @bodyParam total_request_minutes integer required Total work minutes for this request. Example: 480
+     * @bodyParam total_request_nd_minutes integer Optional. Night differential minutes. Example: 60
+     * @bodyParam reason string Optional. Reason for the attendance request. Example: "Forgot to clock in"
+     * @bodyParam file_attachment file Optional. Supporting document or file (max 2MB).
+     *
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Attendance request submitted successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "request_date": "2025-11-01",
+     *     "request_date_in": "2025-11-01 08:00:00",
+     *     "request_date_out": "2025-11-01 17:00:00",
+     *     "total_break_minutes": 60,
+     *     "total_request_minutes": 480,
+     *     "total_request_nd_minutes": 60,
+     *     "reason": "Forgot to clock in",
+     *     "file_attachment": "attendance_attachments/xyz.pdf"
+     *   }
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "Global administrators are not authorized to submit attendance requests."
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Invalid user session. Please log in again."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Please select a date for your attendance request."
+     * }
+     */
     public function requestAttendance(Request $request)
-    {   
+    {
 
         $authUser = $this->authUser();
         // ✅ Block Global admin / global guard users
@@ -2232,7 +2413,7 @@ class AttendanceEmployeeController extends Controller
         $attendance->save();
 
         $this->sendRequestAttendanceNotificationToApprover($authUser, $input['request_date']);
- 
+
 
         // ✅ Optional: Log the action
         UserLog::create([
@@ -2253,7 +2434,46 @@ class AttendanceEmployeeController extends Controller
         ], 201);
     }
 
-    // Request Attendance (Edit/Update)
+    /**
+     * Edit an existing attendance request.
+     *
+     * Allows an employee to update an existing attendance request, including clock-in/out times, break minutes, night differential, reason, and optional file attachment. Approved requests cannot be edited.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id The ID of the attendance request to edit.
+     * @bodyParam request_date date required The date for the attendance request. Example: "2025-11-01"
+     * @bodyParam request_date_in datetime required Clock-in date and time. Example: "2025-11-01 08:00:00"
+     * @bodyParam request_date_out datetime required Clock-out date and time. Must be after clock-in. Example: "2025-11-01 17:00:00"
+     * @bodyParam total_break_minutes integer Optional. Total break minutes. Example: 60
+     * @bodyParam total_request_minutes integer required Total work minutes for this request. Example: 480
+     * @bodyParam total_request_nd_minutes integer Optional. Night differential minutes. Example: 60
+     * @bodyParam reason string Optional. Reason for the attendance request. Example: "Forgot to clock in"
+     * @bodyParam file_attachment file Optional. Supporting document or file (max 2MB).
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Attendance request updated successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "request_date": "2025-11-01",
+     *     "request_date_in": "2025-11-01 08:00:00",
+     *     "request_date_out": "2025-11-01 17:00:00",
+     *     "total_break_minutes": 60,
+     *     "total_request_minutes": 480,
+     *     "total_request_nd_minutes": 60,
+     *     "reason": "Forgot to clock in",
+     *     "file_attachment": "attendance_attachments/xyz.pdf"
+     *   }
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "Approved attendance requests cannot be edited."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation error message."
+     * }
+     */
     public function requestAttendanceEdit(Request $request, $id)
     {
         $attendance = RequestAttendance::findOrFail($id);
@@ -2348,7 +2568,26 @@ class AttendanceEmployeeController extends Controller
         ], 200);
     }
 
-    // Request Attendance (Delete)
+    /**
+     * Delete an attendance request.
+     *
+     * Allows an employee to delete an existing attendance request. Approved requests cannot be deleted. Deletes any attached file as well.
+     *
+     * @param int $id The ID of the attendance request to delete.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Attendance request deleted successfully."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "Approved attendance requests cannot be deleted."
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Attendance request not found."
+     * }
+     */
     public function requestAttendanceDelete($id)
     {
         $attendance = RequestAttendance::findOrFail($id);
