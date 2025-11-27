@@ -582,11 +582,24 @@
                 return;
             }
 
-            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() ||
-                '#064856';
+            // ✅ Determine column size based on number of plans
+            const planCount = filteredPlans.length;
+            const colClass = planCount >= 4 ? 'col-lg-3 col-md-6' : 'col-lg-4 col-md-6';
 
-            filteredPlans.forEach(plan => {
+            console.log(`📐 Using ${colClass} for ${planCount} plans`);
+
+            filteredPlans.forEach((plan, index) => {
                 const isRecommended = plan.is_recommended || false;
+
+                // Define color schemes for each plan tier (matching the reference image)
+                const planColors = {
+                    0: { header: '#52C480', headerText: 'white', badge: 'Best for Start Up!' },  // Green - Free/Starter
+                    1: { header: '#FDB913', headerText: 'white', badge: 'Best Value' },           // Yellow - Core
+                    2: { header: '#D16074', headerText: 'white', badge: 'Most Popular!' },        // Red - Pro
+                    3: { header: '#E57F7F', headerText: 'white', badge: 'Enterprise' }             // Coral - Elite
+                };
+
+                const colorScheme = planColors[index % 4] || planColors[0];
 
                 // Ensure all numeric values are valid numbers
                 const price = parseFloat(plan.price || 0);
@@ -600,116 +613,205 @@
                 const totalUpgradeCost = parseFloat(plan.total_upgrade_cost || 0);
 
                 const planCard = `
-                <div class="col-lg-4 col-md-6">
-                    <div class="card plan-option h-100 position-relative overflow-hidden ${isRecommended ? 'border-primary' : 'border-light'}"
+                <div class="${colClass}">
+                    <div class="card plan-option h-100 shadow-sm border-0"
                          data-plan-id="${plan.id}"
-                         style="cursor: pointer; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 16px; border-width: 2px; transform-origin: center;">
+                         style="cursor: pointer; transition: all 0.3s ease; border-radius: 12px; overflow: hidden;">
 
-
-
-                        <div class="card-body p-4 d-flex flex-column" style="min-height: 480px;">
-                            <!-- Plan Name & Icon -->
-                            <div class="text-center mb-4">
-                                <div class="position-relative d-inline-block mb-3">
-                                    <div class="avatar avatar-xl rounded-circle ${isRecommended ? 'bg-gradient' : 'bg-light'} d-flex align-items-center justify-content-center shadow-sm"
-                                         style="${isRecommended ? 'background: linear-gradient(135deg, ' + primaryColor + ' 0%, #064856 100%);' : ''} transition: all 0.3s ease;">
-                                        <i class="ti ti-package fs-2 ${isRecommended ? 'text-primary' : 'text-white'}"></i>
-                                    </div>
-                                    ${isRecommended ? '<div class="position-absolute top-0 start-100 translate-middle"><span class="badge bg-danger rounded-circle" style="width: 12px; height: 12px; padding: 0;"></span></div>' : ''}
-                                </div>
-                                <h4 class="fw-bold mb-2" style="color: #2c3e50; letter-spacing: -0.5px;">${plan.name}</h4>
-                                <p class="text-muted small mb-0" style="font-size: 0.85rem;">Perfect for growing teams</p>
+                        <!-- Colored Header with Badge -->
+                        <div class="position-relative" style="background: ${colorScheme.header}; padding: 1.25rem 1.5rem;">
+                            ${isRecommended ? `
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-white text-dark px-2 py-1" style="font-size: 0.7rem; font-weight: 600;">
+                                    <i class="ti ti-star-filled" style="color: ${colorScheme.header};"></i> Recommended
+                                </span>
                             </div>
+                            ` : `
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-white bg-opacity-25 text-white px-2 py-1" style="font-size: 0.7rem; font-weight: 600;">
+                                    ${colorScheme.badge}
+                                </span>
+                            </div>
+                            `}
 
-                            <!-- Pricing -->
-                            <div class="text-center mb-4 py-3 rounded-3" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
-                                <div class="d-flex align-items-baseline justify-content-center">
-                                    <span class="text-muted me-1" style="font-size: 1.1rem; font-weight: 500;">₱</span>
-                                    <h2 class="fw-bold mb-0" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem;">
+                            <!-- Plan Name with Icon -->
+                            <div class="d-flex align-items-center justify-content-between mt-3">
+                                <h4 class="fw-bold mb-0" style="color: ${colorScheme.headerText}; font-size: ${planCount >= 4 ? '1.3rem' : '1.5rem'};">
+                                    ${plan.name}
+                                </h4>
+                                <i class="ti ti-package" style="font-size: ${planCount >= 4 ? '1.8rem' : '2rem'}; color: ${colorScheme.headerText}; opacity: 0.9;"></i>
+                            </div>
+                            <p class="mb-0 mt-1" style="color: ${colorScheme.headerText}; opacity: 0.9; font-size: ${planCount >= 4 ? '0.75rem' : '0.85rem'};">
+                                Good for ${employeeLimit <= 20 ? 'Start Up' : employeeLimit <= 100 ? 'Micro-Small' : employeeLimit <= 200 ? 'Medium' : 'Large'} Businesses
+                            </p>
+                        </div>
+
+                        <div class="card-body p-${planCount >= 4 ? '3' : '4'} d-flex flex-column">
+                            <!-- Pricing Section -->
+                            <div class="text-center mb-${planCount >= 4 ? '3' : '4'} pb-${planCount >= 4 ? '3' : '4'}" style="border-bottom: 2px solid #f0f0f0;">
+                                <div class="d-flex align-items-start justify-content-center mb-2">
+                                    <span style="color: #1a1a1a; font-size: ${planCount >= 4 ? '1.5rem' : '1.8rem'}; font-weight: 700; margin-right: 4px;">₱</span>
+                                    <h2 class="fw-bold mb-0" style="color: #1a1a1a; font-size: ${planCount >= 4 ? '2.5rem' : '3rem'}; line-height: 1;">
                                         ${price.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
                                     </h2>
-                                    <span class="text-muted ms-2" style="font-size: 1rem;">/${plan.billing_cycle === 'monthly' ? 'mo' : 'yr'}</span>
                                 </div>
-                                <small class="text-muted" style="font-size: 0.8rem; font-weight: 500;">Billed ${plan.billing_cycle}</small>
+                                <p class="text-muted mb-0" style="font-size: ${planCount >= 4 ? '0.8rem' : '0.9rem'};">
+                                    ${price > 0 ? 'based price' : ''} ${plan.billing_cycle === 'monthly' ? '/month' : '/year'}
+                                </p>
                             </div>
 
-                            <!-- Features -->
-                            <div class="mb-4 flex-grow-1">
-                                <ul class="list-unstyled mb-0">
-                                    <li class="mb-3 d-flex align-items-start" style="transition: transform 0.2s ease;">
-                                        <div class="flex-shrink-0 me-3">
-                                            <span class="avatar avatar-xs rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);">
-                                                <i class="ti ti-users text-white fs-6"></i>
-                                            </span>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="mb-0 fw-semibold" style="color: #2c3e50; font-size: 0.95rem;">Up to ${employeeLimit} users</p>
-                                            <small class="text-muted" style="font-size: 0.8rem;">User capacity</small>
-                                        </div>
-                                    </li>
-                                    <li class="mb-3 d-flex align-items-start" style="transition: transform 0.2s ease;">
-                                        <div class="flex-shrink-0 me-3">
-                                            <span class="avatar avatar-xs rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);">
-                                                <i class="ti ti-coin text-white fs-6"></i>
-                                            </span>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="mb-0 fw-semibold" style="color: #2c3e50; font-size: 0.95rem;">₱${implementationFee.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-                                            <small class="text-muted" style="font-size: 0.8rem;">Implementation fee</small>
-                                        </div>
-                                    </li>
+                            <!-- GET STARTED Button -->
+                            <button class="btn w-100 py-2 rounded-3 fw-semibold mb-${planCount >= 4 ? '3' : '4'} select-plan-btn"
+                                    style="background: ${colorScheme.header}; color: white; border: none; font-size: ${planCount >= 4 ? '0.9rem' : '1rem'}; transition: all 0.3s ease;">
+                                GET STARTED
+                            </button>
 
+                            <!-- Employee Limit Badge -->
+                            <div class="text-center mb-${planCount >= 4 ? '3' : '4'}">
+                                <span class="badge px-3 py-2" style="background: rgba(${parseInt(colorScheme.header.slice(1,3), 16)}, ${parseInt(colorScheme.header.slice(3,5), 16)}, ${parseInt(colorScheme.header.slice(5,7), 16)}, 0.15); color: ${colorScheme.header}; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'}; font-weight: 600;">
+                                    <i class="ti ti-users me-1"></i> Up to ${employeeLimit} Employees
+                                </span>
+                            </div>
+
+                            <!-- What's Included Section -->
+                            <div class="mb-${planCount >= 4 ? '3' : '4'}">
+                                <h6 class="fw-bold mb-3" style="color: #1a1a1a; font-size: ${planCount >= 4 ? '0.9rem' : '1rem'};">What's Included</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-check" style="color: ${colorScheme.header}; font-size: 1.1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #333; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'};">Creation of Portal</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.75rem; color: #999; cursor: help;" title="Your company portal will be created"></i>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-check" style="color: ${colorScheme.header}; font-size: 1.1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #333; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'};">${employeeLimit <= 20 ? '2 Days' : employeeLimit <= 100 ? '7 Days' : employeeLimit <= 200 ? '7 Days' : '14 Days'} Free Training</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.75rem; color: #999; cursor: help;" title="Free training period"></i>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-check" style="color: ${colorScheme.header}; font-size: 1.1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #333; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'};">Knowledge Base</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.75rem; color: #999; cursor: help;" title="Access to knowledge base"></i>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-check" style="color: ${colorScheme.header}; font-size: 1.1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #333; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'};">${employeeLimit >= 200 ? 'User Video Tutorial' : 'Lifetime Email Support'}</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.75rem; color: #999; cursor: help;" title="Support included"></i>
+                                        </div>
+                                    </li>
+                                    ${employeeLimit >= 200 ? `
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-check" style="color: ${colorScheme.header}; font-size: 1.1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #333; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'};">Lifetime Email & Call Support</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.75rem; color: #999; cursor: help;" title="Premium support"></i>
+                                        </div>
+                                    </li>
+                                    ` : ''}
+                                    ${employeeLimit >= 200 ? `
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-check" style="color: ${colorScheme.header}; font-size: 1.1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #333; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'};">Free ${employeeLimit >= 500 ? '2' : '1'} Biometrics Device${employeeLimit >= 500 ? 's' : ''}</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.75rem; color: #999; cursor: help;" title="Biometric devices included"></i>
+                                        </div>
+                                    </li>
+                                    ` : ''}
+                                    ${employeeLimit >= 500 ? `
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-check" style="color: ${colorScheme.header}; font-size: 1.1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #333; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'};">FREE Custom Company Logo</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.75rem; color: #999; cursor: help;" title="Custom branding included"></i>
+                                        </div>
+                                    </li>
+                                    ` : ''}
                                 </ul>
                             </div>
 
-                            <!-- Amount Due Breakdown -->
-                            <div class="rounded-3 p-3 mb-4 shadow-sm" style="background: linear-gradient(135deg, rgba(${parseInt(primaryColor.slice(1, 3), 16)}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(primaryColor.slice(5, 7), 16)}, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-left: 4px solid ${primaryColor};">
-                                <small class="text-muted d-block mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Upgrade Cost Breakdown</small>
-
-                                ${implementationFeeDiff > 0 ? `
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span class="text-muted" style="font-size: 0.85rem;">Implementation Fee Difference</span>
-                                                    <span class="fw-semibold" style="color: #2c3e50;">₱${implementationFeeDiff.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                                                </div>
-                                                ` : ''}
-
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="text-muted" style="font-size: 0.85rem;">Plan Price Difference</span>
-                                    <span class="fw-semibold" style="color: #2c3e50;">₱${planPriceDiff.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom: 1px dashed rgba(0,0,0,0.1);">
-                                    <span class="text-muted" style="font-size: 0.85rem;">Subtotal</span>
-                                    <span class="fw-semibold" style="color: #2c3e50;">₱${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="text-muted" style="font-size: 0.85rem;">VAT (${vatPercentage}%)</span>
-                                    <span class="fw-semibold" style="color: #2c3e50;">₱${vatAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Total Amount</small>
-                                        <h5 class="fw-bold mb-0" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                                            ₱${totalUpgradeCost.toLocaleString('en-US', {minimumFractionDigits: 2})}
-                                        </h5>
-                                    </div>
-                                    <i class="ti ti-arrow-up-right fs-3" style="color: ${primaryColor}; opacity: 0.3;"></i>
-                                </div>
+                            <!-- Available Add-Ons Section -->
+                            <div class="mt-auto">
+                                <h6 class="fw-bold mb-3" style="color: #1a1a1a; font-size: ${planCount >= 4 ? '0.9rem' : '1rem'};">Available Add-Ons</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-tool" style="color: #999; font-size: 1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #666; font-size: ${planCount >= 4 ? '0.8rem' : '0.85rem'};">Custom Company Logo</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.7rem; color: #999; cursor: help;"></i>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-device-mobile" style="color: #999; font-size: 1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #666; font-size: ${planCount >= 4 ? '0.8rem' : '0.85rem'};">Mobile App (iOS & Android)</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.7rem; color: #999; cursor: help;"></i>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-fingerprint" style="color: #999; font-size: 1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #666; font-size: ${planCount >= 4 ? '0.8rem' : '0.85rem'};">Biometrics Integration</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.7rem; color: #999; cursor: help;"></i>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-start mb-2">
+                                        <i class="ti ti-tool" style="color: #999; font-size: 1rem; margin-right: 0.5rem; margin-top: 2px;"></i>
+                                        <div>
+                                            <span style="color: #666; font-size: ${planCount >= 4 ? '0.8rem' : '0.85rem'};">Biometric Labor Installation</span>
+                                            <i class="ti ti-info-circle ms-1" style="font-size: 0.7rem; color: #999; cursor: help;"></i>
+                                        </div>
+                                    </li>
+                                </ul>
                             </div>
 
-                            <!-- Action Button -->
-                            <button class="btn w-100 py-2 rounded-3 shadow-sm fw-semibold select-plan-btn"
-                                    style="transition: all 0.3s ease; ${isRecommended ? 'background: linear-gradient(135deg, ' + primaryColor + ' 0%, #064856 100%); color: white; border: none;' : 'background: white; color: ' + primaryColor + '; border: 2px solid ' + primaryColor + ';'}">
-                                <i class="ti ti-check-circle me-2"></i>
-                                ${isRecommended ? 'Select This Plan' : 'Choose Plan'}
-                            </button>
+                            <!-- Cost Breakdown (Collapsible) -->
+                            <div class="mt-3 pt-3" style="border-top: 2px solid #f0f0f0;">
+                                <button class="btn btn-link w-100 text-start p-0 text-decoration-none d-flex align-items-center justify-content-between"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#costBreakdown${plan.id}"
+                                        style="color: #666; font-size: ${planCount >= 4 ? '0.85rem' : '0.9rem'};">
+                                    <span><i class="ti ti-receipt me-2"></i>View Upgrade Cost Breakdown</span>
+                                    <i class="ti ti-chevron-down"></i>
+                                </button>
+                                <div class="collapse mt-3" id="costBreakdown${plan.id}">
+                                    <div class="bg-light rounded-3 p-3">
+                                        ${implementationFeeDiff > 0 ? `
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span style="font-size: 0.85rem; color: #666;">Implementation Fee Diff.</span>
+                                            <span style="font-size: 0.85rem; font-weight: 600; color: #333;">₱${implementationFeeDiff.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                        </div>
+                                        ` : ''}
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span style="font-size: 0.85rem; color: #666;">Plan Price Difference</span>
+                                            <span style="font-size: 0.85rem; font-weight: 600; color: #333;">₱${planPriceDiff.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2 pb-2" style="border-bottom: 1px dashed #ddd;">
+                                            <span style="font-size: 0.85rem; color: #666;">Subtotal</span>
+                                            <span style="font-size: 0.85rem; font-weight: 600; color: #333;">₱${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span style="font-size: 0.85rem; color: #666;">VAT (${vatPercentage}%)</span>
+                                            <span style="font-size: 0.85rem; font-weight: 600; color: #333;">₱${vatAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center pt-2" style="border-top: 2px solid ${colorScheme.header};">
+                                            <span style="font-size: 0.9rem; font-weight: 700; color: #1a1a1a;">Total Upgrade Cost</span>
+                                            <span style="font-size: 1.1rem; font-weight: 700; color: ${colorScheme.header};">₱${totalUpgradeCost.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Selected State Overlay -->
-                        <div class="position-absolute top-0 start-0 w-100 h-100 border border-success rounded-3"
-                             style="opacity: 0; transition: opacity 0.3s ease; pointer-events: none; border-width: 3px !important; z-index: 5;"></div>
+                        <!-- Selected State Indicator -->
+                        <div class="position-absolute top-0 start-0 w-100 h-100"
+                             style="opacity: 0; transition: opacity 0.3s ease; pointer-events: none; border: 3px solid #28c76f; border-radius: 12px; z-index: 5;"></div>
                     </div>
                 </div>
             `;
@@ -723,14 +825,11 @@
         }
 
         function setupPlanCardHandlers(plans) {
-            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() ||
-                '#064856';
-
             // Add hover effects
             $('#available_plans_container').off('mouseenter mouseleave').on('mouseenter', '.plan-option', function() {
                 $(this).css({
                     'transform': 'translateY(-8px) scale(1.02)',
-                    'box-shadow': `0 20px 40px rgba(${parseInt(primaryColor.slice(1, 3), 16)}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(primaryColor.slice(5, 7), 16)}, 0.25)`
+                    'box-shadow': '0 20px 40px rgba(0, 0, 0, 0.15)'
                 });
             }).on('mouseleave', '.plan-option', function() {
                 if (!$(this).hasClass('selected-plan')) {
@@ -755,13 +854,13 @@
                     $('.plan-option').removeClass('selected-plan').css({
                         'transform': 'translateY(0) scale(1)',
                         'box-shadow': ''
-                    }).find('.position-absolute.border-success').css('opacity', '0');
+                    }).find('.position-absolute:last-child').css('opacity', '0');
 
                     // Add selection to clicked card
                     $(this).addClass('selected-plan').css({
                         'transform': 'translateY(-8px) scale(1.02)',
                         'box-shadow': '0 20px 40px rgba(40, 199, 111, 0.3)'
-                    }).find('.position-absolute.border-success').css('opacity', '1');
+                    }).find('.position-absolute:last-child').css('opacity', '1');
 
                     // Show confirmation dialog
                     showUpgradeConfirmation(plan);
