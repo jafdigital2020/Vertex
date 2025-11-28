@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('branch_addons', function (Blueprint $table) {
             $table->id();
-
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->foreignId('addon_id')->constrained()->onDelete('cascade');
+            $table->enum('feature_type', ['addon', 'upgrade'])->default('addon');
             $table->boolean('active')->default(true);
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();

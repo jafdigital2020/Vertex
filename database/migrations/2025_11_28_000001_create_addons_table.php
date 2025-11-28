@@ -17,8 +17,13 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('price', 10, 2);
             $table->enum('type', ['monthly', 'one_time', 'annually'])->default('monthly');
+            $table->enum('addon_category', ['addon', 'upgrade'])->default('addon');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->text('module_ids')->nullable();
+            $table->text('submodule_ids')->nullable();
+            $table->json('features')->nullable();
+            $table->string('icon')->nullable();
             $table->unique(['name']);
             $table->timestamps();
         });
