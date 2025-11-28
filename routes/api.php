@@ -467,8 +467,9 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('resignation.markCleared');
     Route::post('/resignation/remarks/mark-as-read/{id}', [ResignationController::class, 'markRemarksAsRead']);
     Route::post('/asset-remarks/hr/mark-as-read/{assetId}/{itemNo}', [ResignationController::class, 'HRassetmarkAsRead']);
-    Route::post('/resignations/{id}/undo-clearance', [ResignationController::class, 'undoClearance']);
-
+    Route::post('/resignations/{id}/undo-clearance', [ResignationController::class, 'undoClearance']); 
+    Route::post('/resignations/add-days', [ResignationController::class, 'addRenderingDays'])
+        ->name('addRenderingDays');
     // Custom OT Rate
     Route::get('/payroll/payroll-items/custom-ot-rate', [CustomOtRateController::class, 'otRateIndex'])->name('api.custom-ot-rate');
     Route::post('/payroll/payroll-items/custom-ot-rate', [CustomOtRateController::class, 'store'])->name('api.custom-ot-rate.store');

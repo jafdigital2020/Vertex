@@ -13,14 +13,16 @@
                                                     </button>
                                                 </td>  
                                                 <td>{{$resignation->accepted_date ?? '-'}}</td>    
-                                                 @php
-                                                    if ($resignation->resignation_date !== null) {
-                                                        $remainingDays = \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($resignation->resignation_date), false);
-                                                    } else {
-                                                        $remainingDays = null;
-                                                    }
-                                                @endphp
-
+                                                    @php
+                                                        if ($resignation->accepted_date !== null) { 
+                                                            $today = \Carbon\Carbon::today(); 
+                                                            $acceptedDate = \Carbon\Carbon::parse($resignation->accepted_date)->startOfDay(); 
+                                                            $remainingDays = ($resignation->added_rendering_days ?? 0) - $acceptedDate->diffInDays($today); 
+                                                            $remainingDays = $remainingDays < 0 ? 0 : $remainingDays;
+                                                        } else {
+                                                            $remainingDays = null;
+                                                        }
+                                                    @endphp 
                                                 <td>
                                                     @if ($remainingDays === null)
                                                         -
@@ -29,8 +31,14 @@
                                                     @else
                                                         0 days left
                                                     @endif
-                                                </td>
-
+                                                     @if($resignation->resignation_date !== null)
+                                                        <button class="btn btn-sm btn-primary add-rendering-days-btn" 
+                                                                data-id="{{ $resignation->id }}" 
+                                                                data-remaining="{{ $remainingDays }}">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button> 
+                                                    @endif
+                                                </td> 
                                                 <td>{{$resignation->resignation_date ?? '-'}}</td>
                                                    <td>
                                                     @if($resignation->status_remarks !== null || $resignation->accepted_remarks !== null)
@@ -134,8 +142,7 @@
                                                     @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 1 && $remainingDays <= 0 )
                                                     <span>Resigned</span> 
                                                     @endif
-                                                </td>
-                                             
+                                                </td> 
                                                 <td> 
                                                         @if($resignation->status === 1 && $resignation->accepted_by === null)
                                                         <button class="btn btn-primary btn-sm" onclick="openAcceptanceModal({{ $resignation->id }}, 'accept')">

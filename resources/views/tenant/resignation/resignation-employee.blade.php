@@ -106,13 +106,16 @@
                                                     </button>
                                                 </td>  
                                                 <td>{{$resignation->accepted_date ?? '-'}}</td>
-                                                 @php
-                                                    if ($resignation->resignation_date !== null) {
-                                                        $remainingDays = \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($resignation->resignation_date), false);
-                                                    } else {
-                                                        $remainingDays = null;
-                                                    }
-                                                @endphp
+                                                    @php
+                                                        if ($resignation->accepted_date !== null) { 
+                                                            $today = \Carbon\Carbon::today(); 
+                                                            $acceptedDate = \Carbon\Carbon::parse($resignation->accepted_date)->startOfDay(); 
+                                                            $remainingDays = ($resignation->added_rendering_days ?? 0) - $acceptedDate->diffInDays($today); 
+                                                            $remainingDays = $remainingDays < 0 ? 0 : $remainingDays;
+                                                        } else {
+                                                            $remainingDays = null;
+                                                        }
+                                                    @endphp 
                                                 <td>
                                                     @if ($remainingDays === null)
                                                         -
@@ -121,7 +124,7 @@
                                                     @else
                                                         0 days left
                                                     @endif
-                                                </td>
+                                                </td> 
                                                 <td>{{$resignation->resignation_date ?? '-'}}</td>   
                                                 <td>
                                                     @if($resignation->status_remarks !== null || $resignation->accepted_remarks !== null)
@@ -442,24 +445,10 @@
                                                                                      <td class="text-start">
                                                                                         {{ $asset->assets->name }} 
                                                                                         {{ $asset->order_no ? ' Item No. ' . $asset->order_no : '' }}
-                                                                                    </td>
-
-
+                                                                                    </td> 
                                                                                     <td>
-                                                                                        <select name="condition[{{ $asset->id }}]"
-                                                                                                class="form-select form-select-sm asset-condition"
-                                                                                                data-id="{{ $asset->id }}"
-                                                                                                onchange="checkCondition(this)"
-                                                                                                required>
-                                                                                            <option value="">Select</option>
-                                                                                            <option value="Brand New" {{ $asset->asset_condition == 'Brand New' ? 'selected' : '' }}>Brand New</option>
-                                                                                            <option value="Good Working Condition" {{ $asset->asset_condition == 'Good Working Condition' ? 'selected' : '' }}>Good Working Condition</option>
-                                                                                            <option value="Under Maintenance" {{ $asset->asset_condition == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
-                                                                                            <option value="Defective" {{ $asset->asset_condition == 'Defective' ? 'selected' : '' }}>Defective</option>
-                                                                                            <option value="Unservicable" {{ $asset->asset_condition == 'Unservicable' ? 'selected' : '' }}>Unservicable</option>
-                                                                                        </select>
-                                                                                    </td>
-
+                                                                                       {{$asset->asset_condition ?? ''}}
+                                                                                    </td> 
                                                                                     <td class="text-center">
                                                                                     <button type="button" 
                                                                                         class="btn btn-xs btn-primary position-relative"

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\EmploymentPersonalInformation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +19,7 @@ class Resignation extends Model
         'resignation_file',
         'reason',
         'resignation_date',  
+        'added_rendering_days',
         'status',
         'status_remarks',
         'status_date',
@@ -58,5 +60,13 @@ class Resignation extends Model
 
           return $this->hasMany( AssetsDetails::class, 'deployed_to', 'user_id');
     }
+   public function getRenderingDaysAttribute()
+    {
+        $today = Carbon::today();
+        $resignationDate = Carbon::parse($this->resignation_date); 
+        $extendedDate = $resignationDate->copy()->addDays($this->added_rendering_days ?? 0); 
+        $days = $today->diffInDays($extendedDate, false);
 
+        return $days < 0 ? 0 : $days;
+    }
 }

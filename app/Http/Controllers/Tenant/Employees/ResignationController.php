@@ -301,47 +301,42 @@ class ResignationController extends Controller
     public function saveEmployeeAssets(Request $request)
     {
         $authUser = $this->authUser(); 
-        $conditions = $request->input('condition', []);
         $statuses = $request->input('status', []);
-        $hasChanges = false;  
+        $hasChanges = false;
 
-        foreach ($conditions as $assetId => $condition) {
-            $status = $statuses[$assetId] ?? null;
+        foreach ($statuses as $assetId => $status) {
             $currentAsset = AssetsDetails::find($assetId);
 
             if (!$currentAsset) {
                 continue;
             }
 
-            $previousCondition = $currentAsset->asset_condition;
             $previousStatus = $currentAsset->status;
-    
-            if ($previousCondition === $condition && $previousStatus === $status) {
+ 
+            if ($previousStatus === $status) {
                 continue;
-            }
-    
-            $currentAsset->asset_condition = $condition;
+            } 
             $currentAsset->status = $status;
             $currentAsset->save();
-    
-            $assetDetailsHistory = new AssetsDetailsHistory();
-            $assetDetailsHistory->asset_detail_id = $currentAsset->id;
-            $assetDetailsHistory->item_no = $currentAsset->order_no;
-            $assetDetailsHistory->condition = $currentAsset->asset_condition;
-            $assetDetailsHistory->condition_remarks = null;
-            $assetDetailsHistory->status = $currentAsset->status;
-            $assetDetailsHistory->deployed_to = $currentAsset->deployed_to;
-            $assetDetailsHistory->deployed_date = $currentAsset->deployed_date;
-            $assetDetailsHistory->process = 'Updated asset condition/status';
-            $assetDetailsHistory->updated_by = $authUser->id ?? null;
-            $assetDetailsHistory->updated_at = now();
-            $assetDetailsHistory->created_by = $currentAsset->created_by;
-            $assetDetailsHistory->created_at = $currentAsset->created_at;
-            $assetDetailsHistory->save();
+ 
+            $history = new AssetsDetailsHistory();
+            $history->asset_detail_id = $currentAsset->id;
+            $history->item_no = $currentAsset->order_no; 
+            $history->condition = $currentAsset->asset_condition;
+            $history->condition_remarks = null; 
+            $history->status = $currentAsset->status;
+            $history->deployed_to = $currentAsset->deployed_to;
+            $history->deployed_date = $currentAsset->deployed_date;
+            $history->process = 'Updated asset status';
+            $history->updated_by = $authUser->id ?? null;
+            $history->updated_at = now();
+            $history->created_by = $currentAsset->created_by;
+            $history->created_at = $currentAsset->created_at;
+            $history->save();
 
-            $hasChanges = true;  
+            $hasChanges = true;
         }
-    
+
         if ($hasChanges) {
             $submodule_resignation_hr_ids = SubModule::whereIn('sub_module_name', [
                 'Resignation HR',
@@ -350,7 +345,7 @@ class ResignationController extends Controller
 
             if (!empty($submodule_resignation_hr_ids)) {
                 $userIds = UserPermission::where(function ($query) use ($submodule_resignation_hr_ids) {
-                    foreach ($submodule_resignation_hr_ids as $id) { 
+                    foreach ($submodule_resignation_hr_ids as $id) {
                         $query->orWhere('user_permission_ids', 'like', "%{$id}-%");
                     }
                 })
@@ -359,13 +354,13 @@ class ResignationController extends Controller
 
                 $users = User::whereIn('id', $userIds)->get();
 
-                if ($users->isNotEmpty()) { 
+                if ($users->isNotEmpty()) {
                     $requestorName = trim(
                         ($authUser->personalInformation->first_name ?? '') . ' ' .
                         ($authUser->personalInformation->last_name ?? '')
                     );
 
-                    $message = "{$requestorName} has updated the asset condition and status for their resignation clearance. Please review and validate.";
+                    $message = "{$requestorName} has updated the asset status for their resignation clearance. Please review and validate.";
                     Notification::send($users, new UserNotification($message));
                 }
             }
@@ -376,6 +371,7 @@ class ResignationController extends Controller
             'message' => 'Assets return form submitted successfully.',
         ]);
     }
+
 
     // save employee asset remarks
    public function saveRemark(Request $request)
@@ -979,9 +975,15 @@ class ResignationController extends Controller
                     'message' => 'Resignation must be approved by the department head/reporting to first.'
                 ], 400);
             }
-    
+
+            $resignationDate = Carbon::parse($request->resignation_date);
+            $today =  Carbon::today(); 
+            $renderingDays = $today->diffInDays($resignationDate, false); 
+            $renderingDays = $renderingDays < 0 ? 0 : $renderingDays;
+  
             $resignation->update([
-                'resignation_date' => $request->resignation_date,
+                'resignation_date' => $request->resignation_date, 
+                'added_rendering_days' => $renderingDays,
                 'accepted_date' => now(),
                 'accepted_by' => $authUser->id,
                 'accepted_remarks' => $request->accepted_remarks,
@@ -1038,6 +1040,27 @@ class ResignationController extends Controller
             ], 500);
         }
     }
+    // hr add extra rendering days  
+
+    public function addRenderingDays(Request $request)
+    {
+        $request->validate([
+            'resignation_id' => 'required|exists:resignations,id',
+            'extra_days' => 'required|integer|min:1',
+        ]);
+
+        $resignation = Resignation::findOrFail($request->resignation_id);
+
+        $resignation->added_rendering_days = ($resignation->added_rendering_days ?? 0) + $request->extra_days;
+        $resignation->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => $request->extra_days . ' days added successfully.',
+            'remaining_rendering_days' => $resignation->remaining_rendering_days,
+        ]);
+    }
+
 
 
     // upload hr attachments 

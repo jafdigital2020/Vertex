@@ -157,23 +157,26 @@
                                                     </button>
                                                 </td>  
                                                 <td>{{$resignation->accepted_date ?? '-'}}</td>    
-                                                 @php
-                                                    if ($resignation->resignation_date !== null) {
-                                                        $remainingDays = \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($resignation->resignation_date), false);
-                                                    } else {
-                                                        $remainingDays = null;
-                                                    }
-                                                @endphp
-
+                                                   @php
+                                                        if ($resignation->accepted_date !== null) { 
+                                                            $today = \Carbon\Carbon::today(); 
+                                                            $acceptedDate = \Carbon\Carbon::parse($resignation->accepted_date)->startOfDay(); 
+                                                            $remainingDays = ($resignation->added_rendering_days ?? 0) - $acceptedDate->diffInDays($today); 
+                                                            $remainingDays = $remainingDays < 0 ? 0 : $remainingDays;
+                                                        } else {
+                                                            $remainingDays = null;
+                                                        }
+                                                    @endphp 
                                                 <td>
                                                     @if ($remainingDays === null)
                                                         -
                                                     @elseif ($remainingDays > 0)
                                                         {{ $remainingDays }} days
                                                     @else
-                                                          0 days left
+                                                        0 days left
                                                     @endif
                                                 </td>
+
 
                                                 <td>{{$resignation->resignation_date ?? '-'}}</td>
                                                    <td>

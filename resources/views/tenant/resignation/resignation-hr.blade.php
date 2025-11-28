@@ -179,14 +179,16 @@
                                                     </button>
                                                 </td>  
                                                 <td>{{$resignation->accepted_date ?? '-'}}</td>    
-                                                 @php
-                                                    if ($resignation->resignation_date !== null) {
-                                                        $remainingDays = \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($resignation->resignation_date), false);
-                                                    } else {
-                                                        $remainingDays = null;
-                                                    }
-                                                @endphp
-
+                                                @php
+                                                        if ($resignation->accepted_date !== null) { 
+                                                            $today = \Carbon\Carbon::today(); 
+                                                            $acceptedDate = \Carbon\Carbon::parse($resignation->accepted_date)->startOfDay(); 
+                                                            $remainingDays = ($resignation->added_rendering_days ?? 0) - $acceptedDate->diffInDays($today); 
+                                                            $remainingDays = $remainingDays < 0 ? 0 : $remainingDays;
+                                                        } else {
+                                                            $remainingDays = null;
+                                                        }
+                                                    @endphp 
                                                 <td>
                                                     @if ($remainingDays === null)
                                                         -
@@ -194,6 +196,13 @@
                                                         {{ $remainingDays }} days
                                                     @else
                                                         0 days left
+                                                    @endif
+                                                    @if($resignation->resignation_date !== null)
+                                                    <button class="btn btn-sm btn-primary add-rendering-days-btn" 
+                                                            data-id="{{ $resignation->id }}" 
+                                                            data-remaining="{{ $remainingDays }}">
+                                                        <i class="fa fa-plus"></i>
+                                                    </button> 
                                                     @endif
                                                 </td>
 
@@ -798,6 +807,34 @@
             </div>
         </div>
     </div>
+</div> 
+<div class="modal fade" id="modalAddRenderingDays" tabindex="-1" aria-labelledby="modalAddRenderingDaysLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="formAddRenderingDays">
+      @csrf
+      <input type="hidden" name="resignation_id" id="resignation_id">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalAddRenderingDaysLabel">Add Remaining Days</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body"> 
+          <div class="mb-3">
+            <label for="current_remaining_days" class="form-label">Current Remaining Days</label>
+            <input type="number" class="form-control" id="current_remaining_days" readonly>
+          </div> 
+          <div class="mb-3">
+            <label for="extra_days" class="form-label">Extra Days to Add</label>
+            <input type="number" min="1" class="form-control" name="extra_days" id="extra_days" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Days</button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 
@@ -1459,7 +1496,40 @@
             });
 
         });
-        
+        $(document).ready(function() { 
+
+             $(document).on('click', '.add-rendering-days-btn', function() {
+                let resignationId = $(this).data('id');
+                let remainingDays = $(this).data('remaining');
+
+                $('#resignation_id').val(resignationId);
+                $('#current_remaining_days').val(remainingDays);
+                $('#extra_days').val('');
+
+                $('#modalAddRenderingDays').modal('show');
+            }); 
+            $('#formAddRenderingDays').submit(function(e) {
+                e.preventDefault();
+
+                let formData = $(this).serialize();
+
+                $.ajax({
+                    url: "/api/resignations/add-days",
+                    method: 'POST',
+                    data: formData,
+                    success: function(res) {
+                        if (res.success) {
+                            toastr.success(res.message);
+                            filter();
+                            $('#modalAddRenderingDays').modal('hide');
+                        }
+                    },
+                    error: function(xhr) {
+                         toastr.success(xhr.responseJSON.message || 'Error occurred');
+                    }
+                });
+            });
+        });
    </script>   
     @endpush
     @include('layout.partials.footer-company') 
