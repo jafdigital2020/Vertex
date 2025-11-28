@@ -126,6 +126,43 @@ class OvertimeController extends Controller
         ]);
     }
 
+    /**
+     * Display all overtime requests and summary (Admin).
+     *
+     * Shows all overtime requests for the selected date range, including branch, department, designation, status, and summary statistics (pending, approved, rejected). Only accessible by users with overtime admin permissions.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "11/01/2025 - 11/27/2025"
+     * @queryParam branch integer Optional. Filter overtime requests by branch ID. Example: 1
+     * @queryParam department integer Optional. Filter overtime requests by department ID. Example: 2
+     * @queryParam designation integer Optional. Filter overtime requests by designation ID. Example: 3
+     * @queryParam status string Optional. Filter overtime requests by status ("pending", "approved", "rejected").
+     *
+     * @response 200 {
+     *   "status": "success",
+     *   "data": {
+     *     "overtimes": [
+     *       {
+     *         "id": 1,
+     *         "user_id": 10,
+     *         "overtime_date": "2025-11-01",
+     *         "date_ot_in": "2025-11-01 18:00:00",
+     *         "date_ot_out": "2025-11-01 20:00:00",
+     *         "total_ot_minutes": 120,
+     *         "total_night_diff_minutes": 30,
+     *         "reason": "Project deadline",
+     *         "status": "pending",
+     *         "last_approver": "Juan Dela Cruz",
+     *         "last_approver_type": "HR"
+     *       }
+     *     ],
+     *     "pendingCount": 2,
+     *     "approvedCount": 5,
+     *     "rejectedCount": 1,
+     *     "totalRequests": 8
+     *   }
+     * }
+     */
     public function overtimeIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -246,6 +283,40 @@ class OvertimeController extends Controller
         }
     }
 
+    /**
+     * Approve, reject, or request changes for an overtime request.
+     *
+     * Allows an authorized approver to approve, reject, or request changes for an overtime request. Handles multi-step approval workflows, sends notifications, and updates overtime status.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Overtime $overtime The overtime request to act on.
+     * @bodyParam action string required The action to perform ("approved", "rejected", "pending"). Example: "approved"
+     * @bodyParam comment string Optional. Comment or reason for the action.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Action recorded.",
+     *   "data": {
+     *     "id": 123,
+     *     "status": "approved",
+     *     "current_step": 2,
+     *     "last_approver": "Maria Santos"
+     *   },
+     *   "next_approvers": ["Juan Dela Cruz", "HR Manager"]
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You cannot take action on your own overtime request."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Overtime request has already been rejected."
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Approval step misconfigured."
+     * }
+     */
     public function overtimeApproval(Request $request, Overtime $overtime)
     {
         // 1) Validate payload
@@ -323,11 +394,11 @@ class OvertimeController extends Controller
             $requester->notify(
                 new UserNotification(
                     "Your overtime request on {$overtime->overtime_date} was {$data['action']} by " .
-                    $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
+                        $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
                 )
             );
 
-            
+
             return response()->json([
                 'success'        => true,
                 'message'        => 'Action recorded.',
@@ -406,14 +477,14 @@ class OvertimeController extends Controller
         });
 
         // 7) Return JSON
-        $overtime->refresh(); 
-        
+        $overtime->refresh();
+
         $next = OvertimeApproval::nextApproversFor($overtime, $steps);
- 
+
         $requester->notify(
             new UserNotification("Your overtime request on {$overtime->overtime_date} was {$data['action']} by " .
-                    $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . ".")
-        ); 
+                $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . ".")
+        );
 
         if ($overtime->status === 'pending') {
             $requesterName = $requester->personalInformation->first_name . ' ' . $requester->personalInformation->last_name;
@@ -426,7 +497,7 @@ class OvertimeController extends Controller
                 );
             }
         }
-         
+
         return response()->json([
             'success'        => true,
             'message'        => 'Action recorded.',
@@ -435,6 +506,38 @@ class OvertimeController extends Controller
         ]);
     }
 
+    /**
+     * Reject an overtime request.
+     *
+     * Allows an authorized approver to reject an overtime request, optionally providing a comment. Handles multi-step approval workflows and sends notifications.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Overtime $overtime The overtime request to reject.
+     * @bodyParam comment string Optional. Reason for rejection or additional comments.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Action recorded.",
+     *   "data": {
+     *     "id": 123,
+     *     "status": "rejected",
+     *     "current_step": 2,
+     *     "last_approver": "Maria Santos"
+     *   }
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You cannot reject your own overtime request."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Overtime request has already been rejected."
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Approval step misconfigured."
+     * }
+     */
     public function overtimeReject(Request $request, Overtime $overtime)
     {
         $data = $request->validate([
@@ -449,7 +552,48 @@ class OvertimeController extends Controller
         return $this->overtimeApproval($request, $overtime);
     }
 
-    // Manual Overtime Edit
+    /**
+     * Edit a manual overtime request (Admin).
+     *
+     * Allows an admin to update an employee's manual overtime request, including overtime date, clock-in/out times, total minutes, night differential, offset date, reason, and optional file attachment. Prevents duplicate entries for the same user and date.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id The ID of the overtime request to edit.
+     * @bodyParam user_id integer required The user ID of the employee. Example: 10
+     * @bodyParam overtime_date date required The date for the overtime request. Example: "2025-11-01"
+     * @bodyParam date_ot_in datetime required Overtime clock-in date and time. Example: "2025-11-01 18:00:00"
+     * @bodyParam date_ot_out datetime required Overtime clock-out date and time. Must be after clock-in. Example: "2025-11-01 20:00:00"
+     * @bodyParam total_ot_minutes integer required Total overtime minutes. Example: 120
+     * @bodyParam total_night_diff_minutes integer Optional. Night differential minutes. Example: 30
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, DOC, DOCX, max 5MB).
+     * @bodyParam offset_date date Optional. Offset date for overtime. Example: "2025-11-02"
+     * @bodyParam reason string Optional. Reason for the overtime request. Example: "Project deadline"
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Overtime updated successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "user_id": 10,
+     *     "overtime_date": "2025-11-01",
+     *     "date_ot_in": "2025-11-01 18:00:00",
+     *     "date_ot_out": "2025-11-01 20:00:00",
+     *     "total_ot_minutes": 120,
+     *     "total_night_diff_minutes": 30,
+     *     "file_attachment": "overtime_attachments/xyz.pdf",
+     *     "offset_date": "2025-11-02",
+     *     "reason": "Project deadline"
+     *   }
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "You do not have the permission to update."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "The user has an overtime entry for this date."
+     * }
+     */
     public function overtimeAdminUpdate(Request $request, $id)
     {
         $permission = PermissionHelper::get(17);
@@ -534,7 +678,30 @@ class OvertimeController extends Controller
         ]);
     }
 
-    // Overtime admin Delete
+    /**
+     * Delete a manual overtime request (Admin).
+     *
+     * Allows an admin to delete any manual overtime request. Only users with delete permission can perform this action. Deletes any attached file as well.
+     *
+     * @param int $id The ID of the overtime request to delete.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Overtime deleted successfully."
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "You do not have the permission to delete."
+     * }
+     * @response 404 {
+     *   "status": "error",
+     *   "message": "Overtime request not found."
+     * }
+     * @response 500 {
+     *   "status": "error",
+     *   "message": "Server error while deleting overtime request: [error details]"
+     * }
+     */
     public function overtimeAdminDelete($id)
     {
         $permission = PermissionHelper::get(17);

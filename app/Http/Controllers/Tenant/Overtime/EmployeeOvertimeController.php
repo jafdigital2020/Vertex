@@ -86,6 +86,45 @@ class EmployeeOvertimeController extends Controller
         ]);
     }
 
+    /**
+     * Display the employee's overtime requests and summary.
+     *
+     * Shows the authenticated employee's overtime requests for the last 30 days, including summary statistics and approver information.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "11/01/2025 - 11/27/2025"
+     * @queryParam status string Optional. Filter overtime requests by status (e.g., "pending", "approved", "rejected").
+     *
+     * @response 200 {
+     *   "status": "success",
+     *   "data": {
+     *     "overtimes": [
+     *       {
+     *         "id": 1,
+     *         "overtime_date": "2025-11-01",
+     *         "date_ot_in": "2025-11-01 18:00:00",
+     *         "date_ot_out": "2025-11-01 20:00:00",
+     *         "total_ot_minutes": 120,
+     *         "total_night_diff_minutes": 30,
+     *         "reason": "Project deadline",
+     *         "status": "pending",
+     *         "lastApproverName": "Juan Dela Cruz",
+     *         "lastApproverDept": "HR"
+     *       }
+     *     ],
+     *     "pendingRequests": 2,
+     *     "approvedRequests": 5,
+     *     "rejectedRequests": 1,
+     *     "permission": ["Create", "Update", "Delete"]
+     *   },
+     *   "allData": [],
+     *   "summary": {
+     *     "pendingRequests": 2,
+     *     "approvedRequests": 5,
+     *     "rejectedRequests": 1
+     *   }
+     * }
+     */
     public function overtimeEmployeeIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -154,8 +193,8 @@ class EmployeeOvertimeController extends Controller
             'permission' => $permission
         ]);
     }
-    // Manual User Notification to Approver 
 
+    // Manual User Notification to Approver
     public function sendOvertimeNotificationToApprover($authUser, $overtimeDate)
     {
         $employment = $authUser->employmentDetail;
@@ -164,15 +203,15 @@ class EmployeeOvertimeController extends Controller
         $departmentHead = $employment->department->head_of_department ?? null;
 
         $requestor = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
- 
+
         $steps = OvertimeApproval::stepsForBranch($branchId);
         $firstStep = $steps->first();
 
-        $notifiedUser = null; 
+        $notifiedUser = null;
         if ($reportingToId && $firstStep && $firstStep->level == 1) {
             $notifiedUser = User::find($reportingToId);
         }
- 
+
         if (!$notifiedUser && $firstStep) {
 
             if ($firstStep->approver_kind === 'department_head' && $departmentHead) {
@@ -184,7 +223,7 @@ class EmployeeOvertimeController extends Controller
                 $notifiedUser = User::find($userApproverId);
             }
         }
- 
+
         if ($notifiedUser) {
             $notifiedUser->notify(
                 new UserNotification(
@@ -194,9 +233,46 @@ class EmployeeOvertimeController extends Controller
         }
     }
 
-
-
-    // Manual Overtime Create
+    /**
+     * Submit a manual overtime request.
+     *
+     * Allows an employee to manually file an overtime request for a specific date, including clock-in/out times, total minutes, night differential, reason, and optional file attachment.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @bodyParam overtime_date date required The date for the overtime request. Example: "2025-11-01"
+     * @bodyParam date_ot_in datetime required Overtime clock-in date and time. Example: "2025-11-01 18:00:00"
+     * @bodyParam date_ot_out datetime required Overtime clock-out date and time. Must be after clock-in. Example: "2025-11-01 20:00:00"
+     * @bodyParam total_ot_minutes integer Optional. Total overtime minutes. Example: 120
+     * @bodyParam total_night_diff_minutes integer Optional. Night differential minutes. Example: 30
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, DOC, DOCX, max 5MB).
+     * @bodyParam offset_date date Optional. Offset date for overtime. Example: "2025-11-02"
+     * @bodyParam reason string required Reason for the overtime request. Example: "Project deadline"
+     *
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Overtime added successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "overtime_date": "2025-11-01",
+     *     "date_ot_in": "2025-11-01 18:00:00",
+     *     "date_ot_out": "2025-11-01 20:00:00",
+     *     "total_ot_minutes": 120,
+     *     "total_night_diff_minutes": 30,
+     *     "file_attachment": "overtime_attachments/xyz.pdf",
+     *     "offset_date": "2025-11-02",
+     *     "reason": "Project deadline",
+     *     "status": "pending"
+     *   }
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "You do not have the permission to create."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "You already have an overtime entry for this date."
+     * }
+     */
     public function overtimeEmployeeManualCreate(Request $request)
     {
         $authUser = $this->authUser();
@@ -251,9 +327,9 @@ class EmployeeOvertimeController extends Controller
             'status'            => 'pending',
             'ot_login_type'    => 'manual',
         ]);
-        
-        $this->sendOvertimeNotificationToApprover($authUser , $request->overtime_date);
- 
+
+        $this->sendOvertimeNotificationToApprover($authUser, $request->overtime_date);
+
         // Logging Start
         $userId = null;
         $globalUserId = null;
@@ -282,7 +358,47 @@ class EmployeeOvertimeController extends Controller
         ]);
     }
 
-    // Manual Overtime Edit
+    /**
+     * Edit a manual overtime request.
+     *
+     * Allows an employee to update an existing manual overtime request, including clock-in/out times, total minutes, night differential, reason, offset date, and optional file attachment. Approved requests cannot be edited.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id The ID of the overtime request to edit.
+     * @bodyParam overtime_date date required The date for the overtime request. Example: "2025-11-01"
+     * @bodyParam date_ot_in datetime required Overtime clock-in date and time. Example: "2025-11-01 18:00:00"
+     * @bodyParam date_ot_out datetime required Overtime clock-out date and time. Must be after clock-in. Example: "2025-11-01 20:00:00"
+     * @bodyParam total_ot_minutes integer required Total overtime minutes. Example: 120
+     * @bodyParam total_night_diff_minutes integer Optional. Night differential minutes. Example: 30
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, DOC, DOCX, max 5MB).
+     * @bodyParam offset_date date Optional. Offset date for overtime. Example: "2025-11-02"
+     * @bodyParam reason string required Reason for the overtime request. Example: "Project deadline"
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Overtime updated successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "overtime_date": "2025-11-01",
+     *     "date_ot_in": "2025-11-01 18:00:00",
+     *     "date_ot_out": "2025-11-01 20:00:00",
+     *     "total_ot_minutes": 120,
+     *     "total_night_diff_minutes": 30,
+     *     "file_attachment": "overtime_attachments/xyz.pdf",
+     *     "offset_date": "2025-11-02",
+     *     "reason": "Project deadline",
+     *     "status": "pending"
+     *   }
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "This overtime entry is already approved and cannot be edited."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "You already have an overtime entry for this date."
+     * }
+     */
     public function overtimeEmployeeManualUpdate(Request $request, $id)
     {
         $authUser = $this->authUser();
@@ -374,7 +490,30 @@ class EmployeeOvertimeController extends Controller
         ]);
     }
 
-    // Manual Overtime Delete
+    /**
+     * Delete a manual overtime request.
+     *
+     * Allows an employee to delete their own manual overtime request. Approved requests cannot be deleted.
+     *
+     * @param int $id The ID of the overtime request to delete.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Overtime deleted successfully."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You do not have the permission to delete."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "This overtime entry is already approved and cannot be deleted."
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Overtime request not found."
+     * }
+     */
     public function overtimeEmployeeManualDelete($id)
     {
 
@@ -422,7 +561,36 @@ class EmployeeOvertimeController extends Controller
         ]);
     }
 
-    // Clock in Overtime
+    /**
+     * Clock in for overtime.
+     *
+     * Allows an employee to clock in for overtime for the current date. Supports file attachment, offset date, and reason. Prevents duplicate clock-in for the same date.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, DOC, DOCX, max 5MB).
+     * @bodyParam offset_date date Optional. Offset date for overtime. Example: "2025-11-02"
+     * @bodyParam reason string required Reason for the overtime request. Example: "Project deadline"
+     *
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Overtime clocked in successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "overtime_date": "2025-11-01",
+     *     "date_ot_in": "2025-11-01 18:00:00",
+     *     "status": "pending",
+     *     "file_attachment": "overtime_attachments/xyz.pdf",
+     *     "offset_date": "2025-11-02",
+     *     "reason": "Project deadline",
+     *     "is_holiday": false,
+     *     "holiday_id": null
+     *   }
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "You already have an overtime entry for this date."
+     * }
+     */
     public function overtimeEmployeeClockIn(Request $request)
     {
         $authUser = $this->authUser();
@@ -531,7 +699,31 @@ class EmployeeOvertimeController extends Controller
         ]);
     }
 
-    // Clock out Overtime
+    /**
+     * Clock out for overtime.
+     *
+     * Allows an employee to clock out from their open overtime entry for the current date. Calculates total overtime and night differential minutes.
+     *
+     * @param \Illuminate\Http\Request $request
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Overtime clock-out successful.",
+     *   "data": {
+     *     "id": 1,
+     *     "overtime_date": "2025-11-01",
+     *     "date_ot_in": "2025-11-01 18:00:00",
+     *     "date_ot_out": "2025-11-01 20:00:00",
+     *     "total_ot_minutes": 120,
+     *     "total_night_diff_minutes": 30,
+     *     "status": "pending"
+     *   }
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "No open overtime entry to clock out from."
+     * }
+     */
     public function overtimeEmployeeClockOut(Request $request)
     {
         $authUser = $this->authUser();
