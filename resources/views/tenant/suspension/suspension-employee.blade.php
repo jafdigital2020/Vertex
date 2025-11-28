@@ -7,14 +7,14 @@
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
-                    <h2 class="mb-1">Employee Suspension</h2>
+                    <h2 class="mb-1">Employee Violation</h2>
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item">Suspension</li>
-                            <li class="breadcrumb-item active" aria-current="page">Employee Suspension</li>
+                            <li class="breadcrumb-item">Violation</li>
+                            <li class="breadcrumb-item active" aria-current="page">Employee Violation</li>
                         </ol>
                     </nav>
                 </div>
@@ -25,7 +25,7 @@
                 <div class="col-sm-12">
                     <div class="card">
                          <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                            <h5 class="mb-0">Suspension List</h5>
+                            <h5 class="mb-0">Violation List</h5>
                               <div class="d-flex align-items-center flex-wrap row-gap-2"> 
                                <div class="form-group me-2" style="max-width:200px;">
                                 <select id="suspension-status" class="form-select select2" style="max-width:200px;" oninput="filter()">
@@ -146,7 +146,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="viewSuspensionInfoModalLabel">
-                            <i class="ti ti-file-info me-2"></i>Suspension Details
+                            <i class="ti ti-file-info me-2"></i>Violation Details
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -239,7 +239,7 @@
                             <!-- Suspension Information -->
                             <div class="card mb-3">
                                 <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="ti ti-info-circle me-2"></i>Suspension Information</h6>
+                                    <h6 class="mb-0"><i class="ti ti-info-circle me-2"></i>Violation Information</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
