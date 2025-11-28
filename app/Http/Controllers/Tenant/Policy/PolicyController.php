@@ -111,7 +111,7 @@ class PolicyController extends Controller
             'policy_content' => 'nullable|string',
             'effective_date' => 'required|date',
             'target_type' => 'required|in:company-wide,branch,department,employee',
-            'attachment_path' => 'nullable|file|mimes:pdf,doc,docx',
+            'attachment_path' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx',
         ]);
 
         // Handle file upload if provided
