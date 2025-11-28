@@ -110,9 +110,43 @@ class AttendanceRequestAdminController extends Controller
         ]);
     }
 
+    /**
+     * Display all attendance requests and summary (Admin).
+     *
+     * Shows all attendance requests for the last 30 days, including branch, department, designation, status, and summary statistics (present, late, absent). Only accessible by users with attendance admin permissions.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "11/01/2025 - 11/27/2025"
+     * @queryParam branch integer Optional. Filter attendance requests by branch ID. Example: 1
+     * @queryParam department integer Optional. Filter attendance requests by department ID. Example: 2
+     * @queryParam designation integer Optional. Filter attendance requests by designation ID. Example: 3
+     * @queryParam status string Optional. Filter attendance requests by status ("pending", "approved", "rejected").
+     *
+     * @response 200 {
+     *   "status": true,
+     *   "userAttendance": [
+     *     {
+     *       "id": 1,
+     *       "user_id": 10,
+     *       "request_date": "2025-11-01",
+     *       "request_date_in": "2025-11-01 08:00:00",
+     *       "request_date_out": "2025-11-01 17:00:00",
+     *       "total_request_minutes": 480,
+     *       "total_request_nd_minutes": 60,
+     *       "reason": "Forgot to clock in",
+     *       "status": "pending",
+     *       "last_approver": "Juan Dela Cruz",
+     *       "last_approver_type": "HR",
+     *       "next_approvers": ["Maria Santos"]
+     *     }
+     *   ],
+     *   "total_present": 50,
+     *   "total_late": 5,
+     *   "total_absent": 2
+     * }
+     */
     public function adminRequestAttendanceIndex(Request $request)
     {
-
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $today = Carbon::today()->toDateString();
@@ -237,7 +271,40 @@ class AttendanceRequestAdminController extends Controller
         ]);
     }
 
-    // Approve Request Attendance
+    /**
+     * Approve, reject, or request changes for an attendance request (Admin).
+     *
+     * Allows an authorized approver to approve, reject, or request changes for an attendance request. Handles multi-step approval workflows, sends notifications, and updates attendance for approved requests.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\RequestAttendance $req The attendance request to act on.
+     * @bodyParam action string required The action to perform ("approved", "rejected", "pending"). Example: "approved"
+     * @bodyParam comment string Optional. Comment or reason for the action.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Action recorded.",
+     *   "data": {
+     *     "id": 123,
+     *     "status": "approved",
+     *     "current_step": 2,
+     *     "last_approver": "Maria Santos"
+     *   },
+     *   "next_approvers": ["Juan Dela Cruz", "HR Manager"]
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You cannot take action on your own attendance request."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Attendance request has already been rejected."
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Approval step misconfigured."
+     * }
+     */
     public function requestAttendanceApproval(Request $request, RequestAttendance $req)
     {
         // 1) Validate payload
@@ -401,19 +468,19 @@ class AttendanceRequestAdminController extends Controller
         $req->refresh();
 
         $request_date = Carbon::parse($req->request_date)->toDateString();
-        
+
         $requester->notify(
             new UserNotification(
                 "Your attendance request ({$request_date}) has been {$data['action']} by {$user->personalInformation->first_name} {$user->personalInformation->last_name}."
             )
         );
 
-        $next = RequestAttendanceApproval::nextApproversFor($req, $steps); 
+        $next = RequestAttendanceApproval::nextApproversFor($req, $steps);
         $nextUsers = RequestAttendanceApproval::nextApproverUsersFor($req);
-         
+
         foreach ($nextUsers as $notifiedUser) {
             $notifiedUser->notify(
-                new UserNotification("New attendance request from {$req->user->personalInformation->first_name} {$req->user->personalInformation->last_name } - {$request_date} pending your approval.")
+                new UserNotification("New attendance request from {$req->user->personalInformation->first_name} {$req->user->personalInformation->last_name} - {$request_date} pending your approval.")
             );
         }
 
@@ -925,5 +992,4 @@ class AttendanceRequestAdminController extends Controller
         // 7) Update request attendance status
         $requestAttendance->update(['status' => 'rejected']);
     }
-
 }
