@@ -113,6 +113,45 @@ class LeaveEmployeeController extends Controller
         ]);
     }
 
+    /**
+     * Display the employee's leave types and leave requests.
+     *
+     * Shows the authenticated employee's available leave types (with current balances) and leave requests for the current year, including approver information.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "01/01/2025 - 12/31/2025"
+     * @queryParam status string Optional. Filter leave requests by status (e.g., "pending", "approved", "rejected").
+     * @queryParam leavetype integer Optional. Filter leave requests by leave type ID. Example: 2
+     *
+     * @response 200 {
+     *   "message": "Available leave types fetched.",
+     *   "status": "success",
+     *   "leaveTypes": {
+     *     "1": {
+     *       "id": 1,
+     *       "name": "Vacation Leave",
+     *       "current_balance": 5
+     *     },
+     *     "2": {
+     *       "id": 2,
+     *       "name": "Sick Leave",
+     *       "current_balance": 2
+     *     }
+     *   },
+     *   "leaveRequests": [
+     *     {
+     *       "id": 10,
+     *       "leave_type_id": 1,
+     *       "start_date": "2025-06-01",
+     *       "end_date": "2025-06-03",
+     *       "days_requested": 3,
+     *       "status": "pending",
+     *       "lastApproverName": "Maria Santos",
+     *       "lastApproverDept": "HR"
+     *     }
+     *   ]
+     * }
+     */
     public function leaveEmployeeIndex(Request $request)
     {
         $user = Auth::user();;
@@ -188,21 +227,21 @@ class LeaveEmployeeController extends Controller
             'permission' => $permission
         ]);
     }
+
     public function sendLeaveNotificationToApprover($authUser, $leaveStartDate, $leaveEndDate)
     {
         $employment = $authUser->employmentDetail;
         $reportingToId = optional($employment)->reporting_to;
         $branchId = optional($employment)->branch_id;
 
-        $requestor = trim(optional($authUser->personalInformation)->first_name.' '.optional($authUser->personalInformation)->last_name);
+        $requestor = trim(optional($authUser->personalInformation)->first_name . ' ' . optional($authUser->personalInformation)->last_name);
 
         $notifiedUser = null;
- 
+
         if ($reportingToId) {
             $notifiedUser = User::find($reportingToId);
-        } 
-        else { 
-            $steps = LeaveApproval::stepsForBranch($branchId); 
+        } else {
+            $steps = LeaveApproval::stepsForBranch($branchId);
             $firstStep = $steps->first();
 
             if ($firstStep) {
@@ -212,17 +251,15 @@ class LeaveEmployeeController extends Controller
                     if ($departmentHeadId) {
                         $notifiedUser = User::find($departmentHeadId);
                     }
-
                 } elseif ($firstStep->approver_kind === 'user') {
 
                     $userApproverId = $firstStep->approver_user_id;
                     if ($userApproverId) {
                         $notifiedUser = User::find($userApproverId);
                     }
-
                 }
             }
-        } 
+        }
         if ($notifiedUser) {
             $message = "New leave request from {$requestor}: {$leaveStartDate} - {$leaveEndDate}. Pending your approval.";
             $notifiedUser->notify(new UserNotification($message));
@@ -230,6 +267,40 @@ class LeaveEmployeeController extends Controller
     }
 
 
+    /**
+     * Submit a new leave request.
+     *
+     * Allows an employee to file a leave request for a specific date range, including half-day selection, reason, and optional file attachment. Validates leave type, entitlement, and required documents.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @bodyParam leave_type_id integer required The ID of the leave type. Example: 1
+     * @bodyParam start_date date required Start date of the leave. Example: "2025-06-01"
+     * @bodyParam end_date date required End date of the leave. Example: "2025-06-03"
+     * @bodyParam half_day_type string Optional. Half-day selection ("AM" or "PM") if allowed. Example: "AM"
+     * @bodyParam reason string Optional. Reason for the leave request. Example: "Family emergency"
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, max 2MB).
+     *
+     * @response 201 {
+     *   "message": "Your leave request was sent. We’ll notify your approver.",
+     *   "leave_request": {
+     *     "id": 123,
+     *     "leave_type_id": 1,
+     *     "start_date": "2025-06-01",
+     *     "end_date": "2025-06-03",
+     *     "days_requested": 3,
+     *     "half_day_type": null,
+     *     "file_attachment": "leave_requests/123/attachment.pdf",
+     *     "reason": "Family emergency"
+     *   }
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "Sorry, you can’t file a leave right now. Your account doesn’t have permission to do this."
+     * }
+     * @response 422 {
+     *   "message": "You don’t have enough leave credits for the dates you chose."
+     * }
+     */
     public function leaveEmployeeRequest(Request $request)
     {
         $authUser   = $this->authUser();
@@ -391,8 +462,8 @@ class LeaveEmployeeController extends Controller
             'reason'          => $data['reason'] ?? null,
         ]);
 
-        $this->sendLeaveNotificationToApprover($authUser ,  $data['start_date'], $data['end_date']);
-        
+        $this->sendLeaveNotificationToApprover($authUser,  $data['start_date'], $data['end_date']);
+
         // ================= EMAIL NOTIFICATION TO FIRST APPROVER ===================
         $employee = $request->user();
         $branchId = optional($lr->user->employmentDetail)->branch_id;
@@ -469,6 +540,40 @@ class LeaveEmployeeController extends Controller
         ], 201);
     }
 
+    /**
+     * Edit an existing leave request.
+     *
+     * Allows an employee to update an existing leave request, including date range, half-day selection, reason, and optional file attachment. Only pending requests at step 1 can be edited.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id The ID of the leave request to edit.
+     * @bodyParam leave_type_id integer required The ID of the leave type. Example: 1
+     * @bodyParam start_date date required Start date of the leave. Example: "2025-06-01"
+     * @bodyParam end_date date required End date of the leave. Example: "2025-06-03"
+     * @bodyParam half_day_type string Optional. Half-day selection ("AM" or "PM") if allowed. Example: "AM"
+     * @bodyParam reason string Optional. Reason for the leave request. Example: "Family emergency"
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, max 2MB).
+     *
+     * @response 200 {
+     *   "message": "Leave request updated successfully.",
+     *   "leave_request": {
+     *     "id": 123,
+     *     "leave_type_id": 1,
+     *     "start_date": "2025-06-01",
+     *     "end_date": "2025-06-03",
+     *     "days_requested": 3,
+     *     "half_day_type": "AM",
+     *     "file_attachment": "leave_requests/123/attachment.pdf",
+     *     "reason": "Family emergency"
+     *   }
+     * }
+     * @response 403 {
+     *   "message": "This leave request can no longer be edited."
+     * }
+     * @response 422 {
+     *   "message": "Insufficient leave balance."
+     * }
+     */
     public function leaveEmployeeRequestEdit(Request $request, $id)
     {
 
@@ -571,6 +676,28 @@ class LeaveEmployeeController extends Controller
         ], 200);
     }
 
+    /**
+     * Delete an existing leave request.
+     *
+     * Allows an employee to delete their own pending leave request at step 1. Deletes any attached file as well. Approved or processed requests cannot be deleted.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id The ID of the leave request to delete.
+     *
+     * @response 200 {
+     *   "message": "Leave request deleted successfully."
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "You do not have the permission to delete."
+     * }
+     * @response 403 {
+     *   "message": "This leave request can no longer be deleted."
+     * }
+     * @response 404 {
+     *   "message": "Leave request not found."
+     * }
+     */
     public function leaveEmployeeRequestDelete(Request $request, $id)
     {
         if (!$this->hasPermission('Delete')) {

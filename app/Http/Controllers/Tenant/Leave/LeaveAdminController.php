@@ -137,6 +137,44 @@ class LeaveAdminController extends Controller
         ]);
     }
 
+    /**
+     * Display all leave requests and leave types for the current year (Admin).
+     *
+     * Shows all leave requests for the current year, including leave types, approver information, and summary statistics (approved, rejected, pending). Only accessible by users with leave admin permissions.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "01/01/2025 - 12/31/2025"
+     * @queryParam status string Optional. Filter leave requests by status (e.g., "pending", "approved", "rejected").
+     * @queryParam leavetype integer Optional. Filter leave requests by leave type ID. Example: 2
+     *
+     * @response 200 {
+     *   "message": "This is the leave admin index endpoint.",
+     *   "status": "success",
+     *   "leaveRequests": [
+     *     {
+     *       "id": 10,
+     *       "leave_type_id": 1,
+     *       "start_date": "2025-06-01",
+     *       "end_date": "2025-06-03",
+     *       "days_requested": 3,
+     *       "status": "pending",
+     *       "last_approver": "Maria Santos",
+     *       "last_approver_type": "HR",
+     *       "remaining_balance": 5
+     *     }
+     *   ],
+     *   "leaveTypes": [
+     *     {
+     *       "id": 1,
+     *       "name": "Vacation Leave",
+     *       "current_balance": 5
+     *     }
+     *   ],
+     *   "approvedLeavesCount": 2,
+     *   "rejectedLeavesCount": 1,
+     *   "pendingLeavesCount": 3
+     * }
+     */
     public function leaveAdminIndex(Request $request)
     {
         $today = Carbon::today()->toDateString();
@@ -268,6 +306,40 @@ class LeaveAdminController extends Controller
         ]);
     }
 
+    /**
+     * Approve, reject, or request changes for a leave request.
+     *
+     * Allows an authorized approver to approve, reject, or request changes for a leave request. Handles multi-step approval workflows, sends notifications, and updates leave balances.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\LeaveRequest $leave The leave request to act on.
+     * @bodyParam action string required The action to perform ("APPROVED", "REJECTED", "CHANGES_REQUESTED"). Example: "APPROVED"
+     * @bodyParam comment string Optional. Comment or reason for the action.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Action recorded.",
+     *   "data": {
+     *     "id": 123,
+     *     "status": "approved",
+     *     "current_step": 2,
+     *     "last_approver": "Maria Santos"
+     *   },
+     *   "next_approvers": ["Juan Dela Cruz", "HR Manager"]
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You cannot approve your own leave request."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Leave request has already been rejected."
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Approval step misconfigured."
+     * }
+     */
     public function leaveApproval(Request $request, LeaveRequest $leave)
     {
         // 1) Validate payload
@@ -335,14 +407,14 @@ class LeaveAdminController extends Controller
                         'current_step' => 1,
                         'status'       => 'approved',
                     ]);
- 
-                    $requesterNotif = User::find($leave->user_id); 
+
+                    $requesterNotif = User::find($leave->user_id);
                     $start = Carbon::parse($leave->start_date)->format('M d');
                     $end   = Carbon::parse($leave->end_date)->format('M d');
 
                     $requesterNotif->notify(new UserNotification(
                         'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been approved.'
-                    ));  
+                    ));
 
                     // Deduct leave days
                     $ent = LeaveEntitlement::where('user_id', $leave->user_id)
@@ -354,7 +426,7 @@ class LeaveAdminController extends Controller
                 } else {
                     // REJECTED or CHANGES_REQUESTED
                     $leave->update(['status' => $newStatus]);
-                    $requesterNotif = User::find($leave->user_id); 
+                    $requesterNotif = User::find($leave->user_id);
                     $start = Carbon::parse($leave->start_date)->format('M d');
                     $end   = Carbon::parse($leave->end_date)->format('M d');
 
@@ -449,22 +521,22 @@ class LeaveAdminController extends Controller
                         'current_step' => $currStep + 1,
                         'status'       => 'pending',
                     ]);
-                    $requesterNotif = User::find($leave->user_id); 
+                    $requesterNotif = User::find($leave->user_id);
                     $start = Carbon::parse($leave->start_date)->format('M d');
-                    $end   = Carbon::parse($leave->end_date)->format('M d'); 
-                    
+                    $end   = Carbon::parse($leave->end_date)->format('M d');
+
                     $requesterNotif->notify(new UserNotification(
-                        'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been pre-approved by Level '.$currStep. '.'
-                    ));   
+                        'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been pre-approved by Level ' . $currStep . '.'
+                    ));
                 } else {
                     $leave->update(['status' => 'approved']);
-                    $requesterNotif = User::find($leave->user_id); 
+                    $requesterNotif = User::find($leave->user_id);
                     $start = Carbon::parse($leave->start_date)->format('M d');
                     $end   = Carbon::parse($leave->end_date)->format('M d');
 
                     $requesterNotif->notify(new UserNotification(
                         'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been approved.'
-                    ));  
+                    ));
 
                     // Deduct leave days
                     $ent = LeaveEntitlement::where('user_id', $leave->user_id)
@@ -477,13 +549,13 @@ class LeaveAdminController extends Controller
             } else {
                 // REJECTED or CHANGES_REQUESTED
                 $leave->update(['status' => $newStatus]);
-                $requesterNotif = User::find($leave->user_id); 
+                $requesterNotif = User::find($leave->user_id);
                 $start = Carbon::parse($leave->start_date)->format('M d');
                 $end   = Carbon::parse($leave->end_date)->format('M d');
 
                 $requesterNotif->notify(new UserNotification(
                     'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been rejected.'
-                ));    
+                ));
                 // refund only if it was previously approved
                 if ($oldStatus === 'approved') {
                     $ent = LeaveEntitlement::where('user_id', $leave->user_id)
@@ -621,6 +693,38 @@ class LeaveAdminController extends Controller
         ]);
     }
 
+    /**
+     * Reject a leave request.
+     *
+     * Allows an authorized approver to reject a leave request, optionally providing a comment. Handles multi-step approval workflows and sends notifications.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\LeaveRequest $leave The leave request to reject.
+     * @bodyParam comment string Optional. Reason for rejection or additional comments.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Action recorded.",
+     *   "data": {
+     *     "id": 123,
+     *     "status": "rejected",
+     *     "current_step": 2,
+     *     "last_approver": "Maria Santos"
+     *   }
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You cannot reject your own leave request."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Leave request has already been rejected."
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Approval step misconfigured."
+     * }
+     */
     public function leaveReject(Request $request, LeaveRequest $leave)
     {
         $data = $request->validate([
@@ -635,7 +739,46 @@ class LeaveAdminController extends Controller
         return $this->leaveApproval($request, $leave);
     }
 
-    // Edit Leave Request
+    /**
+     * Edit an existing leave request (Admin).
+     *
+     * Allows an admin to update an existing leave request, including leave type, date range, days requested, reason, and optional file attachment. Validates leave balance and updates entitlement.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $leaveRequestId The ID of the leave request to edit.
+     * @bodyParam leave_type_id integer required The ID of the leave type. Example: 1
+     * @bodyParam start_date date required Start date of the leave. Example: "2025-06-01"
+     * @bodyParam end_date date required End date of the leave. Example: "2025-06-03"
+     * @bodyParam days_requested integer required Number of leave days requested. Example: 3
+     * @bodyParam reason string Optional. Reason for the leave request. Example: "Family emergency"
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, max 2MB).
+     *
+     * @response 200 {
+     *   "status": "success",
+     *   "message": "Leave request updated successfully!",
+     *   "leaveRequest": {
+     *     "id": 123,
+     *     "leave_type_id": 1,
+     *     "start_date": "2025-06-01",
+     *     "end_date": "2025-06-03",
+     *     "days_requested": 3,
+     *     "reason": "Family emergency",
+     *     "file_attachment": "leave_requests/123/attachment.pdf"
+     *   }
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "You do not have the permission to update."
+     * }
+     * @response 422 {
+     *   "status": "error",
+     *   "message": "Insufficient leave balance."
+     * }
+     * @response 422 {
+     *   "status": "error",
+     *   "message": "Validation error message."
+     * }
+     */
     public function editLeaveRequest(Request $request, $leaveRequestId)
     {
         $permission = PermissionHelper::get(19);
@@ -742,7 +885,30 @@ class LeaveAdminController extends Controller
         ]);
     }
 
-    // Delete Leave Request
+    /**
+     * Delete a leave request (Admin).
+     *
+     * Allows an admin to delete any leave request, including its attached file. Only users with delete permission can perform this action.
+     *
+     * @param int $leaveRequestId The ID of the leave request to delete.
+     *
+     * @response 200 {
+     *   "status": "success",
+     *   "message": "Leave request deleted successfully!"
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "You do not have the permission to delete."
+     * }
+     * @response 404 {
+     *   "status": "error",
+     *   "message": "Leave request not found."
+     * }
+     * @response 500 {
+     *   "status": "error",
+     *   "message": "Server error while deleting leave request: [error details]"
+     * }
+     */
     public function deleteLeaveRequest($leaveRequestId)
     {
         $permission = PermissionHelper::get(19);
