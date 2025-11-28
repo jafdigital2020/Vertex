@@ -106,6 +106,44 @@ class AdminOfficialBusinessController extends Controller
         ]);
     }
 
+    /**
+     * Display all official business requests and summary (Admin).
+     *
+     * Shows all official business (OB) requests for the current year, including branch, department, designation, status, and summary statistics (pending, approved, rejected, total). Only accessible by users with OB admin permissions.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "01/01/2025 - 12/31/2025"
+     * @queryParam branch integer Optional. Filter OB requests by branch ID. Example: 1
+     * @queryParam department integer Optional. Filter OB requests by department ID. Example: 2
+     * @queryParam designation integer Optional. Filter OB requests by designation ID. Example: 3
+     * @queryParam status string Optional. Filter OB requests by status ("pending", "approved", "rejected").
+     *
+     * @response 200 {
+     *   "message": "Admin Official Business Index",
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "user_id": 10,
+     *       "ob_date": "2025-11-01",
+     *       "date_ob_in": "2025-11-01 08:00:00",
+     *       "date_ob_out": "2025-11-01 17:00:00",
+     *       "total_ob_minutes": 480,
+     *       "purpose": "Client meeting",
+     *       "status": "pending",
+     *       "last_approver": "Juan Dela Cruz",
+     *       "last_approver_type": "HR",
+     *       "next_approvers": ["Maria Santos"]
+     *     }
+     *   ],
+     *   "counts": {
+     *     "pending": 2,
+     *     "approved": 5,
+     *     "rejected": 1,
+     *     "total": 8
+     *   },
+     *   "allData": []
+     * }
+     */
     public function adminOBIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -250,7 +288,40 @@ class AdminOfficialBusinessController extends Controller
         ]);
     }
 
-    // Approve OB
+    /**
+     * Approve, reject, or request changes for an official business request (Admin).
+     *
+     * Allows an authorized approver to approve, reject, or request changes for an official business (OB) request. Handles multi-step approval workflows, sends notifications, and updates attendance for approved requests.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\OfficialBusiness $ob The official business request to act on.
+     * @bodyParam action string required The action to perform ("approved", "rejected", "pending"). Example: "approved"
+     * @bodyParam comment string Optional. Comment or reason for the action.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Action recorded.",
+     *   "data": {
+     *     "id": 123,
+     *     "status": "approved",
+     *     "current_step": 2,
+     *     "last_approver": "Maria Santos"
+     *   },
+     *   "next_approvers": ["Juan Dela Cruz", "HR Manager"]
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You cannot take action on your own official business request."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Official business request has already been rejected."
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Approval step misconfigured."
+     * }
+     */
     public function obApproval(Request $request, OfficialBusiness $ob)
     {
         // 1) Validate payload
@@ -329,10 +400,10 @@ class AdminOfficialBusinessController extends Controller
             $requester->notify(
                 new UserNotification(
                     "Your OB request on {$ob->ob_date} was {$data['action']} by " .
-                    $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
+                        $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
                 )
             );
-        
+
             return response()->json([
                 'success'        => true,
                 'message'        => 'Action recorded.',
@@ -414,15 +485,15 @@ class AdminOfficialBusinessController extends Controller
         // 7) Return JSON
         $ob->refresh();
 
-       
+
         $requester->notify(
             new UserNotification(
                 "Your OB request on {$ob->ob_date} was {$data['action']} by " .
-                $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
+                    $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
             )
         );
-        
-        
+
+
         $next = OfficialBusinessApproval::nextApproversFor($ob, $steps);
 
         return response()->json([
@@ -433,7 +504,38 @@ class AdminOfficialBusinessController extends Controller
         ]);
     }
 
-    // Reject OB
+    /**
+     * Reject an official business request (Admin).
+     *
+     * Allows an authorized approver to reject an official business (OB) request, optionally providing a comment. Handles multi-step approval workflows and sends notifications.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\OfficialBusiness $ob The official business request to reject.
+     * @bodyParam comment string Optional. Reason for rejection or additional comments.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Action recorded.",
+     *   "data": {
+     *     "id": 123,
+     *     "status": "rejected",
+     *     "current_step": 2,
+     *     "last_approver": "Maria Santos"
+     *   }
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You cannot reject your own official business request."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Official business request has already been rejected."
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Approval step misconfigured."
+     * }
+     */
     public function obReject(Request $request, OfficialBusiness $ob)
     {
         $data = $request->validate([
@@ -467,7 +569,6 @@ class AdminOfficialBusinessController extends Controller
             $attendance->date_time_out = $ob->date_ob_out;
             $attendance->total_work_minutes = $ob->total_ob_minutes;
             $attendance->save();
-
         } else {
 
             // Create new attendance record
@@ -489,7 +590,47 @@ class AdminOfficialBusinessController extends Controller
         }
     }
 
-    // Update OB (Admin)
+    /**
+     * Edit an official business request (Admin).
+     *
+     * Allows an admin to update an employee's official business (OB) request, including OB date, clock-in/out times, total minutes, purpose, and optional file attachment. Prevents duplicate entries for the same user and date.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id The ID of the official business request to edit.
+     * @bodyParam ob_date date required The date for the official business request. Example: "2025-11-01"
+     * @bodyParam date_ob_in datetime required Official business clock-in date and time. Example: "2025-11-01 08:00:00"
+     * @bodyParam date_ob_out datetime required Official business clock-out date and time. Must be after clock-in. Example: "2025-11-01 17:00:00"
+     * @bodyParam total_ob_minutes integer required Total official business minutes. Example: 480
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, DOC, DOCX, max 5MB).
+     * @bodyParam purpose string required Purpose of the official business. Example: "Client meeting"
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Official Business request updated successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "ob_date": "2025-11-01",
+     *     "date_ob_in": "2025-11-01 08:00:00",
+     *     "date_ob_out": "2025-11-01 17:00:00",
+     *     "total_ob_minutes": 480,
+     *     "purpose": "Client meeting",
+     *     "file_attachment": "ob_attachments/xyz.pdf",
+     *     "status": "pending"
+     *   }
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "You do not have the permission to update."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "You already have an official business entry for this date."
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Official business entry not found."
+     * }
+     */
     public function adminUpdateOB(Request $request, $id)
     {
         $authUser = $this->authUser();
@@ -573,7 +714,30 @@ class AdminOfficialBusinessController extends Controller
         ]);
     }
 
-    // Delete OB (Admin)
+    /**
+     * Delete an official business request (Admin).
+     *
+     * Allows an admin to delete any official business (OB) request. Only users with delete permission can perform this action. Deletes any attached file as well.
+     *
+     * @param int $id The ID of the official business request to delete.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Official business deleted successfully."
+     * }
+     * @response 403 {
+     *   "status": "error",
+     *   "message": "You do not have the permission to delete."
+     * }
+     * @response 404 {
+     *   "status": "error",
+     *   "message": "Official business entry not found."
+     * }
+     * @response 500 {
+     *   "status": "error",
+     *   "message": "Server error while deleting official business request: [error details]"
+     * }
+     */
     public function adminDeleteOB($id)
     {
         $authUser = $this->authUser();

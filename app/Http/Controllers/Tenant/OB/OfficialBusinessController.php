@@ -41,7 +41,6 @@ class OfficialBusinessController extends Controller
 
     public function filter(Request $request)
     {
-
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
@@ -82,7 +81,34 @@ class OfficialBusinessController extends Controller
         ]);
     }
 
-
+    /**
+     * Display the employee's official business requests and summary.
+     *
+     * Shows the authenticated employee's official business (OB) requests for the current year, including summary statistics (approved, pending, rejected) and permission information.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @queryParam dateRange string Optional. Date range in format "mm/dd/yyyy - mm/dd/yyyy". Example: "01/01/2025 - 12/31/2025"
+     * @queryParam status string Optional. Filter OB requests by status (e.g., "pending", "approved", "rejected").
+     *
+     * @response 200 {
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "ob_date": "2025-11-01",
+     *       "date_ob_in": "2025-11-01 08:00:00",
+     *       "date_ob_out": "2025-11-01 17:00:00",
+     *       "ob_break_minutes": 60,
+     *       "total_ob_minutes": 480,
+     *       "purpose": "Client meeting",
+     *       "status": "pending"
+     *     }
+     *   ],
+     *   "totalApprovedOB": 2,
+     *   "totalPendingOB": 1,
+     *   "totalRejectedOB": 0,
+     *   "allData": []
+     * }
+     */
     public function employeeOBIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -153,8 +179,7 @@ class OfficialBusinessController extends Controller
         ]);
     }
 
-
-    // OB notification to approver  
+    // OB notification to approver
     public function sendOfficialBusinessNotificationToApprover($authUser, $ob_date)
     {
         $employment = $authUser->employmentDetail;
@@ -162,14 +187,13 @@ class OfficialBusinessController extends Controller
         $branchId = optional($employment)->branch_id;
 
         $requestor = trim(optional($authUser->personalInformation)->first_name . ' ' .
-                        optional($authUser->personalInformation)->last_name);
+            optional($authUser->personalInformation)->last_name);
 
         $notifiedUser = null;
- 
+
         if ($reportingToId) {
             $notifiedUser = User::find($reportingToId);
-        } 
-        else { 
+        } else {
             $steps = OfficialBusinessApproval::stepsForBranch($branchId);
             $firstStep = $steps->first();
 
@@ -180,7 +204,6 @@ class OfficialBusinessController extends Controller
                     if ($departmentHeadId) {
                         $notifiedUser = User::find($departmentHeadId);
                     }
-
                 } elseif ($firstStep->approver_kind === 'user') {
                     $approverUserId = $firstStep->approver_user_id;
                     if ($approverUserId) {
@@ -188,15 +211,48 @@ class OfficialBusinessController extends Controller
                     }
                 }
             }
-        } 
+        }
         if ($notifiedUser) {
             $message = "New official business request from {$requestor}: {$ob_date}. Pending your approval.";
             $notifiedUser->notify(new UserNotification($message));
         }
     }
 
-
-    // Request OB (Employee)
+    /**
+     * Submit a new official business request.
+     *
+     * Allows an employee to file an official business (OB) request for a specific date, including clock-in/out times, break minutes, total minutes, purpose, and optional file attachment. Prevents duplicate entries for the same date.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @bodyParam ob_date date required The date for the official business request. Example: "2025-11-01"
+     * @bodyParam date_ob_in datetime required Official business clock-in date and time. Example: "2025-11-01 08:00:00"
+     * @bodyParam date_ob_out datetime required Official business clock-out date and time. Must be after clock-in. Example: "2025-11-01 17:00:00"
+     * @bodyParam ob_break_minutes integer Optional. Break minutes during official business. Example: 60
+     * @bodyParam total_ob_minutes integer Optional. Total official business minutes. Example: 480
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, DOC, DOCX, max 5MB).
+     * @bodyParam purpose string required Purpose of the official business. Example: "Client meeting"
+     *
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Official business request submitted successfully."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You do not have the permission to create."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "You already have an official business entry for this date."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "The OB date must be the same as the date of your official business start time."
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An unexpected error occurred. Please try again later."
+     * }
+     */
     public function employeeRequestOB(Request $request)
     {
         // Validation
@@ -264,8 +320,8 @@ class OfficialBusinessController extends Controller
                 'purpose'           => $request->purpose,
                 'status'            => 'pending',
             ]);
-            
-            $this->sendOfficialBusinessNotificationToApprover($authUser , $request->ob_date);
+
+            $this->sendOfficialBusinessNotificationToApprover($authUser, $request->ob_date);
 
             return response()->json(['success' => true, 'message' => 'Official business request submitted successfully.']);
         } catch (QueryException $e) {
@@ -310,7 +366,45 @@ class OfficialBusinessController extends Controller
         ]);
     }
 
-    // Update OB (Employee)
+    /**
+     * Edit an official business request (Employee).
+     *
+     * Allows an employee to update their own official business (OB) request, including date, clock-in/out times, break minutes, total minutes, purpose, and optional file attachment. Approved requests cannot be edited. Prevents duplicate entries for the same date.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id The ID of the official business request to edit.
+     * @bodyParam ob_date date required The date for the official business request. Example: "2025-11-01"
+     * @bodyParam date_ob_in datetime required Official business clock-in date and time. Example: "2025-11-01 08:00:00"
+     * @bodyParam date_ob_out datetime required Official business clock-out date and time. Must be after clock-in. Example: "2025-11-01 17:00:00"
+     * @bodyParam ob_break_minutes integer Optional. Break minutes during official business. Example: 60
+     * @bodyParam total_ob_minutes integer required Total official business minutes. Example: 480
+     * @bodyParam file_attachment file Optional. Supporting document (PDF, JPG, JPEG, PNG, DOC, DOCX, max 5MB).
+     * @bodyParam purpose string required Purpose of the official business. Example: "Client meeting"
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Official Business request updated successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "ob_date": "2025-11-01",
+     *     "date_ob_in": "2025-11-01 08:00:00",
+     *     "date_ob_out": "2025-11-01 17:00:00",
+     *     "ob_break_minutes": 60,
+     *     "total_ob_minutes": 480,
+     *     "purpose": "Client meeting",
+     *     "file_attachment": "ob_attachments/xyz.pdf",
+     *     "status": "pending"
+     *   }
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "This official business entry is already approved and cannot be edited."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "You already have an official business entry for this date."
+     * }
+     */
     public function employeeUpdateOB(Request $request, $id)
     {
         $authUser = $this->authUser();
@@ -405,7 +499,34 @@ class OfficialBusinessController extends Controller
         ]);
     }
 
-    // Delete OB (Employee)
+    /**
+     * Delete an official business request (Employee).
+     *
+     * Allows an employee to delete their own official business (OB) request. Approved requests cannot be deleted. Only the owner can delete their entry.
+     *
+     * @param int $id The ID of the official business request to delete.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Official business deleted successfully."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You do not have the permission to delete."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You can only delete your own official business entries."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "This official business entry is already approved and cannot be deleted."
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Official business entry not found."
+     * }
+     */
     public function employeeDeleteOB($id)
     {
         $authUser = $this->authUser();
