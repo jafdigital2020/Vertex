@@ -25,6 +25,7 @@ class ProfileController extends Controller
         return Auth::user();
     }
 
+
     public function profileIndex(Request $request)
     {
         // Auth User

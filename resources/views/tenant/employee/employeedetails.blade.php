@@ -929,11 +929,11 @@
                                                                                                 </span>
                                                                                             @elseif($target->target_type === 'branch')
                                                                                                 <span class="badge badge-soft-success">
-                                                                                                    <i class="ti ti-git-branch me-1"></i>Branch: {{ $target->targetable->name ?? 'N/A' }}
+                                                                                                    <i class="ti ti-git-branch me-1"></i>Branch: {{ $target->target_name ?? 'N/A' }}
                                                                                                 </span>
                                                                                             @elseif($target->target_type === 'department')
                                                                                                 <span class="badge badge-soft-warning">
-                                                                                                    <i class="ti ti-users me-1"></i>Department: {{ $target->targetable->department_name ?? 'N/A' }}
+                                                                                                    <i class="ti ti-users me-1"></i>Department: {{ $target->target_name ?? 'N/A' }}
                                                                                                 </span>
                                                                                             @elseif($target->target_type === 'user')
                                                                                                 <span class="badge badge-soft-danger">

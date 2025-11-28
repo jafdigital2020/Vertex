@@ -40,7 +40,7 @@ class EmployeeDetailsController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function employeeDetails($id)
@@ -81,9 +81,9 @@ class EmployeeDetailsController extends Controller
                 })
                 ->orWhere(function ($q) use ($users) {
                     // Department-specific policies
-                    if ($users->department_id) {
+                    if ($users->employmentDetail->department_id) {
                         $q->where('target_type', 'department')
-                          ->where('target_id', $users->department_id);
+                          ->where('target_id', $users->employmentDetail->department_id);
                     }
                 })
                 ->orWhere(function ($q) use ($users) {
