@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Tenant\Employees;
 
 use App\Models\User;
-use App\Models\Suspension;
+use App\Models\Violation; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Models\EmploymentDetail;
-use App\Models\SuspensionAction;
+use App\Models\ViolationAction;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Notifications\UserNotification;
 use App\Http\Controllers\DataAccessController;
 
-class SuspensionController extends Controller
+class ViolationController extends Controller
 {
     //
     public function authUser(){
@@ -46,7 +46,7 @@ class SuspensionController extends Controller
         }
 
         // Get all active employees from database, optionally filtered by branch_id(s)
-        $query = \App\Models\User::whereHas('employmentDetail', function ($q) use ($branchIds) {
+        $query =  User::whereHas('employmentDetail', function ($q) use ($branchIds) {
             $q->where('status', 1); // only active employees
             if (!empty($branchIds)) {
                 $q->whereIn('branch_id', $branchIds);
@@ -74,7 +74,7 @@ class SuspensionController extends Controller
     public function show($id)
     {
         try {
-            $suspension = Suspension::with([
+            $violation = Violation::with([
                 'employee.employmentDetail.branch',
                 'employee.employmentDetail.department',
                 'employee.employmentDetail.designation',
@@ -83,41 +83,41 @@ class SuspensionController extends Controller
             ])->findOrFail($id);
 
             // Get employee reply action
-            $employeeReply = $suspension->actions
+            $employeeReply = $violation->actions
                 ->where('action_type', 'employee_reply')
                 ->first();
 
             return response()->json([
                 'status' => 'success',
-                'suspension' => [
-                    'id' => $suspension->id,
-                    'employee_name' => $suspension->employee->personalInformation 
-                        ? trim($suspension->employee->personalInformation->first_name . ' ' . 
-                               ($suspension->employee->personalInformation->middle_name ?? '') . ' ' . 
-                               $suspension->employee->personalInformation->last_name)
+                'violation' => [
+                    'id' => $violation->id,
+                    'employee_name' => $violation->employee->personalInformation 
+                        ? trim($violation->employee->personalInformation->first_name . ' ' . 
+                               ($violation->employee->personalInformation->middle_name ?? '') . ' ' . 
+                               $violation->employee->personalInformation->last_name)
                         : 'N/A',
-                    'employee_id' => $suspension->employee->employmentDetail->employee_id ?? 'N/A',
-                    'branch' => $suspension->employee->employmentDetail->branch->name ?? 'N/A',
-                    'department' => $suspension->employee->employmentDetail->department->department_name ?? 'N/A',
-                    'designation' => $suspension->employee->employmentDetail->designation->designation_name ?? 'N/A',
-                    'status' => $suspension->status,
-                    'suspension_type' => $suspension->suspension_type,
-                    'suspension_start_date' => $suspension->suspension_start_date 
-                        ? Carbon::parse($suspension->suspension_start_date)->format('M d, Y') 
+                    'employee_id' => $violation->employee->employmentDetail->employee_id ?? 'N/A',
+                    'branch' => $violation->employee->employmentDetail->branch->name ?? 'N/A',
+                    'department' => $violation->employee->employmentDetail->department->department_name ?? 'N/A',
+                    'designation' => $violation->employee->employmentDetail->designation->designation_name ?? 'N/A',
+                    'status' => $violation->status,
+                    'violation_type' => $violation->violation_type,
+                    'violation_start_date' => $violation->violation_start_date 
+                        ? Carbon::parse($violation->violation_start_date)->format('M d, Y') 
                         : null,
-                    'suspension_end_date' => $suspension->suspension_end_date 
-                        ? Carbon::parse($suspension->suspension_end_date)->format('M d, Y') 
+                    'violation_end_date' => $violation->violation_end_date 
+                        ? Carbon::parse($violation->violation_end_date)->format('M d, Y') 
                         : null,
-                    'suspension_days' => $suspension->suspension_days,
-                    'offense_details' => $suspension->offense_details,
-                    'disciplinary_action' => $suspension->disciplinary_action,
-                    'remarks' => $suspension->remarks,
-                    'investigation_notes' => $suspension->investigation_notes,
-                    'implementation_remarks' => $suspension->implementation_remarks,
-                    'information_report_file' => $suspension->information_report_file,
-                    'nowe_file' => $suspension->nowe_file,
-                    'dam_file' => $suspension->dam_file,
-                    'created_at' => $suspension->created_at ? $suspension->created_at->format('M d, Y') : null,
+                    'violation_days' => $violation->violation_days,
+                    'offense_details' => $violation->offense_details,
+                    'disciplinary_action' => $violation->disciplinary_action,
+                    'remarks' => $violation->remarks,
+                    'investigation_notes' => $violation->investigation_notes,
+                    'implementation_remarks' => $violation->implementation_remarks,
+                    'information_report_file' => $violation->information_report_file,
+                    'nowe_file' => $violation->nowe_file,
+                    'dam_file' => $violation->dam_file,
+                    'created_at' => $violation->created_at ? $violation->created_at->format('M d, Y') : null,
                     'employee_reply' => $employeeReply ? [
                         'description' => $employeeReply->description,
                         'file_path' => $employeeReply->file_path,
@@ -128,11 +128,11 @@ class SuspensionController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching suspension details: ' . $e->getMessage());
+            Log::error('Error fetching violation details: ' . $e->getMessage());
             
             return response()->json([
                 'status' => 'error',
-                'message' => 'Suspension record not found.'
+                'message' => 'Violation record not found.'
             ], 404);
         }
     }
@@ -151,7 +151,7 @@ class SuspensionController extends Controller
         try {
             DB::beginTransaction();
 
-            $suspension = Suspension::findOrFail($id);
+            $violation =Violation::findOrFail($id);
             
             $updateData = [
                 'offense_details' => $request->offense_details,
@@ -162,27 +162,27 @@ class SuspensionController extends Controller
             // Handle file upload if provided
             if ($request->hasFile('information_report_file')) {
                 $file = $request->file('information_report_file');
-                $filename = 'suspension_report_' . time() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('suspensions/reports', $filename, 'public');
+                $filename = 'violation_report_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('violations/reports', $filename, 'public');
                 $updateData['information_report_file'] = $path;
             }
 
-            $suspension->update($updateData);
+            $violation->update($updateData);
 
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Suspension updated successfully.',
-                'data' => $suspension
+                'message' => 'Violation updated successfully.',
+                'data' => $violation
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating suspension: ' . $e->getMessage());
+            Log::error('Error updating violation: ' . $e->getMessage());
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error updating suspension.'
+                'message' => 'Error updating violation.'
             ], 500);
         }
     }
@@ -201,7 +201,7 @@ class SuspensionController extends Controller
         $designation = $request->input('designation');
         $status = $request->input('status');
  
-        $query = Suspension::
+        $query =Violation::
             with([
                 'employee.personalInformation',
                 'employee.employmentDetail.branch',
@@ -234,11 +234,11 @@ class SuspensionController extends Controller
             $query->where('status', $status);
         }
  
-        $suspension = $query->get(); 
+        $violation = $query->get(); 
    
 
-        $html = view('tenant.suspension.suspension-admin-filter', [
-            'suspension' => $suspension,
+        $html = view('tenant.violation.violation-admin-filter', [
+            'violation' => $violation,
             'permission' => $permission
         ])->render();
 
@@ -249,7 +249,7 @@ class SuspensionController extends Controller
     }
 
 
-    public function adminSuspensionEmployeeListIndex(Request $request)
+    public function adminViolationEmployeeListIndex(Request $request)
     {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(60);
@@ -261,7 +261,7 @@ class SuspensionController extends Controller
         $designations = $accessData['designations']->get(); 
         $employeeOptions = [];
  
-        $suspension = Suspension::
+        $violation =Violation::
              with([
                 'employee.personalInformation',
                 'employee.employmentDetail.branch',
@@ -274,9 +274,9 @@ class SuspensionController extends Controller
             ->latest()->get();
   
  
-        return view('tenant.suspension.suspension-admin', [
+        return view('tenant.violation.violation-admin', [
             'permission' => $permission,
-            'suspension' => $suspension,
+            'violation' => $violation,
             'branches' => $branches,
             'departments' => $departments,
             'designations' => $designations,
@@ -295,7 +295,7 @@ class SuspensionController extends Controller
   
         $status = $request->input('status');
  
-        $query =  Suspension::with([
+        $query = Violation::with([
             'employee.personalInformation',
             'employee.employmentDetail.branch',
             'employee.employmentDetail.department',
@@ -308,11 +308,11 @@ class SuspensionController extends Controller
             $query->where('status', $status);
         }
  
-        $suspension = $query->get(); 
+        $violation = $query->get(); 
    
 
-        $html = view('tenant.suspension.suspension-employee-filter', [
-            'suspensions' => $suspension,
+        $html = view('tenant.violation.violation-employee-filter', [
+            'violations' => $violation,
             'permission' => $permission
         ])->render();
 
@@ -324,13 +324,13 @@ class SuspensionController extends Controller
 
 
 
-    public function suspensionEmployeeListIndex(Request $request)
+    public function violationEmployeeListIndex(Request $request)
     {
         $authUser = $this->authUser(); 
         $permission = PermissionHelper::get(61);
  
         
-        $suspensions = Suspension::with([
+        $violations =Violation::with([
             'employee.personalInformation',
             'employee.employmentDetail.branch',
             'employee.employmentDetail.department',
@@ -344,14 +344,14 @@ class SuspensionController extends Controller
         // if ($request->wantsJson()) {
         //     return response()->json([
         //         'status' => 'success',
-        //         'suspensions' => $suspensions->map(function ($s) {
+        //         'violations' => $violations->map(function ($s) {
         //             return [
         //                 'id' => $s->id,
         //                 'offense_details' => $s->offense_details,
         //                 'status' => $s->status,
-        //                 'suspension_type' => $s->suspension_type,
-        //                 'start_date' => $s->suspension_start_date,
-        //                 'end_date' => $s->suspension_end_date,
+        //                 'violation_type' => $s->violation_type,
+        //                 'start_date' => $s->violation_start_date,
+        //                 'end_date' => $s->violation_end_date,
         //                 'information_report_file' => $s->information_report_file,
         //                 'employee_name' => optional($s->employee->personalInformation)->first_name . ' ' . optional($s->employee->personalInformation)->last_name,
         //                 'employee_id' => optional($s->employee->employmentDetail)->employee_id,
@@ -364,16 +364,16 @@ class SuspensionController extends Controller
         // }
 
         // For non-AJAX view load
-        return view('tenant.suspension.suspension-employee', [
+        return view('tenant.violation.violation-employee', [
             'permission' => $permission,
-            'suspensions' => $suspensions,
+            'violations' => $violations,
         ]);
     }
 
 
 
 
-    public function fileSuspensionReport(Request $request)
+    public function fileViolationReport(Request $request)
     {
         $authUser = $this->authUser();
 
@@ -390,19 +390,19 @@ class SuspensionController extends Controller
             if ($request->hasFile('information_report_file')) {
                 $file = $request->file('information_report_file');
                 $fileName = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('storage/suspension_reports'), $fileName);
-                $filePath = "suspension_reports/{$fileName}";
+                $file->move(public_path('storage/violation_reports'), $fileName);
+                $filePath = "violation_reports/{$fileName}";
             }
 
-            $suspension = Suspension::create([
+            $violation =Violation::create([
                 'user_id' => $request->user_id,
                 'offense_details' => $request->offense_details,
                 'information_report_file' => $filePath,
                 'status' => 'pending',
             ]);
 
-            SuspensionAction::create([
-                'suspension_id' => $suspension->id,
+           ViolationAction::create([
+                'violation_id' => $violation->id,
                 'action_type' => 'report_received',
                 'action_by' => $authUser->id,
                 'action_date' => now(),
@@ -413,7 +413,7 @@ class SuspensionController extends Controller
                 if ($user) {
                     $user->notify(
                         new UserNotification(
-                            "A suspension has been filed against you. Please wait for the Notice of Written Explanation (NOWE) to be uploaded by the admin before you can submit your response."
+                            "A violation has been filed against you. Please wait for the Notice of Written Explanation (NOWE) to be uploaded by the admin before you can submit your response."
                         )
                     );
                 } 
@@ -423,17 +423,17 @@ class SuspensionController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Suspension case successfully filed.',
-                'data' => $suspension
+                'message' => 'Violation case successfully filed.',
+                'data' => $violation
             ], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error filing suspension case: ' . $e->getMessage());
+            Log::error('Error filing violation case: ' . $e->getMessage());
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error filing suspension case. Please try again.'
+                'message' => 'Error filing violation case. Please try again.'
             ], 500);
         }
     }
@@ -448,31 +448,31 @@ class SuspensionController extends Controller
         try {
             DB::beginTransaction();
 
-            $suspension = Suspension::findOrFail($id);
+            $violation =Violation::findOrFail($id);
             $file = $request->file('nowe_file');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('storage/suspension_nowe'), $fileName);
-            $filePath = 'suspension_nowe/' . $fileName;
+            $file->move(public_path('storage/violation_nowe'), $fileName);
+            $filePath = 'violation_nowe/' . $fileName;
 
-            $suspension->update([
+            $violation->update([
                 'status' => 'awaiting_reply',
                 'remarks' => 'NOWE issued on ' . now()->format('F d, Y'),
             ]);
 
-            SuspensionAction::create([
-                'suspension_id' => $suspension->id,
+           ViolationAction::create([
+                'violation_id' => $violation->id,
                 'action_type' => 'nowe_issued',
                 'action_by' => $authUser->id,
                 'action_date' => now(),
                 'file_path' => $filePath,
                 'description' => 'Notice of Written Explanation issued to employee.'
             ]);
-            if ($suspension->user_id) { 
-                $user = User::find($suspension->user_id); 
+            if ($violation->user_id) { 
+                $user = User::find($violation->user_id); 
                 if ($user) {
                     $user->notify(
                         new UserNotification(
-                            "A NOWE has been uploaded for your suspension. You may now submit your response."
+                            "A NOWE has been uploaded for your violation. You may now submit your response."
                         )
                     );
                 }
@@ -483,12 +483,12 @@ class SuspensionController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'NOWE successfully issued.',
-                'data' => $suspension
+                'data' => $violation
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error issuing NOWE: ' . $e->getMessage(), [
-                'suspension_id' => $id,
+                'violation_id' => $id,
                 'user_id' => $authUser->id,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -510,32 +510,32 @@ class SuspensionController extends Controller
         try {
             DB::beginTransaction();
 
-            $suspension = Suspension::findOrFail($id);
+            $violation =Violation::findOrFail($id);
             $file = $request->file('reply_file');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('storage/suspension_replies'), $fileName);
+            $file->move(public_path('storage/violation_replies'), $fileName);
 
-            $suspension->update([
+            $violation->update([
                 'status' => 'under_investigation',
                 'remarks' => 'Employee reply received.',
             ]);
 
-            SuspensionAction::create([
-                'suspension_id' => $suspension->id,
+           ViolationAction::create([
+                'violation_id' => $violation->id,
                 'action_type' => 'employee_reply',
                 'action_by' => $authUser->id,
                 'action_date' => now(),
-                'file_path' => 'suspension_replies/' . $fileName,
+                'file_path' => 'violation_replies/' . $fileName,
                 'description' => 'Employee reply received and recorded.'
             ]);
             
-             if ($suspension->user_id) {
+             if ($violation->user_id) {
              
-                $suspension_admin_id = SuspensionAction::where('suspension_id', $suspension->id)
+                $violation_admin_id =ViolationAction::where('violation_id', $violation->id)
                     ->where('action_type', 'nowe_issued')
                     ->value('action_by');
 
-                $adminUser = User::find($suspension_admin_id);
+                $adminUser = User::find($violation_admin_id);
  
                 $employeeName = 
                 (Auth::user()->personalInformation->first_name ?? '') . ' ' . 
@@ -544,7 +544,7 @@ class SuspensionController extends Controller
                 if ($adminUser) {
                     $adminUser->notify(
                         new UserNotification(
-                            "{$employeeName} has submitted a reply for suspension #{$suspension->id}."
+                            "{$employeeName} has submitted a reply for violation #{$violation->id}."
                         )
                     );
                 }
@@ -555,7 +555,7 @@ class SuspensionController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Employee reply successfully received.',
-                'data' => $suspension
+                'data' => $violation
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -578,26 +578,26 @@ class SuspensionController extends Controller
         try {
             DB::beginTransaction();
 
-            $suspension = Suspension::findOrFail($id);
-            $suspension->update([
+            $violation =Violation::findOrFail($id);
+            $violation->update([
                 'status' => 'for_dam_issuance',
                 'remarks' => 'Investigation conducted and case assessed.',
             ]);
 
-            SuspensionAction::create([
-                'suspension_id' => $suspension->id,
+           ViolationAction::create([
+                'violation_id' => $violation->id,
                 'action_type' => 'investigation',
                 'action_by' => $authUser->id,
                 'action_date' => now(),
                 'description' => $request->investigation_notes,
             ]);
 
-            if ($suspension->user_id) { 
-                $user = User::find($suspension->user_id); 
+            if ($violation->user_id) { 
+                $user = User::find($violation->user_id); 
                 if ($user) {
                     $user->notify(
                         new UserNotification(
-                            "An investigation report has been issued for your suspension. Please review it accordingly."
+                            "An investigation report has been issued for your violation. Please review it accordingly."
                         )
                     );
                 }
@@ -608,7 +608,7 @@ class SuspensionController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Investigation recorded successfully.',
-                'data' => $suspension
+                'data' => $violation
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -626,49 +626,49 @@ class SuspensionController extends Controller
         $authUser = $this->authUser();
         $request->validate([
             'dam_file' => 'required|mimes:pdf,doc,docx|max:2048',
-            'suspension_type' => 'required|in:with_pay,without_pay',
+            'violation_type' => 'required|in:with_pay,without_pay',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $suspension = Suspension::find($id);
-            if (!$suspension) {
+            $violation =Violation::find($id);
+            if (!$violation) {
                 DB::rollBack();
-                Log::warning('Suspension not found while issuing DAM', ['suspension_id' => $id, 'action_by' => $authUser->id]);
+                Log::warning('Violation not found while issuing DAM', ['violation_id' => $id, 'action_by' => $authUser->id]);
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Suspension case not found.'
+                    'message' => 'Violation case not found.'
                 ], 404);
             }
 
             $file = $request->file('dam_file');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('storage/suspension_dam'), $fileName);
-            $filePath = "suspension_dam/{$fileName}";
+            $file->move(public_path('storage/violation_dam'), $fileName);
+            $filePath = "violation_dam/{$fileName}";
 
-            $suspension->update([
+            $violation->update([
                 'dam_file' => $filePath,
                 'dam_issued_at' => now(),
-                'suspension_type' => $request->suspension_type,
+                'violation_type' => $request->violation_type,
                 'status' => 'suspended',
             ]);
 
-            SuspensionAction::create([
-                'suspension_id' => $suspension->id,
+           ViolationAction::create([
+                'violation_id' => $violation->id,
                 'action_type' => 'dam_issued',
                 'action_by' => $authUser->id,
                 'action_date' => now(),
                 'file_path' => $filePath,
-                'description' => 'Disciplinary Action Memo issued to employee (' . str_replace('_', ' ', $request->suspension_type) . ').',
+                'description' => 'Disciplinary Action Memo issued to employee (' . str_replace('_', ' ', $request->violation_type) . ').',
             ]);
             
-            if ($suspension->user_id) { 
-                $user = User::find($suspension->user_id); 
+            if ($violation->user_id) { 
+                $user = User::find($violation->user_id); 
                 if ($user) {
                     $user->notify(
                         new UserNotification(
-                            "A Disciplinary Action Memo has been uploaded for your suspension."
+                            "A Disciplinary Action Memo has been uploaded for your violation."
                         )
                     );
                 }
@@ -678,8 +678,8 @@ class SuspensionController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'DAM issued successfully with suspension type: ' . str_replace('_', ' ', $request->suspension_type) . '.',
-                'data' => $suspension
+                'message' => 'DAM issued successfully with violation type: ' . str_replace('_', ' ', $request->violation_type) . '.',
+                'data' => $violation
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -692,51 +692,51 @@ class SuspensionController extends Controller
         }
     }
 
-    public function implementSuspension(Request $request, $id)
+    public function implementViolation(Request $request, $id)
     {
         $authUser = $this->authUser();
         $request->validate([
-            'suspension_start_date' => 'required|date',
-            'suspension_end_date' => 'required|date|after_or_equal:suspension_start_date',
+            'violation_start_date' => 'required|date',
+            'violation_end_date' => 'required|date|after_or_equal:violation_start_date',
             'implementation_remarks' => 'nullable|string|max:1000',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $suspension = Suspension::findOrFail($id);
-            $days = Carbon::parse($request->suspension_start_date)
-                ->diffInDays(Carbon::parse($request->suspension_end_date)) + 1;
+            $violation =Violation::findOrFail($id);
+            $days = Carbon::parse($request->violation_start_date)
+                ->diffInDays(Carbon::parse($request->violation_end_date)) + 1;
 
-            $suspension->update([
-                'suspension_type' => 'without_pay',
-                'suspension_start_date' => $request->suspension_start_date,
-                'suspension_end_date' => $request->suspension_end_date,
-                'suspension_days' => $days,
+            $violation->update([
+                'violation_type' => 'without_pay',
+                'violation_start_date' => $request->violation_start_date,
+                'violation_end_date' => $request->violation_end_date,
+                'violation_days' => $days,
                 'implemented_by' => $authUser->id,
                 'implementation_remarks' => $request->implementation_remarks,
                 'status' => 'suspended',
             ]);
 
             // Update employee's employment_state to 'Suspended'
-            EmploymentDetail::where('user_id', $suspension->user_id)
+            EmploymentDetail::where('user_id', $violation->user_id)
                 ->update(['employment_state' => 'Suspended']);
 
-            SuspensionAction::create([
-                'suspension_id' => $suspension->id,
-                'action_type' => 'suspension_implemented',
+           ViolationAction::create([
+                'violation_id' => $violation->id,
+                'action_type' => 'violation_implemented',
                 'action_by' => $authUser->id,
                 'action_date' => now(),
-                'description' => 'Suspension implemented without pay.',
+                'description' => 'Violation implemented without pay.',
                 'remarks' => 'Duration: ' . $days . ' days'
             ]);
                 
-            if ($suspension->user_id) { 
-                $user = User::find($suspension->user_id); 
+            if ($violation->user_id) { 
+                $user = User::find($violation->user_id); 
                 if ($user) {
                     $user->notify(
                         new UserNotification(
-                             "Your suspension #{$suspension->id} has been implemented from {$request->suspension_start_date} to {$request->suspension_end_date} ({$days} days)."
+                             "Your violation #{$violation->id} has been implemented from {$request->violation_start_date} to {$request->violation_end_date} ({$days} days)."
                         )
                     );
                 }
@@ -747,16 +747,16 @@ class SuspensionController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Suspension implemented successfully.',
-                'data' => $suspension
+                'message' => 'Violation implemented successfully.',
+                'data' => $violation
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error implementing suspension: ' . $e->getMessage());
+            Log::error('Error implementing violation: ' . $e->getMessage());
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error implementing suspension.'
+                'message' => 'Error implementing violation.'
             ], 500);
         }
     }
@@ -768,31 +768,31 @@ class SuspensionController extends Controller
         try {
             DB::beginTransaction();
 
-            $suspension = Suspension::findOrFail($id);
-            $suspension->update([
+            $violation =Violation::findOrFail($id);
+            $violation->update([
                 'return_to_work_at' => now(),
                 'status' => 'completed',
-                'remarks' => 'Employee returned to work after serving suspension.',
+                'remarks' => 'Employee returned to work after serving violation.',
             ]);
 
             // Update employee's employment_state back to 'Active'
-            EmploymentDetail::where('user_id', $suspension->user_id)
+            EmploymentDetail::where('user_id', $violation->user_id)
                 ->update(['employment_state' => 'Active']);
 
-            SuspensionAction::create([
-                'suspension_id' => $suspension->id,
+           ViolationAction::create([
+                'violation_id' => $violation->id,
                 'action_type' => 'return_to_work',
                 'action_by' => $authUser->id,
                 'action_date' => now(),
                 'description' => 'Employee returned to office. Case closed.',
             ]);
 
-            if ($suspension->user_id) { 
-                $user = User::find($suspension->user_id); 
+            if ($violation->user_id) { 
+                $user = User::find($violation->user_id); 
                 if ($user) {
                     $user->notify(
                         new UserNotification(
-                             "Your suspension has been completed. You have been marked as returned to work."
+                             "Your violation has been completed. You have been marked as returned to work."
                         )
                     );
                 }
@@ -803,15 +803,15 @@ class SuspensionController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Case closed. Employee returned to work.',
-                'data' => $suspension
+                'data' => $violation
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error closing suspension case: ' . $e->getMessage());
+            Log::error('Error closing violation case: ' . $e->getMessage());
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error closing suspension case.'
+                'message' => 'Error closing violation case.'
             ], 500);
         }
     }

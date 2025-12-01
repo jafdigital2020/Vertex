@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SuspensionAction extends Model
+class ViolationAction extends Model
 {
     //
 
     use HasFactory;
 
     protected $fillable = [
-        'suspension_id',
+        'violation_id',
         'action_type',
         'action_by',
         'action_date',
@@ -21,9 +21,9 @@ class SuspensionAction extends Model
         'remarks',
     ];
 
-    public function suspension()
+    public function violation()
     {
-        return $this->belongsTo(Suspension::class);
+        return $this->belongsTo(Violation::class);
     }
 
     // HR or user who performed the action

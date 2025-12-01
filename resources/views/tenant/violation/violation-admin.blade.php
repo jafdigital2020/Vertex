@@ -1,4 +1,4 @@
-<?php $page = 'suspension'; ?>
+<?php $page = 'violation'; ?>
 @extends('layout.mainlayout')
 @section('content')
 
@@ -23,7 +23,7 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap">
                         <div class="mb-2">
                             <button class="btn btn-primary" data-bs-toggle="modal"
-                                    data-bs-target="#fileSuspensionModal">
+                                    data-bs-target="#fileViolationModal">
                                     <i class="ti ti-file-plus"></i> File Violation
                                 </button>
                         </div>
@@ -37,7 +37,7 @@
                 </div>
                 <!-- /Breadcrumb -->
 
-                <!-- Suspension List -->
+                <!-- Violation List -->
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="card">
@@ -72,7 +72,7 @@
                                         </select>
                                     </div>
                                     <div class="form-group me-2"> 
-                                    <select id="suspension-status" class="form-select select2" style="width:150px;" oninput="filter()">
+                                    <select id="violation-status" class="form-select select2" style="width:150px;" oninput="filter()">
                                         <option value="">All Status</option>
                                         <option value="pending">Pending</option>
                                         <option value="implemented">Implemented</option>
@@ -80,14 +80,14 @@
                                     </select>
                                     </div>
 
-                                    <!-- File Suspension Button -->
+                                    <!-- File Violation Button -->
                                 
                                 </div>
                             </div>
 
                             <div class="card-body p-3">  
-                                <div class="table-responsive" id="suspension-table-wrap">
-                                    <table class="table datatable table-striped align-middle" id="suspension-table">
+                                <div class="table-responsive" id="violation-table-wrap">
+                                    <table class="table datatable table-striped align-middle" id="violation-table">
                                         <thead>
                                             <tr>
                                                 <th>#</th>
@@ -102,7 +102,7 @@
                                                 <th class="text-center">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="suspension-tbody">
+                                        <tbody id="violation-tbody">
                                             @php
                                                 function getStatusColor($status) {
                                                     switch ($status) {
@@ -117,7 +117,7 @@
                                                     }
                                                 }
                                             @endphp
-                                               @foreach ($suspension as $idx => $sus) 
+                                               @foreach ($violation as $idx => $sus) 
                                                     <tr>    
                                                         <td>{{ $idx + 1 }}</td>
                                                         <td>{{  $sus->employee->personalInformation->first_name ?? '' }}  {{   $sus->employee->personalInformation->last_name ?? '' }}</td> 
@@ -125,9 +125,9 @@
                                                         <td class="text-center">{{ $sus->employee->employmentDetail->department->department_name ?? '' }}</td>
                                                         <td class="text-center">{{ $sus->employee->employmentDetail->designation->designation_name ?? '' }}</td>
                                                         <td class="text-center">
-                                                            @if($sus->status === 'suspended' && $sus->suspension_start_date === null && $sus->suspension_end_date === null)
+                                                            @if($sus->status === 'suspended' && $sus->violation_start_date === null && $sus->violation_end_date === null)
                                                                 <span class="badge bg-secondary">
-                                                                    For Suspension
+                                                                    For Violation
                                                                 </span>
                                                             @else
                                                                 <span class="badge bg-{{ getStatusColor($sus->status) }}">
@@ -135,15 +135,15 @@
                                                                 </span>
                                                             @endif
                                                         </td>
-                                                        <td class="text-center">{{ $sus->suspension_type ?? '' }}</td>
-                                                        <td class="text-center">{{ $sus->suspension_start_date ?? '' }}</td>
-                                                        <td class="text-center">{{ $sus->suspension_end_date ?? '' }}</td>  
+                                                        <td class="text-center">{{ $sus->violation_type ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->violation_start_date ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->violation_end_date ?? '' }}</td>  
                                                     <td class="text-center">
                                                         <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
 
-                                                            <button class="btn btn-sm btn-primary edit-suspension"
+                                                            <button class="btn btn-sm btn-primary edit-violation"
                                                                 data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                title="Edit Suspension">
+                                                                title="Edit Violation">
                                                                 <i class="ti ti-edit"></i>
                                                             </button>
 
@@ -154,9 +154,9 @@
                                                                     <i class="ti ti-mail"></i>
                                                                 </button>
                                                             @else
-                                                                <button class="btn btn-sm btn-secondary view-suspension"
+                                                                <button class="btn btn-sm btn-secondary view-violation"
                                                                     data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                    title="View Suspension Details">
+                                                                    title="View Violation Details">
                                                                     <i class="ti ti-eye"></i>
                                                                 </button>
                                                             @endif
@@ -188,17 +188,17 @@
                                                                             <i class="ti ti-file-check"></i>
                                                                         </button>
                                                                     @endif
-                                                                    @if($sus->suspension_start_date === null && $sus->suspension_end_date === null)
+                                                                    @if($sus->violation_start_date === null && $sus->violation_end_date === null)
                                                                     <button class="btn btn-sm btn-danger"
                                                                         onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
-                                                                        title="Implement Suspension">
+                                                                        title="Implement Violation">
                                                                         <i class="ti ti-ban"></i>
                                                                     </button>
                                                                     @endif
-                                                                    @if($sus->suspension_start_date !== null && $sus->suspension_end_date !== null)
+                                                                    @if($sus->violation_start_date !== null && $sus->violation_end_date !== null)
                                                                     <button class="btn btn-sm btn-secondary"
-                                                                        onclick="completeSuspension({{ $sus->id ?? $sus->employee->id }})"
-                                                                        title="Complete Suspension">
+                                                                        onclick="completeViolation({{ $sus->id ?? $sus->employee->id }})"
+                                                                        title="Complete Violation">
                                                                         <i class="ti ti-check"></i>
                                                                     </button>
                                                                     @endif
@@ -220,17 +220,17 @@
 
             @component('components.modal-popup') @endcomponent 
             
-            <!-- File Suspension Report Modal -->
-            <div class="modal fade" id="fileSuspensionModal" tabindex="-1" aria-labelledby="fileSuspensionModalLabel"
+            <!-- File Violation Report Modal -->
+            <div class="modal fade" id="fileViolationModal" tabindex="-1" aria-labelledby="fileViolationModalLabel"
                 aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="fileSuspensionModalLabel">File Violation Report</h5>
+                            <h5 class="modal-title" id="fileViolationModalLabel">File Violation Report</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
-                    <form id="fileSuspensionForm" enctype="multipart/form-data">
+                    <form id="fileViolationForm" enctype="multipart/form-data">
                         @csrf
                         <div class="modal-body">
 
@@ -274,8 +274,8 @@
                                     accept=".pdf,.doc,.docx">
                             </div>
 
-                            <div id="file-suspension-error" class="alert alert-danger d-none"></div>
-                            <div id="file-suspension-success" class="alert alert-success d-none"></div>
+                            <div id="file-violation-error" class="alert alert-danger d-none"></div>
+                            <div id="file-violation-success" class="alert alert-success d-none"></div>
                         </div>
 
                         <div class="modal-footer">
@@ -300,7 +300,7 @@
                         <form id="issueNoweForm" enctype="multipart/form-data">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="nowe_suspension_id" name="suspension_id"> 
+                                <input type="hidden" id="nowe_violation_id" name="violation_id"> 
                                 <div class="mb-3">
                                     <label for="nowe_file" class="form-label">Upload NOWE Document</label>
                                     <input type="file" name="nowe_file" id="nowe_file" class="form-control" accept=".pdf,.doc,.docx"
@@ -335,7 +335,7 @@
                         <form id="investigationForm">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="investigation_suspension_id" name="suspension_id">
+                                <input type="hidden" id="investigation_violation_id" name="violation_id">
 
                                 <div class="mb-3">
                                     <label for="investigation_notes" class="form-label">Investigation Notes</label>
@@ -368,7 +368,7 @@
                         <form id="issueDamForm" enctype="multipart/form-data">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="dam_suspension_id" name="suspension_id"> 
+                                <input type="hidden" id="dam_violation_id" name="violation_id"> 
                                 <div class="mb-3">
                                     <label for="dam_file" class="form-label">Upload DAM File <span class="text-danger">*</span></label>
                                     <input type="file" name="dam_file" id="dam_file" class="form-control" accept=".pdf,.doc,.docx"
@@ -377,19 +377,19 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Suspension Type <span class="text-danger">*</span></label>
+                                    <label class="form-label">Violation Type <span class="text-danger">*</span></label>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="suspension_type" id="suspension_with_pay" value="with_pay" required>
-                                        <label class="form-check-label" for="suspension_with_pay">
+                                        <input class="form-check-input" type="radio" name="violation_type" id="violation_with_pay" value="with_pay" required>
+                                        <label class="form-check-label" for="violation_with_pay">
                                             <strong>With Pay</strong>
-                                            <small class="d-block text-muted">Employee will receive salary during suspension</small>
+                                            <small class="d-block text-muted">Employee will receive salary during violation</small>
                                         </label>
                                     </div>
                                     <div class="form-check mt-2">
-                                        <input class="form-check-input" type="radio" name="suspension_type" id="suspension_without_pay" value="without_pay" required>
-                                        <label class="form-check-label" for="suspension_without_pay">
+                                        <input class="form-check-input" type="radio" name="violation_type" id="violation_without_pay" value="without_pay" required>
+                                        <label class="form-check-label" for="violation_without_pay">
                                             <strong>Without Pay</strong>
-                                            <small class="d-block text-muted">Employee will NOT receive salary during suspension</small>
+                                            <small class="d-block text-muted">Employee will NOT receive salary during violation</small>
                                         </label>
                                     </div>
                                 </div>
@@ -407,28 +407,28 @@
                 </div>
             </div>
 
-            <!-- Implement Suspension Modal -->
-            <div class="modal fade" id="implementSuspensionModal" tabindex="-1" aria-labelledby="implementSuspensionModalLabel" aria-hidden="true">
+            <!-- Implement Violation Modal -->
+            <div class="modal fade" id="implementViolationModal" tabindex="-1" aria-labelledby="implementViolationModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="implementSuspensionModalLabel">Implement Suspension</h5>
+                            <h5 class="modal-title" id="implementViolationModalLabel">Implement Violation</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
-                        <form id="implementSuspensionForm">
+                        <form id="implementViolationForm">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="implement_suspension_id" name="suspension_id">
+                                <input type="hidden" id="implement_violation_id" name="violation_id">
 
                                 <div class="mb-3">
-                                    <label for="suspension_start_date" class="form-label">Suspension Start Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="suspension_start_date" id="suspension_start_date" class="form-control" required>
+                                    <label for="violation_start_date" class="form-label">Violation Start Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="violation_start_date" id="violation_start_date" class="form-control" required>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="suspension_end_date" class="form-label">Suspension End Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="suspension_end_date" id="suspension_end_date" class="form-control" required>
+                                    <label for="violation_end_date" class="form-label">Violation End Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="violation_end_date" id="violation_end_date" class="form-control" required>
                                 </div>
 
                                 <div class="mb-3">
@@ -440,43 +440,43 @@
 
                                 <div class="alert alert-info">
                                     <i class="ti ti-info-circle me-2"></i>
-                                    <strong>Note:</strong> This will implement suspension without pay. The employee's status will be updated accordingly.
+                                    <strong>Note:</strong> This will implement violation without pay. The employee's status will be updated accordingly.
                                 </div>
 
-                                <div id="implement-suspension-error" class="alert alert-danger d-none"></div>
-                                <div id="implement-suspension-success" class="alert alert-success d-none"></div>
+                                <div id="implement-violation-error" class="alert alert-danger d-none"></div>
+                                <div id="implement-violation-success" class="alert alert-success d-none"></div>
                             </div>
 
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-danger">Implement Suspension</button>
+                                <button type="submit" class="btn btn-danger">Implement Violation</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- View Suspension Info Modal -->
-            <div class="modal fade" id="viewSuspensionModal" tabindex="-1" aria-labelledby="viewSuspensionModalLabel" aria-hidden="true">
+            <!-- View Violation Info Modal -->
+            <div class="modal fade" id="viewViolationModal" tabindex="-1" aria-labelledby="viewViolationModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="viewSuspensionModalLabel">
+                            <h5 class="modal-title" id="viewViolationModalLabel">
                                 <i class="ti ti-file-info me-2"></i>Violation Details
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
-                            <div id="view-suspension-loading" class="text-center py-4">
+                            <div id="view-violation-loading" class="text-center py-4">
                                 <div class="spinner-border" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
                             </div>
 
-                            <div id="view-suspension-error" class="alert alert-danger d-none"></div>
+                            <div id="view-violation-error" class="alert alert-danger d-none"></div>
 
-                            <div id="view-suspension-content" class="d-none">
+                            <div id="view-violation-content" class="d-none">
                                 <!-- Employee Information -->
                                 <div class="card mb-3">
                                     <div class="card-header bg-light">
@@ -497,7 +497,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Suspension Information -->
+                                <!-- Violation Information -->
                                 <div class="card mb-3">
                                     <div class="card-header bg-light">
                                         <h6 class="mb-0"><i class="ti ti-alert-circle me-2"></i>Violation Information</h6>
@@ -587,21 +587,21 @@
                 </div>
             </div>
 
-            <!-- Edit Suspension Modal -->
-            <div class="modal fade" id="editSuspensionModal" tabindex="-1" aria-labelledby="editSuspensionModalLabel" aria-hidden="true">
+            <!-- Edit Violation Modal -->
+            <div class="modal fade" id="editViolationModal" tabindex="-1" aria-labelledby="editViolationModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="editSuspensionModalLabel">
+                            <h5 class="modal-title" id="editViolationModalLabel">
                                 <i class="ti ti-edit me-2"></i>Edit Violation
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
-                        <form id="editSuspensionForm" enctype="multipart/form-data">
+                        <form id="editViolationForm" enctype="multipart/form-data">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="edit_suspension_id" name="suspension_id">
+                                <input type="hidden" id="edit_violation_id" name="violation_id">
  
                                 <div class="alert alert-info">
                                     <strong>Employee:</strong> <span id="edit_employee_info"></span>
@@ -636,8 +636,8 @@
                                     <div id="current_file_info" class="mt-2"></div>
                                 </div>
 
-                                <div id="edit-suspension-error" class="alert alert-danger d-none"></div>
-                                <div id="edit-suspension-success" class="alert alert-success d-none"></div>
+                                <div id="edit-violation-error" class="alert alert-danger d-none"></div>
+                                <div id="edit-violation-success" class="alert alert-success d-none"></div>
                             </div>
 
                             <div class="modal-footer">
@@ -665,7 +665,7 @@
                         <form id="returnToWorkForm">
                             @csrf
                             <div class="modal-body">
-                                <input type="hidden" id="return_suspension_id" name="suspension_id">
+                                <input type="hidden" id="return_violation_id" name="violation_id">
 
                                 <!-- Employee Info (Read-only) -->
                                 <div class="alert alert-info">
@@ -675,7 +675,7 @@
                                 <div class="alert alert-warning">
                                     <i class="ti ti-alert-triangle me-2"></i>
                                     <strong>Confirmation Required</strong>
-                                    <p class="mb-0 mt-2">This action will mark the employee as returned to work and close the suspension case. The suspension status will be changed to "Completed".</p>
+                                    <p class="mb-0 mt-2">This action will mark the employee as returned to work and close the violation case. The violation status will be changed to "Completed".</p>
                                 </div>
 
                                 <div class="mb-3">
@@ -708,9 +708,9 @@
                     const branch = $('#branch_filter').val();
                     const department = $('#department_filter').val();
                     const designation = $('#designation_filter').val();
-                    const status = $('#suspension-status').val(); 
+                    const status = $('#violation-status').val(); 
                     $.ajax({
-                            url: '{{ route('suspension-admin-filter') }}',
+                            url: '{{ route('violation-admin-filter') }}',
                             type: 'GET',
                             data: {
                                 branch,
@@ -720,9 +720,9 @@
                             },
                             success: function(response) {
                                 if (response.status === 'success') {
-                                    $('#suspension-table').DataTable().destroy();
-                                    $('#suspension-tbody').html(response.html);
-                                    $('#suspension-table').DataTable();
+                                    $('#violation-table').DataTable().destroy();
+                                    $('#violation-tbody').html(response.html);
+                                    $('#violation-table').DataTable();
                                     
                                 } else {
                                     toastr.error(response.message || 'Something went wrong.');
@@ -746,7 +746,7 @@
                     let branchIds = $(this).val();  
 
                     $.ajax({
-                        url: "{{ route('suspension.employees-by-branch') }}",
+                        url: "{{ route('violation.employees-by-branch') }}",
                         type: "GET",
                         data: {
                             branch_id: Array.isArray(branchIds) ? branchIds.join(',') : branchIds
@@ -773,11 +773,11 @@
                 });
 
 
-                // File Suspension Report Submission
+                // File Violation Report Submission
                 document.addEventListener('DOMContentLoaded', () => {
-                    const fileForm = document.getElementById('fileSuspensionForm');
-                    const errorBox = document.getElementById('file-suspension-error');
-                    const successBox = document.getElementById('file-suspension-success');
+                    const fileForm = document.getElementById('fileViolationForm');
+                    const errorBox = document.getElementById('file-violation-error');
+                    const successBox = document.getElementById('file-violation-success');
 
                     fileForm.addEventListener('submit', async (e) => {
                         e.preventDefault();
@@ -787,7 +787,7 @@
                         const formData = new FormData(fileForm);
 
                         try {
-                                const res = await fetch("{{ route('api.suspensionFileReport') }}", {
+                                const res = await fetch("{{ route('api.violationFileReport') }}", {
                                 method: 'POST',
                                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                                 body: formData
@@ -796,9 +796,9 @@
                             const data = await res.json();
 
                             if (data.status === 'success') {
-                                toastr.success('Suspension filed successfully','Success');
+                                toastr.success('Violation filed successfully','Success');
                                 fileForm.reset(); 
-                                document.querySelector('#fileSuspensionModal .btn-close').click();
+                                document.querySelector('#fileViolationModal .btn-close').click();
                                 filter(); 
                             } else {
                                    toastr.error(data.message || 'Something went wrong.','Error');
@@ -818,13 +818,13 @@
                         const noweError = $('#nowe-error');
                         const noweSuccess = $('#nowe-success');
                         const noweFile = $('#nowe_file');
-                        const noweSuspensionId = $('#nowe_suspension_id');
+                        const noweViolationId = $('#nowe_violation_id');
    
                         $(document).on('click', '.issue-nowe', function (e) { 
                                 e.preventDefault(); 
                                 const $btn = $(this);
-                                const suspensionId = $btn.data('id'); 
-                                $(noweSuspensionId).val(suspensionId);
+                                const violationId = $btn.data('id'); 
+                                $(noweViolationId).val(violationId);
                                 issueNoweModal.modal('show');
                                 
                         });
@@ -832,9 +832,9 @@
                         noweForm.on('submit', function (e) {
                             e.preventDefault();
   
-                            const suspensionId = noweSuspensionId.val();
-                            if (!suspensionId) { 
-                                toast.error('Undefined suspension id','Error');
+                            const violationId = noweViolationId.val();
+                            if (!violationId) { 
+                                toast.error('Undefined violation id','Error');
                                 return;
                             }
 
@@ -855,7 +855,7 @@
                             formData.append('nowe_file', file);
 
                             $.ajax({
-                                url: `{{ url('/api/suspension') }}/${suspensionId}/issue-nowe`,
+                                url: `{{ url('/api/violation') }}/${violationId}/issue-nowe`,
                                 type: "POST",
                                 data: formData,
                                 processData: false,
@@ -891,25 +891,25 @@
             </script> 
             <script>
                 $(document).ready(function () {
-                    const apiSuspensionBase = "{{ url('/api/suspension') }}"; 
+                    const apiViolationBase = "{{ url('/api/violation') }}"; 
                     const $investigationModal = $('#InvestigationReportModal');
                     const investigationModal = new bootstrap.Modal($investigationModal[0]);
                     const $investigationForm = $('#investigationForm');
                     const $investigationError = $('#investigation-error');
                     const $investigationSuccess = $('#investigation-success');
-                    const $investigationSuspensionId = $('#investigation_suspension_id');
+                    const $investigationViolationId = $('#investigation_violation_id');
  
-                    window.openInvestigationModal = function (suspensionId) {
+                    window.openInvestigationModal = function (violationId) {
                         $investigationForm[0].reset();
                         $investigationError.addClass('d-none');
                         $investigationSuccess.addClass('d-none');
 
-                        if (!suspensionId) {
-                            $investigationError.text('Invalid suspension id.').removeClass('d-none');
+                        if (!violationId) {
+                            $investigationError.text('Invalid violation id.').removeClass('d-none');
                             return;
                         }
 
-                        $investigationSuspensionId.val(suspensionId);
+                        $investigationViolationId.val(violationId);
                         investigationModal.show();
                     };
  
@@ -918,11 +918,11 @@
                         $investigationError.addClass('d-none');
                         $investigationSuccess.addClass('d-none');
 
-                        const id = $investigationSuspensionId.val();
+                        const id = $investigationViolationId.val();
                         const notes = $('#investigation_notes').val()?.trim() || '';
 
                         if (!id) {
-                            $investigationError.text('Invalid suspension record.').removeClass('d-none');
+                            $investigationError.text('Invalid violation record.').removeClass('d-none');
                             return;
                         }
 
@@ -940,7 +940,7 @@
                         formData.append('investigation_notes', notes);
 
                         $.ajax({
-                            url: `${apiSuspensionBase}/${id}/investigate`,
+                            url: `${apiViolationBase}/${id}/investigate`,
                             method: 'POST',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                             data: formData,
@@ -966,19 +966,19 @@
                     const $damForm = $('#issueDamForm');
                     const $damError = $('#dam-error');
                     const $damSuccess = $('#dam-success');
-                    const $damSuspensionId = $('#dam_suspension_id');
+                    const $damViolationId = $('#dam_violation_id');
  
-                    window.openDamModal = function (suspensionId) {
+                    window.openDamModal = function (violationId) {
                         $damForm[0].reset();
                         $damError.addClass('d-none');
                         $damSuccess.addClass('d-none');
 
-                        if (!suspensionId) {
-                            $damError.text('Invalid suspension id.').removeClass('d-none');
+                        if (!violationId) {
+                            $damError.text('Invalid violation id.').removeClass('d-none');
                             return;
                         }
 
-                        $damSuspensionId.val(suspensionId);
+                        $damViolationId.val(violationId);
                         damModal.show();
                     };
  
@@ -987,18 +987,18 @@
                         $damError.addClass('d-none');
                         $damSuccess.addClass('d-none');
 
-                        const id = $damSuspensionId.val();
+                        const id = $damViolationId.val();
                         const file = $('#dam_file')[0].files[0];
-                        const suspensionType = $('input[name="suspension_type"]:checked').val();
+                        const violationType = $('input[name="violation_type"]:checked').val();
 
-                        if (!id) { $damError.text('Invalid suspension record.').removeClass('d-none'); return; }
+                        if (!id) { $damError.text('Invalid violation record.').removeClass('d-none'); return; }
                         if (!file) { $damError.text('Please upload a DAM file.').removeClass('d-none'); return; }
-                        if (!suspensionType) { $damError.text('Please select suspension type.').removeClass('d-none'); return; }
+                        if (!violationType) { $damError.text('Please select violation type.').removeClass('d-none'); return; }
                         if (file.size > 2 * 1024 * 1024) { $damError.text('File exceeds 2MB limit.').removeClass('d-none'); return; }
 
                         const formData = new FormData();
                         formData.append('dam_file', file);
-                        formData.append('suspension_type', suspensionType);
+                        formData.append('violation_type', violationType);
 
                         const submitDam = (url) => $.ajax({
                             url: url,
@@ -1010,7 +1010,7 @@
                         });
 
                         // Try primary submission
-                        submitDam(`${apiSuspensionBase}/${id}/issue-dam`)
+                        submitDam(`${apiViolationBase}/${id}/issue-dam`)
                         .done(function (data) {
                             if (data.status === 'success') {
                                  toastr.success(data.message || 'DAM issued successfully.','Success');
@@ -1022,13 +1022,13 @@
                         })
                         .fail(function (xhr) {
                             if (xhr.status === 404 || /not found/i.test(xhr.responseJSON?.message || '')) {
-                                // Fallback: lookup suspension by employee id
-                                $.getJSON(`${apiSuspensionBase}?employee_id=${encodeURIComponent(id)}&status=for_dam_issuance`)
+                                // Fallback: lookup violation by employee id
+                                $.getJSON(`${apiViolationBase}?employee_id=${encodeURIComponent(id)}&status=for_dam_issuance`)
                                 .done(function (lookupData) {
-                                    const first = (lookupData.suspensions || lookupData.data || lookupData)[0];
-                                    if (!first?.id) { $damError.text('Suspension case not found for this employee.').removeClass('d-none'); return; }
+                                    const first = (lookupData.violations || lookupData.data || lookupData)[0];
+                                    if (!first?.id) { $damError.text('Violation case not found for this employee.').removeClass('d-none'); return; }
                                     // Retry DAM submission
-                                    submitDam(`${apiSuspensionBase}/${first.id}/issue-dam`).done(function (retryData) {
+                                    submitDam(`${apiViolationBase}/${first.id}/issue-dam`).done(function (retryData) {
                                         if (retryData.status === 'success') {
                                             toastr.success(retryData.message || 'DAM issued successfully.','Success');
                                             damModal.hide(); 
@@ -1042,7 +1042,7 @@
                                     });
                                 })
                                 .fail(function () {
-                                    toastr.error('No suspension found for given employee.','Error');
+                                    toastr.error('No violation found for given employee.','Error');
                                 });
                             } else {
                                 toastr.error(xhr.responseJSON?.message || `Error (${xhr.status}) issuing DAM.`,'Error');
@@ -1054,85 +1054,85 @@
             </script>
 
             <script>
-               // View Suspension Info Modal
+               // View Violation Info Modal
                 $(document).ready(function () {
-                    const apiSuspensionBase = "{{ url('/api/suspension') }}";
-                    const viewModal = $('#viewSuspensionModal');
-                    const $viewLoading = $('#view-suspension-loading');
-                    const $viewError = $('#view-suspension-error');
-                    const $viewContent = $('#view-suspension-content');
+                    const apiViolationBase = "{{ url('/api/violation') }}";
+                    const viewModal = $('#viewViolationModal');
+                    const $viewLoading = $('#view-violation-loading');
+                    const $viewError = $('#view-violation-error');
+                    const $viewContent = $('#view-violation-content');
     
  
-                    $(document).on('click', '.view-suspension', function (e) { 
+                    $(document).on('click', '.view-violation', function (e) { 
                         e.preventDefault(); 
                         const $btn = $(this);
-                        const suspensionId = $btn.data('id');  
-                        fetchSuspensionDetails(suspensionId);
+                        const violationId = $btn.data('id');  
+                        fetchViolationDetails(violationId);
                         viewModal.modal('show');
                             
                     }); 
 
-                    function fetchSuspensionDetails(suspensionId) {
+                    function fetchViolationDetails(violationId) {
                         $.ajax({
-                            url: `${apiSuspensionBase}/${suspensionId}`,
+                            url: `${apiViolationBase}/${violationId}`,
                             method: 'GET',
                             headers: {
                                 'Accept': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function (data) {
-                                if (data.status === 'success' && data.suspension) {
-                                    displaySuspensionDetails(data.suspension);
+                                if (data.status === 'success' && data.violation) {
+                                    displayViolationDetails(data.violation);
                                 } else { 
-                                    toastr.error('Failed to load suspension details','Error');
+                                    toastr.error('Failed to load violation details','Error');
                                 }
                             },
                             error: function (xhr, status, error) { 
-                                toastr.error(`Error fetching suspension details (${xhr.status}): ${error}`,'Error');
+                                toastr.error(`Error fetching violation details (${xhr.status}): ${error}`,'Error');
                             }
                         });
                     } 
 
-                    function displaySuspensionDetails(suspension) {
+                    function displayViolationDetails(violation) {
                         // Employee Information
-                        $('#view_employee_name').text(suspension.employee_name || 'N/A');
-                        $('#view_employee_id').text(suspension.employee_id || 'N/A');
-                        $('#view_branch').text(suspension.branch || 'N/A');
-                        $('#view_department').text(suspension.department || 'N/A');
-                        $('#view_designation').text(suspension.designation || 'N/A');
+                        $('#view_employee_name').text(violation.employee_name || 'N/A');
+                        $('#view_employee_id').text(violation.employee_id || 'N/A');
+                        $('#view_branch').text(violation.branch || 'N/A');
+                        $('#view_department').text(violation.department || 'N/A');
+                        $('#view_designation').text(violation.designation || 'N/A');
 
-                        // Suspension Information
+                        // Violation Information
                         const statusBadge = $('#view_status');
-                        const status = suspension.status || 'N/A';
+                        const status = violation.status || 'N/A';
                         statusBadge.text(status).attr('class', 'badge bg-' + getStatusColor(status));
 
-                        $('#view_type').text(suspension.suspension_type ? suspension.suspension_type.replace('_', ' ').toUpperCase() : 'N/A');
-                        $('#view_filed_date').text(suspension.created_at ? new Date(suspension.created_at).toLocaleDateString() : 'N/A');
-                        $('#view_start_date').text(suspension.suspension_start_date || 'N/A');
-                        $('#view_end_date').text(suspension.suspension_end_date || 'N/A');
-                        $('#view_duration').text(suspension.suspension_days ? `${suspension.suspension_days} day(s)` : 'N/A');
+                        $('#view_type').text(violation.violation_type ? violation.violation_type.replace('_', ' ').toUpperCase() : 'N/A');
+                        $('#view_filed_date').text(violation.created_at ? new Date(violation.created_at).toLocaleDateString() : 'N/A');
+                        $('#view_start_date').text(violation.violation_start_date || 'N/A');
+                        $('#view_end_date').text(violation.violation_end_date || 'N/A');
+                        $('#view_duration').text(violation.violation_days ? `${violation.violation_days} day(s)` : 'N/A');
 
                         // Offense Details
-                        $('#view_offense_details').text(suspension.offense_details || 'No details provided.'); 
+                        $('#view_offense_details').text(violation.offense_details || 'No details provided.'); 
                         // Investigation Notes
-                        if (suspension.investigation_notes) {
-                            $('#view_investigation_notes').text(suspension.investigation_notes);
+                        if (violation.investigation_notes) {
+                            $('#view_investigation_notes').text(violation.investigation_notes);
                             $('#view_investigation_card').show();
                         } else {
                             $('#view_investigation_card').hide();
                         }
 
                         // Implementation Remarks
-                        if (suspension.implementation_remarks) {
-                            $('#view_implementation_remarks').text(suspension.implementation_remarks);
+                        if (violation.implementation_remarks) {
+                            $('#view_implementation_remarks').text(violation.implementation_remarks);
                             $('#view_implementation_card').show();
                         } else {
                             $('#view_implementation_card').hide();
                         }
 
                         // Employee Reply
-                        if (suspension.employee_reply) {
-                            const reply = suspension.employee_reply;
+                        if (violation.employee_reply) {
+                            const reply = violation.employee_reply;
                             $('#view_employee_reply_text').text(reply.description || 'No reply text provided.');
                             $('#view_employee_reply_date').text(reply.action_date || 'N/A');
 
@@ -1150,9 +1150,9 @@
 
                         // Attachments
                         const attachments = [];
-                        if (suspension.information_report_file) attachments.push({ name: 'Information Report', url: suspension.information_report_file });
-                        if (suspension.nowe_file) attachments.push({ name: 'NOWE Document', url: suspension.nowe_file });
-                        if (suspension.dam_file) attachments.push({ name: 'DAM Document', url: suspension.dam_file });
+                        if (violation.information_report_file) attachments.push({ name: 'Information Report', url: violation.information_report_file });
+                        if (violation.nowe_file) attachments.push({ name: 'NOWE Document', url: violation.nowe_file });
+                        if (violation.dam_file) attachments.push({ name: 'DAM Document', url: violation.dam_file });
 
                         const $attachmentsList = $('#view_attachments_list');
                         $attachmentsList.empty();
@@ -1190,42 +1190,42 @@
             </script>
 
             <script>
-                // Implement Suspension Modal
+                // Implement Violation Modal
                 document.addEventListener('DOMContentLoaded', () => {
-                    const apiSuspensionBase = "{{ url('/api/suspension') }}";
-                    const implementModal = new bootstrap.Modal(document.getElementById('implementSuspensionModal'));
-                    const implementForm = document.getElementById('implementSuspensionForm');
-                    const implementError = document.getElementById('implement-suspension-error');
-                    const implementSuccess = document.getElementById('implement-suspension-success');
-                    const implementSuspensionId = document.getElementById('implement_suspension_id');
+                    const apiViolationBase = "{{ url('/api/violation') }}";
+                    const implementModal = new bootstrap.Modal(document.getElementById('implementViolationModal'));
+                    const implementForm = document.getElementById('implementViolationForm');
+                    const implementError = document.getElementById('implement-violation-error');
+                    const implementSuccess = document.getElementById('implement-violation-success');
+                    const implementViolationId = document.getElementById('implement_violation_id');
 
                     // Open modal function
-                    window.openSuspendModal = function (suspensionId) {
+                    window.openSuspendModal = function (violationId) {
                         implementForm.reset();
                         implementError.classList.add('d-none');
                         implementSuccess.classList.add('d-none');
                         
-                        if (!suspensionId) {
-                            implementError.textContent = 'Invalid suspension id.';
+                        if (!violationId) {
+                            implementError.textContent = 'Invalid violation id.';
                             implementError.classList.remove('d-none');
                             return;
                         }
                         
-                        implementSuspensionId.value = suspensionId;
+                        implementViolationId.value = violationId;
                         
                         // Set minimum date to today
                         const today = new Date().toISOString().split('T')[0];
-                        document.getElementById('suspension_start_date').setAttribute('min', today);
-                        document.getElementById('suspension_end_date').setAttribute('min', today);
+                        document.getElementById('violation_start_date').setAttribute('min', today);
+                        document.getElementById('violation_end_date').setAttribute('min', today);
                         
                         implementModal.show();
                     };
 
                     // Update end date minimum when start date changes
-                    document.getElementById('suspension_start_date').addEventListener('change', function() {
+                    document.getElementById('violation_start_date').addEventListener('change', function() {
                         const startDate = this.value;
                         if (startDate) {
-                            document.getElementById('suspension_end_date').setAttribute('min', startDate);
+                            document.getElementById('violation_end_date').setAttribute('min', startDate);
                         }
                     });
 
@@ -1235,13 +1235,13 @@
                         implementError.classList.add('d-none');
                         implementSuccess.classList.add('d-none');
 
-                        const id = implementSuspensionId.value;
-                        const startDate = document.getElementById('suspension_start_date').value;
-                        const endDate = document.getElementById('suspension_end_date').value;
+                        const id = implementViolationId.value;
+                        const startDate = document.getElementById('violation_start_date').value;
+                        const endDate = document.getElementById('violation_end_date').value;
                         const remarks = document.getElementById('implementation_remarks').value;
                         
                         if (!id) {
-                            implementError.textContent = 'Invalid suspension record.';
+                            implementError.textContent = 'Invalid violation record.';
                             implementError.classList.remove('d-none');
                             return;
                         }
@@ -1260,14 +1260,14 @@
                         }
 
                         const formData = new FormData();
-                        formData.append('suspension_start_date', startDate);
-                        formData.append('suspension_end_date', endDate);
+                        formData.append('violation_start_date', startDate);
+                        formData.append('violation_end_date', endDate);
                         if (remarks) {
                             formData.append('implementation_remarks', remarks);
                         }
 
                         try {
-                            const res = await fetch(`${apiSuspensionBase}/${id}/implement`, {
+                            const res = await fetch(`${apiViolationBase}/${id}/implement`, {
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -1286,14 +1286,14 @@
                             }
 
                             if (res.ok && data.status === 'success') {
-                                toastr.success(data.message || 'Suspension implemented successfully.','Success'); 
+                                toastr.success(data.message || 'Violation implemented successfully.','Success'); 
                                 implementModal.hide();
                                 filter();
                             } else {
                                 throw new Error(data.message || `Server error (${res.status}).`);
                             }
                         } catch (err) {
-                            toastr.error(err.message || 'Error implementing suspension.','Error');
+                            toastr.error(err.message || 'Error implementing violation.','Error');
                             
                         }
                     });
@@ -1301,62 +1301,62 @@
             </script>
             <script>
                 $(document).ready(function() {
-                    const apiSuspensionBase = "{{ url('/api/suspension') }}";
+                    const apiViolationBase = "{{ url('/api/violation') }}";
 
-                    const $editModal = $('#editSuspensionModal');
-                    const $editForm = $('#editSuspensionForm');
-                    const $editError = $('#edit-suspension-error');
-                    const $editSuccess = $('#edit-suspension-success');
-                    const $editSuspensionId = $('#edit_suspension_id');
+                    const $editModal = $('#editViolationModal');
+                    const $editForm = $('#editViolationForm');
+                    const $editError = $('#edit-violation-error');
+                    const $editSuccess = $('#edit-violation-success');
+                    const $editViolationId = $('#edit_violation_id');
                     const $currentFileInfo = $('#current_file_info');
  
-                    window.openEditSuspensionModal = function(suspensionId) {
+                    window.openEditViolationModal = function(violationId) {
                         $editForm[0].reset();
                         $editError.addClass('d-none').text('');
                         $editSuccess.addClass('d-none').text('');
                         $currentFileInfo.html('');
 
-                        if (!suspensionId) {
-                            $editError.text('Invalid suspension id.').removeClass('d-none');
+                        if (!violationId) {
+                            $editError.text('Invalid violation id.').removeClass('d-none');
                             return;
                         }
 
-                        $editSuspensionId.val(suspensionId);
+                        $editViolationId.val(violationId);
  
-                        fetchAndPopulateSuspension(suspensionId);
+                        fetchAndPopulateViolation(violationId);
 
                         $editModal.modal('show');
                     };
 
-                    function fetchAndPopulateSuspension(suspensionId) {
+                    function fetchAndPopulateViolation(violationId) {
                         $.ajax({
-                            url: `${apiSuspensionBase}/${suspensionId}`,
+                            url: `${apiViolationBase}/${violationId}`,
                             method: 'GET',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                             dataType: 'json',
                             success: function(data) {
-                                if (data.status === 'success' && data.suspension) {
-                                    const suspension = data.suspension;
+                                if (data.status === 'success' && data.violation) {
+                                    const violation = data.violation;
 
-                                    $('#edit_employee_info').text(`${suspension.employee_name || 'N/A'} (${suspension.employee_id || 'N/A'})`);
-                                    $('#edit_offense_details').val(suspension.offense_details || '');
-                                    $('#edit_disciplinary_action').val(suspension.disciplinary_action || '');
-                                    $('#edit_remarks').val(suspension.remarks || '');
+                                    $('#edit_employee_info').text(`${violation.employee_name || 'N/A'} (${violation.employee_id || 'N/A'})`);
+                                    $('#edit_offense_details').val(violation.offense_details || '');
+                                    $('#edit_disciplinary_action').val(violation.disciplinary_action || '');
+                                    $('#edit_remarks').val(violation.remarks || '');
 
-                                    if (suspension.information_report_file) {
+                                    if (violation.information_report_file) {
                                         $currentFileInfo.html(
                                             `<small class="text-info">
                                                 <i class="ti ti-file-check"></i> Current file: 
-                                                <a href="/storage/${suspension.information_report_file}" target="_blank">View Document</a>
+                                                <a href="/storage/${violation.information_report_file}" target="_blank">View Document</a>
                                             </small>`
                                         );
                                     }
                                 } else {
-                                   toastr.error('Failed to load suspension details','Error');
+                                   toastr.error('Failed to load violation details','Error');
                                 }
                             },
                             error: function(xhr, status, error) {
-                                  toastr.error('Error loading suspension details' + error ,'Error');
+                                  toastr.error('Error loading violation details' + error ,'Error');
                             }
                         });
                     }
@@ -1366,14 +1366,14 @@
                         $editError.addClass('d-none').text('');
                         $editSuccess.addClass('d-none').text('');
 
-                        const id = $editSuspensionId.val();
+                        const id = $editViolationId.val();
                         const offenseDetails = $('#edit_offense_details').val().trim();
                         const disciplinaryAction = $('#edit_disciplinary_action').val().trim();
                         const remarks = $('#edit_remarks').val().trim();
                         const fileInput = $('#edit_information_report_file')[0];
 
                         if (!id) {
-                            $editError.text('Invalid suspension record.').removeClass('d-none');
+                            $editError.text('Invalid violation record.').removeClass('d-none');
                             return;
                         }
 
@@ -1390,7 +1390,7 @@
                         if (fileInput.files.length > 0) formData.append('information_report_file', fileInput.files[0]);
 
                         $.ajax({
-                            url: `${apiSuspensionBase}/${id}`,
+                            url: `${apiViolationBase}/${id}`,
                             method: 'POST',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                             data: formData,
@@ -1398,22 +1398,22 @@
                             processData: false,
                             success: function(data) {
                                 if (data.status === 'success') {
-                                   toastr.success('Suspension updated successfully','Success');
+                                   toastr.success('Violation updated successfully','Success');
                                    filter();
                                    $editModal.modal('hide'); 
                                 } else {
-                                    toastr.error('Error updating suspension','Error');
+                                    toastr.error('Error updating violation','Error');
                                 }
                             },
                             error: function(xhr, status, error) {
-                               toastr.error('Error updating suspension' + error ,'Error');
+                               toastr.error('Error updating violation' + error ,'Error');
                             }
                         });
                     });
  
-                    $(document).on('click', '.edit-suspension', function() {
-                        const suspensionId = $(this).data('id');
-                        openEditSuspensionModal(suspensionId);
+                    $(document).on('click', '.edit-violation', function() {
+                        const violationId = $(this).data('id');
+                        openEditViolationModal(violationId);
                     });
                 });
             </script>
@@ -1422,36 +1422,36 @@
             <script>
                 // Return to Work Modal
                 document.addEventListener('DOMContentLoaded', () => {
-                    const apiSuspensionBase = "{{ url('/api/suspension') }}";
+                    const apiViolationBase = "{{ url('/api/violation') }}";
                     const returnModal = new bootstrap.Modal(document.getElementById('returnToWorkModal'));
                     const returnForm = document.getElementById('returnToWorkForm');
                     const returnError = document.getElementById('return-error');
                     const returnSuccess = document.getElementById('return-success');
-                    const returnSuspensionId = document.getElementById('return_suspension_id');
+                    const returnViolationId = document.getElementById('return_violation_id');
 
                     // Open return to work modal function
-                    window.completeSuspension = function (suspensionId) {
+                    window.completeViolation = function (violationId) {
                         returnForm.reset();
                         returnError.classList.add('d-none');
                         returnSuccess.classList.add('d-none');
                         
-                        if (!suspensionId) {
-                            returnError.textContent = 'Invalid suspension id.';
+                        if (!violationId) {
+                            returnError.textContent = 'Invalid violation id.';
                             returnError.classList.remove('d-none');
                             return;
                         }
                         
-                        returnSuspensionId.value = suspensionId;
+                        returnViolationId.value = violationId;
                         
-                        // Fetch suspension data to show employee info
-                        fetchSuspensionForReturn(suspensionId);
+                        // Fetch violation data to show employee info
+                        fetchViolationForReturn(violationId);
                         
                         returnModal.show();
                     };
 
-                    async function fetchSuspensionForReturn(suspensionId) {
+                    async function fetchViolationForReturn(violationId) {
                         try {
-                            const res = await fetch(`${apiSuspensionBase}/${suspensionId}`, {
+                            const res = await fetch(`${apiViolationBase}/${violationId}`, {
                                 method: 'GET',
                                 headers: {
                                     'Accept': 'application/json',
@@ -1461,22 +1461,22 @@
                             });
 
                             if (!res.ok) {
-                                throw new Error(`Failed to fetch suspension details (${res.status})`);
+                                throw new Error(`Failed to fetch violation details (${res.status})`);
                             }
 
                             const data = await res.json();
                             
-                            if (data.status === 'success' && data.suspension) {
-                                const suspension = data.suspension;
+                            if (data.status === 'success' && data.violation) {
+                                const violation = data.violation;
                                 
                                 // Populate employee info (read-only)
                                 document.getElementById('return_employee_info').textContent = 
-                                    `${suspension.employee_name || 'N/A'} (${suspension.employee_id || 'N/A'})`;
+                                    `${violation.employee_name || 'N/A'} (${violation.employee_id || 'N/A'})`;
                             } else {
-                                throw new Error(data.message || 'Failed to load suspension details.');
+                                throw new Error(data.message || 'Failed to load violation details.');
                             }
                         } catch (err) {
-                            returnError.textContent = err.message || 'Error loading suspension details.';
+                            returnError.textContent = err.message || 'Error loading violation details.';
                             returnError.classList.remove('d-none');
                         }
                     }
@@ -1487,16 +1487,16 @@
                         returnError.classList.add('d-none');
                         returnSuccess.classList.add('d-none');
 
-                        const id = returnSuspensionId.value;
+                        const id = returnViolationId.value;
                         
                         if (!id) {
-                            returnError.textContent = 'Invalid suspension record.';
+                            returnError.textContent = 'Invalid violation record.';
                             returnError.classList.remove('d-none');
                             return;
                         }
 
                         try {
-                            const res = await fetch(`${apiSuspensionBase}/${id}/return`, {
+                            const res = await fetch(`${apiViolationBase}/${id}/return`, {
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',

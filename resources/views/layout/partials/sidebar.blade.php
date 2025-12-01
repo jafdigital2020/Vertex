@@ -325,19 +325,19 @@
                             @if (in_array(19, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('suspension', 'suspension/employee', 'suspension/admin') ? 'active subdrop' : '' }}">
+                                        class="{{ Request::is('violation', 'violation/employee', 'violation/admin') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-alert-octagon"></i><span>Violation</span>
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][60]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('suspension-admin') }}"
-                                                    class="{{ Request::is('suspension/admin') ? 'active' : '' }}">Violation
+                                            <li><a href="{{ route('violation-admin') }}"
+                                                    class="{{ Request::is('violation/admin') ? 'active' : '' }}">Violation
                                                     (Admin)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][61]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ route('suspension-employee-list') }}"
-                                                    class="{{ Request::is('suspension/employee') ? 'active' : '' }}">Violation
+                                            <li><a href="{{ route('violation-employee-list') }}"
+                                                    class="{{ Request::is('violation/employee') ? 'active' : '' }}">Violation
                                                     (Employee)</a></li>
                                         @endif
                                     </ul>

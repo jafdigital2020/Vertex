@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SuspensionHR extends Model
+class ViolationHR extends Model
 {
     //
     use HasFactory;
@@ -20,9 +20,9 @@ class SuspensionHR extends Model
     ];
 
 
-    public function suspension()
+    public function violation()
     {
-        return $this->belongsTo(Suspension::class);
+        return $this->belongsTo(Violation::class);
     }
 
     public function hr()

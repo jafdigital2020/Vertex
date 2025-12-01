@@ -1,15 +1,12 @@
 <?php
 
-use App\Http\Controllers\Tenant\Employees\SuspensionController;
-use App\Http\Controllers\Tenant\Settings\BioController;
-use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Models\User;
 use App\Models\Assets;
 use App\Models\Department;
-
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 use Illuminate\Support\Facades\Route;
 use App\Notifications\UserNotification;
 use App\Http\Controllers\AuthController;
@@ -26,6 +23,7 @@ use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\SuperAdmin\PackageController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
 use App\Http\Controllers\Tenant\DesignationController;
+use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
@@ -39,13 +37,17 @@ use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
 use App\Http\Controllers\Tenant\Overtime\OvertimeController;
+use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
+use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
+use App\Http\Controllers\Tenant\Employees\ViolationController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
 use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
-use App\Http\Controllers\Tenant\Employees\SalaryBondController;
+use App\Http\Controllers\Tenant\Employees\SalaryBondController; 
+use App\Http\Controllers\Tenant\Payroll\CustomOtRateController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Report\PayrollReportController;
 use App\Http\Controllers\Tenant\Settings\CustomfieldController;
@@ -53,6 +55,7 @@ use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\Employees\InactiveListController;
 use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
@@ -63,9 +66,6 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
-use App\Http\Controllers\Tenant\Employees\InactiveListController;
-use App\Http\Controllers\Tenant\Payroll\AllowanceController;
-use App\Http\Controllers\Tenant\Payroll\CustomOtRateController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -254,14 +254,14 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
 
     //Suspension
-    Route::get('/suspension/admin', [SuspensionController::class, 'adminSuspensionEmployeeListIndex'])->name('suspension-admin')->middleware(CheckPermission::class . ':60');
-    Route::get('/suspension/admin-filter', [SuspensionController::class, 'filter'])->name('suspension-admin-filter');
-    // Route::get('/suspension/employees', [SuspensionController::class, 'suspensionEmployeeListIndex'])->name('suspension-employee-list')->middleware(CheckPermission::class . ':60');
-    Route::get('/suspension/employee', [SuspensionController::class, 'suspensionEmployeeListIndex'])->name('suspension-employee-list')->middleware(CheckPermission::class . ':61');
-    Route::get('/suspension/employee-filter', [SuspensionController::class, 'empfilter'])->name('suspension-employee-filter');
+    Route::get('/violation/admin', [ViolationController::class, 'adminViolationEmployeeListIndex'])->name('violation-admin')->middleware(CheckPermission::class . ':60');
+    Route::get('/violation/admin-filter', [ViolationController::class, 'filter'])->name('violation-admin-filter');
+    // Route::get('/violation/employees', [ViolationController::class, 'violationEmployeeListIndex'])->name('violation-employee-list')->middleware(CheckPermission::class . ':60');
+    Route::get('/violation/employee', [ViolationController::class, 'violationEmployeeListIndex'])->name('violation-employee-list')->middleware(CheckPermission::class . ':61');
+    Route::get('/violation/employee-filter', [ViolationController::class, 'empfilter'])->name('violation-employee-filter');
 
-    Route::get('/suspension/employees-by-branch', [SuspensionController::class, 'getEmployeesByBranch'])
-        ->name('suspension.employees-by-branch');
+    Route::get('/violation/employees-by-branch', [ViolationController::class, 'getEmployeesByBranch'])
+        ->name('violation.employees-by-branch');
 
 
     // Knowledge Base

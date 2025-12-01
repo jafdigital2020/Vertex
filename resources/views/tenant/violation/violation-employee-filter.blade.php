@@ -1,4 +1,4 @@
- @foreach($suspensions as $index => $s)
+ @foreach($violations as $index => $s)
                                             <tr>
                                                 <td class="text-center">{{ $index + 1 }}</td>
                                                 <td>{{ $s->offense_details ?? '—' }}</td>
@@ -18,9 +18,9 @@
                                                         {{ ucfirst(str_replace('_', ' ', $s->status)) }}
                                                     </span>
                                                 </td>
-                                                <td class="text-center">{{ $s->suspension_type ? strtoupper(str_replace('_', ' ', $s->suspension_type)) : '' }}</td>
-                                                <td class="text-center">{{ $s->suspension_start_date ?? '' }}</td>
-                                                <td class="text-center">{{ $s->suspension_end_date ?? '' }}</td>
+                                                <td class="text-center">{{ $s->violation_type ? strtoupper(str_replace('_', ' ', $s->violation_type)) : '' }}</td>
+                                                <td class="text-center">{{ $s->violation_start_date ?? '' }}</td>
+                                                <td class="text-center">{{ $s->violation_end_date ?? '' }}</td>
                                                 <td class="text-center">
                                                     @if($s->information_report_file)
                                                         <a href="{{ asset('storage/' . $s->information_report_file) }}" target="_blank" class="btn btn-sm btn-outline-primary">
@@ -31,7 +31,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-center">
-                                                    <button class="btn btn-sm btn-info view-suspension" data-id="{{ $s->id }}" title="View Details">
+                                                    <button class="btn btn-sm btn-info view-violation" data-id="{{ $s->id }}" title="View Details">
                                                         <i class="ti ti-eye"></i>
                                                     </button>
                                                     @if( $s->status === 'awaiting_reply')

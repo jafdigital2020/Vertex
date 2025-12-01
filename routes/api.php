@@ -32,7 +32,7 @@ use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
 use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\SalaryBondController;
-use App\Http\Controllers\Tenant\Employees\SuspensionController;
+use App\Http\Controllers\Tenant\Employees\ViolationController;
 use App\Http\Controllers\Tenant\Payroll\CustomOtRateController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Report\PayrollReportController;
@@ -279,39 +279,39 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/policy/remove-target', [PolicyController::class, 'removeTarget'])->name('api.policyRemoveTarget');
     Route::put('/policy/update/{id}', [PolicyController::class, 'policyUpdate'])->name('api.policyUpdate');
 
-    // ============= Suspension API ================ //
-    Route::get('/employees/suspensions', [SuspensionController::class, 'adminSuspensionEmployeeListIndex'])->name('api.adminSuspensionEmployeeListIndex');
+    // ============= Violation API ================ //
+    Route::get('/employees/violations', [ViolationController::class, 'adminViolationEmployeeListIndex'])->name('api.adminViolationEmployeeListIndex');
 
-    Route::get('/suspension/{id}', [SuspensionController::class, 'show'])
-        ->name('api.suspensionShow');
+    Route::get('/violation/{id}', [ViolationController::class, 'show'])
+        ->name('api.violationShow');
 
-    Route::put('/suspension/{id}', [SuspensionController::class, 'update'])
-        ->name('api.suspensionUpdate');
+    Route::put('/violation/{id}', [ViolationController::class, 'update'])
+        ->name('api.violationUpdate');
 
-    Route::post('/suspension/file-report', [SuspensionController::class, 'fileSuspensionReport'])
-        ->name('api.suspensionFileReport');
+    Route::post('/violation/file-report', [ViolationController::class, 'fileViolationReport'])
+        ->name('api.violationFileReport');
 
-    Route::post('/suspension/{id}/issue-nowe', [SuspensionController::class, 'issueNOWE'])
-        ->name('api.suspensionIssueNOWE');
+    Route::post('/violation/{id}/issue-nowe', [ViolationController::class, 'issueNOWE'])
+        ->name('api.violationIssueNOWE');
 
-    Route::post('/suspension/{id}/receive-reply', [SuspensionController::class, 'receiveReply'])
-        ->name('api.suspensionReceiveReply');
-
-
-    Route::post('/suspension/{id}/investigate', [SuspensionController::class, 'conductInvestigation'])
-        ->name('api.suspensionConductInvestigation');
+    Route::post('/violation/{id}/receive-reply', [ViolationController::class, 'receiveReply'])
+        ->name('api.violationReceiveReply');
 
 
-    Route::post('/suspension/{id}/issue-dam', [SuspensionController::class, 'issueDAM'])
-        ->name('api.suspensionIssueDAM');
-
-    Route::post('/suspension/{id}/implement', [SuspensionController::class, 'implementSuspension'])
-        ->name('api.suspensionImplementSuspension');
+    Route::post('/violation/{id}/investigate', [ViolationController::class, 'conductInvestigation'])
+        ->name('api.violationConductInvestigation');
 
 
+    Route::post('/violation/{id}/issue-dam', [ViolationController::class, 'issueDAM'])
+        ->name('api.violationIssueDAM');
 
-    Route::post('/suspension/{id}/return', [SuspensionController::class, 'markReturnToWork'])
-        ->name('api.suspensionMarkReturnToWork');
+    Route::post('/violation/{id}/implement', [ViolationController::class, 'implementViolation'])
+        ->name('api.violationImplementViolation');
+
+
+
+    Route::post('/violation/{id}/return', [ViolationController::class, 'markReturnToWork'])
+        ->name('api.violationMarkReturnToWork');
 
 
     // ============= Resignation API ================ //

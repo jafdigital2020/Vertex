@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Suspension extends Model
+class Violation extends Model
 {
     //
     use HasFactory;
@@ -17,10 +17,10 @@ class Suspension extends Model
             'dam_file',
             'dam_issued_at',
             'disciplinary_action',
-            'suspension_type',
-            'suspension_start_date',
-            'suspension_end_date',
-            'suspension_days',
+            'violation_type',
+            'violation_start_date',
+            'violation_end_date',
+            'violation_days',
             'implemented_by',
             'implementation_remarks',
             'return_to_work_at',
@@ -44,12 +44,12 @@ class Suspension extends Model
     // HR assignments (many HRs can be assigned)
     public function hrAssignments()
     {
-        return $this->hasMany(SuspensionHR::class);
+        return $this->hasMany(ViolationHR::class);
     }
 
     // Timeline or actions related to this suspension
     public function actions()
     {
-        return $this->hasMany(SuspensionAction::class);
+        return $this->hasMany(ViolationAction::class);
     }
 }

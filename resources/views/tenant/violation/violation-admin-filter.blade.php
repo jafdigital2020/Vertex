@@ -12,7 +12,7 @@
                                                     }
                                                 }
                                             @endphp
-                                               @foreach ($suspension as $idx => $sus) 
+                                               @foreach ($violation as $idx => $sus) 
                                                     <tr>    
                                                         <td>{{ $idx + 1 }}</td>
                                                         <td>{{  $sus->employee->personalInformation->first_name ?? '' }}  {{   $sus->employee->personalInformation->last_name ?? '' }}</td> 
@@ -24,15 +24,15 @@
                                                                 {{ $sus->status ?? '' }}
                                                             </span>
                                                         </td>
-                                                        <td class="text-center">{{ $sus->suspension_type ?? '' }}</td>
-                                                        <td class="text-center">{{ $sus->suspension_start_date ?? '' }}</td>
-                                                        <td class="text-center">{{ $sus->suspension_end_date ?? '' }}</td>  
+                                                        <td class="text-center">{{ $sus->violation_type ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->violation_start_date ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->violation_end_date ?? '' }}</td>  
                                                     <td class="text-center">
                                                         <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
 
-                                                            <button class="btn btn-sm btn-primary edit-suspension"
+                                                            <button class="btn btn-sm btn-primary edit-violation"
                                                                 data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                title="Edit Suspension">
+                                                                title="Edit Violation">
                                                                 <i class="ti ti-edit"></i>
                                                             </button>
 
@@ -43,9 +43,9 @@
                                                                     <i class="ti ti-mail"></i>
                                                                 </button>
                                                             @else
-                                                                <button class="btn btn-sm btn-secondary view-suspension"
+                                                                <button class="btn btn-sm btn-secondary view-violation"
                                                                     data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                    title="View Suspension Details">
+                                                                    title="View Violation Details">
                                                                     <i class="ti ti-eye"></i>
                                                                 </button>
                                                             @endif
@@ -77,17 +77,17 @@
                                                                             <i class="ti ti-file-check"></i>
                                                                         </button>
                                                                     @endif
-                                                                    @if($sus->suspension_start_date === null && $sus->suspension_end_date === null)
+                                                                    @if($sus->violation_start_date === null && $sus->violation_end_date === null)
                                                                     <button class="btn btn-sm btn-danger"
                                                                         onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
-                                                                        title="Implement Suspension">
+                                                                        title="Implement Violation">
                                                                         <i class="ti ti-ban"></i>
                                                                     </button>
                                                                     @endif
-                                                                    @if($sus->suspension_start_date !== null && $sus->suspension_end_date !== null)
+                                                                    @if($sus->violation_start_date !== null && $sus->violation_end_date !== null)
                                                                     <button class="btn btn-sm btn-secondary"
-                                                                        onclick="completeSuspension({{ $sus->id ?? $sus->employee->id }})"
-                                                                        title="Complete Suspension">
+                                                                        onclick="completeViolation({{ $sus->id ?? $sus->employee->id }})"
+                                                                        title="Complete Violation">
                                                                         <i class="ti ti-check"></i>
                                                                     </button>
                                                                     @endif
