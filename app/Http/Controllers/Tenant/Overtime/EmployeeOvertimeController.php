@@ -320,7 +320,7 @@ class EmployeeOvertimeController extends Controller
             'date_ot_in'        => $request->date_ot_in,
             'date_ot_out'       => $request->date_ot_out,
             'total_ot_minutes'  => $request->total_ot_minutes,
-            'total_night_diff_minutes'  => $request->total_night_diff_minutes,
+            'total_night_diff_minutes'  => $request->total_night_diff_minutes ?? 0,
             'file_attachment'   => $filePath,
             'reason'            => $request->reason,
             'offset_date'       => $request->offset_date,
