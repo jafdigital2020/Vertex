@@ -163,6 +163,37 @@
 </div>
 <!-- /Main Wrapper -->
 
+@if (!Route::is(['login',
+'login-2',
+'login-3',
+'register',
+'register-2',
+'register-3',
+'forgot-password',
+'forgot-password-2',
+'forgot-password-3',
+'reset-password',
+'reset-password-2',
+'reset-password-3',
+'email-verification',
+'email-verification-2',
+'email-verification-3',
+'lock-screen',
+'error-404',
+'error-500',
+'coming-soon',
+'under-maintenance',
+'under-construction',
+'success',
+'success-2',
+'success-3',
+'two-step-verification',
+'two-step-verification-2',
+'two-step-verification-3'
+]))
+    @include('layout.partials.demo-button')
+@endif
+
 @include('layout.partials.footer-scripts')
 </body>
 
