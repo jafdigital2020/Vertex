@@ -192,6 +192,7 @@
 'two-step-verification-3'
 ]))
     @include('layout.partials.demo-button')
+    @include('layout.partials.subscription-marquee')
 @endif
 
 @include('layout.partials.footer-scripts')
