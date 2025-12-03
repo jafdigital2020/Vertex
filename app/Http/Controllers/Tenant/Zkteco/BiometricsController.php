@@ -255,6 +255,17 @@ class BiometricsController extends Controller
                 $state = $tabParts[2] ?? 0; // Status: 0=IN, 1=OUT, etc.
                 $verifyType = $tabParts[3] ?? null; // Verify Mode: 1=Fingerprint, etc.
                 // Additional fields: $tabParts[4+] may contain workcode, etc.
+
+                Log::info('🎯 ZKTeco Direct Punch State Detected', [
+                    'line_index' => $lineIndex,
+                    'employee_id' => $pin,
+                    'datetime' => $time,
+                    'punch_state_number' => $state,
+                    'verify_type' => $verifyType,
+                    'raw_line' => $line,
+                    'tab_parts_count' => count($tabParts),
+                    'all_tab_parts' => $tabParts
+                ]);
             }
 
             // ✅ METHOD 2: Handle "ATTLOG" prefixed lines (for Pull Mode compatibility)
