@@ -311,7 +311,7 @@ jobs:
           password: ${{ secrets.VPS_PASS }}
           script: |
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
-            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timora
             echo "Creating site for domain: $DOMAIN_NAME with user: $SITE_USER"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
             echo "Site creation completed successfully"
@@ -350,7 +350,21 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           source: "."
-          target: "/home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}"
+          target: "/tmp/deploy-${{ env.SUBDOMAIN }}"
+
+      - name: Move files to correct location with sanitized username
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASS }}
+          script: |
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timora
+            TARGET_DIR="/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}"
+            mkdir -p "$TARGET_DIR"
+            rsync -av /tmp/deploy-${{ env.SUBDOMAIN }}/ "$TARGET_DIR/"
+            rm -rf /tmp/deploy-${{ env.SUBDOMAIN }}
+            echo "Files moved to $TARGET_DIR successfully"
 
       - name: Notify file deployment completed
         run: |
@@ -386,6 +400,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timora
             DB_NAME=$(echo "${{ env.COMPANY_NAME }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
             DB_USER=$(echo "${{ env.USERNAME }}" | tr -d ' ._' | tr -cd '[:alnum:]')dev
             DB_PASS=JAF2025
@@ -393,12 +408,12 @@ jobs:
             # Create database and user using clpctl
             clpctl db:add --domainName="${{ env.SUBDOMAIN }}" --databaseName="$DB_NAME" --databaseUserName="$DB_USER" --databaseUserPassword="$DB_PASS"
 
-            cd "/home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}"
+            cd "/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}"
             cp .env.testing .env
             composer install --no-dev
 
             # Update .env with new DB credentials before running artisan commands
-            ENV_PATH="/home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            ENV_PATH="/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/.env"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=root/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}/" "$ENV_PATH"
@@ -415,42 +430,42 @@ jobs:
             sed -i "s|^HITPAY_WEBHOOK_URL=.*|HITPAY_WEBHOOK_URL=${APP_URL}/hitpay/webhook|" "$ENV_PATH"
 
             # add worker config
-            WORKER_CONF="/etc/supervisor/conf.d/${{ env.USERNAME }}-timora-worker.conf"
+            WORKER_CONF="/etc/supervisor/conf.d/$SITE_USER-timora-worker.conf"
             cat <<EOF | sudo tee "$WORKER_CONF"
-            [program:${{ env.USERNAME }}-timora-worker]
+            [program:$SITE_USER-timora-worker]
             process_name=%(program_name)s_%(process_num)02d
-            command=php /home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
+            command=php /home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
             autostart=true
             autorestart=true
             user=root
             numprocs=1
             redirect_stderr=true
-            stdout_logfile=/home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
-            stderr_logfile=/home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
+            stdout_logfile=/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
+            stderr_logfile=/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
             stopwaitsecs=3600
             EOF
 
             # add email queue worker config
-            EMAIL_WORKER_CONF="/etc/supervisor/conf.d/${{ env.USERNAME }}-timora-email-worker.conf"
+            EMAIL_WORKER_CONF="/etc/supervisor/conf.d/$SITE_USER-timora-email-worker.conf"
             cat <<EOF | sudo tee "$EMAIL_WORKER_CONF"
-            [program:${{ env.USERNAME }}-timora-email-worker]
+            [program:$SITE_USER-timora-email-worker]
             process_name=%(program_name)s_%(process_num)02d
-            command=php /home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --queue=emails --sleep=3 --tries=3 --timeout=90
+            command=php /home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --queue=emails --sleep=3 --tries=3 --timeout=90
             autostart=true
             autorestart=true
             user=root
             numprocs=1
             redirect_stderr=true
-            stdout_logfile=/home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker.log
-            stderr_logfile=/home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker_error.log
+            stdout_logfile=/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker.log
+            stderr_logfile=/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker_error.log
             stopwaitsecs=3600
             EOF
 
-            ( crontab -l 2>/dev/null; echo "* * * * * /usr/bin/php8.2 /home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}/artisan schedule:run >> /dev/null 2>&1" ) | crontab -
+            ( crontab -l 2>/dev/null; echo "* * * * * /usr/bin/php8.2 /home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/artisan schedule:run >> /dev/null 2>&1" ) | crontab -
 
             sudo supervisorctl reread
             sudo supervisorctl update
-            sudo supervisorctl restart "${{ env.USERNAME }}-timora-worker"
+            sudo supervisorctl restart "$SITE_USER-timora-worker"
 
             # Update env variables for database
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
@@ -563,9 +578,9 @@ jobs:
             php artisan storage:link
             chmod -R guo+w storage
 
-            git config --global --add safe.directory "/home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN }}"
+            git config --global --add safe.directory "/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}"
 
-            sudo chown -R ${{ env.USERNAME }}:${{ env.USERNAME }} /home/${{ env.USERNAME }}/htdocs/${{ env.SUBDOMAIN}}
+            sudo chown -R $SITE_USER:$SITE_USER /home/$SITE_USER/htdocs/${{ env.SUBDOMAIN}}
 
       - name: Assigning Custom Domains
         run: |
