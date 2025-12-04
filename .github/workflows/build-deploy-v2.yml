@@ -311,7 +311,7 @@ jobs:
           password: ${{ secrets.VPS_PASS }}
           script: |
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
-            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timora
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
             echo "Creating site for domain: $DOMAIN_NAME with user: $SITE_USER"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
             echo "Site creation completed successfully"
@@ -359,7 +359,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
-            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timora
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
             TARGET_DIR="/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}"
             mkdir -p "$TARGET_DIR"
             rsync -av /tmp/deploy-${{ env.SUBDOMAIN }}/ "$TARGET_DIR/"
@@ -400,7 +400,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
-            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timora
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
             DB_NAME=$(echo "${{ env.COMPANY_NAME }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
             DB_USER=$(echo "${{ env.USERNAME }}" | tr -d ' ._' | tr -cd '[:alnum:]')dev
             DB_PASS=JAF2025
