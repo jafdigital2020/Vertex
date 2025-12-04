@@ -65,7 +65,7 @@ class PayrollController extends Controller
             return ucwords(str_replace('_', ' ', $name));
         });
 
-        $payrolls = $accessData['payrolls']->get();
+        $payrolls = $accessData['payrolls']->with(['user.personalInformation', 'user.employmentDetail'])->get();
         $payrollBatches = PayrollBatchSettings::where('tenant_id', $tenantId)->get();
 
         $thirteenthMonthPayrolls = ThirteenthMonthPay::where('tenant_id', $tenantId)

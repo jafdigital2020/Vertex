@@ -19,12 +19,13 @@ use App\Http\Controllers\DataAccessController;
 class DeductionsController extends Controller
 {
 
-    public function authUser()
+     public function authUser()
     {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+
+        return Auth::user();
     }
 
     public function deductionsFilter(Request $request)

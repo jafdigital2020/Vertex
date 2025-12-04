@@ -88,7 +88,7 @@ class PayslipController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        $payslips = $accessData['payslips']->get();
+        $payslips = $accessData['payslips']->with(['user.personalInformation', 'user.employmentDetail'])->get();
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
