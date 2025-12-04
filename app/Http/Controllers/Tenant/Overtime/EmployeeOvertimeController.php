@@ -26,16 +26,16 @@ class EmployeeOvertimeController extends Controller
         return Auth::user();
     }
 
-    private function hasPermission(string $action, int $moduleId = 45): bool
-    {
-        // For API (token) requests, skip session-based PermissionHelper and allow controller-level ownership checks
-        if (request()->is('api/*') || request()->expectsJson()) {
-            return true;
-        }
+    // private function hasPermission(string $action, int $moduleId = 45): bool
+    // {
+    //     // For API (token) requests, skip session-based PermissionHelper and allow controller-level ownership checks
+    //     if (request()->is('api/*') || request()->expectsJson()) {
+    //         return true;
+    //     }
 
-        $permission = PermissionHelper::get($moduleId);
-        return in_array($action, $permission);
-    }
+    //     $permission = PermissionHelper::get($moduleId);
+    //     return in_array($action, $permission);
+    // }
 
     public function filter(Request $request)
     {
@@ -278,12 +278,19 @@ class EmployeeOvertimeController extends Controller
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
 
-        if (!$this->hasPermission('Create')) {
+          if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
             ], 403);
         }
+
+        // if (!$this->hasPermission('Create')) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'You do not have the permission to create.'
+        //     ], 403);
+        // }
         // Validation
         $request->validate([
             'overtime_date'      => 'required|date',
@@ -404,7 +411,14 @@ class EmployeeOvertimeController extends Controller
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
 
-        if (!$this->hasPermission('Update')) {
+        // if (!$this->hasPermission('Update')) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'You do not have the permission to update.'
+        //     ], 403);
+        // }
+
+          if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
@@ -516,13 +530,25 @@ class EmployeeOvertimeController extends Controller
      */
     public function overtimeEmployeeManualDelete($id)
     {
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(47);
+        $authUserTenantId = $authUser->tenant_id ?? null;
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
 
-        if (!$this->hasPermission('Delete')) {
+        if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
             ], 403);
         }
+
+        // if (!$this->hasPermission('Delete')) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'You do not have the permission to delete.'
+        //     ], 403);
+        // }
 
         $overtime = Overtime::findOrFail($id);
 

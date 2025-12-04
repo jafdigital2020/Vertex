@@ -28,16 +28,7 @@ class OfficialBusinessController extends Controller
         return Auth::user();
     }
 
-    private function hasPermission(string $action, int $moduleId = 48): bool
-    {
-        // For API (token) requests, skip session-based PermissionHelper and allow controller-level ownership checks
-        if (request()->is('api/*') || request()->expectsJson()) {
-            return true;
-        }
 
-        $permission = PermissionHelper::get($moduleId);
-        return in_array($action, $permission);
-    }
 
     public function filter(Request $request)
     {
@@ -261,8 +252,7 @@ class OfficialBusinessController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        // ✅ Skip session-based PermissionHelper for API calls (API uses token/auth)
-        if (!$this->hasPermission('Create')) {
+            if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
@@ -413,11 +403,11 @@ class OfficialBusinessController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        if (!$this->hasPermission('Update')) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You do not have the permission to update.'
-            ], 403);
+        if (!in_array('Update', $permission)) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'You do not have the permission to update.'
+        ], 403);
         }
 
         $request->validate([
@@ -534,12 +524,11 @@ class OfficialBusinessController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        // ✅ FIXED: Skip permission check for API requests
-        if (!$this->hasPermission('Delete')) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You do not have the permission to delete.'
-            ], 403);
+        if (!in_array('Delete', $permission)) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'You do not have the permission to delete.'
+        ], 403);
         }
 
         $ob = OfficialBusiness::findOrFail($id);
