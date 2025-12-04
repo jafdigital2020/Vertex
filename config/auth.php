@@ -68,6 +68,11 @@ return [
             'driver' => 'sanctum',
             'provider' => 'global_users',
         ],
+
+        'candidate' => [
+            'driver' => 'session',
+            'provider' => 'candidates',
+        ],
     ],
 
     /*
@@ -108,6 +113,11 @@ return [
         'global_users' => [
             'driver' => 'eloquent',
             'model' => App\Models\GlobalUser::class,
+        ],
+
+        'candidates' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Candidate::class,
         ],
     ],
 

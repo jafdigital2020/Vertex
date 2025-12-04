@@ -355,33 +355,95 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/assets-settings-history', [AssetsController::class, 'assetsSettingsHistoryIndex'])->name('assets-settings-history')->middleware(CheckPermission::class . ':50');
     Route::get('/assets-settings-history-filter', [AssetsController::class, 'assetsSettingsHistoryFilter'])->name('assets-history-filter');
 
-    // Payroll Report
-    Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('payroll-report');
-    Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report');
-    Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report');
-    Route::get('/generate-pdf', [SssReportController::class, 'generatePdf']);
+    // Recruitment Module Routes
+    Route::prefix('recruitment')->group(function () {
+        // Manpower Requests
+        Route::get('/manpower-requests', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'index'])->name('recruitment.manpower-requests.index')->middleware(CheckPermission::class . ':65');
+        Route::get('/manpower-requests/create', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'create'])->name('recruitment.manpower-requests.create')->middleware(CheckPermission::class . ':65');
+        Route::post('/manpower-requests', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'store'])->name('recruitment.manpower-requests.store')->middleware(CheckPermission::class . ':65');
+        Route::get('/manpower-requests/{manpowerRequest}', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'show'])->name('recruitment.manpower-requests.show')->middleware(CheckPermission::class . ':65');
+        Route::get('/manpower-requests/{manpowerRequest}/edit', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'edit'])->name('recruitment.manpower-requests.edit')->middleware(CheckPermission::class . ':65');
+        Route::put('/manpower-requests/{manpowerRequest}', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'update'])->name('recruitment.manpower-requests.update')->middleware(CheckPermission::class . ':65');
+        Route::delete('/manpower-requests/{manpowerRequest}', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'destroy'])->name('recruitment.manpower-requests.destroy')->middleware(CheckPermission::class . ':65');
+        Route::post('/manpower-requests/{manpowerRequest}/approve', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'approve'])->name('recruitment.manpower-requests.approve')->middleware(CheckPermission::class . ':65');
+        Route::post('/manpower-requests/{manpowerRequest}/reject', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'reject'])->name('recruitment.manpower-requests.reject')->middleware(CheckPermission::class . ':65');
+        Route::post('/manpower-requests/{manpowerRequest}/post-job', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'postJob'])->name('recruitment.manpower-requests.post-job')->middleware(CheckPermission::class . ':65');
+        Route::post('/manpower-requests/{manpowerRequest}/submit-review', [App\Http\Controllers\Tenant\Recruitment\ManpowerRequestController::class, 'submitForReview'])->name('recruitment.manpower-requests.submit-review')->middleware(CheckPermission::class . ':65');
 
+        // Job Postings
+        Route::get('/job-postings', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'index'])->name('recruitment.job-postings.index')->middleware(CheckPermission::class . ':60');
+        Route::get('/job-postings/create', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'create'])->name('recruitment.job-postings.create')->middleware(CheckPermission::class . ':60');
+        Route::post('/job-postings', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'store'])->name('recruitment.job-postings.store')->middleware(CheckPermission::class . ':60');
+        Route::get('/job-postings/{jobPosting}', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'show'])->name('recruitment.job-postings.show')->middleware(CheckPermission::class . ':60');
+        Route::get('/job-postings/{jobPosting}/edit', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'edit'])->name('recruitment.job-postings.edit')->middleware(CheckPermission::class . ':60');
+        Route::put('/job-postings/{jobPosting}', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'update'])->name('recruitment.job-postings.update')->middleware(CheckPermission::class . ':60');
+        Route::delete('/job-postings/{jobPosting}', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'destroy'])->name('recruitment.job-postings.destroy')->middleware(CheckPermission::class . ':60');
+        Route::post('/job-postings/{jobPosting}/publish', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'publish'])->name('recruitment.job-postings.publish')->middleware(CheckPermission::class . ':60');
+        Route::post('/job-postings/{jobPosting}/close', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'close'])->name('recruitment.job-postings.close')->middleware(CheckPermission::class . ':60');
+        Route::post('/job-postings/{jobPosting}/clone', [App\Http\Controllers\Tenant\Recruitment\JobPostingController::class, 'clone'])->name('recruitment.job-postings.clone')->middleware(CheckPermission::class . ':60');
 
-    // Billing
-    Route::group(['prefix' => 'billing', 'as' => 'billing.'], function () {
-        Route::get('/', [BillingController::class, 'billingIndex'])->name('index')->middleware(CheckPermission::class . ':57');
+        // Candidates
+        Route::get('/candidates', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'index'])->name('recruitment.candidates.index')->middleware(CheckPermission::class . ':61');
+        Route::get('/candidates/create', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'create'])->name('recruitment.candidates.create')->middleware(CheckPermission::class . ':61');
+        Route::post('/candidates', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'store'])->name('recruitment.candidates.store')->middleware(CheckPermission::class . ':61');
+        Route::get('/candidates/{candidate}', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'show'])->name('recruitment.candidates.show')->middleware(CheckPermission::class . ':61');
+        Route::get('/candidates/{candidate}/edit', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'edit'])->name('recruitment.candidates.edit')->middleware(CheckPermission::class . ':61');
+        Route::put('/candidates/{candidate}', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'update'])->name('recruitment.candidates.update')->middleware(CheckPermission::class . ':61');
+        Route::delete('/candidates/{candidate}', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'destroy'])->name('recruitment.candidates.destroy')->middleware(CheckPermission::class . ':61');
+        Route::post('/candidates/{candidate}/status', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'updateStatus'])->name('recruitment.candidates.update-status')->middleware(CheckPermission::class . ':61');
+        Route::get('/candidates/export', [App\Http\Controllers\Tenant\Recruitment\CandidateController::class, 'export'])->name('recruitment.candidates.export')->middleware(CheckPermission::class . ':61');
 
-        // Payment routes
-        Route::post('/payment/initiate/{invoice}', [TenantPaymentController::class, 'initiatePayment'])->name('payment.initiate');
-        Route::get('/payment/return/{invoice}', [TenantPaymentController::class, 'paymentReturn'])->name('payment.return');
-        Route::get('/payment/success', [TenantPaymentController::class, 'success'])->name('payment.success');
-        Route::get('/payment/status/{transaction}', [TenantPaymentController::class, 'checkStatus'])->name('payment.status');
+        // Job Applications
+        Route::get('/applications', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'index'])->name('recruitment.applications.index')->middleware(CheckPermission::class . ':62');
+        Route::get('/applications/{application}', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'show'])->name('recruitment.applications.show')->middleware(CheckPermission::class . ':62');
+        Route::post('/applications/{application}/status', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'updateStatus'])->name('recruitment.applications.update-status')->middleware(CheckPermission::class . ':62');
+        Route::post('/applications/{application}/recruiter', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'assignRecruiter'])->name('recruitment.applications.assign-recruiter')->middleware(CheckPermission::class . ':62');
+        Route::post('/applications/{application}/score', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'updateScore'])->name('recruitment.applications.update-score')->middleware(CheckPermission::class . ':62');
+        Route::post('/applications/bulk-status', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'bulkUpdateStatus'])->name('recruitment.applications.bulk-status')->middleware(CheckPermission::class . ':62');
+        Route::get('/applications/kanban', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'kanbanView'])->name('recruitment.applications.kanban')->middleware(CheckPermission::class . ':62');
+        Route::get('/applications/statistics', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'statistics'])->name('recruitment.applications.statistics')->middleware(CheckPermission::class . ':62');
+        Route::get('/applications/{application}/workflow', [App\Http\Controllers\Tenant\Recruitment\JobApplicationController::class, 'getWorkflowHistory'])->name('recruitment.applications.workflow')->middleware(CheckPermission::class . ':62');
+
+        // Interviews
+        Route::get('/interviews', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'index'])->name('recruitment.interviews.index')->middleware(CheckPermission::class . ':63');
+        Route::get('/interviews/create', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'create'])->name('recruitment.interviews.create')->middleware(CheckPermission::class . ':63');
+        Route::post('/interviews', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'store'])->name('recruitment.interviews.store')->middleware(CheckPermission::class . ':63');
+        Route::get('/interviews/{interview}', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'show'])->name('recruitment.interviews.show')->middleware(CheckPermission::class . ':63');
+        Route::get('/interviews/{interview}/edit', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'edit'])->name('recruitment.interviews.edit')->middleware(CheckPermission::class . ':63');
+        Route::put('/interviews/{interview}', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'update'])->name('recruitment.interviews.update')->middleware(CheckPermission::class . ':63');
+        Route::post('/interviews/{interview}/status', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'updateStatus'])->name('recruitment.interviews.update-status')->middleware(CheckPermission::class . ':63');
+        Route::post('/interviews/{interview}/feedback', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'addFeedback'])->name('recruitment.interviews.feedback')->middleware(CheckPermission::class . ':63');
+        Route::post('/interviews/{interview}/reschedule', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'reschedule'])->name('recruitment.interviews.reschedule')->middleware(CheckPermission::class . ':63');
+        Route::get('/interviews/calendar', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'calendar'])->name('recruitment.interviews.calendar')->middleware(CheckPermission::class . ':63');
+        Route::get('/interviews/today', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'todaysInterviews'])->name('recruitment.interviews.today')->middleware(CheckPermission::class . ':63');
+        Route::get('/interviews/upcoming', [App\Http\Controllers\Tenant\Recruitment\InterviewController::class, 'upcomingInterviews'])->name('recruitment.interviews.upcoming')->middleware(CheckPermission::class . ':63');
+
+        // Job Offers
+        Route::get('/offers', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'index'])->name('recruitment.offers.index')->middleware(CheckPermission::class . ':64');
+        Route::get('/offers/create', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'create'])->name('recruitment.offers.create')->middleware(CheckPermission::class . ':64');
+        Route::post('/offers', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'store'])->name('recruitment.offers.store')->middleware(CheckPermission::class . ':64');
+        Route::get('/offers/{offer}', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'show'])->name('recruitment.offers.show')->middleware(CheckPermission::class . ':64');
+        Route::get('/offers/{offer}/edit', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'edit'])->name('recruitment.offers.edit')->middleware(CheckPermission::class . ':64');
+        Route::put('/offers/{offer}', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'update'])->name('recruitment.offers.update')->middleware(CheckPermission::class . ':64');
+        Route::post('/offers/{offer}/send', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'send'])->name('recruitment.offers.send')->middleware(CheckPermission::class . ':64');
+        Route::post('/offers/{offer}/accept', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'accept'])->name('recruitment.offers.accept')->middleware(CheckPermission::class . ':64');
+        Route::post('/offers/{offer}/reject', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'reject'])->name('recruitment.offers.reject')->middleware(CheckPermission::class . ':64');
+        Route::post('/offers/{offer}/withdraw', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'withdraw'])->name('recruitment.offers.withdraw')->middleware(CheckPermission::class . ':64');
+        Route::post('/offers/{offer}/approve', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'approve'])->name('recruitment.offers.approve')->middleware(CheckPermission::class . ':64');
+        Route::post('/offers/{offer}/generate-letter', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'generateOfferLetter'])->name('recruitment.offers.generate-letter')->middleware(CheckPermission::class . ':64');
+        Route::get('/offers/{offer}/download-letter', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'downloadOfferLetter'])->name('recruitment.offers.download-letter')->middleware(CheckPermission::class . ':64');
+        Route::get('/offers/statistics', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'statistics'])->name('recruitment.offers.statistics')->middleware(CheckPermission::class . ':64');
+        Route::get('/offers/expired', [App\Http\Controllers\Tenant\Recruitment\JobOfferController::class, 'expiredOffers'])->name('recruitment.offers.expired')->middleware(CheckPermission::class . ':64');
+        
+        // Candidate Role Management Routes
+        Route::prefix('candidate-roles')->group(function () {
+            Route::get('/roles', [App\Http\Controllers\Tenant\Recruitment\CandidateRoleController::class, 'getRoles'])->name('recruitment.candidate-roles.get-roles')->middleware(CheckPermission::class . ':61');
+            Route::post('/candidates/{candidate}/assign-role', [App\Http\Controllers\Tenant\Recruitment\CandidateRoleController::class, 'assignRole'])->name('recruitment.candidate-roles.assign')->middleware(CheckPermission::class . ':61');
+            Route::delete('/candidates/{candidate}/remove-role', [App\Http\Controllers\Tenant\Recruitment\CandidateRoleController::class, 'removeRole'])->name('recruitment.candidate-roles.remove')->middleware(CheckPermission::class . ':61');
+            Route::get('/candidates/{candidate}/role', [App\Http\Controllers\Tenant\Recruitment\CandidateRoleController::class, 'getCandidateRole'])->name('recruitment.candidate-roles.get')->middleware(CheckPermission::class . ':61');
+            Route::put('/candidates/{candidate}/permissions', [App\Http\Controllers\Tenant\Recruitment\CandidateRoleController::class, 'updatePermissions'])->name('recruitment.candidate-roles.update-permissions')->middleware(CheckPermission::class . ':61');
+        });
     });
-
-
-    // Subscriptions
-    Route::get('/subscriptions', [TenantSubscriptionController::class, 'index'])->name('subscriptions');
-    Route::get('/subscriptions-filter', [TenantSubscriptionController::class, 'filter'])->name('subscriptions-filter');
-    Route::get('/subscriptions/available-plans', [TenantSubscriptionController::class, 'getAvailablePlans'])->name('subscriptions.available-plans');
-    Route::post('/subscriptions/upgrade', [TenantSubscriptionController::class, 'upgradePlan'])->name('subscriptions.upgrade');
-
-    // Invoice Items
-    Route::get('/billing/invoices/{invoice}/items', [InvoiceController::class, 'getInvoiceItems']);
 });
 
 Route::get('/send-test-notif', function () {
@@ -390,12 +452,59 @@ Route::get('/send-test-notif', function () {
     return 'Notification Sent!';
 });
 
-Route::prefix('billing/central-admin')->group(function () {
-    Route::get('/config', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'checkCentralAdminConfig']);
-    Route::post('/retry-failed-syncs', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'retryFailedSyncs']);
-    Route::post('/sync-transaction/{transactionId}', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'syncTransactionToCentralAdmin']);
-    Route::post('/create-test-transaction', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'createTestTransaction']);
-});
 
-// Webhook route (outside auth middleware)
-Route::post('/hitpay/webhook', [TenantPaymentController::class, 'webhook'])->name('hitpay.webhook');
+// Payroll Report
+Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('payroll-report');
+Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report')->middleware(CheckAddon::class . ':alphalist_report');
+Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report')->middleware(CheckAddon::class . ':sss_reports');
+Route::get('/generate-pdf', [SssReportController::class, 'generatePdf'])->middleware(CheckAddon::class . ':sss_reports');
+
+
+// Billing
+Route::get('/billing', [BillingController::class, 'billingIndex'])->name('billing');
+Route::get('/payment', [PaymentHistoryController::class, 'paymentIndex'])->name('payment');
+
+Route::get('/invoice/{id}/download', [App\Http\Controllers\Tenant\Billing\BillingController::class, 'downloadInvoice'])->name('invoice.download');
+Route::get('/invoices/download-all', [App\Http\Controllers\Tenant\Billing\BillingController::class, 'downloadAllInvoices'])->name('invoices.download-all');
+
+// Branch Add-ons
+Route::get('/addons', [BranchAddonController::class, 'index'])->name('addons.purchase');
+Route::post('/addons/purchase', [BranchAddonController::class, 'purchase'])->name('addon.purchase');
+Route::post('/addons/cancel', [BranchAddonController::class, 'cancel'])->name('addon.cancel');
+Route::get('/addons/payment/callback/{invoice}', [BranchAddonController::class, 'paymentCallback'])->name('addon.payment.callback');
+Route::get('/addons/payment-status', [BranchAddonController::class, 'showPaymentStatus'])->name('addon.payment.status');
+
+// Addon Access Denied Pages
+Route::get('/addonrequired', function () {
+    session()->forget('addon_redirect'); // Clear session after use
+    return response()->view('errors.addonrequired', [], 200);
+})->name('addon.required');
+
+Route::get('/featurerequired', function () {
+    session()->forget('addon_redirect'); // Clear session after use
+    return response()->view('errors.featurerequired', [], 200);
+})->name('feature.required');
+
+Route::get('/employees/topup', [EmployeePaymentController::class, 'showPaymentStatus'])->name('employee.paymentstatus');
+
+// Career Page Routes (Public)
+Route::prefix('career')->group(function () {
+    Route::get('/', [App\Http\Controllers\Tenant\Recruitment\CareerPageController::class, 'index'])->name('career.index');
+    Route::get('/jobs/{job}', [App\Http\Controllers\Tenant\Recruitment\CareerPageController::class, 'show'])->name('career.show');
+    Route::get('/search', [App\Http\Controllers\Tenant\Recruitment\CareerPageController::class, 'searchJobs'])->name('career.search');
+    
+    // Authentication routes
+    Route::get('/register', [App\Http\Controllers\Career\CandidateAuthController::class, 'showRegisterForm'])->name('career.register');
+    Route::post('/register', [App\Http\Controllers\Career\CandidateAuthController::class, 'register'])->name('career.register.submit');
+    Route::get('/login', [App\Http\Controllers\Career\CandidateAuthController::class, 'showLoginForm'])->name('career.login');
+    Route::post('/login', [App\Http\Controllers\Career\CandidateAuthController::class, 'login'])->name('career.login.submit');
+    Route::post('/logout', [App\Http\Controllers\Career\CandidateAuthController::class, 'logout'])->name('career.logout');
+    
+    // Protected routes (require candidate authentication)
+    Route::middleware('auth:candidate')->group(function () {
+        Route::get('/jobs/{job}/apply', [App\Http\Controllers\Tenant\Recruitment\CareerPageController::class, 'showApplicationForm'])->name('career.apply');
+        Route::post('/jobs/{job}/apply', [App\Http\Controllers\Tenant\Recruitment\CareerPageController::class, 'apply'])->name('career.apply.submit');
+        Route::post('/application-status', [App\Http\Controllers\Tenant\Recruitment\CareerPageController::class, 'applicationStatus'])->name('career.application-status');
+        Route::post('/withdraw-application', [App\Http\Controllers\Tenant\Recruitment\CareerPageController::class, 'withdrawApplication'])->name('career.withdraw-application');
+    });
+});

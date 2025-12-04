@@ -359,6 +359,41 @@
                                     </ul>
                                 </li>
                             @endif
+                            @if (in_array(20, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('recruitment/*') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-users-group"></i><span>Recruitment</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][65]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('recruitment.manpower-requests.index') }}"
+                                                    class="{{ Request::is('recruitment/manpower-requests*') ? 'active' : '' }}">Manpower Requests</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][60]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('recruitment.job-postings.index') }}"
+                                                    class="{{ Request::is('recruitment/job-postings*') ? 'active' : '' }}">Job Postings</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][61]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('recruitment.candidates.index') }}"
+                                                    class="{{ Request::is('recruitment/candidates*') ? 'active' : '' }}">Candidates</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][62]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('recruitment.applications.index') }}"
+                                                    class="{{ Request::is('recruitment/applications*') ? 'active' : '' }}">Applications</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][63]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('recruitment.interviews.index') }}"
+                                                    class="{{ Request::is('recruitment/interviews*') ? 'active' : '' }}">Interviews</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][64]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('recruitment.offers.index') }}"
+                                                    class="{{ Request::is('recruitment/offers*') ? 'active' : '' }}">Job Offers</a></li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
                         </ul>
                     </li>
                 @endif
