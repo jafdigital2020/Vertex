@@ -303,7 +303,7 @@ class DeductionsController extends Controller
             $query->where('status', $status);
         }
 
-        $userDeductions = $query->get();
+        $userDeductions = $query->with(['user.personalInformation', 'user.employmentDetail'])->get();
 
         $html = view('tenant.payroll.payroll-items.deduction.deductionuser_filter', compact('userDeductions', 'permission'))->render();
         return response()->json([
@@ -325,7 +325,7 @@ class DeductionsController extends Controller
         $branches =  $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
-        $userDeductions = $accessData['userDeductions']->get();
+        $userDeductions = $accessData['userDeductions']->with(['user.personalInformation', 'user.employmentDetail'])->get();
 
         if ($request->wantsJson()) {
             return response()->json([

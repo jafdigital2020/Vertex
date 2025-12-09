@@ -302,7 +302,7 @@ class EarningsController extends Controller
             $query->where('status', $status);
         }
 
-        $userEarnings = $query->get();
+        $userEarnings = $query->with(['user.personalInformation', 'user.employmentDetail'])->get();
 
         $html = view('tenant.payroll.payroll-items.earning.earninguser_filter', compact('userEarnings', 'permission'))->render();
         return response()->json([
@@ -325,7 +325,7 @@ class EarningsController extends Controller
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
-        $userEarnings = $accessData['userEarnings']->get();
+        $userEarnings = $accessData['userEarnings']->with(['user.personalInformation', 'user.employmentDetail'])->get();
 
         if ($request->wantsJson()) {
             return response()->json([
