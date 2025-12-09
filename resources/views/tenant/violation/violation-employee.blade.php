@@ -62,15 +62,28 @@
                                                 <td class="text-center">{{ $index + 1 }}</td>
                                                 <td>{{ $s->offense_details ?? '—' }}</td>
                                                 @php
-                                                    switch($s->status) {
-                                                        case 'pending': $statusColor = 'warning'; break;
-                                                        case 'awaiting_reply': $statusColor = 'info'; break;
-                                                        case 'under_investigation': $statusColor = 'primary'; break;
-                                                        case 'for_dam_issuance': $statusColor = 'secondary'; break;
-                                                        case 'suspended': $statusColor = 'danger'; break;
-                                                        case 'completed': $statusColor = 'success'; break;
-                                                        default: $statusColor = 'secondary';
-                                                    }
+    switch ($s->status) {
+        case 'pending':
+            $statusColor = 'warning';
+            break;
+        case 'awaiting_reply':
+            $statusColor = 'info';
+            break;
+        case 'under_investigation':
+            $statusColor = 'primary';
+            break;
+        case 'for_dam_issuance':
+            $statusColor = 'secondary';
+            break;
+        case 'suspended':
+            $statusColor = 'danger';
+            break;
+        case 'completed':
+            $statusColor = 'success';
+            break;
+        default:
+            $statusColor = 'secondary';
+    }
                                                 @endphp
                                                 <td class="text-center">
                                                     <span class="badge bg-{{ $statusColor }}">
@@ -93,7 +106,7 @@
                                                     <button class="btn btn-sm btn-info view-violation" data-id="{{ $s->id }}" title="View Details">
                                                         <i class="ti ti-eye"></i>
                                                     </button>
-                                                    @if( $s->status === 'awaiting_reply')
+                                                    @if($s->status === 'awaiting_reply')
                                                         <button class="btn btn-sm btn-success ms-1" onclick="openReplyViolationModal({{ $s->id }})" title="Submit Reply">
                                                             <i class="ti ti-message"></i>
                                                         </button>
@@ -398,242 +411,278 @@
     <!-- Scripts -->
 
     @push('scripts')
-    <script> 
-    function filter() {  
-        const status = $('#violation-status').val(); 
-        $.ajax({
-                url: '{{ route('violation-employee-filter') }}',
-                type: 'GET',
-                data: { 
-                    status,
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#violation-table').DataTable().destroy();
-                        $('#violation-tbody').html(response.html);
-                        $('#violation-table').DataTable();
-                        
-                    } else {
-                        toastr.error(response.message || 'Something went wrong.');
-                    }
-                },
-                error: function(xhr) {
-                    let message = 'An unexpected error occurred.';
-                    if (xhr.status === 403) {
-                        message = 'You are not authorized to perform this action.';
-                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                        message = xhr.responseJSON.message;
-                    }
-                    toastr.error(message);
-                }
-            });
-        }
-</script>
+            <script> 
+            function filter() {  
+                const status = $('#violation-status').val(); 
+                $.ajax({
+                        url: '{{ route('violation-employee-filter') }}',
+                        type: 'GET',
+                        data: { 
+                            status,
+                        },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                $('#violation-table').DataTable().destroy();
+                                $('#violation-tbody').html(response.html);
+                                $('#violation-table').DataTable();
 
-    <script> 
-        const url = "{{ route('violation-employee-list') }}"; 
-        // Reply Violation Modal
-        document.addEventListener('DOMContentLoaded', () => {
-            const replyModal = new bootstrap.Modal(document.getElementById('replyViolationModal'));
-            const form = document.getElementById('replyViolationForm');
-            const errorBox = document.getElementById('reply-error');
-            const successBox = document.getElementById('reply-success');
-            const idField = document.getElementById('reply_violation_id');
-
-            window.openReplyViolationModal = function (id) {
-                idField.value = id;
-                errorBox.classList.add('d-none');
-                successBox.classList.add('d-none');
-                form.reset();
-                replyModal.show();
-            };
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                errorBox.classList.add('d-none');
-                successBox.classList.add('d-none');
-
-                const formData = new FormData(form);
-                const violationId = idField.value;
-
-                try {
-                    const res = await fetch(`{{ url('/api/violation') }}/${violationId}/receive-reply`, {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                        body: formData
+                            } else {
+                                toastr.error(response.message || 'Something went wrong.');
+                            }
+                        },
+                        error: function(xhr) {
+                            let message = 'An unexpected error occurred.';
+                            if (xhr.status === 403) {
+                                message = 'You are not authorized to perform this action.';
+                            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+                            toastr.error(message);
+                        }
                     });
-
-                    const data = await res.json();
-                    if (data.status === 'success') {
-                        toastr.success('Reply submitted successfully','Success'); 
-                        replyModal.hide(); 
-                        filter();
-                    } else {
-                        throw new Error(data.message || 'Submission failed.');
-                    }
-                } catch (err) { 
-                    toastr.error( err.message || 'Failed to load violation details.'); 
                 }
-            });
-        });
+        </script>
 
-        // View Violation Info Modal
-        $(document).ready(function () {
+            <script> 
+                const url = "{{ route('violation-employee-list') }}"; 
+                // Reply Violation Modal
+                document.addEventListener('DOMContentLoaded', () => {
+                    const replyModal = new bootstrap.Modal(document.getElementById('replyViolationModal'));
+                    const form = document.getElementById('replyViolationForm');
+                    const errorBox = document.getElementById('reply-error');
+                    const successBox = document.getElementById('reply-success');
+                    const idField = document.getElementById('reply_violation_id');
 
-        const apiViolationBase = "{{ url('/api/violation') }}";
-        const viewModal = $('#viewViolationInfoModal'); 
-        const $viewLoading = $('#view-info-loading');
-        const $viewContent = $('#view-info-content');
-   
-        $(document).on('click', '.view-violation', function (e) { 
-            e.preventDefault(); 
-            const $btn = $(this);
-            const violationId = $btn.data('id');  
-            fetchViolationDetails(violationId);
-            viewModal.modal('show');
-                
-        }); 
+                    window.openReplyViolationModal = function (id) {
+                        idField.value = id;
+                        errorBox.classList.add('d-none');
+                        successBox.classList.add('d-none');
+                        form.reset();
+                        replyModal.show();
+                    };
 
+                    form.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        errorBox.classList.add('d-none');
+                        successBox.classList.add('d-none');
 
+                        const formData = new FormData(form);
+                        const violationId = idField.value;
 
-        function fetchViolationDetails(violationId) {
-            $.ajax({
-                url: `${apiViolationBase}/${violationId}`,
-                method: 'GET',
-                headers: { 
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                success: function (data) {
-                    if (data.status === 'success' && data.violation) {
-                        displayViolationDetails(data.violation);
-                    } else {
-                        toastr.error(data.message || 'Failed to load violation details.');
-                        $viewLoading.addClass('d-none');
-                    }
-                },
-                error: function (xhr) {
-                    toastr.error(xhr.responseJSON?.message || `Error fetching violation details (${xhr.status}).`);
-                    $viewLoading.addClass('d-none');
-                }
-            });
-        }
+                        try {
+                            const res = await fetch(`{{ url('/api/violation') }}/${violationId}/receive-reply`, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                body: formData
+                            });
 
-        function displayViolationDetails(violation) {
-            updateProgressFlow(violation.status);
- 
-            $('#view-offense-details').text(violation.offense_details || 'No details provided.');
- 
-            const status = violation.status || 'N/A';
-            $('#view-status').text(status.replace('_', ' ').toUpperCase())
-                .attr('class', 'badge bg-' + getStatusColorForView(status));
-
-            $('#view-type').text(violation.violation_type ? violation.violation_type.replace('_',' ').toUpperCase() : 'N/A');
-            $('#view-filed-date').text(violation.created_at || 'N/A');
-            $('#view-start-date').text(violation.violation_start_date || 'N/A');
-            $('#view-end-date').text(violation.violation_end_date || 'N/A');
-            $('#view-duration').text(violation.violation_days ? violation.violation_days + ' day(s)' : 'N/A');
- 
-            const $replyCard = $('#view-reply-card');
-            if (violation.employee_reply) {
-                const reply = violation.employee_reply;
-
-                if (reply.description && reply.description.trim() !== '') {
-                    $('#view-reply-text').text(reply.description);
-                    $('#view-reply-text-section').show();
-                } else {
-                    $('#view-reply-text-section').hide();
-                }
-
-                $('#view-reply-date').text(reply.action_date || 'N/A');
-
-                if (reply.file_path) {
-                    $('#view-reply-file-link').attr('href', '/storage/' + reply.file_path);
-                    $('#view-reply-file').show();
-                } else {
-                    $('#view-reply-file').hide();
-                }
-
-                $replyCard.show();
-            } else {
-                $replyCard.hide();
-            }
-
-            // Attachments
-            const $attachmentsCard = $('#view-attachments-card');
-            const $attachmentsList = $('#view-attachments-list').empty();
-
-            const attachments = [];
-            if (violation.information_report_file) attachments.push({ name: 'Information Report', url: violation.information_report_file });
-            if (violation.nowe_file) attachments.push({ name: 'NOWE Document', url: violation.nowe_file });
-            if (violation.dam_file) attachments.push({ name: 'DAM Document', url: violation.dam_file });
-
-            if (attachments.length > 0) {
-                attachments.forEach(att => {
-                    const link = $('<a>')
-                        .attr({ href: '/storage/' + att.url, target: '_blank' })
-                        .addClass('btn btn-sm btn-outline-primary me-2 mb-2')
-                        .html(`<i class="ti ti-download me-1"></i>${att.name}`);
-                    $attachmentsList.append(link);
+                            const data = await res.json();
+                            if (data.status === 'success') {
+                                toastr.success('Reply submitted successfully','Success'); 
+                                replyModal.hide(); 
+                                filter();
+                            } else {
+                                throw new Error(data.message || 'Submission failed.');
+                            }
+                        } catch (err) { 
+                            toastr.error( err.message || 'Failed to load violation details.'); 
+                        }
+                    });
                 });
-                $attachmentsCard.show();
-            } else {
-                $attachmentsCard.hide();
-            }
 
-            $viewLoading.addClass('d-none');
-            $viewContent.removeClass('d-none');
-        }
+                // View Violation Info Modal
+                $(document).ready(function () {
 
-        function updateProgressFlow(status) {
-            $('.timeline-step').removeClass('active completed');
+                const apiViolationBase = "{{ url('/api/violation') }}";
+                const viewModal = $('#viewViolationInfoModal'); 
+                const $viewLoading = $('#view-info-loading');
+                const $viewContent = $('#view-info-content');
 
-            const statusFlow = {
-                'pending': ['step-pending'],
-                'awaiting_reply': ['step-pending','step-nowe'],
-                'under_investigation': ['step-pending','step-nowe','step-investigation'],
-                'for_dam_issuance': ['step-pending','step-nowe','step-investigation'],
-                'suspended': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended'],
-                'completed': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended','step-completed']
-            };
+                $(document).on('click', '.view-violation', function (e) { 
+                    e.preventDefault(); 
+                    const $btn = $(this);
+                    const violationId = $btn.data('id');  
+                    fetchViolationDetails(violationId);
+                    viewModal.modal('show');
 
-            const currentStepMap = {
-                'pending': 'step-pending',
-                'awaiting_reply': 'step-nowe',
-                'under_investigation': 'step-investigation',
-                'for_dam_issuance': 'step-dam',
-                'suspended': 'step-suspended',
-                'completed': 'step-completed'
-            };
+                }); 
 
-            const completedSteps = statusFlow[status] || [];
-            const currentStep = currentStepMap[status];
 
-            completedSteps.forEach(stepId => {
-                const $stepEl = $('#' + stepId);
-                if ($stepEl.length) {
-                    if (stepId === currentStep && status !== 'completed') {
-                        $stepEl.addClass('active');
+
+                function fetchViolationDetails(violationId) {
+                    $.ajax({
+                        url: `${apiViolationBase}/${violationId}`,
+                        method: 'GET',
+                        headers: { 
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        success: function (data) {
+                            if (data.status === 'success' && data.violation) {
+                                displayViolationDetails(data.violation);
+                            } else {
+                                toastr.error(data.message || 'Failed to load violation details.');
+                                $viewLoading.addClass('d-none');
+                            }
+                        },
+                        error: function (xhr) {
+                            toastr.error(xhr.responseJSON?.message || `Error fetching violation details (${xhr.status}).`);
+                            $viewLoading.addClass('d-none');
+                        }
+                    });
+                }
+
+                function displayViolationDetails(violation) {
+                    updateProgressFlow(violation.status);
+
+                    $('#view-offense-details').text(violation.offense_details || 'No details provided.');
+
+                    const status = violation.status || 'N/A';
+                    $('#view-status').text(status.replace('_', ' ').toUpperCase())
+                        .attr('class', 'badge bg-' + getStatusColorForView(status));
+
+                    $('#view-type').text(violation.violation_type ? violation.violation_type.replace('_',' ').toUpperCase() : 'N/A');
+                    $('#view-filed-date').text(violation.created_at || 'N/A');
+                    $('#view-start-date').text(violation.violation_start_date || 'N/A');
+                    $('#view-end-date').text(violation.violation_end_date || 'N/A');
+                    $('#view-duration').text(violation.violation_days ? violation.violation_days + ' day(s)' : 'N/A');
+
+                    const $replyCard = $('#view-reply-card');
+                    if (violation.employee_reply) {
+                        const reply = violation.employee_reply;
+
+                        if (reply.description && reply.description.trim() !== '') {
+                            $('#view-reply-text').text(reply.description);
+                            $('#view-reply-text-section').show();
+                        } else {
+                            $('#view-reply-text-section').hide();
+                        }
+
+                        $('#view-reply-date').text(reply.action_date || 'N/A');
+
+                        if (reply.file_path) {
+                            $('#view-reply-file-link').attr('href', '/storage/' + reply.file_path);
+                            $('#view-reply-file').show();
+                        } else {
+                            $('#view-reply-file').hide();
+                        }
+
+                        $replyCard.show();
                     } else {
-                        $stepEl.addClass('completed');
+                        $replyCard.hide();
+                    }
+
+                    // Attachments
+                    const $attachmentsCard = $('#view-attachments-card');
+                    const $attachmentsList = $('#view-attachments-list').empty();
+
+                    const attachments = [];
+                    if (violation.information_report_file) attachments.push({ name: 'Information Report', url: violation.information_report_file, type: 'Legacy', size: null, uploaded_by: null, uploaded_at: null });
+                    if (violation.nowe_file) attachments.push({ name: 'NOWE Document', url: violation.nowe_file, type: 'Legacy', size: null, uploaded_by: null, uploaded_at: null });
+                    if (violation.dam_file) attachments.push({ name: 'DAM Document', url: violation.dam_file, type: 'Legacy', size: null, uploaded_by: null, uploaded_at: null });
+
+                    // Add attachments from violation_attachments table
+                    if (violation.attachments && violation.attachments.length > 0) {
+                        violation.attachments.forEach(att => {
+                            attachments.push({
+                                name: att.file_name,
+                                url: att.file_path,
+                                type: att.attachment_type ? att.attachment_type.replace('_', ' ').toUpperCase() : 'Attachment',
+                                size: att.file_size,
+                                uploaded_by: att.uploaded_by,
+                                uploaded_at: att.uploaded_at
+                            });
+                        });
+                    }
+
+                    if (attachments.length > 0) {
+                        attachments.forEach(att => {
+                            const fileSize = att.size ? `(${(att.size / 1024).toFixed(2)} KB)` : '';
+                            const uploadInfo = att.uploaded_at ? `
+                                <small class="text-muted d-block mt-1">
+                                    <i class="ti ti-user me-1"></i>${att.uploaded_by || 'N/A'} •
+                                    <i class="ti ti-calendar me-1"></i>${att.uploaded_at}
+                                </small>
+                            ` : '';
+
+                            const card = `
+                                <div class="border rounded p-2 mb-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center">
+                                                <i class="ti ti-file me-2 text-primary"></i>
+                                                <strong>${att.name}</strong>
+                                                <span class="badge bg-light text-dark ms-2">${att.type}</span>
+                                                ${fileSize ? `<span class="text-muted ms-2">${fileSize}</span>` : ''}
+                                            </div>
+                                            ${uploadInfo}
+                                        </div>
+                                        <a href="/storage/${att.url}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                                          <i class="ti ti-search"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                            $attachmentsList.append(card);
+                        });
+                        $attachmentsCard.show();
+                    } else {
+                        $attachmentsCard.hide();
+                    }
+
+                    $viewLoading.addClass('d-none');
+                    $viewContent.removeClass('d-none');
+                }
+
+                function updateProgressFlow(status) {
+                    $('.timeline-step').removeClass('active completed');
+
+                    const statusFlow = {
+                        'pending': ['step-pending'],
+                        'awaiting_reply': ['step-pending','step-nowe'],
+                        'under_investigation': ['step-pending','step-nowe','step-investigation'],
+                        'for_dam_issuance': ['step-pending','step-nowe','step-investigation'],
+                        'suspended': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended'],
+                        'completed': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended','step-completed']
+                    };
+
+                    const currentStepMap = {
+                        'pending': 'step-pending',
+                        'awaiting_reply': 'step-nowe',
+                        'under_investigation': 'step-investigation',
+                        'for_dam_issuance': 'step-dam',
+                        'suspended': 'step-suspended',
+                        'completed': 'step-completed'
+                    };
+
+                    const completedSteps = statusFlow[status] || [];
+                    const currentStep = currentStepMap[status];
+
+                    completedSteps.forEach(stepId => {
+                        const $stepEl = $('#' + stepId);
+                        if ($stepEl.length) {
+                            if (stepId === currentStep && status !== 'completed') {
+                                $stepEl.addClass('active');
+                            } else {
+                                $stepEl.addClass('completed');
+                            }
+                        }
+                    });
+                }
+
+                function getStatusColorForView(status) {
+                    switch (status) {
+                        case 'pending': return 'warning';
+                        case 'awaiting_reply': return 'info';
+                        case 'under_investigation': return 'primary';
+                        case 'for_dam_issuance': return 'secondary';
+                        case 'suspended': return 'danger';
+                        case 'completed': return 'success';
+                        default: return 'secondary';
                     }
                 }
             });
-        }
 
-        function getStatusColorForView(status) {
-            switch (status) {
-                case 'pending': return 'warning';
-                case 'awaiting_reply': return 'info';
-                case 'under_investigation': return 'primary';
-                case 'for_dam_issuance': return 'secondary';
-                case 'suspended': return 'danger';
-                case 'completed': return 'success';
-                default: return 'secondary';
-            }
-        }
-    });
-
-    </script>
+            </script>
     @endpush
 @endsection

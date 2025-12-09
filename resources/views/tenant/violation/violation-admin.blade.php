@@ -141,27 +141,25 @@
                                                     <td class="text-center">
                                                         <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
 
-                                                            <button class="btn btn-sm btn-primary edit-violation"
+                                                        <button class="btn btn-sm btn-secondary view-violation"
+                                                            data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                            title="View Violation Details">
+                                                            <i class="ti ti-eye"></i>
+                                                        </button>
+
+                                                        <button class="btn btn-sm btn-primary edit-violation"
+                                                            data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                            title="Edit Violation">
+                                                            <i class="ti ti-edit"></i>
+                                                        </button>
+
+                                                        @if ($sus->status === 'pending')
+                                                            <button class="btn btn-sm btn-warning issue-nowe"
                                                                 data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                title="Edit Violation">
-                                                                <i class="ti ti-edit"></i>
+                                                                title="Issue NOWE">
+                                                                <i class="ti ti-mail"></i>
                                                             </button>
-
-                                                            @if ($sus->status === 'pending')
-                                                                <button class="btn btn-sm btn-warning issue-nowe"
-                                                                    data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                    title="Issue NOWE">
-                                                                    <i class="ti ti-mail"></i>
-                                                                </button>
-                                                            @else
-                                                                <button class="btn btn-sm btn-secondary view-violation"
-                                                                    data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                    title="View Violation Details">
-                                                                    <i class="ti ti-eye"></i>
-                                                                </button>
-                                                            @endif
-
-                                                            @switch($sus->status)  
+                                                        @endif                                                            @switch($sus->status)  
                                                                 @case('under_investigation')
                                                                     <button class="btn btn-sm btn-info"
                                                                         onclick="openInvestigationModal({{ $sus->id ?? $sus->employee->id }})"
@@ -262,19 +260,27 @@
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="offense_details" class="form-label">Offense Details <span class="text-danger">*</span></label>
-                                <textarea name="offense_details" id="offense_details" class="form-control" rows="3"
-                                    placeholder="Enter details of the offense..." required></textarea>
-                            </div>
+                        <div class="mb-3">
+                            <label for="offense_details" class="form-label">Offense Details <span class="text-danger">*</span></label>
+                            <textarea name="offense_details" id="offense_details" class="form-control" rows="3"
+                                placeholder="Enter details of the offense..." required></textarea>
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="information_report_file" class="form-label">Attach Report (Optional)</label>
-                                <input type="file" name="information_report_file" id="information_report_file" class="form-control"
-                                    accept=".pdf,.doc,.docx">
-                            </div>
-
-                            <div id="file-violation-error" class="alert alert-danger d-none"></div>
+                        <div class="mb-3">
+                            <label for="violation_attachments" class="form-label">
+                                Attachments (Optional)
+                                <i class="ti ti-info-circle text-muted" data-bs-toggle="tooltip" title="You can upload multiple files at once or add more files"></i>
+                            </label>
+                            <input type="file" name="attachments[]" id="violation_attachments" class="form-control"
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ti ti-paperclip me-1"></i>Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB per file)
+                            </small>
+                            <small class="text-info d-block">
+                                <i class="ti ti-plus me-1"></i>You can select multiple files at once. Click "Choose Files" again to add more.
+                            </small>
+                            <div id="attachment-preview" class="mt-3"></div>
+                        </div>                            <div id="file-violation-error" class="alert alert-danger d-none"></div>
                             <div id="file-violation-success" class="alert alert-success d-none"></div>
                         </div>
 
@@ -628,15 +634,25 @@
                                     <small class="text-muted">Maximum 1000 characters</small>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label for="edit_information_report_file" class="form-label">Update Report File (Optional)</label>
-                                    <input type="file" name="information_report_file" id="edit_information_report_file" class="form-control"
-                                        accept=".pdf,.doc,.docx">
-                                    <small class="text-muted">Accepted formats: PDF, DOC, DOCX (Max 2MB)</small>
-                                    <div id="current_file_info" class="mt-2"></div>
+                            <div class="mb-3">
+                                <label for="edit_information_report_file" class="form-label">Current Attachments</label>
+                                <div id="edit_current_attachments" class="border rounded p-3 bg-light">
+                                    <p class="text-muted mb-0"><i>Loading attachments...</i></p>
                                 </div>
+                            </div>
 
-                                <div id="edit-violation-error" class="alert alert-danger d-none"></div>
+                            <div class="mb-3">
+                                <label for="edit_new_attachments" class="form-label">
+                                    Add More Attachments (Optional)
+                                    <i class="ti ti-info-circle text-muted" data-bs-toggle="tooltip" title="You can upload multiple files at once"></i>
+                                </label>
+                                <input type="file" name="attachments[]" id="edit_new_attachments" class="form-control"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="ti ti-paperclip me-1"></i>Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB per file)
+                                </small>
+                                <div id="edit_attachment_preview" class="mt-2"></div>
+                            </div>                                <div id="edit-violation-error" class="alert alert-danger d-none"></div>
                                 <div id="edit-violation-success" class="alert alert-success d-none"></div>
                             </div>
 
@@ -778,33 +794,156 @@
                     const fileForm = document.getElementById('fileViolationForm');
                     const errorBox = document.getElementById('file-violation-error');
                     const successBox = document.getElementById('file-violation-success');
+                    const attachmentInput = document.getElementById('violation_attachments');
+                    const attachmentPreview = document.getElementById('attachment-preview');
+                    
+                    let selectedFiles = [];
+
+                    // Handle multiple file selection and preview with ability to add more
+                    if (attachmentInput) {
+                        attachmentInput.addEventListener('change', function(e) {
+                            const newFiles = Array.from(e.target.files);
+                            
+                            // Add new files to existing selection
+                            newFiles.forEach(file => {
+                                // Check if file already exists (by name and size)
+                                const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+                                if (!exists) {
+                                    selectedFiles.push(file);
+                                }
+                            });
+                            
+                            // Update preview
+                            updateFilePreview();
+                            
+                            // Reset input to allow selecting the same files again if needed
+                            e.target.value = '';
+                        });
+                    }
+                    
+                    function updateFilePreview() {
+                        attachmentPreview.innerHTML = '';
+                        
+                        if (selectedFiles.length > 0) {
+                            const previewContainer = document.createElement('div');
+                            previewContainer.className = 'border rounded p-3 bg-light';
+
+                            const heading = document.createElement('div');
+                            heading.className = 'd-flex align-items-center justify-content-between mb-3';
+                            
+                            const headingText = document.createElement('strong');
+                            headingText.className = 'text-primary';
+                            headingText.innerHTML = `<i class="ti ti-files me-2"></i>${selectedFiles.length} file(s) selected`;
+                            
+                            const clearAllBtn = document.createElement('button');
+                            clearAllBtn.type = 'button';
+                            clearAllBtn.className = 'btn btn-sm btn-outline-danger';
+                            clearAllBtn.innerHTML = '<i class="ti ti-trash me-1"></i>Clear All';
+                            clearAllBtn.onclick = function() {
+                                selectedFiles = [];
+                                updateFilePreview();
+                            };
+                            
+                            heading.appendChild(headingText);
+                            heading.appendChild(clearAllBtn);
+                            previewContainer.appendChild(heading);
+
+                            selectedFiles.forEach((file, index) => {
+                                const fileItem = document.createElement('div');
+                                fileItem.className = 'd-flex align-items-center justify-content-between py-2 px-2 mb-2 bg-white rounded border';
+
+                                const fileInfo = document.createElement('div');
+                                fileInfo.className = 'd-flex align-items-center flex-grow-1';
+
+                                const icon = document.createElement('i');
+                                const ext = file.name.split('.').pop().toLowerCase();
+                                if (ext === 'pdf') {
+                                    icon.className = 'ti ti-file-type-pdf me-2 text-danger fs-5';
+                                } else if (['jpg', 'jpeg', 'png'].includes(ext)) {
+                                    icon.className = 'ti ti-photo me-2 text-success fs-5';
+                                } else {
+                                    icon.className = 'ti ti-file-text me-2 text-primary fs-5';
+                                }
+
+                                const fileDetails = document.createElement('div');
+                                fileDetails.className = 'flex-grow-1';
+                                
+                                const fileName = document.createElement('div');
+                                fileName.className = 'text-dark fw-medium';
+                                fileName.textContent = file.name;
+
+                                const fileSize = document.createElement('small');
+                                fileSize.className = 'text-muted';
+                                const sizeInKB = (file.size / 1024).toFixed(2);
+                                const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                                fileSize.textContent = sizeInKB > 1024 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
+                                
+                                fileDetails.appendChild(fileName);
+                                fileDetails.appendChild(fileSize);
+
+                                const removeBtn = document.createElement('button');
+                                removeBtn.type = 'button';
+                                removeBtn.className = 'btn btn-sm btn-outline-danger ms-2';
+                                removeBtn.innerHTML = '<i class="ti ti-x"></i>';
+                                removeBtn.onclick = function() {
+                                    selectedFiles.splice(index, 1);
+                                    updateFilePreview();
+                                };
+
+                                fileInfo.appendChild(icon);
+                                fileInfo.appendChild(fileDetails);
+                                fileItem.appendChild(fileInfo);
+                                fileItem.appendChild(removeBtn);
+
+                                previewContainer.appendChild(fileItem);
+                            });
+
+                            attachmentPreview.appendChild(previewContainer);
+                        }
+                    }
 
                     fileForm.addEventListener('submit', async (e) => {
                         e.preventDefault();
                         errorBox.classList.add('d-none');
                         successBox.classList.add('d-none');
 
-                        const formData = new FormData(fileForm);
+                        const formData = new FormData();
+                        
+                        // Add form fields
+                        formData.append('user_id', document.getElementById('employee').value);
+                        formData.append('offense_details', document.getElementById('offense_details').value);
+                        
+                        // Add all selected files to formData
+                        selectedFiles.forEach((file) => {
+                            formData.append('attachments[]', file);
+                        });
 
                         try {
+                                console.log('Submitting violation with files:', selectedFiles.length);
                                 const res = await fetch("{{ route('api.violationFileReport') }}", {
                                 method: 'POST',
                                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                                 body: formData
                             });
 
+                            console.log('Response status:', res.status);
                             const data = await res.json();
+                            console.log('Response data:', data);
 
                             if (data.status === 'success') {
                                 toastr.success('Violation filed successfully','Success');
-                                fileForm.reset(); 
+                                fileForm.reset();
+                                selectedFiles = [];
+                                attachmentPreview.innerHTML = '';
                                 document.querySelector('#fileViolationModal .btn-close').click();
-                                filter(); 
+                                filter();
                             } else {
-                                   toastr.error(data.message || 'Something went wrong.','Error');
+                                console.error('Error response:', data);
+                                toastr.error(data.message || 'Something went wrong.','Error');
                             }
                         } catch (err) {
-                             toastr.error(err.message || 'Something went wrong.','Error');
+                            console.error('Fetch error:', err);
+                            toastr.error(err.message || 'Something went wrong.','Error');
                         }
                     });
                 }); 
@@ -1150,19 +1289,56 @@
 
                         // Attachments
                         const attachments = [];
-                        if (violation.information_report_file) attachments.push({ name: 'Information Report', url: violation.information_report_file });
-                        if (violation.nowe_file) attachments.push({ name: 'NOWE Document', url: violation.nowe_file });
-                        if (violation.dam_file) attachments.push({ name: 'DAM Document', url: violation.dam_file });
+                        if (violation.information_report_file) attachments.push({ name: 'Information Report', url: violation.information_report_file, type: 'Legacy', size: null, uploaded_by: null, uploaded_at: null });
+                        if (violation.nowe_file) attachments.push({ name: 'NOWE Document', url: violation.nowe_file, type: 'Legacy', size: null, uploaded_by: null, uploaded_at: null });
+                        if (violation.dam_file) attachments.push({ name: 'DAM Document', url: violation.dam_file, type: 'Legacy', size: null, uploaded_by: null, uploaded_at: null });
+
+                        // Add attachments from violation_attachments table
+                        if (violation.attachments && violation.attachments.length > 0) {
+                            violation.attachments.forEach(att => {
+                                attachments.push({
+                                    name: att.file_name,
+                                    url: att.file_path,
+                                    type: att.attachment_type ? att.attachment_type.replace('_', ' ').toUpperCase() : 'Attachment',
+                                    size: att.file_size,
+                                    uploaded_by: att.uploaded_by,
+                                    uploaded_at: att.uploaded_at
+                                });
+                            });
+                        }
 
                         const $attachmentsList = $('#view_attachments_list');
                         $attachmentsList.empty();
 
                         if (attachments.length > 0) {
-                            attachments.forEach(att => {
-                                const link = `<a href="/storage/${att.url}" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
-                                                <i class="ti ti-download me-1"></i>${att.name}
-                                            </a>`;
-                                $attachmentsList.append(link);
+                            attachments.forEach((att, index) => {
+                                const fileSize = att.size ? `(${(att.size / 1024).toFixed(2)} KB)` : '';
+                                const uploadInfo = att.uploaded_at ? `
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="ti ti-user me-1"></i>${att.uploaded_by || 'N/A'} •
+                                        <i class="ti ti-calendar me-1"></i>${att.uploaded_at}
+                                    </small>
+                                ` : '';
+
+                                const card = `
+                                    <div class="border rounded p-2 mb-2">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="ti ti-file me-2 text-primary"></i>
+                                                    <strong>${att.name}</strong>
+                                                    <span class="badge bg-light text-dark ms-2">${att.type}</span>
+                                                    ${fileSize ? `<span class="text-muted ms-2">${fileSize}</span>` : ''}
+                                                </div>
+                                                ${uploadInfo}
+                                            </div>
+                                            <a href="/storage/${att.url}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                                                <i class="ti ti-search"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                `;
+                                $attachmentsList.append(card);
                             });
                             $('#view_attachments_card').show();
                         } else {
@@ -1328,68 +1504,118 @@
                         $editModal.modal('show');
                     };
 
-                    function fetchAndPopulateViolation(violationId) {
-                        $.ajax({
-                            url: `${apiViolationBase}/${violationId}`,
-                            method: 'GET',
-                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                            dataType: 'json',
-                            success: function(data) {
-                                if (data.status === 'success' && data.violation) {
-                                    const violation = data.violation;
+                function fetchAndPopulateViolation(violationId) {
+                    $.ajax({
+                        url: `${apiViolationBase}/${violationId}`,
+                        method: 'GET',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        dataType: 'json',
+                        success: function(data) {
+                            if (data.status === 'success' && data.violation) {
+                                const violation = data.violation;
 
-                                    $('#edit_employee_info').text(`${violation.employee_name || 'N/A'} (${violation.employee_id || 'N/A'})`);
-                                    $('#edit_offense_details').val(violation.offense_details || '');
-                                    $('#edit_disciplinary_action').val(violation.disciplinary_action || '');
-                                    $('#edit_remarks').val(violation.remarks || '');
+                                $('#edit_employee_info').text(`${violation.employee_name || 'N/A'} (${violation.employee_id || 'N/A'})`);
+                                $('#edit_offense_details').val(violation.offense_details || '');
+                                $('#edit_disciplinary_action').val(violation.disciplinary_action || '');
+                                $('#edit_remarks').val(violation.remarks || '');
 
-                                    if (violation.information_report_file) {
-                                        $currentFileInfo.html(
-                                            `<small class="text-info">
-                                                <i class="ti ti-file-check"></i> Current file: 
-                                                <a href="/storage/${violation.information_report_file}" target="_blank">View Document</a>
-                                            </small>`
-                                        );
-                                    }
-                                } else {
-                                   toastr.error('Failed to load violation details','Error');
+                                // Display current attachments
+                                const $attachmentsDiv = $('#edit_current_attachments');
+                                $attachmentsDiv.html('');
+
+                                const attachments = [];
+                                if (violation.information_report_file) {
+                                    attachments.push({ 
+                                        name: 'Information Report', 
+                                        url: violation.information_report_file, 
+                                        type: 'Report',
+                                        size: null
+                                    });
                                 }
-                            },
-                            error: function(xhr, status, error) {
-                                  toastr.error('Error loading violation details' + error ,'Error');
+
+                                if (violation.attachments && violation.attachments.length > 0) {
+                                    violation.attachments.forEach(att => {
+                                        attachments.push({
+                                            name: att.file_name,
+                                            url: att.file_path,
+                                            type: att.attachment_type || 'Attachment',
+                                            size: att.file_size,
+                                            uploaded_by: att.uploaded_by,
+                                            uploaded_at: att.uploaded_at
+                                        });
+                                    });
+                                }
+
+                                if (attachments.length > 0) {
+                                    let html = '<div class="list-group">';
+                                    attachments.forEach(att => {
+                                        const fileSize = att.size ? ` (${(att.size / 1024).toFixed(2)} KB)` : '';
+                                        const uploadInfo = att.uploaded_at ? 
+                                            `<small class="text-muted d-block"><i class="ti ti-calendar me-1"></i>${att.uploaded_at}</small>` : '';
+                                        
+                                        html += `
+                                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="ti ti-file me-2 text-primary"></i>
+                                                        <strong>${att.name}</strong>
+                                                        <span class="badge bg-light text-dark ms-2">${att.type}</span>
+                                                        ${fileSize}
+                                                    </div>
+                                                    ${uploadInfo}
+                                                </div>
+                                                <a href="/storage/${att.url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="ti ti-eye"></i>
+                                                </a>
+                                            </div>
+                                        `;
+                                    });
+                                    html += '</div>';
+                                    $attachmentsDiv.html(html);
+                                } else {
+                                    $attachmentsDiv.html('<p class="text-muted mb-0"><i>No attachments yet</i></p>');
+                                }
+                            } else {
+                               toastr.error('Failed to load violation details','Error');
                             }
-                        });
-                    }
- 
-                    $editForm.on('submit', function(e) {
+                        },
+                        error: function(xhr, status, error) {
+                              toastr.error('Error loading violation details' + error ,'Error');
+                        }
+                    });
+                }                    $editForm.on('submit', function(e) {
                         e.preventDefault();
                         $editError.addClass('d-none').text('');
                         $editSuccess.addClass('d-none').text('');
 
-                        const id = $editViolationId.val();
-                        const offenseDetails = $('#edit_offense_details').val().trim();
-                        const disciplinaryAction = $('#edit_disciplinary_action').val().trim();
-                        const remarks = $('#edit_remarks').val().trim();
-                        const fileInput = $('#edit_information_report_file')[0];
+                    const id = $editViolationId.val();
+                    const offenseDetails = $('#edit_offense_details').val().trim();
+                    const disciplinaryAction = $('#edit_disciplinary_action').val().trim();
+                    const remarks = $('#edit_remarks').val().trim();
+                    const newAttachmentsInput = $('#edit_new_attachments')[0];
 
-                        if (!id) {
-                            $editError.text('Invalid violation record.').removeClass('d-none');
-                            return;
+                    if (!id) {
+                        $editError.text('Invalid violation record.').removeClass('d-none');
+                        return;
+                    }
+
+                    if (!offenseDetails) {
+                        $editError.text('Offense details is required.').removeClass('d-none');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('_method', 'PUT');
+                    formData.append('offense_details', offenseDetails);
+                    if (disciplinaryAction) formData.append('disciplinary_action', disciplinaryAction);
+                    if (remarks) formData.append('remarks', remarks);
+                    
+                    // Add new attachments if any
+                    if (newAttachmentsInput && newAttachmentsInput.files.length > 0) {
+                        for (let i = 0; i < newAttachmentsInput.files.length; i++) {
+                            formData.append('attachments[]', newAttachmentsInput.files[i]);
                         }
-
-                        if (!offenseDetails) {
-                            $editError.text('Offense details is required.').removeClass('d-none');
-                            return;
-                        }
-
-                        const formData = new FormData();
-                        formData.append('_method', 'PUT');
-                        formData.append('offense_details', offenseDetails);
-                        if (disciplinaryAction) formData.append('disciplinary_action', disciplinaryAction);
-                        if (remarks) formData.append('remarks', remarks);
-                        if (fileInput.files.length > 0) formData.append('information_report_file', fileInput.files[0]);
-
-                        $.ajax({
+                    }                        $.ajax({
                             url: `${apiViolationBase}/${id}`,
                             method: 'POST',
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },

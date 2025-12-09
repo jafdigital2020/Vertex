@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Tenant\Employees;
 
 use App\Models\User;
-use App\Models\Violation; 
+use App\Models\Violation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Models\EmploymentDetail;
 use App\Models\ViolationAction;
+use App\Models\ViolationAttachment;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -79,7 +80,8 @@ class ViolationController extends Controller
                 'employee.employmentDetail.department',
                 'employee.employmentDetail.designation',
                 'employee.personalInformation',
-                'actions'
+                'actions',
+                'attachments.uploader.personalInformation'
             ])->findOrFail($id);
 
             // Get employee reply action
@@ -91,9 +93,9 @@ class ViolationController extends Controller
                 'status' => 'success',
                 'violation' => [
                     'id' => $violation->id,
-                    'employee_name' => $violation->employee->personalInformation 
-                        ? trim($violation->employee->personalInformation->first_name . ' ' . 
-                               ($violation->employee->personalInformation->middle_name ?? '') . ' ' . 
+                    'employee_name' => $violation->employee->personalInformation
+                        ? trim($violation->employee->personalInformation->first_name . ' ' .
+                               ($violation->employee->personalInformation->middle_name ?? '') . ' ' .
                                $violation->employee->personalInformation->last_name)
                         : 'N/A',
                     'employee_id' => $violation->employee->employmentDetail->employee_id ?? 'N/A',
@@ -102,11 +104,11 @@ class ViolationController extends Controller
                     'designation' => $violation->employee->employmentDetail->designation->designation_name ?? 'N/A',
                     'status' => $violation->status,
                     'violation_type' => $violation->violation_type,
-                    'violation_start_date' => $violation->violation_start_date 
-                        ? Carbon::parse($violation->violation_start_date)->format('M d, Y') 
+                    'violation_start_date' => $violation->violation_start_date
+                        ? Carbon::parse($violation->violation_start_date)->format('M d, Y')
                         : null,
-                    'violation_end_date' => $violation->violation_end_date 
-                        ? Carbon::parse($violation->violation_end_date)->format('M d, Y') 
+                    'violation_end_date' => $violation->violation_end_date
+                        ? Carbon::parse($violation->violation_end_date)->format('M d, Y')
                         : null,
                     'violation_days' => $violation->violation_days,
                     'offense_details' => $violation->offense_details,
@@ -121,15 +123,30 @@ class ViolationController extends Controller
                     'employee_reply' => $employeeReply ? [
                         'description' => $employeeReply->description,
                         'file_path' => $employeeReply->file_path,
-                        'action_date' => $employeeReply->action_date 
-                            ? Carbon::parse($employeeReply->action_date)->format('M d, Y') 
+                        'action_date' => $employeeReply->action_date
+                            ? Carbon::parse($employeeReply->action_date)->format('M d, Y')
                             : null,
                     ] : null,
+                    'attachments' => $violation->attachments->map(function ($attachment) {
+                        return [
+                            'id' => $attachment->id,
+                            'file_name' => $attachment->file_name,
+                            'file_path' => $attachment->file_path,
+                            'file_type' => $attachment->file_type,
+                            'file_size' => $attachment->file_size,
+                            'attachment_type' => $attachment->attachment_type,
+                            'uploaded_by' => $attachment->uploader
+                                ? trim(($attachment->uploader->personalInformation->first_name ?? '') . ' ' .
+                                       ($attachment->uploader->personalInformation->last_name ?? ''))
+                                : 'N/A',
+                            'uploaded_at' => $attachment->created_at ? $attachment->created_at->format('M d, Y h:i A') : null,
+                        ];
+                    }),
                 ]
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching violation details: ' . $e->getMessage());
-            
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Violation record not found.'
@@ -140,19 +157,20 @@ class ViolationController extends Controller
     public function update(Request $request, $id)
     {
         $authUser = $this->authUser();
-        
+
         $request->validate([
             'offense_details' => 'required|string|max:2000',
             'disciplinary_action' => 'nullable|string|max:1000',
             'remarks' => 'nullable|string|max:1000',
             'information_report_file' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+            'attachments.*' => 'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $violation =Violation::findOrFail($id);
-            
+            $violation = Violation::findOrFail($id);
+
             $updateData = [
                 'offense_details' => $request->offense_details,
                 'disciplinary_action' => $request->disciplinary_action,
@@ -165,6 +183,30 @@ class ViolationController extends Controller
                 $filename = 'violation_report_' . time() . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('violations/reports', $filename, 'public');
                 $updateData['information_report_file'] = $path;
+            }
+
+            // Handle multiple attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $index => $file) {
+                    // Get file info before moving
+                    $originalName = $file->getClientOriginalName();
+                    $mimeType = $file->getClientMimeType();
+                    $fileSize = $file->getSize();
+
+                    $fileName = time() . '_' . $index . '_' . $originalName;
+                    $file->move(public_path('storage/violation_reports'), $fileName);
+                    $filePath = "violation_reports/{$fileName}";
+
+                    ViolationAttachment::create([
+                        'violation_id' => $violation->id,
+                        'file_name' => $originalName,
+                        'file_path' => $filePath,
+                        'file_type' => $mimeType,
+                        'file_size' => $fileSize,
+                        'attachment_type' => 'information_report',
+                        'uploaded_by' => $authUser->id,
+                    ]);
+                }
             }
 
             $violation->update($updateData);
@@ -381,11 +423,13 @@ class ViolationController extends Controller
             'user_id' => 'required|exists:users,id',
             'offense_details' => 'required|string|max:1000',
             'information_report_file' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'attachments.*' => 'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
         ]);
 
         try {
             DB::beginTransaction();
 
+            // Keep backward compatibility with single file upload
             $filePath = null;
             if ($request->hasFile('information_report_file')) {
                 $file = $request->file('information_report_file');
@@ -394,20 +438,45 @@ class ViolationController extends Controller
                 $filePath = "violation_reports/{$fileName}";
             }
 
-            $violation =Violation::create([
+            $violation = Violation::create([
                 'user_id' => $request->user_id,
                 'offense_details' => $request->offense_details,
                 'information_report_file' => $filePath,
                 'status' => 'pending',
             ]);
 
-           ViolationAction::create([
+            // Handle multiple attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $index => $file) {
+                    // Get file info before moving
+                    $originalName = $file->getClientOriginalName();
+                    $mimeType = $file->getClientMimeType();
+                    $fileSize = $file->getSize();
+
+                    $fileName = time() . '_' . $index . '_' . $originalName;
+                    $file->move(public_path('storage/violation_reports'), $fileName);
+                    $filePath = "violation_reports/{$fileName}";
+
+                    ViolationAttachment::create([
+                        'violation_id' => $violation->id,
+                        'file_name' => $originalName,
+                        'file_path' => $filePath,
+                        'file_type' => $mimeType,
+                        'file_size' => $fileSize,
+                        'attachment_type' => 'information_report',
+                        'uploaded_by' => $authUser->id,
+                    ]);
+                }
+            }
+
+            ViolationAction::create([
                 'violation_id' => $violation->id,
                 'action_type' => 'report_received',
                 'action_by' => $authUser->id,
                 'action_date' => now(),
                 'description' => 'Information report received for offense.',
             ]);
+
             if($request->user_id){
                 $user = User::find($request->user_id);
                 if ($user) {
@@ -416,9 +485,9 @@ class ViolationController extends Controller
                             "A violation has been filed against you. Please wait for the Notice of Written Explanation (NOWE) to be uploaded by the admin before you can submit your response."
                         )
                     );
-                } 
+                }
             }
-          
+
             DB::commit();
 
             return response()->json([
@@ -429,11 +498,24 @@ class ViolationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error filing violation case: ' . $e->getMessage());
+            Log::error('Error filing violation case: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['information_report_file', 'attachments']),
+                'has_main_file' => $request->hasFile('information_report_file'),
+                'has_attachments' => $request->hasFile('attachments'),
+                'attachments_count' => $request->hasFile('attachments') ? count($request->file('attachments')) : 0
+            ]);
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error filing violation case. Please try again.'
+                'message' => 'Error filing violation case: ' . $e->getMessage(),
+                'debug' => [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]
             ], 500);
         }
     }

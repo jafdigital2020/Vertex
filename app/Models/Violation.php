@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Violation extends Model
 {
-    //
     use HasFactory;
 
     protected $fillable  = [
@@ -51,5 +50,11 @@ class Violation extends Model
     public function actions()
     {
         return $this->hasMany(ViolationAction::class);
+    }
+
+    // Attachments for this violation
+    public function attachments()
+    {
+        return $this->hasMany(ViolationAttachment::class);
     }
 }
