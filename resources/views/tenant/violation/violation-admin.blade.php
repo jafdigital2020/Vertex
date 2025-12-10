@@ -382,9 +382,35 @@
                                     <small class="text-muted">Accepted formats: PDF, DOC, DOCX (Max 2MB)</small>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Violation Type <span class="text-danger">*</span></label>
-                                    <div class="form-check">
+                                <div class="mb-3 mt-2">
+                                   <label class="form-label">Violation Type <span class="text-danger">*</span></label> 
+                                    <div class="row">
+                                        @foreach ($violationTypes as $item)
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-2">
+
+                                                    <input class="form-check-input" 
+                                                        type="radio" 
+                                                        name="violation_type_id" 
+                                                        value="{{ $item->id }}" 
+                                                        id="violation_{{ $item->id }}" 
+                                                        required> 
+                                                    <label class="form-check-label" 
+                                                        for="violation_{{ $item->id }}" 
+                                                        style="font-size:14px;"> 
+                                                        <strong>{{ $item->name }}</strong> 
+                                                        @if($item->description)
+                                                            <small class="d-block text-muted">{{ $item->description }}</small>
+                                                        @endif
+                                                    </label>
+
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    
+                                    {{-- <div class="form-check">
                                         <input class="form-check-input" type="radio" name="violation_type" id="violation_with_pay" value="with_pay" required>
                                         <label class="form-check-label" for="violation_with_pay">
                                             <strong>With Pay</strong>
@@ -397,7 +423,7 @@
                                             <strong>Without Pay</strong>
                                             <small class="d-block text-muted">Employee will NOT receive salary during violation</small>
                                         </label>
-                                    </div>
+                                    </div> --}}
                                 </div>
 
                                 <div id="dam-error" class="alert alert-danger d-none"></div>
@@ -1128,7 +1154,7 @@
 
                         const id = $damViolationId.val();
                         const file = $('#dam_file')[0].files[0];
-                        const violationType = $('input[name="violation_type"]:checked').val();
+                        const violationType = $('input[name="violation_type_id"]:checked').val();
 
                         if (!id) { $damError.text('Invalid violation record.').removeClass('d-none'); return; }
                         if (!file) { $damError.text('Please upload a DAM file.').removeClass('d-none'); return; }
@@ -1137,7 +1163,7 @@
 
                         const formData = new FormData();
                         formData.append('dam_file', file);
-                        formData.append('violation_type', violationType);
+                        formData.append('violation_type_id', violationType);
 
                         const submitDam = (url) => $.ajax({
                             url: url,

@@ -40,6 +40,8 @@ class DatabaseSeeder extends Seeder
             TenantTableSeeder::class,
             UserPermissionTableSeeder::class,
             WithholdingTaxSeeder::class,
+            ViolationTypeSeeder::class
+
         ]);
  
     }

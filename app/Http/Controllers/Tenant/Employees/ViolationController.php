@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Tenant\Employees;
 use App\Models\User;
 use App\Models\Violation;
 use Illuminate\Http\Request;
+use App\Models\ViolationTypes;
 use Illuminate\Support\Carbon;
-use App\Models\EmploymentDetail;
 use App\Models\ViolationAction;
-use App\Models\ViolationAttachment;
+use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
+use App\Models\ViolationAttachment;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -314,7 +315,7 @@ class ViolationController extends Controller
                 $query->where('status', 1); 
             }) 
             ->latest()->get();
-  
+        $violationTypes = ViolationTypes::all();
  
         return view('tenant.violation.violation-admin', [
             'permission' => $permission,
@@ -323,6 +324,7 @@ class ViolationController extends Controller
             'departments' => $departments,
             'designations' => $designations,
             'employeeOptions' => $employeeOptions,
+            'violationTypes' => $violationTypes,
         ]);
     }
 
@@ -708,7 +710,7 @@ class ViolationController extends Controller
         $authUser = $this->authUser();
         $request->validate([
             'dam_file' => 'required|mimes:pdf,doc,docx|max:2048',
-            'violation_type' => 'required|in:with_pay,without_pay',
+            'violation_type_id' => 'required',
         ]);
 
         try {
@@ -732,8 +734,8 @@ class ViolationController extends Controller
             $violation->update([
                 'dam_file' => $filePath,
                 'dam_issued_at' => now(),
-                'violation_type' => $request->violation_type,
-                'status' => 'suspended',
+                'violation_type_id' => $request->violation_type_id,
+                'status' => 'dam_issued',
             ]);
 
            ViolationAction::create([
@@ -742,7 +744,7 @@ class ViolationController extends Controller
                 'action_by' => $authUser->id,
                 'action_date' => now(),
                 'file_path' => $filePath,
-                'description' => 'Disciplinary Action Memo issued to employee (' . str_replace('_', ' ', $request->violation_type) . ').',
+                'description' => 'Disciplinary Action Memo issued to employee (' . str_replace('_', ' ', $request->violation_type_id) . ').',
             ]);
             
             if ($violation->user_id) { 
@@ -760,7 +762,7 @@ class ViolationController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'DAM issued successfully with violation type: ' . str_replace('_', ' ', $request->violation_type) . '.',
+                'message' => 'DAM issued successfully with violation type: ' . str_replace('_', ' ', $request->violation_type_id) . '.',
                 'data' => $violation
             ]);
         } catch (\Exception $e) {
