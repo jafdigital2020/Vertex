@@ -240,21 +240,34 @@ class BiometricsController extends Controller
                 $status = $this->determineStatus(['State' => $state, 'Status' => $state]);
                 $userId = $userMap[$pin] ?? null;
 
+                // Determine the actual employee_id and mapping type
+                $actualEmployeeId = $pin; // Default to device PIN
+                $mappingType = 'unknown';
+
                 if ($userId) {
                     $user = User::with('employmentDetail')->find($userId);
-                    $mappingType = !empty($user->employmentDetail->biometrics_id) && $user->employmentDetail->biometrics_id == $pin
-                        ? 'biometrics_id'
-                        : 'employee_id';
+                    if ($user && $user->employmentDetail) {
+                        // Determine which ID was used for mapping
+                        if (!empty($user->employmentDetail->biometrics_id) && $user->employmentDetail->biometrics_id == $pin) {
+                            $mappingType = 'biometrics_id';
+                        } elseif (!empty($user->employmentDetail->employee_id) && $user->employmentDetail->employee_id == $pin) {
+                            $mappingType = 'employee_id';
+                        }
+
+                        // Always use the actual employee_id from the database
+                        $actualEmployeeId = $user->employmentDetail->employee_id ?? $pin;
+                    }
 
                     Log::debug('✅ User found via mapping', [
-                        'pin' => $pin,
+                        'device_pin' => $pin,
                         'user_id' => $userId,
                         'mapping_type' => $mappingType,
+                        'actual_employee_id' => $actualEmployeeId,
                         'user_name' => $user->name ?? 'Unknown'
                     ]);
                 } else {
                     Log::warning('⚠️ No user mapping found', [
-                        'pin' => $pin,
+                        'device_pin' => $pin,
                         'available_mappings_sample' => array_slice(array_keys($userMap), 0, 5)
                     ]);
                 }
@@ -262,7 +275,7 @@ class BiometricsController extends Controller
                 $attendanceLog = AttendanceLog::firstOrCreate(
                     [
                         'device_id'  => $device->id,
-                        'employee_id' => (string) $pin,
+                        'employee_id' => (string) $actualEmployeeId,
                         'check_time' => $ts,
                     ],
                     [
@@ -273,6 +286,8 @@ class BiometricsController extends Controller
                         'raw_data'    => json_encode([
                             'line' => $line,
                             'tab_parts' => $tabParts,
+                            'device_pin' => $pin,
+                            'mapping_type' => $mappingType,
                             'parsing_method' => 'tab_separated'
                         ], JSON_UNESCAPED_UNICODE),
                     ]
@@ -282,8 +297,10 @@ class BiometricsController extends Controller
                     $saved++;
                     Log::info('🆕 NEW ATTENDANCE LOG CREATED!', [
                         'device_id' => $device->id,
-                        'employee_id' => $pin,
+                        'device_pin' => $pin,
+                        'employee_id' => $actualEmployeeId,
                         'user_id' => $userId,
+                        'mapping_type' => $mappingType,
                         'status' => $status,
                         'time' => $ts->toDateTimeString(),
                         'log_id' => $attendanceLog->id
@@ -780,30 +797,42 @@ class BiometricsController extends Controller
                 $checkTime = Carbon::parse($punchTime, $tz);
                 $userId = $userMap[$employeeCode] ?? null;
 
+                // Determine the actual employee_id and mapping type
+                $actualEmployeeId = $employeeCode; // Default to device employee code
+                $mappingType = 'unknown';
+
                 if ($userId) {
                     $user = User::with('employmentDetail')->find($userId);
-                    $mappingType = !empty($user->employmentDetail->biometrics_id) && $user->employmentDetail->biometrics_id == $employeeCode
-                        ? 'biometrics_id'
-                        : 'employee_id';
+                    if ($user && $user->employmentDetail) {
+                        // Determine which ID was used for mapping
+                        if (!empty($user->employmentDetail->biometrics_id) && $user->employmentDetail->biometrics_id == $employeeCode) {
+                            $mappingType = 'biometrics_id';
+                        } elseif (!empty($user->employmentDetail->employee_id) && $user->employmentDetail->employee_id == $employeeCode) {
+                            $mappingType = 'employee_id';
+                        }
+
+                        // Always use the actual employee_id from the database
+                        $actualEmployeeId = $user->employmentDetail->employee_id ?? $employeeCode;
+                    }
 
                     Log::debug('BioTime user found via mapping', [
-                        'employee_code' => $employeeCode,
+                        'device_employee_code' => $employeeCode,
                         'user_id' => $userId,
                         'mapping_type' => $mappingType,
+                        'actual_employee_id' => $actualEmployeeId,
                         'user_name' => $user->name ?? 'Unknown'
                     ]);
                 } else {
                     Log::warning('No BioTime user mapping found', [
-                        'employee_code' => $employeeCode,
+                        'device_employee_code' => $employeeCode,
                         'available_mappings' => array_keys($userMap)
                     ]);
                 }
 
-
                 $status = $this->determineBioTimeStatus($punchState);
 
                 Log::debug('Processing transaction', [
-                    'employee_code' => $employeeCode,
+                    'device_employee_code' => $employeeCode,
                     'punch_time' => $punchTime,
                     'punch_state' => $punchState,
                     'status' => $status,
@@ -813,14 +842,17 @@ class BiometricsController extends Controller
                 $attendanceLog = AttendanceLog::firstOrCreate(
                     [
                         'device_id' => $device->id,
-                        'employee_id' => (string) $employeeCode,
+                        'employee_id' => (string) $actualEmployeeId,
                         'check_time' => $checkTime,
                     ],
                     [
                         'user_id' => $userId,
                         'status' => $status,
                         'verify_type' => $verifyType,
-                        'raw_data' => json_encode($transaction, JSON_UNESCAPED_UNICODE),
+                        'raw_data' => json_encode(array_merge($transaction, [
+                            'device_employee_code' => $employeeCode,
+                            'mapping_type' => $mappingType
+                        ]), JSON_UNESCAPED_UNICODE),
                     ]
                 );
 
@@ -832,7 +864,9 @@ class BiometricsController extends Controller
 
                     Log::info('NEW ATTENDANCE LOG CREATED FROM BIOTIME!', [
                         'device_id' => $device->id,
-                        'employee_id' => $employeeCode,
+                        'device_employee_code' => $employeeCode,
+                        'employee_id' => $actualEmployeeId,
+                        'mapping_type' => $mappingType,
                         'status' => $status,
                         'time' => $checkTime->toDateTimeString(),
                         'user_id' => $userId
@@ -896,7 +930,8 @@ class BiometricsController extends Controller
             $employment = $user->employmentDetail;
             if (!$employment) continue;
 
-            // Priority 1: Use biometrics_id if available
+            // Map BOTH biometrics_id AND employee_id to the same user
+            // This allows clock-in with either identifier
             if (!empty($employment->biometrics_id)) {
                 $userMap[$employment->biometrics_id] = $user->id;
                 Log::debug('User mapped via biometrics_id', [
@@ -905,10 +940,10 @@ class BiometricsController extends Controller
                     'name' => $user->name
                 ]);
             }
-            // Priority 2: Fallback to employee_id if biometrics_id is null
-            elseif (!empty($employment->employee_id)) {
+
+            if (!empty($employment->employee_id)) {
                 $userMap[$employment->employee_id] = $user->id;
-                Log::debug('User mapped via employee_id (fallback)', [
+                Log::debug('User mapped via employee_id', [
                     'user_id' => $user->id,
                     'employee_id' => $employment->employee_id,
                     'name' => $user->name
@@ -916,13 +951,13 @@ class BiometricsController extends Controller
             }
         }
 
-        Log::info('User mapping created with biometrics_id priority', [
+        Log::info('User mapping created with both IDs', [
             'total_mappings' => count($userMap),
-            'biometrics_mappings' => User::whereHas('employmentDetail', function ($q) {
+            'users_with_biometrics_id' => User::whereHas('employmentDetail', function ($q) {
                 $q->whereNotNull('biometrics_id');
             })->count(),
-            'employee_id_mappings' => User::whereHas('employmentDetail', function ($q) {
-                $q->whereNull('biometrics_id')->whereNotNull('employee_id');
+            'users_with_employee_id' => User::whereHas('employmentDetail', function ($q) {
+                $q->whereNotNull('employee_id');
             })->count()
         ]);
 
