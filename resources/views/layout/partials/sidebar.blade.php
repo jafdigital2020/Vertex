@@ -173,7 +173,7 @@
                             @if (in_array(4, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}">
+                                        class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'employee-archive', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-users"></i><span>Employees</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -182,6 +182,12 @@
                                             <li><a href="{{ url('employees') }}"
                                                     class="{{ Request::is('employees') ? 'active' : '' }}"><i class="ti ti-list"></i>&nbsp; Employee
                                                     Lists</a>
+                                            </li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][9]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('employee-archive') }}"
+                                                    class="{{ Request::is('employee-archive') ? 'active' : '' }}"><i class="ti ti-archive"></i>&nbsp; Employee
+                                                    Archive</a>
                                             </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][10]) || $role_data['role_id'] == 'global_user')
@@ -1090,12 +1096,15 @@
                         </li>
                         <li class="submenu">
                             <a href="javascript:void(0);"
-                                class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}"><span>Employees</span>
+                                class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'employee-archive', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}"><span>Employees</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
                                 <li><a href="{{ url('employees') }}"
                                         class="{{ Request::is('employees') ? 'active' : '' }}">Employee Lists</a>
+                                </li>
+                                <li><a href="{{ url('employee-archive') }}"
+                                        class="{{ Request::is('employee-archive') ? 'active' : '' }}">Employee Archive</a>
                                 </li>
                                 <li><a href="{{ url('employees-grid') }}"
                                         class="{{ Request::is('employees-grid') ? 'active' : '' }}">Employee
@@ -2262,13 +2271,16 @@
                             <li class="menu-title"><span>HRM</span></li>
                             <li class="submenu">
                                 <a href="javascript:void(0);"
-                                    class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}"><span>Employees</span>
+                                    class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'employee-archive', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}"><span>Employees</span>
                                     <span class="menu-arrow"></span>
                                 </a>
                                 <ul>
                                     <li><a href="{{ url('employees') }}"
                                             class="{{ Request::is('employees') ? 'active' : '' }}">Employee
                                             Lists</a></li>
+                                    <li><a href="{{ url('employee-archive') }}"
+                                            class="{{ Request::is('employee-archive') ? 'active' : '' }}">Employee
+                                            Archive</a></li>
                                     <li><a href="{{ url('employees-grid') }}"
                                             class="{{ Request::is('employees-grid') ? 'active' : '' }}">Employee
                                             Grid</a></li>
@@ -4409,13 +4421,16 @@
                             <ul class="stack-submenu">
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}"><span>Employees</span>
+                                        class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'employee-archive', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}"><span>Employees</span>
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
                                         <li><a href="{{ url('employees') }}"
                                                 class="{{ Request::is('employees') ? 'active' : '' }}">Employee
                                                 Lists</a></li>
+                                        <li><a href="{{ url('employee-archive') }}"
+                                                class="{{ Request::is('employee-archive') ? 'active' : '' }}">Employee
+                                                Archive</a></li>
                                         <li><a href="{{ url('employees-grid') }}"
                                                 class="{{ Request::is('employees-grid') ? 'active' : '' }}">Employee
                                                 Grid</a></li>
