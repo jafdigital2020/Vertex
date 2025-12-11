@@ -77,6 +77,7 @@ class ViolationController extends Controller
     {
         try {
             $violation = Violation::with([
+                'violationType',
                 'employee.employmentDetail.branch',
                 'employee.employmentDetail.department',
                 'employee.employmentDetail.designation',
@@ -104,7 +105,7 @@ class ViolationController extends Controller
                     'department' => $violation->employee->employmentDetail->department->department_name ?? 'N/A',
                     'designation' => $violation->employee->employmentDetail->designation->designation_name ?? 'N/A',
                     'status' => $violation->status,
-                    'violation_type' => $violation->violation_type,
+                    'violation_type' => $violation->violationType->name ?? '',
                     'violation_start_date' => $violation->violation_start_date
                         ? Carbon::parse($violation->violation_start_date)->format('M d, Y')
                         : null,

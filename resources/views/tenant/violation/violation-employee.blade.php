@@ -62,35 +62,35 @@
                                                 <td class="text-center">{{ $index + 1 }}</td>
                                                 <td>{{ $s->offense_details ?? '—' }}</td>
                                                 @php
-    switch ($s->status) {
-        case 'pending':
-            $statusColor = 'warning';
-            break;
-        case 'awaiting_reply':
-            $statusColor = 'info';
-            break;
-        case 'under_investigation':
-            $statusColor = 'primary';
-            break;
-        case 'for_dam_issuance':
-            $statusColor = 'secondary';
-            break;
-        case 'suspended':
-            $statusColor = 'danger';
-            break;
-        case 'completed':
-            $statusColor = 'success';
-            break;
-        default:
-            $statusColor = 'secondary';
-    }
+                                                    switch ($s->status) {
+                                                        case 'pending':
+                                                            $statusColor = 'warning';
+                                                            break;
+                                                        case 'awaiting_reply':
+                                                            $statusColor = 'info';
+                                                            break;
+                                                        case 'under_investigation':
+                                                            $statusColor = 'primary';
+                                                            break;
+                                                        case 'for_dam_issuance':
+                                                            $statusColor = 'secondary';
+                                                            break;
+                                                        case 'suspended':
+                                                            $statusColor = 'danger';
+                                                            break;
+                                                        case 'completed':
+                                                            $statusColor = 'success';
+                                                            break;
+                                                        default:
+                                                            $statusColor = 'secondary';
+                                                    }
                                                 @endphp
                                                 <td class="text-center">
                                                     <span class="badge bg-{{ $statusColor }}">
                                                         {{ ucfirst(str_replace('_', ' ', $s->status)) }}
                                                     </span>
                                                 </td>
-                                                <td class="text-center">{{ $s->violation_type ? strtoupper(str_replace('_', ' ', $s->violation_type)) : '' }}</td>
+                                                <td class="text-center">{{ $s->violationType->name?? ''  }}</td>
                                                 <td class="text-center">{{ $s->violation_start_date ?? '' }}</td>
                                                 <td class="text-center">{{ $s->violation_end_date ?? '' }}</td>
                                                 <td class="text-center">
@@ -222,7 +222,7 @@
                                                 <i class="ti ti-clock-pause"></i>
                                             </div>
                                             <div class="timeline-content">
-                                                <h6 class="mb-0">Suspended</h6>
+                                                <h6 class="mb-0">Disciplinary Action Implemented</h6>
                                                 <small class="text-muted">Implementation period</small>
                                             </div>
                                         </div>
@@ -534,6 +534,7 @@
 
                 function displayViolationDetails(violation) {
                     updateProgressFlow(violation.status);
+                
 
                     $('#view-offense-details').text(violation.offense_details || 'No details provided.');
 
@@ -642,7 +643,7 @@
                         'awaiting_reply': ['step-pending','step-nowe'],
                         'under_investigation': ['step-pending','step-nowe','step-investigation'],
                         'for_dam_issuance': ['step-pending','step-nowe','step-investigation'],
-                        'suspended': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended'],
+                        'dam_issued': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended'],
                         'completed': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended','step-completed']
                     };
 
@@ -651,7 +652,7 @@
                         'awaiting_reply': 'step-nowe',
                         'under_investigation': 'step-investigation',
                         'for_dam_issuance': 'step-dam',
-                        'suspended': 'step-suspended',
+                        'dam_issued': 'step-suspended',
                         'completed': 'step-completed'
                     };
 

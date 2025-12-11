@@ -16,7 +16,7 @@ class Violation extends Model
             'dam_file',
             'dam_issued_at',
             'disciplinary_action',
-            'violation_type',
+            'violation_type_id',
             'violation_start_date',
             'violation_end_date',
             'violation_days',
@@ -57,4 +57,9 @@ class Violation extends Model
     {
         return $this->hasMany(ViolationAttachment::class);
     }
+    public function violationType()
+    {
+        return $this->hasOne(ViolationTypes::class,'id','violation_type_id');
+    }
+
 }

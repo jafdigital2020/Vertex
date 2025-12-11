@@ -135,7 +135,7 @@
                                                                 </span>
                                                             @endif
                                                         </td>
-                                                        <td class="text-center">{{ $sus->violation_type ?? '' }}</td>
+                                                        <td class="text-center">{{ $sus->violationType->name ?? '' }}</td>
                                                         <td class="text-center">{{ $sus->violation_start_date ?? '' }}</td>
                                                         <td class="text-center">{{ $sus->violation_end_date ?? '' }}</td>  
                                                     <td class="text-center">
@@ -178,7 +178,7 @@
                                                                     @endif
                                                                     @break
 
-                                                                @case('suspended')
+                                                                @case('dam_issued')
                                                                     @if (!$sus->dam_file)
                                                                         <button class="btn btn-sm btn-success"
                                                                             onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
@@ -1271,7 +1271,7 @@
                         const status = violation.status || 'N/A';
                         statusBadge.text(status).attr('class', 'badge bg-' + getStatusColor(status));
 
-                        $('#view_type').text(violation.violation_type ? violation.violation_type.replace('_', ' ').toUpperCase() : 'N/A');
+                        $('#view_type').text(violation.violation_type ? violation.violation_type: 'N/A');
                         $('#view_filed_date').text(violation.created_at ? new Date(violation.created_at).toLocaleDateString() : 'N/A');
                         $('#view_start_date').text(violation.violation_start_date || 'N/A');
                         $('#view_end_date').text(violation.violation_end_date || 'N/A');
