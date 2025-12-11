@@ -429,25 +429,7 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Archive Table Controls -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap px-3 border-bottom">
-                    <div class="dataTables_length">
-                        <label class="d-flex align-items-center fs-12 mb-0">Row Per Page
-                            <select name="archive_entries" id="archive_entries" class="form-select form-select-sm" style="width: auto;">
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                            Entries
-                        </label>
-                    </div>
-                    <div class="dataTables_length">
-                        <input type="search" class="form-control form-control-sm" placeholder="Search..." 
-                            id="archive_search" onkeyup="filterArchive()" style="width: 200px;">
-                    </div>
-                </div>
+          
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable-filtered" id="employee_archive_table">
@@ -2150,6 +2132,17 @@
                 // Show/Hide cards
                 $('#employeeListCard').hide();
                 $('#employeeArchiveCard').show();
+                
+                // Initialize DataTable for archive if not already initialized
+                if (!$.fn.dataTable.isDataTable('#employee_archive_table')) {
+                    initFilteredDataTable('#employee_archive_table', {
+                        pageLength: 10,
+                        order: [], // Disable default sorting
+                        columnDefs: [
+                            { orderable: false, targets: -1 } // Disable sorting on action column
+                        ]
+                    });
+                }
                 
                 // Load inactive employees when archive tab is clicked
                 filterArchive();

@@ -59,6 +59,147 @@ class EmployeeListController extends Controller
     }
 
     /**
+     * Get employee archive (inactive employees only)
+     *
+     * Retrieves a paginated list of inactive employees with their personal information, employment details, and role assignments.
+     * Supports filtering by branch, department, designation, and sorting options.
+     *
+     * @group Employees
+     * @authenticated
+     *
+     * @queryParam branch_id integer Optional. Filter employees by branch ID. Example: 1
+     * @queryParam department_id integer Optional. Filter employees by department ID. Example: 2
+     * @queryParam designation_id integer Optional. Filter employees by designation ID. Example: 3
+     * @queryParam sort string Optional. Sort order: "asc" (oldest first), "desc" (newest first), "last_month" (last 30 days), "last_7_days" (last week). Example: desc
+     * @queryParam search string Optional. Search employees by name, email, or employee ID. Example: john
+     * @queryParam length integer Optional. Number of records per page. Example: 10
+     *
+     * @response 200 scenario="Success" {
+     *   "employees": [
+     *     {
+     *       "user": {
+     *         "id": 1,
+     *         "username": "juan.delacruz",
+     *         "email": "juan@company.com",
+     *         "role": "Employee"
+     *       },
+     *       "employment_detail": {
+     *         "id": 1,
+     *         "employee_id": "EMP-0001",
+     *         "date_hired": "2024-01-15",
+     *         "employment_type": "Regular",
+     *         "employment_status": "Inactive",
+     *         "status": 0
+     *       }
+     *     }
+     *   ]
+     * }
+     */
+    public function employeeArchiveIndex(Request $request)
+    {
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(9);
+        $leaveTypes = LeaveType::all();
+        $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
+        $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
+        $departmentId = $request->input('department_id');
+        $designationId = $request->input('designation_id');
+        $sort = $request->input('sort');
+        $search = $request->input('search');
+        $length = $request->input('length', 10);
+
+        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments  = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+        $employees = $accessData['employees'];
+
+        // Force status to 0 (inactive) for archive
+        $employees->whereHas('employmentDetail', function ($query) {
+            $query->where('status', 0);
+        });
+
+        if ($branchId) {
+            $employees->whereHas('employmentDetail', function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            });
+        }
+
+        if ($departmentId) {
+            $employees->whereHas('employmentDetail', function ($query) use ($departmentId) {
+                $query->where('department_id', $departmentId);
+            });
+        }
+
+        if ($designationId) {
+            $employees->whereHas('employmentDetail', function ($query) use ($designationId) {
+                $query->where('designation_id', $designationId);
+            });
+        }
+
+        if ($search) {
+            $employees->where(function ($query) use ($search) {
+                $query->where('email', 'LIKE', "%{$search}%")
+                    ->orWhere('username', 'LIKE', "%{$search}%")
+                    ->orWhereHas('personalInformation', function ($q) use ($search) {
+                        $q->where('first_name', 'LIKE', "%{$search}%")
+                          ->orWhere('last_name', 'LIKE', "%{$search}%")
+                          ->orWhere('middle_name', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('employmentDetail', function ($q) use ($search) {
+                        $q->where('employee_id', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($sort === 'asc') {
+            $employees->orderBy('created_at', 'asc');
+        } elseif ($sort === 'desc') {
+            $employees->orderBy('created_at', 'desc');
+        } elseif ($sort === 'last_month') {
+            $employees->where('created_at', '>=', now()->subMonth());
+        } elseif ($sort === 'last_7_days') {
+            $employees->where('created_at', '>=', now()->subDays(7));
+        }
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'employees' => $employees->take($length)->get()->map(function ($user) {
+                    return [
+                        'user' => [
+                            'id' => $user->id,
+                            'username' => $user->username,
+                            'email' => $user->email,
+                            'role' => $user->userPermission->role->role_name ?? null,
+                        ],
+                        'employment_detail' => $user->employmentDetail,
+                        'personal_information' => $user->employmentPersonalInformation,
+                    ];
+                }),
+            ]);
+        }
+
+        return view('tenant.employee.employeearchive', [
+            'employees' => $employees->get(),
+            'permission' => $permission,
+            'departments' => $departments,
+            'designations' => $designations,
+            'branches' => $branches,
+            'roles' => $roles,
+            'selectedBranchId' => $branchId,
+            'selectedDepartmentId' => $departmentId,
+            'selectedDesignationId' => $designationId,
+            'selectedSort' => $sort,
+            'selectedSearch' => $search,
+            'selectedLength' => $length,
+            'leaveTypes' => $leaveTypes,
+            'prefixes' => $prefixes,
+        ]);
+    }
+
+    /**
      * Get all employees
      *
      * Retrieves a paginated list of employees with their personal information, employment details, and role assignments.

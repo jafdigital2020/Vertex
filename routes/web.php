@@ -143,6 +143,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees')->middleware(CheckPermission::class . ':9');
+    Route::get('/employee-archive', [EmployeeListController::class, 'employeeArchiveIndex'])->name('employee-archive')->middleware(CheckPermission::class . ':9');
     Route::get('/employee-list-filter', [EmployeeListController::class, 'employeeListFilter'])->name('empList-filter');
     Route::get('/employee-branch-auto-filter', [EmployeeListController::class, 'branchAutoFilter'])->name('branchAuto-filter');
     Route::get('/employee-department-auto-filter', [EmployeeListController::class, 'departmentAutoFilter'])->name('departmentAuto-filter');
