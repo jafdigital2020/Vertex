@@ -443,11 +443,9 @@
                             Entries
                         </label>
                     </div>
-                    <div class="dataTables_filter">
-                        <label class="d-flex align-items-center gap-1 fs-12 mb-0">Search:
-                            <input type="search" class="form-control form-control-sm" placeholder="Search..." 
-                                   id="archive_search" onkeyup="filterArchive()" style="width: 200px;">
-                        </label>
+                    <div class="dataTables_length">
+                        <input type="search" class="form-control form-control-sm" placeholder="Search..." 
+                            id="archive_search" onkeyup="filterArchive()" style="width: 200px;">
                     </div>
                 </div>
                 <div class="card-body p-0">
