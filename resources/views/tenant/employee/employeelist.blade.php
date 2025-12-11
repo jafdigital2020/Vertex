@@ -215,7 +215,13 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="payroll-btns mb-3">
+                <a href="#" class="btn btn-primary active border me-2" id="employeeListTab">Employee List</a>
+                <a href="#" class="btn btn-white border me-2" id="employeeArchiveTab">Employee Archive</a>
+            </div>
+
+            <!-- Employee List Card -->
+            <div class="card" id="employeeListCard">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Employee List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
@@ -361,6 +367,165 @@
                                                                 onclick="deactivateEmployee({{ $employee->id }})"><i
                                                                     class="ti ti-cancel" title="Deactivate"></i></a>
                                                         @endif
+                                                    @endif
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="#" class="btn-delete"
+                                                            onclick="deleteEmployee({{ $employee->id }})">
+                                                            <i class="ti ti-trash" title="Delete"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        @endif
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Archive Card -->
+            <div class="card" id="employeeArchiveCard" style="display: none;">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                    <h5>Employee Archive</h5>
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                        <div class="form-group me-2">
+                            <select name="archive_branch_filter" id="archive_branch_filter" class="select2 form-select"
+                                oninput="filterArchive();" style="width:200px;">
+                                <option value="" selected>All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="archive_department_filter" id="archive_department_filter" class="select2 form-select"
+                                oninput="filterArchive()" style="width:200px;">
+                                <option value="" selected>All Departments</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="archive_designation_filter" id="archive_designation_filter" class="select2 form-select"
+                                oninput="filterArchive()" style="width:200px;">
+                                <option value="" selected>All Designations</option>
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <select name="archive_sortby_filter" id="archive_sortby_filter" class="select2 form-select"
+                                onchange="filterArchive()" style="width:150px;">
+                                <option value="" selected>All Sort By</option>
+                                <option value="ascending">Ascending</option>
+                                <option value="descending">Descending</option>
+                                <option value="last_month">Last Month</option>
+                                <option value="last_7_days">Last 7 days</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Archive Table Controls -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap px-3 border-bottom">
+                    <div class="dataTables_length">
+                        <label class="d-flex align-items-center fs-12 mb-0">Row Per Page
+                            <select name="archive_entries" id="archive_entries" class="form-select form-select-sm" style="width: auto;">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            Entries
+                        </label>
+                    </div>
+                    <div class="dataTables_filter">
+                        <label class="d-flex align-items-center gap-1 fs-12 mb-0">Search:
+                            <input type="search" class="form-control form-control-sm" placeholder="Search..." 
+                                   id="archive_search" onkeyup="filterArchive()" style="width: 200px;">
+                        </label>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="custom-datatable-filter table-responsive">
+                        <table class="table datatable-filtered" id="employee_archive_table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Designation</th>
+                                    <th>Joining Date</th>
+                                    <th>Status</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <th class="text-center">Action</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody id="employeeArchiveTableBody">
+                                @php
+                                    // For now, use empty collection and rely on AJAX filtering to load inactive employees
+                                    $inactiveEmployees = collect();
+                                @endphp
+
+                                @foreach ($inactiveEmployees as $employee)
+                                    @php
+                                        $detail = $employee->employmentDetail;
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            @if (in_array('Read', $permission) && in_array('Update', $permission))
+                                                <a href="{{ url('employees/employee-details/' . $employee->id) }}"
+                                                    class="me-2" title="View Full Details"><i
+                                                        class="ti ti-eye"></i></a>
+                                            @endif
+                                            @if (in_array('Update', $permission))
+                                                <a href="#" class="me-2"
+                                                    onclick="editEmployee({{ $employee->id }})"><i
+                                                        class="ti ti-edit"></i></a>
+                                            @endif
+                                            {{ $detail->employee_id ?? 'N/A' }}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <a href="{{ url('employee-details') }}" class="avatar avatar-md"
+                                                    data-bs-toggle="modal" data-bs-target="#view_details"><img
+                                                        src="{{ $employee->personalInformation && $employee->personalInformation->profile_picture ? asset('storage/' . $employee->personalInformation->profile_picture) : URL::asset('build/img/users/user-13.jpg') }}"
+                                                        class="img-fluid rounded-circle" alt="img"></a>
+                                                <div class="ms-2">
+                                                    <p class="text-dark mb-0"><a href="{{ url('employee-details') }}"
+                                                            data-bs-toggle="modal" data-bs-target="#view_details">
+                                                            {{ $employee->personalInformation->last_name ?? '' }}
+                                                            {{ $employee->personalInformation->suffix ?? '' }},
+                                                            {{ $employee->personalInformation->first_name ?? '' }}
+                                                            {{ $employee->personalInformation->middle_name ?? '' }}</a>
+                                                    </p>
+                                                    <span
+                                                        class="fs-12">{{ $employee->employmentDetail->branch->name ?? '' }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $employee->email ?? '-' }}</td>
+                                        <td>{{ $detail?->department?->department_name ?? 'N/A' }}</td>
+                                        <td> {{ $detail?->designation?->designation_name ?? 'N/A' }}</td>
+                                        <td>{{ $detail->date_hired ?? 'N/A' }}</td>
+                                        <td>
+                                            <span class="badge d-inline-flex align-items-center badge-xs badge-danger">
+                                                <i class="ti ti-point-filled me-1"></i>Inactive
+                                            </span>
+                                        </td>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                            <td>
+                                                <div class="action-icon d-inline-flex">
+                                                    @if (in_array('Update', $permission))
+                                                        <a href="#" class="btn-activate"
+                                                            onclick="activateEmployee({{ $employee->id }})"
+                                                            title="Activate"><i class="ti ti-circle-check"></i></a>
                                                     @endif
                                                     @if (in_array('Delete', $permission))
                                                         <a href="#" class="btn-delete"
@@ -1955,6 +2120,77 @@
                 },
                 error: function() {
                     toastr.error('An error occurred while getting employee details.');
+                }
+            });
+        }
+    </script>
+
+    <script>
+        // Tab switching functionality
+        $(document).ready(function() {
+            // Employee List Tab
+            $('#employeeListTab').on('click', function(e) {
+                e.preventDefault();
+                
+                // Update tab styling
+                $('#employeeListTab').removeClass('btn-white').addClass('btn-primary active');
+                $('#employeeArchiveTab').removeClass('btn-primary active').addClass('btn-white');
+                
+                // Show/Hide cards
+                $('#employeeListCard').show();
+                $('#employeeArchiveCard').hide();
+            });
+
+            // Employee Archive Tab
+            $('#employeeArchiveTab').on('click', function(e) {
+                e.preventDefault();
+                
+                // Update tab styling
+                $('#employeeArchiveTab').removeClass('btn-white').addClass('btn-primary active');
+                $('#employeeListTab').removeClass('btn-primary active').addClass('btn-white');
+                
+                // Show/Hide cards
+                $('#employeeListCard').hide();
+                $('#employeeArchiveCard').show();
+                
+                // Load inactive employees when archive tab is clicked
+                filterArchive();
+            });
+            
+            // Add event listener for entries dropdown in archive
+            $('#archive_entries').on('change', function() {
+                filterArchive();
+            });
+        });
+
+        // Filter function for archive
+        function filterArchive() {
+            const branch = $('#archive_branch_filter').val();
+            const department = $('#archive_department_filter').val();
+            const designation = $('#archive_designation_filter').val();
+            const sort = $('#archive_sortby_filter').val();
+            const search = $('#archive_search').val();
+            const entries = $('#archive_entries').val();
+
+            $.ajax({
+                url: '{{ route('empList-filter') }}',
+                type: 'GET',
+                data: {
+                    branch: branch,
+                    department: department,
+                    designation: designation,
+                    status: 0, // Only inactive employees for archive
+                    sort_by: sort,
+                    search: search,
+                    length: entries
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#employeeArchiveTableBody').html(response.html);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error filtering archive:', error);
                 }
             });
         }
