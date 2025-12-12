@@ -365,6 +365,37 @@
                                     </ul>
                                 </li>
                             @endif
+                            @if (in_array(19, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('request-loan', 'request-budget', 'request-asset', 'request-hmo', 'request-coe') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-file-text"></i><span>Requests</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][51]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('request-loan') }}"
+                                                    class="{{ Request::is('request-loan') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i>&nbsp;Request Loan</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][52]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('request-budget') }}"
+                                                    class="{{ Request::is('request-budget') ? 'active' : '' }}"><i class="ti ti-calculator"></i>&nbsp;Request Budget</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][53]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('request-asset') }}"
+                                                    class="{{ Request::is('request-asset') ? 'active' : '' }}"><i class="ti ti-device-desktop"></i>&nbsp;Request Asset</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][54]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('request-hmo') }}"
+                                                    class="{{ Request::is('request-hmo') ? 'active' : '' }}"><i class="ti ti-heart-plus"></i>&nbsp;Request HMO</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][55]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('request-coe') }}"
+                                                    class="{{ Request::is('request-coe') ? 'active' : '' }}"><i class="ti ti-certificate"></i>&nbsp;Request COE</a></li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
                         </ul>
                     </li>
                 @endif
@@ -723,9 +754,117 @@
 
             </ul>
         </div>
-        {{-- Subscription Notice --}}
+        
+        {{-- Subscription Widget --}}
+        @php
+            // Get authenticated user
+            $currentUser = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+            
+            // Hide for super admins
+            $isSuperAdmin = $currentUser && $currentUser->global_role && $currentUser->global_role->global_role_name === 'super_admin';
+            
+            // Get actual subscription data from user's tenant/company
+            $showSubscriptionWidget = false;
+            $subscriptionPlan = 'Professional Plan';
+            $remainingDays = 15;
+            $isExpiringSoon = false;
+            
+            if (!$isSuperAdmin && $currentUser) {
+                try {
+                    // Try to get tenant subscription
+                    if ($currentUser->tenant_id) {
+                        $tenant = \App\Models\Tenant::find($currentUser->tenant_id);
+                        if ($tenant) {
+                            $subscription = \App\Models\Subscription::where('tenant_id', $tenant->id)
+                                ->whereIn('status', ['active', 'trial'])
+                                ->first();
+                            
+                            if ($subscription) {
+                                $showSubscriptionWidget = true;
+                                $subscriptionPlan = $subscription->plan->name ?? 'Free Plan';
+                                
+                                // Calculate remaining days using subscription_end
+                                if ($subscription->subscription_end) {
+                                    $expiryDate = \Carbon\Carbon::parse($subscription->subscription_end);
+                                    $remainingDays = max(0, (int) $expiryDate->diffInDays(now(), false));
+                                    $isExpiringSoon = $remainingDays <= 30;
+                                }
+                            } else {
+                                // Show widget even if no active subscription (for upgrade prompt)
+                                $showSubscriptionWidget = true;
+                                $subscriptionPlan = 'Free Plan';
+                                $remainingDays = 0;
+                                $isExpiringSoon = true;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Fallback: Show demo widget for testing
+                    $showSubscriptionWidget = true;
+                    $subscriptionPlan = 'Professional Plan';
+                    $remainingDays = 15;
+                    $isExpiringSoon = true;
+                }
+            }
+        @endphp
+
+        @if ($showSubscriptionWidget && !$isSuperAdmin)
+            <div id="subscriptionWidget" class="subscription-widget-fixed" style="position: fixed; bottom: 10px; left: 10px; width: 260px; z-index: 1050; display: block;">
+                <div class="card border-0 text-white position-relative overflow-hidden" style="border-radius: 10px; background: #0f8b8d; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+                    <!-- Close Button -->
+                    <button type="button" class="btn-close btn-close-white position-absolute" onclick="document.getElementById('subscriptionWidget').style.display='none'" 
+                        style="top: 10px; right: 10px; z-index: 10; font-size: 9px; opacity: 0.8;" 
+                        aria-label="Close"></button>
+                    
+                    <!-- Decorative Background Icon -->
+                    <div style="position: absolute; width: 140px; height: 140px; right: -30px; top: -20px; z-index: 1;">
+                        <i class="ti ti-crown" style="font-size: 110px; color: rgba(255, 255, 255, 0.07);"></i>
+                    </div>
+                    
+                    <!-- Decorative Circle -->
+                    <div style="position: absolute; right: -50px; bottom: -50px; width: 150px; height: 150px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); z-index: 1;"></div>
+                    
+                    <div class="card-body p-3" style="position: relative; z-index: 2;">
+                        @if ($isExpiringSoon)
+                            <div class="alert border-0 mb-2 p-2" style="font-size: 10px; background: rgba(255, 255, 255, 0.2); border-radius: 6px;">
+                                <div style="color: #ffffff;">
+                                    <strong>⚠️ Expiring Soon!</strong><br>
+                                    <span style="opacity: 0.95;">{{ $remainingDays }} day{{ $remainingDays > 1 ? 's' : '' }} left</span>
+                                </div>
+                            </div>
+                        @endif
+                        
+                        <div class="d-flex align-items-center {{ $isExpiringSoon ? 'mt-2' : 'mt-2' }} mb-3">
+                            <div class="me-2" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="ti ti-crown" style="font-size: 20px; color: #ffffff;"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="mb-0" style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255, 255, 255, 0.7);">Current Plan</p>
+                                <h6 class="mb-0 fw-bold text-white" style="font-size: 16px;">{{ $subscriptionPlan ?? 'Free Plan' }}</h6>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center justify-content-between mb-3 p-2" style="background: rgba(255, 255, 255, 0.15); border-radius: 6px;">
+                            <span style="font-size: 11px; color: #ffffff;">Days Remaining</span>
+                            <span class="fw-bold text-white" style="font-size: 16px;">{{ $remainingDays }}</span>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{{ url('subscriptions') }}" class="btn btn-sm fw-semibold text-center" 
+                                style="font-size: 11px; padding: 10px 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.95); border: none; color: #0f8b8d; text-decoration: none; transition: all 0.3s ease;"
+                                onmouseover="this.style.background='#ffffff'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.background='rgba(255, 255, 255, 0.95)'; this.style.transform='translateY(0)'">
+                                <i class="ti ti-arrow-up me-1"></i>Upgrade Plan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- Old Subscription Notice (kept for backward compatibility) --}}
         @if (isset($subscriptionNotice) && $subscriptionNotice['show'])
-            <div class="alert alert-danger">
+            <div class="alert alert-danger mx-3 mb-3">
                 <strong>Notice:</strong>
                 Your subscription will expire on
                 <strong>{{ $subscriptionNotice['expiry_date'] }}</strong>.

@@ -2031,6 +2031,28 @@
                             <i class="ti ti-mail"></i>
                         </a>
                     </div> --}}
+                     {{-- Plan Expiry Notification --}}
+                        @php
+                            $authUser = Auth::user() ?? Auth::guard('global')->user();
+                            $tenantId = $authUser->tenant_id ?? null;
+                            $subscription = null;
+                            $package = null;
+                            
+                            if ($tenantId) {
+                                $subscription = \App\Models\Subscription::where('tenant_id', $tenantId)
+                                    ->with('plan')
+                                    ->where('status', 'active')
+                                    ->orderBy('subscription_end', 'desc')
+                                    ->first();
+                                $package = $subscription?->plan;
+                            }
+                            
+                            $isExpiring = $subscription && \Carbon\Carbon::parse($subscription->subscription_end)->lte(now()->addDays(7));
+                            $isExpired = !$subscription || \Carbon\Carbon::parse($subscription->subscription_end)->lt(now());
+                            $showPlanAlert = $tenantId && $package && ($isExpiring || $isExpired);
+                        @endphp
+
+
                      <div class="me-1 notification_item">
                         @php 
                             $authUser = Auth::user() ?? Auth::guard('global')->user();
@@ -2102,6 +2124,45 @@
                         </div>
                     </div>
                 </div>
+                
+                {{-- Plan Display --}}
+                @php
+                    $authUser = Auth::user() ?? Auth::guard('global')->user();
+                    $tenantId = $authUser->tenant_id ?? null;
+                    $subscription = null;
+                    $package = null;
+                    
+                    if ($tenantId) {
+                        $subscription = \App\Models\Subscription::where('tenant_id', $tenantId)
+                            ->with('plan')
+                            ->where('status', 'active')
+                            ->orderBy('subscription_end', 'desc')
+                            ->first();
+                        $package = $subscription?->plan;
+                    }
+                    
+                    $isExpiring = $subscription && \Carbon\Carbon::parse($subscription->subscription_end)->lte(now()->addDays(7));
+                    $isExpired = !$subscription || \Carbon\Carbon::parse($subscription->subscription_end)->lt(now());
+                    $isElitePlan = $package && (stripos($package->name, 'elite') !== false || strtolower($package->name) === 'elite');
+                    
+                    // Calculate remaining days
+                    $remainingDays = 0;
+                    if ($subscription && $subscription->subscription_end) {
+                        $remainingDays = max(0, (int) \Carbon\Carbon::parse($subscription->subscription_end)->diffInDays(now(), false));
+                    }
+                @endphp
+
+                @if($tenantId && $package)
+                <div class="d-flex align-items-center me-3" style="border-left: 2px solid #0f8b8d; padding-left: 10px;">
+                    <div class="me-2" style="width: 22px; height: 22px; border-radius: 50%; background: #0f8b8d; display: flex; align-items: center; justify-content: center;">
+                        <i class="ti ti-crown" style="font-size: 11px; color: #ffffff;"></i>
+                    </div>
+                    <div>
+                        <span class="fw-bold" style="font-size: 12px; color: #0f8b8d;">{{ $package->name }} <span style="color: #999;">|</span> <span style="font-size: 10px; color: #999;">{{ $remainingDays }} days left</span></span>
+                    </div>
+                </div>
+                @endif
+
                 <div class="dropdown profile-dropdown">
                     <a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center"
                         data-bs-toggle="dropdown">
@@ -2173,6 +2234,15 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Upgrade Button --}}
+                @if($tenantId && $package && !$isElitePlan)
+                <div class="ms-2">
+                    <a href="{{ route('subscriptions') }}" class="btn btn-sm" style="background: #0f8b8d; color: #ffffff; border: none; padding: 7px 14px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+                        <i class="ti ti-arrow-up me-1"></i>Upgrade
+                    </a>
+                </div>
+                @endif
             </div>
         </div>
 
