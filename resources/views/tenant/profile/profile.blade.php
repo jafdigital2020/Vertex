@@ -812,6 +812,11 @@
                                                         data-bs-target="#address4" type="button" role="tab"
                                                         aria-selected="true">Attachments</button>
                                                 </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link" id="address-tab5" data-bs-toggle="tab"
+                                                        data-bs-target="#address5" type="button" role="tab"
+                                                        aria-selected="true">Leave Information</button>
+                                                </li>
                                             </ul>
                                         </div>
                                         <div class="tab-content" id="myTabContent3">
@@ -989,6 +994,157 @@
                                                                         <p class="text-muted">No attachments available for
                                                                             this user.</p>
                                                                     @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Tab Leave Information --}}
+                                            <div class="tab-pane fade" id="address5" role="tabpanel"
+                                                aria-labelledby="address-tab5" tabindex="0">
+                                                <div class="row">
+                                                    {{-- Leave Credits Section --}}
+                                                    <div class="col-md-12 mb-4">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                <h5 class="mb-0">
+                                                                    <i class="ti ti-calendar-stats me-2"></i>Leave Credits
+                                                                </h5>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                @if($users->leaveEntitlements && $users->leaveEntitlements->count() > 0)
+                                                                    <div class="row">
+                                                                        @foreach($users->leaveEntitlements ?? [] as $entitlement)
+                                                                            <div class="col-md-6 col-xl-4 mb-3">
+                                                                                <div class="card border-0 shadow-sm h-100">
+                                                                                    <div class="card-body text-center">
+                                                                                        <div class="mb-3">
+                                                                                            <div class="avatar avatar-lg mx-auto mb-2" style="background-color: #f8f9fa;">
+                                                                                                <i class="ti ti-calendar-stats text-primary" style="font-size: 24px;"></i>
+                                                                                            </div>
+                                                                                            <h6 class="fw-medium mb-1">{{ $entitlement->leaveType->name ?? 'N/A' }}</h6>
+                                                                                        </div>
+                                                                                        <div class="row g-2">
+                                                                                            <div class="col-6">
+                                                                                                <div class="p-2 bg-light rounded">
+                                                                                                    <span class="text-muted small">Opening</span>
+                                                                                                    <h5 class="mb-0 text-primary">{{ $entitlement->opening_balance ?? 0 }}</h5>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="col-6">
+                                                                                                <div class="p-2 bg-light rounded">
+                                                                                                    <span class="text-muted small">Available</span>
+                                                                                                    <h5 class="mb-0 text-success">{{ $entitlement->current_balance ?? 0 }}</h5>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="mt-3">
+                                                                                            <small class="text-muted">
+                                                                                                <i class="ti ti-calendar me-1"></i>
+                                                                                                Period: {{ \Carbon\Carbon::parse($entitlement->period_start)->format('M Y') }} - 
+                                                                                                {{ \Carbon\Carbon::parse($entitlement->period_end)->format('M Y') }}
+                                                                                            </small>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @else
+                                                                    <div class="text-center py-4">
+                                                                        <i class="ti ti-calendar-x" style="font-size: 48px; color: #ccc;"></i>
+                                                                        <p class="text-muted mt-3">No leave credits assigned.</p>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Leave Records Section --}}
+                                                    <div class="col-md-12">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <h5 class="mb-0">
+                                                                        <i class="ti ti-calendar-event me-2"></i>Leave Records
+                                                                    </h5>
+                                                                    <div class="d-flex gap-2">
+                                                                        <select class="select2 form-select" id="leaveRecordsFilter" style="width: 200px;">
+                                                                            <option value="">All Records</option>
+                                                                            <option value="current-month">This Month</option>
+                                                                            <option value="last-month">Last Month</option>
+                                                                            <option value="current-year">This Year</option>
+                                                                            <option value="last-year">Last Year</option>
+                                                                            <option value="last-3-months">Last 3 Months</option>
+                                                                            <option value="last-6-months">Last 6 Months</option>
+                                                                            <option value="custom">Custom Date Range</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row mt-3" id="customDateRange" style="display: none;">
+                                                                    <div class="col-md-6">
+                                                                        <label class="form-label">From Date</label>
+                                                                        <input type="date" class="form-control form-control-sm" id="fromDate">
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <label class="form-label">To Date</label>
+                                                                        <input type="date" class="form-control form-control-sm" id="toDate">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body p-0">
+                                                                <div class="custom-datatable-filter table-responsive">
+                                                                    <table class="table datatable-filtered" id="profile_leave_records_table">
+                                                                        <thead class="thead-light">
+                                                                            <tr>
+                                                                                <th>Leave Type</th>
+                                                                                <th>Start Date</th>
+                                                                                <th>End Date</th>
+                                                                                <th>Days</th>
+                                                                                <th>Status</th>
+                                                                                <th>Reason</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @foreach(($users->leaveRequests ?? collect())->sortByDesc('created_at') as $request)
+                                                                                <tr>
+                                                                                    <td>
+                                                                                        <span class="badge badge-soft-primary">
+                                                                                            <i class="ti ti-calendar me-1"></i>
+                                                                                            {{ $request->leaveType->name ?? 'N/A' }}
+                                                                                        </span>
+                                                                                    </td>
+                                                                                    <td data-order="{{ \Carbon\Carbon::parse($request->start_date)->format('Y-m-d') }}">
+                                                                                        {{ \Carbon\Carbon::parse($request->start_date)->format('d M, Y') }}
+                                                                                    </td>
+                                                                                    <td data-order="{{ \Carbon\Carbon::parse($request->end_date)->format('Y-m-d') }}">
+                                                                                        {{ \Carbon\Carbon::parse($request->end_date)->format('d M, Y') }}
+                                                                                    </td>
+                                                                                    <td>{{ $request->days_requested }} {{ Str::plural('day', $request->days_requested) }}</td>
+                                                                                    <td>
+                                                                                        @if($request->status == 'approved')
+                                                                                            <span class="badge badge-soft-success">
+                                                                                                <i class="ti ti-check me-1"></i>Approved
+                                                                                            </span>
+                                                                                        @elseif($request->status == 'rejected')
+                                                                                            <span class="badge badge-soft-danger">
+                                                                                                <i class="ti ti-x me-1"></i>Rejected
+                                                                                            </span>
+                                                                                        @elseif($request->status == 'pending')
+                                                                                            <span class="badge badge-soft-warning">
+                                                                                                <i class="ti ti-clock me-1"></i>Pending
+                                                                                            </span>
+                                                                                        @else
+                                                                                            <span class="badge badge-soft-secondary">{{ ucfirst($request->status) }}</span>
+                                                                                        @endif
+                                                                                    </td>
+                                                                                    <td>{{ Str::limit($request->reason, 50) ?? 'No reason provided' }}</td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+                                                                    </table>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -2719,6 +2875,140 @@
                     });
             });
 
+        });
+    </script>
+
+    <!-- DataTable Scripts -->
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            let leaveRecordsTable;
+            
+            // Initialize Select2 for filter dropdown
+            $('#leaveRecordsFilter').select2({
+                minimumResultsForSearch: Infinity // Disable search for this dropdown
+            });
+
+            // Initialize DataTable for leave records if table exists and has data
+            if ($('#profile_leave_records_table').length && $('#profile_leave_records_table tbody tr').length > 0) {
+                leaveRecordsTable = initFilteredDataTable('#profile_leave_records_table', {
+                    pageLength: 10,
+                    order: [[1, 'desc']], // Order by Start Date descending
+                    columnDefs: [
+                        { orderable: false, targets: [0, 4] }, // Disable sorting for Leave Type and Status columns
+                    ]
+                });
+            }
+
+            // Date filtering functionality
+            function getDateRange(filterValue) {
+                const today = new Date();
+                const currentYear = today.getFullYear();
+                const currentMonth = today.getMonth();
+                
+                switch (filterValue) {
+                    case 'current-month':
+                        return {
+                            start: new Date(currentYear, currentMonth, 1),
+                            end: new Date(currentYear, currentMonth + 1, 0)
+                        };
+                    case 'last-month':
+                        return {
+                            start: new Date(currentYear, currentMonth - 1, 1),
+                            end: new Date(currentYear, currentMonth, 0)
+                        };
+                    case 'current-year':
+                        return {
+                            start: new Date(currentYear, 0, 1),
+                            end: new Date(currentYear, 11, 31)
+                        };
+                    case 'last-year':
+                        return {
+                            start: new Date(currentYear - 1, 0, 1),
+                            end: new Date(currentYear - 1, 11, 31)
+                        };
+                    case 'last-3-months':
+                        return {
+                            start: new Date(currentYear, currentMonth - 3, 1),
+                            end: today
+                        };
+                    case 'last-6-months':
+                        return {
+                            start: new Date(currentYear, currentMonth - 6, 1),
+                            end: today
+                        };
+                    default:
+                        return null;
+                }
+            }
+
+            function formatDate(date) {
+                return date.toISOString().split('T')[0];
+            }
+
+            function filterTableByDate(startDate, endDate) {
+                if (!leaveRecordsTable) return;
+
+                leaveRecordsTable.rows().every(function() {
+                    const row = this.node();
+                    const startDateCell = $(row).find('td:eq(1)');
+                    const dateOrder = startDateCell.attr('data-order');
+                    
+                    if (dateOrder) {
+                        const rowDate = new Date(dateOrder);
+                        const showRow = (!startDate || rowDate >= startDate) && (!endDate || rowDate <= endDate);
+                        
+                        if (showRow) {
+                            $(row).show();
+                        } else {
+                            $(row).hide();
+                        }
+                    }
+                });
+
+                leaveRecordsTable.draw();
+            }
+
+            // Filter dropdown change handler
+            $('#leaveRecordsFilter').on('change', function() {
+                const filterValue = $(this).val();
+                
+                if (filterValue === 'custom') {
+                    $('#customDateRange').show();
+                } else {
+                    $('#customDateRange').hide();
+                    
+                    if (filterValue === '') {
+                        // Show all records
+                        if (leaveRecordsTable) {
+                            leaveRecordsTable.rows().every(function() {
+                                $(this.node()).show();
+                            });
+                            leaveRecordsTable.draw();
+                        }
+                    } else {
+                        // Apply predefined filter
+                        const dateRange = getDateRange(filterValue);
+                        if (dateRange) {
+                            filterTableByDate(dateRange.start, dateRange.end);
+                        }
+                    }
+                }
+            });
+
+            // Custom date range handlers
+            $('#fromDate, #toDate').on('change', function() {
+                const fromDate = $('#fromDate').val();
+                const toDate = $('#toDate').val();
+                
+                if (fromDate && toDate) {
+                    filterTableByDate(new Date(fromDate), new Date(toDate));
+                } else if (fromDate) {
+                    filterTableByDate(new Date(fromDate), null);
+                } else if (toDate) {
+                    filterTableByDate(null, new Date(toDate));
+                }
+            });
         });
     </script>
 @endpush

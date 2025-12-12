@@ -377,6 +377,18 @@ class User extends Authenticatable
         return $this->hasMany(ThirteenthMonthPay::class, 'user_id');
     }
 
+    // Leave Requests Relationship
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class, 'user_id');
+    }
+
+    // Leave Entitlements (Credits) Relationship
+    public function leaveEntitlements()
+    {
+        return $this->hasMany(LeaveEntitlement::class, 'user_id');
+    }
+
     protected $appends = ['role_data'];
 
     public function getRoleDataAttribute()

@@ -46,6 +46,8 @@ class ProfileController extends Controller
                 'experience',
                 'emergency',
                 'salaryDetail',
+                'leaveRequests.leaveType',
+                'leaveEntitlements.leaveType',
             ]);
         }
 

@@ -47,7 +47,7 @@ class EmployeeDetailsController extends Controller
     {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(9);
-        $users = User::with('employmentDetail', 'personalInformation', 'governmentId', 'employeeBank', 'family', 'education', 'experience', 'emergency', 'branch')->findOrFail($id);
+        $users = User::with('employmentDetail', 'personalInformation', 'governmentId', 'employeeBank', 'family', 'education', 'experience', 'emergency', 'branch', 'leaveRequests.leaveType', 'leaveEntitlements.leaveType')->findOrFail($id);
         $banks = Bank::where('tenant_id', $authUser->tenant_id)->get();
         $branches = Branch::where('tenant_id', $authUser->tenant_id)->get();
         $departments = Department::whereHas('branch', function ($query) use ($authUser) {
