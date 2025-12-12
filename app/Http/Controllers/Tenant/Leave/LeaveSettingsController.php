@@ -102,6 +102,9 @@ class LeaveSettingsController extends Controller
                 'allow_backdated'     => false,
                 'backdated_days'      => 0,
                 'require_documents'   => false,
+                'enable_anniversary_accrual' => false,
+                'sil_days_per_year'   => 5.00,
+                'sil_info_tooltip'    => null,
             ]
         );
 
@@ -128,6 +131,9 @@ class LeaveSettingsController extends Controller
             'allow_backdated'       => 'boolean',
             'backdated_days'        => 'integer|min:0|nullable',
             'require_documents'     => 'boolean',
+            'enable_anniversary_accrual' => 'boolean',
+            'sil_days_per_year'     => 'numeric|min:0|max:999.99|nullable',
+            'sil_info_tooltip'      => 'string|nullable',
         ];
 
         // Only validate the fields actually sent

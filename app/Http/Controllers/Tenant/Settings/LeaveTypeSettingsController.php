@@ -100,6 +100,13 @@ class LeaveTypeSettingsController extends Controller
                     'numeric',
                     'min:0',
                 ],
+                'is_sil' => 'nullable|boolean',
+                'sil_minimum_service_months' => [
+                    'nullable',
+                    'required_if:is_sil,1',
+                    'integer',
+                    'min:1',
+                ],
 
 
             ], $this->validationMessages());
@@ -119,6 +126,8 @@ class LeaveTypeSettingsController extends Controller
                 'is_paid'           => $validated['is_paid'],
                 'is_cash_convertible' => $validated['is_cash_convertible'] ?? false,
                 'conversion_rate'     => $validated['conversion_rate'] ?? null,
+                'is_sil'              => $validated['is_sil'] ?? false,
+                'sil_minimum_service_months' => $validated['sil_minimum_service_months'] ?? 12,
             ]);
 
             // Logging (unchanged)
@@ -206,6 +215,13 @@ class LeaveTypeSettingsController extends Controller
                     'numeric',
                     'min:0',
                 ],
+                'is_sil' => 'nullable|boolean',
+                'sil_minimum_service_months' => [
+                    'nullable',
+                    'required_if:is_sil,1',
+                    'integer',
+                    'min:1',
+                ],
 
             ], $this->validationMessages());
 
@@ -223,6 +239,8 @@ class LeaveTypeSettingsController extends Controller
                 'is_paid'           => $validated['is_paid'],
                 'is_cash_convertible' => $validated['is_cash_convertible'],
                 'conversion_rate'     => $validated['is_cash_convertible'] ? ($validated['conversion_rate'] ?? 0) : null,
+                'is_sil'              => $validated['is_sil'] ?? false,
+                'sil_minimum_service_months' => $validated['sil_minimum_service_months'] ?? 12,
             ]);
 
             // Logging (unchanged)

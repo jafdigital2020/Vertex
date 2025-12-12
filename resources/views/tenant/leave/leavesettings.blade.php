@@ -167,7 +167,10 @@
                 allow_half_day: "Half-Day",
                 allow_backdated: "Backdated Leave",
                 backdated_days: "Backdated Days",
-                require_documents: "Document Requirement"
+                require_documents: "Document Requirement",
+                enable_anniversary_accrual: "Anniversary Accrual",
+                sil_days_per_year: "SIL Days Per Year",
+                sil_info_tooltip: "SIL Information Tooltip"
             };
 
             // Attach to every leave‐settings form
@@ -183,6 +186,11 @@
                 const backSection = form.querySelector(".backdatedDaysSection");
                 const backDaysInput = form.querySelector('[name="backdated_days"]');
                 const docToggle = form.querySelector('[name="require_documents"]');
+                
+                // SIL fields
+                const anniversaryToggle = form.querySelector('[name="enable_anniversary_accrual"]');
+                const silDaysInput = form.querySelector('[name="sil_days_per_year"]');
+                const silTooltipInput = form.querySelector('[name="sil_info_tooltip"]');
 
                 // Show/hide backdated‐days
                 function toggleBackSection() {
@@ -202,6 +210,17 @@
                 backDaysInput.addEventListener("change", e => saveField(e.target.name, e.target.value));
                 docToggle.addEventListener("change", e => saveField(e.target.name, e.target.checked ? 1 :
                     0));
+                
+                // SIL event listeners
+                if (anniversaryToggle) {
+                    anniversaryToggle.addEventListener("change", e => saveField(e.target.name, e.target.checked ? 1 : 0));
+                }
+                if (silDaysInput) {
+                    silDaysInput.addEventListener("change", e => saveField(e.target.name, e.target.value));
+                }
+                if (silTooltipInput) {
+                    silTooltipInput.addEventListener("change", e => saveField(e.target.name, e.target.value));
+                }
 
                 // Save a single field
                 async function saveField(name, value) {
@@ -246,6 +265,17 @@
                         backToggle.checked = Boolean(data.allow_backdated);
                         backDaysInput.value = data.backdated_days;
                         docToggle.checked = Boolean(data.require_documents);
+                        
+                        // Populate SIL fields if they exist
+                        if (anniversaryToggle) {
+                            anniversaryToggle.checked = Boolean(data.enable_anniversary_accrual);
+                        }
+                        if (silDaysInput) {
+                            silDaysInput.value = data.sil_days_per_year || 5.00;
+                        }
+                        if (silTooltipInput) {
+                            silTooltipInput.value = data.sil_info_tooltip || '';
+                        }
 
                         toggleBackSection();
                     } catch (err) {

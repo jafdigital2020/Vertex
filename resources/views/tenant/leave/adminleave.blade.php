@@ -56,6 +56,13 @@
             </div>
             <!-- /Breadcrumb -->
 
+            {{-- Tab Links --}}
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('leave-admin') }}" class="btn btn-white active border me-2">Leave Requests</a>
+                <a href="{{ route('sil-eligibility-report') }}" class="btn btn-white border me-2">SIL Eligibility</a>
+                <a href="{{ route('sil-accrual-history') }}" class="btn btn-white border me-2">SIL History</a>
+            </div>
+
             <!-- Leaves Info -->
             <div class="row">
                 <div class="col-xl-4 col-md-6">

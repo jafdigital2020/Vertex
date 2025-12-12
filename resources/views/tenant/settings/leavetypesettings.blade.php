@@ -153,7 +153,9 @@
                                                                         data-earned-rate="{{ $leaveType->earned_rate }}"
                                                                         data-earned-interval="{{ $leaveType->earned_interval }}"
                                                                         data-is-cash-convertible="{{ $leaveType->is_cash_convertible ? '1' : '0' }}"
-                                                                        data-conversion-rate="{{ $leaveType->conversion_rate }}"><i
+                                                                        data-conversion-rate="{{ $leaveType->conversion_rate }}"
+                                                                        data-is-sil="{{ $leaveType->is_sil ? '1' : '0' }}"
+                                                                        data-sil-minimum-service-months="{{ $leaveType->sil_minimum_service_months ?? 12 }}"><i
                                                                             class="ti ti-edit"></i></a>
                                                                      @endif
                                                                     @if(in_array('Delete', $permission))
@@ -205,7 +207,9 @@
                 const isEarned = form.querySelector('#leaveTypeIsEarned').checked ? 1 : 0;
                 const isCashConvertible = form.querySelector('#leaveTypeIsCashConvertible').checked ?
                     1 : 0;
+                const isSil = form.querySelector('#leaveTypeIsSil').checked ? 1 : 0;
                 const conversionRate = form.querySelector('#conversionRate').value.trim();
+                const silMinServiceMonths = form.querySelector('#silMinServiceMonths').value.trim();
 
                 const payload = {
                     name: form.name.value.trim(),
@@ -214,6 +218,8 @@
                     is_paid: form.is_paid.value === '1' ? 1 : 0,
                     is_cash_convertible: isCashConvertible,
                     conversion_rate: isCashConvertible ? parseFloat(conversionRate) || 0 : 0,
+                    is_sil: isSil,
+                    sil_minimum_service_months: isSil ? parseInt(silMinServiceMonths) || 12 : 12,
                 };
 
                 if (isEarned) {
@@ -336,7 +342,9 @@
                 const id = editForm.leave_type_id.value;
                 const isEarn = chkEarned.checked ? 1 : 0;
                 const isCashConvertible = chkCashConvertible.checked ? 1 : 0;
+                const isSil = chkSilEdit.checked ? 1 : 0;
                 const conversionRate = inputConversionRate.value.trim();
+                const silMinService = inputSilMinService.value.trim();
 
 
                 const payload = {
@@ -347,6 +355,8 @@
                     is_cash_convertible: isCashConvertible,
                     conversion_rate: isCashConvertible ? parseFloat(inputConversionRate.value) ||
                         0 : 0,
+                    is_sil: isSil,
+                    sil_minimum_service_months: isSil ? parseInt(silMinService) || 12 : 12,
                 };
 
                 if (isEarn) {
@@ -464,6 +474,8 @@
             const chk = document.getElementById('leaveTypeIsEarned');
             const earnedFields = document.getElementById('earnedFields');
             const globalFields = document.getElementById('globalFields');
+            const chkSil = document.getElementById('leaveTypeIsSil');
+            const silSection = document.getElementById('silMinServiceSection');
 
             function toggleSections() {
                 if (chk.checked) {
@@ -474,9 +486,19 @@
                     globalFields.style.display = '';
                 }
             }
+            
+            function toggleSilSection() {
+                if (chkSil.checked) {
+                    silSection.style.display = '';
+                } else {
+                    silSection.style.display = 'none';
+                }
+            }
 
             chk.addEventListener('change', toggleSections);
+            chkSil.addEventListener('change', toggleSilSection);
             toggleSections(); // initial state
+            toggleSilSection(); // initial state
         });
     </script>
 @endpush

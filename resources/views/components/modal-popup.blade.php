@@ -1,307 +1,307 @@
 @if (
-    Route::is([
-        'index',
-        'layout-horizontal',
-        'layout-detached',
-        'layout-modern',
-        'layout-horizontal-overlay',
-        'layout-two-column',
-        'layout-hovered',
-        'layout-hovered',
-        'layout-box',
-        'layout-horizontal-single',
-        'layout-horizontal-box',
-        'layout-horizontal-sidemenu',
-        'layout-vertical-transparent',
-        'layout-without-header',
-        'layout-rtl',
-        'layout-dark'
-    ])
-)
+        Route::is([
+            'index',
+            'layout-horizontal',
+            'layout-detached',
+            'layout-modern',
+            'layout-horizontal-overlay',
+            'layout-two-column',
+            'layout-hovered',
+            'layout-hovered',
+            'layout-box',
+            'layout-horizontal-single',
+            'layout-horizontal-box',
+            'layout-horizontal-sidemenu',
+            'layout-vertical-transparent',
+            'layout-without-header',
+            'layout-rtl',
+            'layout-dark'
+        ])
+    )
 
-    <!-- Add Todo -->
-    <div class="modal fade" id="add_todo">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Add New Todo</h4>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
-                </div>
-                <form action="{{url('index')}}">
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Todo Title</label>
-                                    <input type="text" class="form-control">
+        <!-- Add Todo -->
+        <div class="modal fade" id="add_todo">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Add New Todo</h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{url('index')}}">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Todo Title</label>
+                                        <input type="text" class="form-control">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Tag</label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Internal</option>
-                                        <option>Projects</option>
-                                        <option>Meetings</option>
-                                        <option>Reminder</option>
-                                    </select>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tag</label>
+                                        <select class="select">
+                                            <option>Select</option>
+                                            <option>Internal</option>
+                                            <option>Projects</option>
+                                            <option>Meetings</option>
+                                            <option>Reminder</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Priority</label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Medium</option>
-                                        <option>High</option>
-                                        <option>Low</option>
-                                    </select>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Priority</label>
+                                        <select class="select">
+                                            <option>Select</option>
+                                            <option>Medium</option>
+                                            <option>High</option>
+                                            <option>Low</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-lg-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Descriptions</label>
-                                    <div class="summernote"></div>
+                                <div class="col-lg-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Descriptions</label>
+                                        <div class="summernote"></div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Add Assignee</label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Sophie</option>
-                                        <option>Cameron</option>
-                                        <option>Doris</option>
-                                        <option>Rufana</option>
-                                    </select>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Add Assignee</label>
+                                        <select class="select">
+                                            <option>Select</option>
+                                            <option>Sophie</option>
+                                            <option>Cameron</option>
+                                            <option>Doris</option>
+                                            <option>Rufana</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="mb-0">
-                                    <label class="form-label">Status</label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Completed</option>
-                                        <option>Pending</option>
-                                        <option>Onhold</option>
-                                        <option>Inprogress</option>
-                                    </select>
+                                <div class="col-12">
+                                    <div class="mb-0">
+                                        <label class="form-label">Status</label>
+                                        <select class="select">
+                                            <option>Select</option>
+                                            <option>Completed</option>
+                                            <option>Pending</option>
+                                            <option>Onhold</option>
+                                            <option>Inprogress</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add New Todo</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- /Add Todo -->
-
-    <!-- Add Project -->
-    <div class="modal fade" id="add_project" role="dialog">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header header-border align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <h5 class="modal-title me-2">Add Project </h5>
-                        <p class="text-dark">Project ID : PRO-0004</p>
-                    </div>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
-                </div>
-                <div class="add-info-fieldset">
-                    <div class="add-details-wizard p-3 pb-0">
-                        <ul class="progress-bar-wizard d-flex align-items-center border-bottom">
-                            <li class="active p-2 pt-0">
-                                <h6 class="fw-medium">Basic Information</h6>
-                            </li>
-                            <li class="p-2 pt-0">
-                                <h6 class="fw-medium">Members</h6>
-                            </li>
-                        </ul>
-                    </div>
-                    <fieldset id="first-field-file">
-                        <form action="{{url('projects')}}">
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                                            <div class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                                <i class="ti ti-photo text-gray-2 fs-16"></i>
-                                            </div>
-                                            <div class="profile-upload">
-                                                <div class="mb-2">
-                                                    <h6 class="mb-1">Upload Project Logo</h6>
-                                                    <p class="fs-12">Image should be below 4 mb</p>
-                                                </div>
-                                                <div class="profile-uploader d-flex align-items-center">
-                                                    <div class="drag-upload-btn btn btn-sm btn-primary me-2">
-                                                        Upload
-                                                        <input type="file" class="form-control image-sign" multiple="">
-                                                    </div>
-                                                    <a href="javascript:void(0);" class="btn btn-light btn-sm">Cancel</a>
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="mb-3">
-                                            <label class="form-label">Project Name</label>
-                                            <input type="text" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="mb-3">
-                                            <label class="form-label">Client</label>
-                                            <select class="select">
-                                                <option>Select</option>
-                                                <option>Anthony Lewis</option>
-                                                <option>Brian Villalobos</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Start Date</label>
-                                                    <div class="input-icon-end position-relative">
-                                                        <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy" value="02-05-2024">
-                                                        <span class="input-icon-addon">
-                                                            <i class="ti ti-calendar text-gray-7"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label">End Date</label>
-                                                    <div class="input-icon-end position-relative">
-                                                        <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy" value="02-05-2024">
-                                                        <span class="input-icon-addon">
-                                                            <i class="ti ti-calendar text-gray-7"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Priority</label>
-                                                    <select class="select">
-                                                        <option>Select</option>
-                                                        <option>High</option>
-                                                        <option>Medium</option>
-                                                        <option>Low</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Project Value</label>
-                                                    <input type="text" class="form-control" value="$">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Total Working Hours</label>
-                                                    <div class="input-icon-end position-relative">
-                                                        <input type="text" class="form-control timepicker" placeholder="-- : -- : --" value="02-05-2024">
-                                                        <span class="input-icon-addon">
-                                                            <i class="ti ti-clock-hour-3 text-gray-7"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Extra Time</label>
-                                                    <input type="text" class="form-control">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="mb-0">
-                                            <label class="form-label">Description</label>
-                                            <div class="summernote"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <div class="d-flex align-items-center justify-content-end">
-                                    <button type="button" class="btn btn-outline-light border me-2" data-bs-dismiss="modal">Cancel</button>
-                                    <button class="btn btn-primary wizard-next-btn" type="button">Add Team Member</button>
-                                </div>
-                            </div>
-                        </form>
-                    </fieldset>
-                    <fieldset>
-                        <form action="{{url('projects')}}">
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="mb-3">
-                                            <label class="form-label me-2">Team Members</label>
-                                            <input class="input-tags form-control" placeholder="Add new" type="text" data-role="tagsinput"  name="Label" value="Jerald,Andrew,Philip,Davis">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="mb-3">
-                                            <label class="form-label me-2">Team Leader</label>
-                                            <input class="input-tags form-control" placeholder="Add new" type="text" data-role="tagsinput"  name="Label" value="Hendry,James">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="mb-3">
-                                            <label class="form-label me-2">Project Manager</label>
-                                            <input class="input-tags form-control" placeholder="Add new" type="text" data-role="tagsinput"  name="Label" value="Dwight">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="mb-3">
-                                            <label class="form-label">Status</label>
-                                            <select class="select">
-                                                <option>Select</option>
-                                                <option>Active</option>
-                                                <option>Inactive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div>
-                                            <label class="form-label">Tags</label>
-                                            <select class="select">
-                                                <option>Select</option>
-                                                <option>High</option>
-                                                <option>Low</option>
-                                                <option>Medium</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <div class="d-flex align-items-center justify-content-end">
-                                    <button type="button" class="btn btn-outline-light border me-2" data-bs-dismiss="modal">Cancel</button>
-                                    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#success_modal">Save</button>
-                                </div>
-                            </div>
-                        </form>
-                    </fieldset>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add New Todo</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- /Add Project -->
+        <!-- /Add Todo -->
+
+        <!-- Add Project -->
+        <div class="modal fade" id="add_project" role="dialog">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header header-border align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <h5 class="modal-title me-2">Add Project </h5>
+                            <p class="text-dark">Project ID : PRO-0004</p>
+                        </div>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <div class="add-info-fieldset">
+                        <div class="add-details-wizard p-3 pb-0">
+                            <ul class="progress-bar-wizard d-flex align-items-center border-bottom">
+                                <li class="active p-2 pt-0">
+                                    <h6 class="fw-medium">Basic Information</h6>
+                                </li>
+                                <li class="p-2 pt-0">
+                                    <h6 class="fw-medium">Members</h6>
+                                </li>
+                            </ul>
+                        </div>
+                        <fieldset id="first-field-file">
+                            <form action="{{url('projects')}}">
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
+                                                <div class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
+                                                    <i class="ti ti-photo text-gray-2 fs-16"></i>
+                                                </div>
+                                                <div class="profile-upload">
+                                                    <div class="mb-2">
+                                                        <h6 class="mb-1">Upload Project Logo</h6>
+                                                        <p class="fs-12">Image should be below 4 mb</p>
+                                                    </div>
+                                                    <div class="profile-uploader d-flex align-items-center">
+                                                        <div class="drag-upload-btn btn btn-sm btn-primary me-2">
+                                                            Upload
+                                                            <input type="file" class="form-control image-sign" multiple="">
+                                                        </div>
+                                                        <a href="javascript:void(0);" class="btn btn-light btn-sm">Cancel</a>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="mb-3">
+                                                <label class="form-label">Project Name</label>
+                                                <input type="text" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="mb-3">
+                                                <label class="form-label">Client</label>
+                                                <select class="select">
+                                                    <option>Select</option>
+                                                    <option>Anthony Lewis</option>
+                                                    <option>Brian Villalobos</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Start Date</label>
+                                                        <div class="input-icon-end position-relative">
+                                                            <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy" value="02-05-2024">
+                                                            <span class="input-icon-addon">
+                                                                <i class="ti ti-calendar text-gray-7"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">End Date</label>
+                                                        <div class="input-icon-end position-relative">
+                                                            <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy" value="02-05-2024">
+                                                            <span class="input-icon-addon">
+                                                                <i class="ti ti-calendar text-gray-7"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Priority</label>
+                                                        <select class="select">
+                                                            <option>Select</option>
+                                                            <option>High</option>
+                                                            <option>Medium</option>
+                                                            <option>Low</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Project Value</label>
+                                                        <input type="text" class="form-control" value="$">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Total Working Hours</label>
+                                                        <div class="input-icon-end position-relative">
+                                                            <input type="text" class="form-control timepicker" placeholder="-- : -- : --" value="02-05-2024">
+                                                            <span class="input-icon-addon">
+                                                                <i class="ti ti-clock-hour-3 text-gray-7"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Extra Time</label>
+                                                        <input type="text" class="form-control">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="mb-0">
+                                                <label class="form-label">Description</label>
+                                                <div class="summernote"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <button type="button" class="btn btn-outline-light border me-2" data-bs-dismiss="modal">Cancel</button>
+                                        <button class="btn btn-primary wizard-next-btn" type="button">Add Team Member</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </fieldset>
+                        <fieldset>
+                            <form action="{{url('projects')}}">
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="mb-3">
+                                                <label class="form-label me-2">Team Members</label>
+                                                <input class="input-tags form-control" placeholder="Add new" type="text" data-role="tagsinput"  name="Label" value="Jerald,Andrew,Philip,Davis">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="mb-3">
+                                                <label class="form-label me-2">Team Leader</label>
+                                                <input class="input-tags form-control" placeholder="Add new" type="text" data-role="tagsinput"  name="Label" value="Hendry,James">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="mb-3">
+                                                <label class="form-label me-2">Project Manager</label>
+                                                <input class="input-tags form-control" placeholder="Add new" type="text" data-role="tagsinput"  name="Label" value="Dwight">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="mb-3">
+                                                <label class="form-label">Status</label>
+                                                <select class="select">
+                                                    <option>Select</option>
+                                                    <option>Active</option>
+                                                    <option>Inactive</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div>
+                                                <label class="form-label">Tags</label>
+                                                <select class="select">
+                                                    <option>Select</option>
+                                                    <option>High</option>
+                                                    <option>Low</option>
+                                                    <option>Medium</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <button type="button" class="btn btn-outline-light border me-2" data-bs-dismiss="modal">Cancel</button>
+                                        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#success_modal">Save</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Add Project -->
 @endif
 
 @if (Route::is(['api-keys']))
@@ -1586,42 +1586,42 @@
 @if (Route::is(['assignedUsersIndex']))
 
     <!-- Edit Assigned User -->
-	 <div class="modal fade" id="edit_assigned_users_leave">
-		<div class="modal-dialog modal-dialog-centered modal-md">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4 class="modal-title">Edit Assigned User</h4>
-					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-						<i class="ti ti-x"></i>
-					</button>
-				</div>
-				<form id="editLeaveTypeForm">
-					<div class="modal-body pb-0">
-						<div class="row">
+     <div class="modal fade" id="edit_assigned_users_leave">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Assigned User</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editLeaveTypeForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
                             <input type="hidden" name="id" id="leaveEntitlementId">
-							<div class="col-md-12">
-								<div class="mb-3">
-									<label class="form-label">Leave Type Name <span class="text-danger">*</span></label>
-									<input type="text" class="form-control" name="name" id="assignedLeaveTypeName" readonly>
-								</div>
-							</div>
-							<div class="col-md-12">
-								<div class="mb-3">
-									<label class="form-label">Current Balance <span class="text-danger">*</span></label>
-									<input type="text" class="form-control" name="current_balance" id="assignedLeaveCurrentBalance">
-								</div>
-							</div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Leave Type Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" id="assignedLeaveTypeName" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Current Balance <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="current_balance" id="assignedLeaveCurrentBalance">
+                                </div>
+                            </div>
 
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn btn-primary" id="updateAssignedLeaveBtn">Update</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateAssignedLeaveBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <!-- /Edit Assigned User -->
 
     <!-- Delete leave Modal -->
@@ -1649,24 +1649,24 @@
 
 @if (Route::is(['leave-type']))
     <!-- Add Leave Type -->
-	 <div class="modal fade" id="add_leaveType">
-		<div class="modal-dialog modal-dialog-centered modal-md">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4 class="modal-title">Add Leave Type</h4>
-					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-						<i class="ti ti-x"></i>
-					</button>
-				</div>
-				<form id="addLeaveTypeForm">
-					<div class="modal-body pb-0">
-						<div class="row">
-							<div class="col-md-12">
-								<div class="mb-3">
-									<label class="form-label">Leave Type Name <span class="text-danger">*</span></label>
-									<input type="text" class="form-control" name="name" id="leaveTypeName">
-								</div>
-							</div>
+     <div class="modal fade" id="add_leaveType">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Leave Type</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addLeaveTypeForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Leave Type Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" id="leaveTypeName">
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Number of days <span class="text-danger">*</span></label>
@@ -1743,6 +1743,24 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
+                                    <label class="form-label">Service Incentive Leave (SIL)</label>
+                                    <div class="form-check form-check-md form-switch me-2">
+                                        <input class="form-check-input me-2" name="is_sil"
+                                            id="leaveTypeIsSil" type="checkbox" role="switch">
+                                    </div>
+                                    <small class="text-muted">Enable if this is a Service Incentive Leave type</small>
+                                </div>
+                            </div>
+                            <div class="col-md-12" id="silMinServiceSection" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label">Minimum Service (Months)</label>
+                                    <input type="number" class="form-control" name="sil_minimum_service_months" 
+                                           id="silMinServiceMonths" value="12" min="1">
+                                    <small class="text-muted">Minimum months of service before SIL eligibility (default: 12)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                     <label class="form-label">Payment Type <span class="text-danger">*</span></label>
                                         <select name="is_paid" id="leaveTypeIsPaid" class="select">
                                             <option value="1">Paid</option>
@@ -1751,44 +1769,44 @@
                                 </div>
                             </div>
 
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn btn-primary">Add Leave</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-	<!-- /Add Leave Type -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Leave</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Leave Type -->
 
-	<!-- Edit Leaves -->
-	 <div class="modal fade" id="edit_leaveType">
-		<div class="modal-dialog modal-dialog-centered modal-md">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4 class="modal-title">Edit Leave Type</h4>
-					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-						<i class="ti ti-x"></i>
-					</button>
-				</div>
-				<form id="editLeaveTypeForm">
-					<div class="modal-body pb-0">
-						<div class="row">
+    <!-- Edit Leaves -->
+     <div class="modal fade" id="edit_leaveType">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Leave Type</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editLeaveTypeForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
                             <input type="hidden" name="leave_type_id" id="editLeaveTypeId">
-							<div class="col-md-12">
-								<div class="mb-3">
-									<label class="form-label">Leave Type Name <span class="text-danger">*</span></label>
-									<input type="text" class="form-control" name="name" id="editLeaveTypeName">
-								</div>
-							</div>
-							<div class="col-md-12">
-								<div class="mb-3">
-									<label class="form-label">Number of days <span class="text-danger">*</span></label>
-									<input type="text" class="form-control" name="default_entitle" id="editDefaultEntitle">
-								</div>
-							</div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Leave Type Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" id="editLeaveTypeName">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Number of days <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="default_entitle" id="editDefaultEntitle">
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Earned Leave</label>
@@ -1860,6 +1878,24 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
+                                    <label class="form-label">Service Incentive Leave (SIL)</label>
+                                    <div class="form-check form-check-md form-switch me-2">
+                                        <input class="form-check-input me-2" name="is_sil"
+                                            id="editLeaveTypeIsSil" type="checkbox" role="switch">
+                                    </div>
+                                    <small class="text-muted">Enable if this is a Service Incentive Leave type</small>
+                                </div>
+                            </div>
+                            <div class="col-md-12" id="editSilMinServiceSection" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label">Minimum Service (Months)</label>
+                                    <input type="number" class="form-control" name="sil_minimum_service_months" 
+                                           id="editSilMinServiceMonths" value="12" min="1">
+                                    <small class="text-muted">Minimum months of service before SIL eligibility (default: 12)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                     <label class="form-label">Payment Type <span class="text-danger">*</span></label>
                                         <select name="is_paid" id="editLeaveTypeIsPaid" class="select">
                                             <option value="1">Paid</option>
@@ -1867,17 +1903,17 @@
                                         </select>
                                 </div>
                             </div>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn btn-primary" id="updateLeaveTypeBtn">Save Leave</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-	<!-- /Edit Leaves -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateLeaveTypeBtn">Save Leave</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Leaves -->
 
     <!-- Delete leave Modal -->
     <div class="modal fade" id="delete_leaveType">
@@ -1904,76 +1940,76 @@
 
 @if (Route::is(['custom-fields']))
     {{-- Add Prefix --}}
-	 <div class="modal fade" id="add_prefix">
-		<div class="modal-dialog modal-dialog-centered modal-md">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4 class="modal-title">Add Prefix</h4>
-					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-						<i class="ti ti-x"></i>
-					</button>
-				</div>
-				<form id="addPrefixForm">
-					<div class="modal-body pb-0">
-						<div class="row">
-							<div class="col-md-12">
-								<div class="mb-3">
-									<label class="form-label">Prefix<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" name="prefix_name" id="prefixName">
-								</div>
-							</div>
+     <div class="modal fade" id="add_prefix">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Prefix</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addPrefixForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Prefix<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="prefix_name" id="prefixName">
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Remarks</label>
                                     <textarea class="form-control" name="remarks" id="prefixRemarks" cols="30" rows="3"></textarea>
                                 </div>
                             </div>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn btn-primary">Add Prefix</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Prefix</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     {{-- Edit Prefix --}}
     <div class="modal fade" id="edit_prefix">
-		<div class="modal-dialog modal-dialog-centered modal-md">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4 class="modal-title">Add Prefix</h4>
-					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-						<i class="ti ti-x"></i>
-					</button>
-				</div>
-				<form id="editPrefixForm">
-					<div class="modal-body pb-0">
-						<div class="row">
-							<div class="col-md-12">
-								<div class="mb-3">
-									<label class="form-label">Prefix<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" name="prefix_name" id="editPrefixName">
-								</div>
-							</div>
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Prefix</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editPrefixForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Prefix<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="prefix_name" id="editPrefixName">
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Remarks</label>
                                     <textarea class="form-control" name="remarks" id="editPrefixRemarks" cols="30" rows="3"></textarea>
                                 </div>
                             </div>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn btn-primary" id="updatePrefixBtn">Update Prefix</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updatePrefixBtn">Update Prefix</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     {{-- Delete Prefix --}}
     <div class="modal fade" id="delete_prefix">
@@ -9404,88 +9440,88 @@
 @endif
 
 @if (Route::is(['notes']))
-    <!-- Add Note -->
-    <div class="modal fade" id="add_note">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Add Notes</h4>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
-                </div>
-                <form action="{{url('notes')}}">
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Note Title</label>
-                                    <input type="text" class="form-control">
+        <!-- Add Note -->
+        <div class="modal fade" id="add_note">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Add Notes</h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{url('notes')}}">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Note Title</label>
+                                        <input type="text" class="form-control">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Assignee</label>
-                                    <select class="select">
-                                        <option>Choose</option>
-                                        <option>Kathleen</option>
-                                        <option>Gifford</option>
-                                    </select>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Assignee</label>
+                                        <select class="select">
+                                            <option>Choose</option>
+                                            <option>Kathleen</option>
+                                            <option>Gifford</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Tag</label>
-                                    <input class="input-tags form-control" placeholder="Add new" type="text" data-role="tagsinput"  name="Label" value="Pending,Done">
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tag</label>
+                                        <input class="input-tags form-control" placeholder="Add new" type="text" data-role="tagsinput"  name="Label" value="Pending,Done">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Priority</label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Medium</option>
-                                        <option>High</option>
-                                        <option>Low</option>
-                                    </select>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Priority</label>
+                                        <select class="select">
+                                            <option>Select</option>
+                                            <option>Medium</option>
+                                            <option>High</option>
+                                            <option>Low</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="input-blocks todo-calendar">
-                                    <label class="form-label">Due Date</label>
-                                    <div class="input-groupicon calender-input">
-                                        <input type="text" class="form-control  datetimepicker" placeholder="dd-mm-yyyy">
+                                <div class="col-6">
+                                    <div class="input-blocks todo-calendar">
+                                        <label class="form-label">Due Date</label>
+                                        <div class="input-groupicon calender-input">
+                                            <input type="text" class="form-control  datetimepicker" placeholder="dd-mm-yyyy">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <select class="select">
+                                            <option>Select</option>
+                                            <option>Active</option>
+                                            <option>Inactive</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-6">
+                            <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Status</label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Active</option>
-                                        <option>Inactive</option>
-                                    </select>
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" ></textarea>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <textarea class="form-control" ></textarea>
-                            </div>
-                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Plan</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Plan</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-<!-- /Add Plan -->
+    <!-- /Add Plan -->
 @endif
 
 @if (Route::is(['cronjob']))
@@ -13250,270 +13286,270 @@
 
 @if (Route::is(['domain']))
     <!-- Domain Details -->
-		<div class="modal fade" id="domain_approved">
-			<div class="modal-dialog modal-dialog-centered modal-md">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h4 class="modal-title d-flex align-items-center">
-							Domain Detail
-							<span class="badge bg-outline-success d-inline-flex align-items-center badge-xs ms-2">
-								<i class="ti ti-point-filled"></i>Approved
-							</span>
-						</h4>
-						<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-							<i class="ti ti-x"></i>
-						</button>
-					</div>
-					<form action="{{url('domain')}}">
-						<div class="modal-body pb-0">
-							<div class="row">
-								<div class="col-md-12">
-									<div class="mb-3">
-										<div class="p-3 mb-3 br-5 bg-transparent-light">
-											<div class="row">
-												<div class="col-md-12">
-													<div class="d-flex align-items-center file-name-icon">
-														<a href="#" class="avatar avatar-md border avatar-rounded">
-															<img src="{{ URL::asset('build/img/company/company-01.svg') }}" class="img-fluid" alt="img">
-														</a>
-														<div class="ms-2">
-															<h6 class="fw-medium fs-14"><a href="#">BrightWave Innovations</a></h6>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Plan Name</span>
-										<h6 class="fw-normal">Advanced</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Plan Type</span>
-										<h6 class="fw-normal">Monthly</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Account URL</span>
-										<h6 class="fw-normal">bwi.example.com</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Price</span>
-										<h6 class="fw-normal">200</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Register Date</span>
-										<h6 class="fw-normal">12/09/2024</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Expiring On</span>
-										<h6 class="fw-normal">11/10/2024</h6>
-									</div>
-								</div>
-							</div>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-		<!-- /Domain Details -->
+        <div class="modal fade" id="domain_approved">
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title d-flex align-items-center">
+                            Domain Detail
+                            <span class="badge bg-outline-success d-inline-flex align-items-center badge-xs ms-2">
+                                <i class="ti ti-point-filled"></i>Approved
+                            </span>
+                        </h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{url('domain')}}">
+                        <div class="modal-body pb-0">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <div class="p-3 mb-3 br-5 bg-transparent-light">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="d-flex align-items-center file-name-icon">
+                                                        <a href="#" class="avatar avatar-md border avatar-rounded">
+                                                            <img src="{{ URL::asset('build/img/company/company-01.svg') }}" class="img-fluid" alt="img">
+                                                        </a>
+                                                        <div class="ms-2">
+                                                            <h6 class="fw-medium fs-14"><a href="#">BrightWave Innovations</a></h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Plan Name</span>
+                                        <h6 class="fw-normal">Advanced</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Plan Type</span>
+                                        <h6 class="fw-normal">Monthly</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Account URL</span>
+                                        <h6 class="fw-normal">bwi.example.com</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Price</span>
+                                        <h6 class="fw-normal">200</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Register Date</span>
+                                        <h6 class="fw-normal">12/09/2024</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Expiring On</span>
+                                        <h6 class="fw-normal">11/10/2024</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- /Domain Details -->
 
-		<!-- Domain Details -->
-		<div class="modal fade" id="domain_pending">
-			<div class="modal-dialog modal-dialog-centered modal-md">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h4 class="modal-title d-flex align-items-center">
-							Domain Detail
-							<span class="badge bg-outline-skyblue d-inline-flex align-items-center badge-xs ms-2">
-								<i class="ti ti-point-filled"></i>Pending
-							</span>
-						</h4>
-						<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-							<i class="ti ti-x"></i>
-						</button>
-					</div>
-					<form action="{{url('domain')}}">
-						<div class="modal-body pb-0">
-							<div class="row">
-								<div class="col-md-12">
-									<div class="mb-3">
-										<div class="p-3 mb-3 br-5 bg-transparent-light">
-											<div class="row">
-												<div class="col-md-6">
-													<div class="d-flex align-items-center file-name-icon">
-														<a href="#" class="avatar avatar-md border avatar-rounded">
-															<img src="{{ URL::asset('build/img/company/company-01.svg') }}" class="img-fluid" alt="img">
-														</a>
-														<div class="ms-2">
-															<h6 class="fw-medium fs-14"><a href="#">BrightWave Innovations</a></h6>
-														</div>
-													</div>
-												</div>
-												<div class="col-md-6 text-end">
-													<span class="badge badge-success d-inline-flex align-items-center badge-xs ms-2">
-														<i class="ti ti-check me-1"></i>Approve
-													</span>
-													<span class="badge badge-danger d-inline-flex align-items-center badge-xs ms-2">
-														<i class="ti ti-x me-1"></i>Reject
-													</span>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Plan Name</span>
-										<h6 class="fw-normal">Advanced</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Plan Type</span>
-										<h6 class="fw-normal">Monthly</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Account URL</span>
-										<h6 class="fw-normal">bwi.example.com</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Price</span>
-										<h6 class="fw-normal">200</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Register Date</span>
-										<h6 class="fw-normal">12/09/2024</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Expiring On</span>
-										<h6 class="fw-normal">11/10/2024</h6>
-									</div>
-								</div>
-							</div>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-		<!-- /Domain Details -->
+        <!-- Domain Details -->
+        <div class="modal fade" id="domain_pending">
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title d-flex align-items-center">
+                            Domain Detail
+                            <span class="badge bg-outline-skyblue d-inline-flex align-items-center badge-xs ms-2">
+                                <i class="ti ti-point-filled"></i>Pending
+                            </span>
+                        </h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{url('domain')}}">
+                        <div class="modal-body pb-0">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <div class="p-3 mb-3 br-5 bg-transparent-light">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center file-name-icon">
+                                                        <a href="#" class="avatar avatar-md border avatar-rounded">
+                                                            <img src="{{ URL::asset('build/img/company/company-01.svg') }}" class="img-fluid" alt="img">
+                                                        </a>
+                                                        <div class="ms-2">
+                                                            <h6 class="fw-medium fs-14"><a href="#">BrightWave Innovations</a></h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 text-end">
+                                                    <span class="badge badge-success d-inline-flex align-items-center badge-xs ms-2">
+                                                        <i class="ti ti-check me-1"></i>Approve
+                                                    </span>
+                                                    <span class="badge badge-danger d-inline-flex align-items-center badge-xs ms-2">
+                                                        <i class="ti ti-x me-1"></i>Reject
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Plan Name</span>
+                                        <h6 class="fw-normal">Advanced</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Plan Type</span>
+                                        <h6 class="fw-normal">Monthly</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Account URL</span>
+                                        <h6 class="fw-normal">bwi.example.com</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Price</span>
+                                        <h6 class="fw-normal">200</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Register Date</span>
+                                        <h6 class="fw-normal">12/09/2024</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Expiring On</span>
+                                        <h6 class="fw-normal">11/10/2024</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- /Domain Details -->
 
-		<!-- Domain Details -->
-		<div class="modal fade" id="domain_rejected">
-			<div class="modal-dialog modal-dialog-centered modal-md">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h4 class="modal-title d-flex align-items-center">Domain Detail
-							<span class="badge bg-outline-danger d-inline-flex align-items-center badge-xs ms-2">
-							<i class="ti ti-point-filled"></i>Rejected
-						</span></h4>
-						<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-							<i class="ti ti-x"></i>
-						</button>
-					</div>
-					<form action="{{url('domain')}}">
-						<div class="modal-body pb-0">
-							<div class="row">
-								<div class="col-md-12">
-									<div class="mb-3">
-										<div class="p-3 mb-3 br-5 bg-transparent-light">
-											<div class="row">
-												<div class="col-md-12">
-													<div class="d-flex align-items-center file-name-icon">
-														<a href="#" class="avatar avatar-md border avatar-rounded">
-															<img src="{{ URL::asset('build/img/company/company-01.svg') }}" class="img-fluid" alt="img">
-														</a>
-														<div class="ms-2">
-															<h6 class="fw-medium fs-14"><a href="#">BrightWave Innovations</a></h6>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Plan Name</span>
-										<h6 class="fw-normal">Advanced</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Plan Type</span>
-										<h6 class="fw-normal">Monthly</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Account URL</span>
-										<h6 class="fw-normal">bwi.example.com</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Price</span>
-										<h6 class="fw-normal">200</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Register Date</span>
-										<h6 class="fw-normal">12/09/2024</h6>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="mb-3">
-										<span class="fs-12">Expiring On</span>
-										<h6 class="fw-normal">11/10/2024</h6>
-									</div>
-								</div>
-							</div>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-		<!-- /Domain Details -->
+        <!-- Domain Details -->
+        <div class="modal fade" id="domain_rejected">
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title d-flex align-items-center">Domain Detail
+                            <span class="badge bg-outline-danger d-inline-flex align-items-center badge-xs ms-2">
+                            <i class="ti ti-point-filled"></i>Rejected
+                        </span></h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{url('domain')}}">
+                        <div class="modal-body pb-0">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <div class="p-3 mb-3 br-5 bg-transparent-light">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="d-flex align-items-center file-name-icon">
+                                                        <a href="#" class="avatar avatar-md border avatar-rounded">
+                                                            <img src="{{ URL::asset('build/img/company/company-01.svg') }}" class="img-fluid" alt="img">
+                                                        </a>
+                                                        <div class="ms-2">
+                                                            <h6 class="fw-medium fs-14"><a href="#">BrightWave Innovations</a></h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Plan Name</span>
+                                        <h6 class="fw-normal">Advanced</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Plan Type</span>
+                                        <h6 class="fw-normal">Monthly</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Account URL</span>
+                                        <h6 class="fw-normal">bwi.example.com</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Price</span>
+                                        <h6 class="fw-normal">200</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Register Date</span>
+                                        <h6 class="fw-normal">12/09/2024</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <span class="fs-12">Expiring On</span>
+                                        <h6 class="fw-normal">11/10/2024</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- /Domain Details -->
 
-		<!-- Delete Modal -->
-		<div class="modal fade" id="delete_modal">
-			<div class="modal-dialog modal-dialog-centered">
-				<div class="modal-content">
-					<div class="modal-body text-center">
-						<span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-							<i class="ti ti-trash-x fs-36"></i>
-						</span>
-						<h4 class="mb-1">Confirm Delete</h4>
-						<p class="mb-3">You want to delete all the marked items, this cant be undone once you delete.</p>
-						<div class="d-flex justify-content-center">
-							<a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
-							<a href="{{url('domain')}}" class="btn btn-danger">Yes, Delete</a>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<!-- /Delete Modal -->
+        <!-- Delete Modal -->
+        <div class="modal fade" id="delete_modal">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                            <i class="ti ti-trash-x fs-36"></i>
+                        </span>
+                        <h4 class="mb-1">Confirm Delete</h4>
+                        <p class="mb-3">You want to delete all the marked items, this cant be undone once you delete.</p>
+                        <div class="d-flex justify-content-center">
+                            <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                            <a href="{{url('domain')}}" class="btn btn-danger">Yes, Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Delete Modal -->
 @endif
 
 @if (Route::is(['purchase-transaction']))
@@ -31695,10 +31731,10 @@
                                     <select class="select" name="head_of_department" id="editHeadOfDepartment" placeholder="Select Head">
                                         <option value="" disabled selected>Select Head</option>
                                            @foreach($users as $user)
-                                                <option value="{{ $user->id }}">
-                                                    {{ optional($user->personalInformation)->last_name ?? '' }}, {{ optional($user->personalInformation)->first_name ?? '' }}
-                                                </option>
-                                            @endforeach
+                                            <option value="{{ $user->id }}">
+                                                {{ optional($user->personalInformation)->last_name ?? '' }}, {{ optional($user->personalInformation)->first_name ?? '' }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -32769,7 +32805,7 @@
                                         <select name="deminimis_benefit_id" id="deminimisBenefitId" class="form-select"  required>
                                             <option value="">Select</option>
                                                  @foreach ($deMinimis as $deminimi)
-                                                <option value="{{ $deminimi->id }}" data-limit="{{ $deminimi->maximum_amount }}">{{ ucwords(str_replace('_', ' ', $deminimi->name)) }}</option>
+                                                    <option value="{{ $deminimi->id }}" data-limit="{{ $deminimi->maximum_amount }}">{{ ucwords(str_replace('_', ' ', $deminimi->name)) }}</option>
                                                 @endforeach
                                         </select>
                                 </div>
@@ -33546,6 +33582,72 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    @if($leaveType->is_sil)
+                                        {{-- SIL Anniversary Accrual --}}
+                                        <div class="border rounded p-3 mb-3 bg-light">
+                                            <h6 class="fw-semibold mb-3 text-primary">
+                                                <i class="ti ti-calendar-event me-2"></i>Service Incentive Leave (SIL) Configuration
+                                            </h6>
+
+                                            {{-- Enable Anniversary Accrual --}}
+                                            <div
+                                                class="d-flex justify-content-between align-items-center flex-wrap border-bottom mb-3">
+                                                <div class="mb-3">
+                                                    <h5 class="fw-medium d-flex align-items-center mb-1">
+                                                        Enable Anniversary Accrual
+                                                        <i class="ti ti-info-circle ms-2 text-muted" 
+                                                           data-bs-toggle="tooltip" 
+                                                           data-bs-placement="top"
+                                                           title="SIL will be automatically credited on each employee's employment anniversary after completing minimum service period"></i>
+                                                    </h5>
+                                                    <p class="text-muted">Automatically credit SIL on employment anniversary</p>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <div class="form-check form-check-md form-switch me-2">
+                                                        <input class="form-check-input me-2" name="enable_anniversary_accrual"
+                                                            id="enableAnniversaryAccrual" type="checkbox" role="switch">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- SIL Days Per Year --}}
+                                            <div
+                                                class="d-flex justify-content-between align-items-center flex-wrap border-bottom mb-3">
+                                                <div class="mb-3">
+                                                    <h5 class="fw-medium d-flex align-items-center mb-1">SIL Days Per Year
+                                                    </h5>
+                                                    <p class="text-muted">Number of SIL days to credit annually (default: 5 days)</p>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <input type="number" step="0.01" min="0" max="999.99" 
+                                                        class="form-control" name="sil_days_per_year"
+                                                        id="silDaysPerYear" value="5.00">
+                                                </div>
+                                            </div>
+
+                                            {{-- SIL Info Tooltip --}}
+                                            <div class="mb-3">
+                                                <label class="form-label fw-medium">SIL Information Tooltip</label>
+                                                <textarea class="form-control" name="sil_info_tooltip"
+                                                    id="silInfoTooltip" rows="3"
+                                                    placeholder="Add helpful information about SIL that will be shown to employees (e.g., eligibility, accrual rules, etc.)"></textarea>
+                                                <small class="text-muted">This will appear as a tooltip for employees when viewing SIL</small>
+                                            </div>
+
+                                            <div class="alert alert-info d-flex align-items-start mb-0">
+                                                <i class="ti ti-info-circle me-2 mt-1"></i>
+                                                <div>
+                                                    <strong>SIL Rules:</strong>
+                                                    <ul class="mb-0 ps-3">
+                                                        <li>SIL is credited automatically on each employment anniversary</li>
+                                                        <li>Employees must complete {{ $leaveType->sil_minimum_service_months ?? 12 }} months of service before first SIL credit</li>
+                                                        <li>System processes SIL accrual daily via scheduled task</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -39976,662 +40078,662 @@
     <!-- /Delete Modal -->
 @endif
 @if (Route::is(['assets-settings']))
- <div class="modal fade" id="add_assets">
-  <div class="modal-dialog modal-dialog-centered modal-mg w-100">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Add Assets</h4>
-        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-          <i class="ti ti-x"></i>
-        </button>
-      </div>
-      <form action="{{ url('/assets-settings/create') }}" method="POST" id="addAssetsForm">
-          @csrf
-        <div class="modal-body pb-0">
-          <div class="row">
-
-          <div class="col-md-12 mb-3">
-            <label class="form-label">Branch</label>
-            <select class="form-select select2" name="branch_id">
-                     <option disabled selected>Select Branch</option>
-                @foreach($branches as $branch)
-                    <option value="{{$branch->id}}">{{$branch->name}}</option>
-                @endforeach
-            </select>
+     <div class="modal fade" id="add_assets">
+      <div class="modal-dialog modal-dialog-centered modal-mg w-100">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Add Assets</h4>
+            <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <i class="ti ti-x"></i>
+            </button>
           </div>
+          <form action="{{ url('/assets-settings/create') }}" method="POST" id="addAssetsForm">
+              @csrf
+            <div class="modal-body pb-0">
+              <div class="row">
 
-           <div class="col-md-12 mb-3">
-                <label class="form-label">Category</label>
-                <select id="existingCategory" name="category_id" class="form-select select2">
-                    <option value="" selected>-- Select existing category --</option>
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" data-prefix="{{ $category->prefix }}">
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                    <option value="new">+ Add new category</option>
-                </select>
-
-                <input type="text" id="newCategoryInput" name="new_category_name"
-                    class="form-control mt-2" placeholder="Type new category name" style="display:none;">
-            </div>
-
-            <div class="col-md-12">
-                <div class="mb-3">
-                    <label class="form-label">Asset Name</label>
-                    <div class="d-flex align-items-center gap-1">
-
-                        <div class="col-md-4" id="prefixWrapper">
-                            <select class="form-select" id="categoryPrefix" name="categoryPrefix">
-                                <option value="" selected disabled>Select Prefix</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->prefix }}">{{ $category->prefix }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4" id="prefixInputWrapper" style="display:none;">
-                            <input type="text" id="newPrefixInput" name="new_prefix"
-                                class="form-control" placeholder="e.g. LPTP">
-                        </div>
-                        <span>-</span>
-                        <div class="col-md-4">
-                            <input type="text" id="monthYear" name="month_year" class="form-control"
-                                value="{{ date('Y') . '-' . date('m') }} ">
-                        </div>
-                        <span>-</span>
-                        <div class="col-md-3">
-                            <input type="text" class="form-control" name="numbering" id="numbering"
-                                placeholder="012392">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Item Name</label>
-                <input type="text" class="form-control" name="item_name" required>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="mb-3">
-                <label class="form-label">Quantity</label>
-                <input type="number" class="form-control" name="quantity" min="1" required>
-              </div>
-            </div>
-
-            <div class="col-md-3">
-              <div class="mb-3">
-                <label class="form-label">Price</label>
-                <input type="number" step="0.01" class="form-control" name="price" min="0" required>
-              </div>
-            </div>
-
-
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Model</label>
-                <input type="text" class="form-control" name="model" required>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Manufacturer</label>
-                <input type="text" class="form-control" name="manufacturer" required>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Purchase Date</label>
-                <input type="date" class="form-control" name="purchase_date" required>
-              </div>
-            </div>
-             <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Serial Number</label>
-                <input type="text" class="form-control" name="serial_number" required>
-              </div>
-            </div>
-             <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Processor</label>
-                <input type="text" class="form-control" name="processor" required>
-              </div>
-            </div>
-            <div class="col-md-12">
-              <div class="mb-3">
-                <label class="form-label">Description <small class="text-muted">(optional)</small></label>
-                <textarea class="form-control" name="description" rows="4" placeholder="Enter description"></textarea>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Add Asset</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-{{-- Edit assets --}}
-
-<div class="modal fade" id="edit_assets" >
-  <div class="modal-dialog modal-dialog-centered modal-mg w-100">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Edit Assets</h4>
-        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-          <i class="ti ti-x"></i>
-        </button>
-      </div>
-      <form action="{{ url('/assets-settings/update') }}" method="POST"  id="editAssetsForm" >
-          @csrf
-
-        <div class="modal-body pb-0">
-          <div class="row">
-            <div class="col-md-12 mb-3">
+              <div class="col-md-12 mb-3">
                 <label class="form-label">Branch</label>
-                <select class="form-select select2" name="edit_branch_id" id="edit_branch_id">
-                        <option disabled selected>Select Branch</option>
+                <select class="form-select select2" name="branch_id">
+                         <option disabled selected>Select Branch</option>
                     @foreach($branches as $branch)
                         <option value="{{$branch->id}}">{{$branch->name}}</option>
                     @endforeach
                 </select>
-            </div>
-            <div class="col-md-12 mb-3">
-              <label class="form-label">Category</label>
-              <select id="edit_existingCategory" name="edit_category_id"  class="form-select select2">
-                <option value="" selected>-- Select existing category --</option>
-                @foreach ($categories as $category)
-                  <option value="{{ $category->id }}">{{ $category->name }}</option>
-                @endforeach
-                <option value="new">+ Add new category</option>
-              </select>
-              <input type="text" id="edit_newCategoryInput" name="edit_new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
-            </div>
-             <div class="col-md-12">
-                <div class="mb-3">
-                    <label class="form-label">Asset Name</label>
-                    <div class="d-flex align-items-center gap-1">
-                        <div class="col-md-4" id="edit_prefixWrapper">
-                            <select class="form-select" id="edit_categoryPrefix" name="edit_categoryPrefix">
-                                <option value="" selected disabled>Select Prefix</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->prefix }}">{{ $category->prefix }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4" id="edit_prefixInputWrapper" style="display:none;">
-                            <input type="text" id="edit_newPrefixInput" name="edit_new_prefix"
-                                class="form-control" placeholder="e.g. LPTP">
-                        </div>
-                        <span>-</span>
-                        <div class="col-md-4">
-                            <input type="text" id="edit_monthYear" name="edit_month_year" class="form-control">
-                        </div>
-                        <span>-</span>
-                        <div class="col-md-3">
-                            <input type="text" class="form-control" name="edit_numbering" id="edit_numbering"
-                                placeholder="012392">
+              </div>
+
+               <div class="col-md-12 mb-3">
+                    <label class="form-label">Category</label>
+                    <select id="existingCategory" name="category_id" class="form-select select2">
+                        <option value="" selected>-- Select existing category --</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}" data-prefix="{{ $category->prefix }}">
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                        <option value="new">+ Add new category</option>
+                    </select>
+
+                    <input type="text" id="newCategoryInput" name="new_category_name"
+                        class="form-control mt-2" placeholder="Type new category name" style="display:none;">
+                </div>
+
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label class="form-label">Asset Name</label>
+                        <div class="d-flex align-items-center gap-1">
+
+                            <div class="col-md-4" id="prefixWrapper">
+                                <select class="form-select" id="categoryPrefix" name="categoryPrefix">
+                                    <option value="" selected disabled>Select Prefix</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->prefix }}">{{ $category->prefix }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="prefixInputWrapper" style="display:none;">
+                                <input type="text" id="newPrefixInput" name="new_prefix"
+                                    class="form-control" placeholder="e.g. LPTP">
+                            </div>
+                            <span>-</span>
+                            <div class="col-md-4">
+                                <input type="text" id="monthYear" name="month_year" class="form-control"
+                                    value="{{ date('Y') . '-' . date('m') }} ">
+                            </div>
+                            <span>-</span>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" name="numbering" id="numbering"
+                                    placeholder="012392">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Item Name</label>
-                 <input type="hidden" class="form-control" name="edit_id" id="edit_id" >
-                <input type="text" class="form-control" name="edit_item_name" id="edit_item_name" required>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Price</label>
-                <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
-              </div>
-            </div>
-              <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Model</label>
-                <input type="text" class="form-control" name="edit_model" id="edit_model" required>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Manufacturer</label>
-                <input type="text" class="form-control" name="edit_manufacturer" id="edit_manufacturer" required>
-              </div>
-            </div>
-             <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Purchase Date</label>
-                <input type="date" class="form-control" name="edit_purchase_date" id="edit_purchase_date" required>
-              </div>
-            </div>
-             <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Serial Number</label>
-                <input type="text" class="form-control" name="edit_serial_number" id="edit_serial_number" required>
-              </div>
-            </div>
-             <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Processor</label>
-                <input type="text" class="form-control" name="edit_processor" id="edit_processor" required>
-              </div>
-            </div>
-            <div class="col-md-12">
-              <div class="mb-3">
-                <label class="form-label">Description <small class="text-muted">(optional)</small></label>
-                <textarea class="form-control" name="edit_description" id="edit_description" rows="3" placeholder="Enter description"></textarea>
-              </div>
-            </div>
-          </div>
-        </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" class="form-control" name="item_name" required>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" class="form-control" name="quantity" min="1" required>
+                  </div>
+                </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update</button>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">Price</label>
+                    <input type="number" step="0.01" class="form-control" name="price" min="0" required>
+                  </div>
+                </div>
+
+
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Model</label>
+                    <input type="text" class="form-control" name="model" required>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Manufacturer</label>
+                    <input type="text" class="form-control" name="manufacturer" required>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Purchase Date</label>
+                    <input type="date" class="form-control" name="purchase_date" required>
+                  </div>
+                </div>
+                 <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Serial Number</label>
+                    <input type="text" class="form-control" name="serial_number" required>
+                  </div>
+                </div>
+                 <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Processor</label>
+                    <input type="text" class="form-control" name="processor" required>
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="mb-3">
+                    <label class="form-label">Description <small class="text-muted">(optional)</small></label>
+                    <textarea class="form-control" name="description" rows="4" placeholder="Enter description"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Add Asset</button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
-  </div>
-</div>
 
-{{-- edit assets condition and status --}}
+    {{-- Edit assets --}}
 
-<div class="modal fade edit-assetsCondition" id="edit_assetsCondition" >
-  <div class="modal-dialog modal-dialog-centered modal-lg w-100">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Edit Assets Condition and Status</h4>
-        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-          <i class="ti ti-x"></i>
-        </button>
-        </div>
-        <div class="modal-body pb-0">
-            <form id="assetsSettingsDetailsUpdateForm" method="POST" action="{{ route('assetsSettingsDetailsUpdate') }}">
-            @csrf
-            <input type="hidden" id="editCondition_id" name="assetCondition_id">
-         <div class="row mb-2">
-            <div class="col-5">
-                <label class="form-label fw-semibold">Asset Name:</label>
-                <span id="editCondition_name"></span>
-                <br>
-
-                <label class="form-label fw-semibold">Item Name:</label>
-                <span id="editCondition_item_name"></span>
-            </div>
-
-            <div class="col-5">
-                <label class="form-label fw-semibold">Category:</label>
-                <span id="editCondition_category"></span>
-            </div>
-
-            <div class="col">
-                <button class="btn btn-primary" type="button" onclick="addNewItem()">Add Item</button>
-            </div>
-        </div>
-
-            <div class="row">
-
-                <table class="table" id="assetsConditionTable">
-                    <thead>
-                        <tr class="text-center">
-                            <th>Item no.</th>
-                            <th>Condition</th>
-                            <th>Remarks</th>
-                            <th>Status</th>
-                            <th>Deployed to</th>
-                            <th>Deployed Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="assetsConditionTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-{{-- delete assets --}}
-
- <div class="modal fade" id="delete_assets">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal fade" id="edit_assets" >
+      <div class="modal-dialog modal-dialog-centered modal-mg w-100">
         <div class="modal-content">
-            <div class="modal-body text-center">
-                <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                    <i class="ti ti-trash-x fs-36"></i>
-                </span>
-                <h4 class="mb-1">Confirm Delete</h4>
-                <input type="hidden" id="delete_assets_id" class="form-control">
-                <p class="mb-3">
-                    Are you sure you want to delete <strong><span id="assetsPlaceholder"></span></strong>? This can’t be undone.
-                </p>
-                <div class="d-flex justify-content-center">
-                    <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
-                    <a href="javascript:void(0);" class="btn btn-danger" id="assetsConfirmDeleteBtn">Yes, Delete</a>
+          <div class="modal-header">
+            <h4 class="modal-title">Edit Assets</h4>
+            <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
+          <form action="{{ url('/assets-settings/update') }}" method="POST"  id="editAssetsForm" >
+              @csrf
+
+            <div class="modal-body pb-0">
+              <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Branch</label>
+                    <select class="form-select select2" name="edit_branch_id" id="edit_branch_id">
+                            <option disabled selected>Select Branch</option>
+                        @foreach($branches as $branch)
+                            <option value="{{$branch->id}}">{{$branch->name}}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-12 mb-3">
+                  <label class="form-label">Category</label>
+                  <select id="edit_existingCategory" name="edit_category_id"  class="form-select select2">
+                    <option value="" selected>-- Select existing category --</option>
+                    @foreach ($categories as $category)
+                          <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    @endforeach
+                    <option value="new">+ Add new category</option>
+                  </select>
+                  <input type="text" id="edit_newCategoryInput" name="edit_new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
+                </div>
+                 <div class="col-md-12">
+                    <div class="mb-3">
+                        <label class="form-label">Asset Name</label>
+                        <div class="d-flex align-items-center gap-1">
+                            <div class="col-md-4" id="edit_prefixWrapper">
+                                <select class="form-select" id="edit_categoryPrefix" name="edit_categoryPrefix">
+                                    <option value="" selected disabled>Select Prefix</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->prefix }}">{{ $category->prefix }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="edit_prefixInputWrapper" style="display:none;">
+                                <input type="text" id="edit_newPrefixInput" name="edit_new_prefix"
+                                    class="form-control" placeholder="e.g. LPTP">
+                            </div>
+                            <span>-</span>
+                            <div class="col-md-4">
+                                <input type="text" id="edit_monthYear" name="edit_month_year" class="form-control">
+                            </div>
+                            <span>-</span>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" name="edit_numbering" id="edit_numbering"
+                                    placeholder="012392">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Item Name</label>
+                     <input type="hidden" class="form-control" name="edit_id" id="edit_id" >
+                    <input type="text" class="form-control" name="edit_item_name" id="edit_item_name" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Price</label>
+                    <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
+                  </div>
+                </div>
+                  <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Model</label>
+                    <input type="text" class="form-control" name="edit_model" id="edit_model" required>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Manufacturer</label>
+                    <input type="text" class="form-control" name="edit_manufacturer" id="edit_manufacturer" required>
+                  </div>
+                </div>
+                 <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Purchase Date</label>
+                    <input type="date" class="form-control" name="edit_purchase_date" id="edit_purchase_date" required>
+                  </div>
+                </div>
+                 <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Serial Number</label>
+                    <input type="text" class="form-control" name="edit_serial_number" id="edit_serial_number" required>
+                  </div>
+                </div>
+                 <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Processor</label>
+                    <input type="text" class="form-control" name="edit_processor" id="edit_processor" required>
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="mb-3">
+                    <label class="form-label">Description <small class="text-muted">(optional)</small></label>
+                    <textarea class="form-control" name="edit_description" id="edit_description" rows="3" placeholder="Enter description"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {{-- edit assets condition and status --}}
+
+    <div class="modal fade edit-assetsCondition" id="edit_assetsCondition" >
+      <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Edit Assets Condition and Status</h4>
+            <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <i class="ti ti-x"></i>
+            </button>
+            </div>
+            <div class="modal-body pb-0">
+                <form id="assetsSettingsDetailsUpdateForm" method="POST" action="{{ route('assetsSettingsDetailsUpdate') }}">
+                @csrf
+                <input type="hidden" id="editCondition_id" name="assetCondition_id">
+             <div class="row mb-2">
+                <div class="col-5">
+                    <label class="form-label fw-semibold">Asset Name:</label>
+                    <span id="editCondition_name"></span>
+                    <br>
+
+                    <label class="form-label fw-semibold">Item Name:</label>
+                    <span id="editCondition_item_name"></span>
+                </div>
+
+                <div class="col-5">
+                    <label class="form-label fw-semibold">Category:</label>
+                    <span id="editCondition_category"></span>
+                </div>
+
+                <div class="col">
+                    <button class="btn btn-primary" type="button" onclick="addNewItem()">Add Item</button>
+                </div>
+            </div>
+
+                <div class="row">
+
+                    <table class="table" id="assetsConditionTable">
+                        <thead>
+                            <tr class="text-center">
+                                <th>Item no.</th>
+                                <th>Condition</th>
+                                <th>Remarks</th>
+                                <th>Status</th>
+                                <th>Deployed to</th>
+                                <th>Deployed Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assetsConditionTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {{-- delete assets --}}
+
+     <div class="modal fade" id="delete_assets">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <input type="hidden" id="delete_assets_id" class="form-control">
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="assetsPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="assetsConfirmDeleteBtn">Yes, Delete</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="assetsSettingsViewRemarksModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Condition Remarks</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-          <textarea id="assetsSettings_conditionRemarksText" class="form-control" rows="4" readonly></textarea>
-      </div>
-      <div class="modal-footer">
-          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+    <div class="modal fade" id="assetsSettingsViewRemarksModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Condition Remarks</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+              <textarea id="assetsSettings_conditionRemarksText" class="form-control" rows="4" readonly></textarea>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="modal fade" id="assetsSettingsRemarksModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add Remarks</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="remarksAssetsSettingsId">
-          <textarea id="remarksAssetsSettingsText" class="form-control" rows="4" required></textarea>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="saveAssetsSettingsRemarks">Save</button>
+    <div class="modal fade" id="assetsSettingsRemarksModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Remarks</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="remarksAssetsSettingsId">
+              <textarea id="remarksAssetsSettingsText" class="form-control" rows="4" required></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="saveAssetsSettingsRemarks">Save</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
 @endif
 
 @if (Route::is(['employee-assets']))
 
-<div class="modal fade" id="add_employee_assets" >
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Employee Assets</h4>
-        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-          <i class="ti ti-x"></i>
-        </button>
-      </div>
-      <form action="{{ route('employee-assets-create')}}" method="POST"  id="editAssetsForm" >
-          @csrf
-        <input type="hidden" class="form-control" id="employee-id" name="employee-id">
-        <input type="hidden" id="removeAssetDetail_ids" name="removeAssetDetails_ids[]">
-        <div class="modal-body pb-0">
-           <div class="mb-3">
-            <div class="row align-items-end">
-                <div class="col-md-4 mb-2">
-                    <label for="selectCategory" class="form-label fw-semibold">Category:</label>
-                    <select class="form-select select2 w-100" id="selectCategory">
-                        <option selected disabled>Select Category</option>
-                        @foreach($categories as $category)
-                        <option value="{{$category->id}}">{{$category->name}}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-5 mb-2">
-                    <label for="selectAvailableAssets" class="form-label fw-semibold">Available Assets:</label>
-                    <select class="form-select select2 w-100" id="selectAvailableAssets">
-                    </select>
-                </div>
-                <div class="col-md-3 mb-2 d-grid">
-                    <label class="form-label fw-semibold invisible">Add Button</label>
-                    <button type="button" class="btn btn-info" id="addEmployeeAssetButton">
-                        <i class="ti ti-plus"></i> Add
-                    </button>
+    <div class="modal fade" id="add_employee_assets" >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Employee Assets</h4>
+            <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
+          <form action="{{ route('employee-assets-create')}}" method="POST"  id="editAssetsForm" >
+              @csrf
+            <input type="hidden" class="form-control" id="employee-id" name="employee-id">
+            <input type="hidden" id="removeAssetDetail_ids" name="removeAssetDetails_ids[]">
+            <div class="modal-body pb-0">
+               <div class="mb-3">
+                <div class="row align-items-end">
+                    <div class="col-md-4 mb-2">
+                        <label for="selectCategory" class="form-label fw-semibold">Category:</label>
+                        <select class="form-select select2 w-100" id="selectCategory">
+                            <option selected disabled>Select Category</option>
+                            @foreach($categories as $category)
+                                <option value="{{$category->id}}">{{$category->name}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-5 mb-2">
+                        <label for="selectAvailableAssets" class="form-label fw-semibold">Available Assets:</label>
+                        <select class="form-select select2 w-100" id="selectAvailableAssets">
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2 d-grid">
+                        <label class="form-label fw-semibold invisible">Add Button</label>
+                        <button type="button" class="btn btn-info" id="addEmployeeAssetButton">
+                            <i class="ti ti-plus"></i> Add
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-           <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                <table class="table table-bordered table-sm mb-0 ">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Asset</th>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Category</th>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Price</th>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Condition</th>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Remarks</th>
-                            <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th>
-                            <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="addEmployeeAssetsTableBody">
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th colspan="2" class="text-end">Total:</th>
-                            <th class="text-center" id="totalPrice">0</th>
-                            <th colspan="3"></th>
-                        </tr>
-                    </tfoot>
-                </table>
+               <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-bordered table-sm mb-0 ">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Asset</th>
+                                <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Category</th>
+                                <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Price</th>
+                                <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Condition</th>
+                                <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Remarks</th>
+                                <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th>
+                                <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="addEmployeeAssetsTableBody">
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="2" class="text-end">Total:</th>
+                                <th class="text-center" id="totalPrice">0</th>
+                                <th colspan="3"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Update </button>
+            </div>
+          </form>
         </div>
-        <div class="modal-footer">
-           <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update </button>
-        </div>
-      </form>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="modal fade" id="employeeAssetsRemarksModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add Remarks</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="remarksAssetId">
-          <textarea id="remarksText" class="form-control" rows="4"></textarea>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="saveEmployeeAssetsRemarks">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="modal fade" id="employeeAssetsViewRemarksModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Condition Remarks</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-          <textarea id="conditionRemarksText" class="form-control" rows="4" readonly></textarea>
-      </div>
-      <div class="modal-footer">
-          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+    <div class="modal fade" id="employeeAssetsRemarksModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Remarks</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="remarksAssetId">
+              <textarea id="remarksText" class="form-control" rows="4"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="saveEmployeeAssetsRemarks">Save</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
+    <div class="modal fade" id="employeeAssetsViewRemarksModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Condition Remarks</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+              <textarea id="conditionRemarksText" class="form-control" rows="4" readonly></textarea>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
 @endif
 
 @if (Route::is(['payroll-batch-settings']))
-<div class="modal fade" id="create_payroll_batch" tabindex="-1" aria-labelledby="createPayrollBatchLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createPayrollBatchLabel">Create Payroll Batch</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <form id="createPayrollBatchForm">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="batch_name" class="form-label">Batch Name</label>
-                        <input type="text" name="batch_name" id="batch_name" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="edit_pbsettings" tabindex="-1" aria-labelledby="editPbSettingsLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editPbSettingsLabel">Edit Payroll Batch</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <form id="editPbSettingsForm">
-                @csrf
-                <input type="hidden" name="id" id="edit_pbsettings_id">
-
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="edit_batch_name" class="form-label">Batch Name</label>
-                        <input type="text" name="batch_name" id="edit_batch_name" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update</button>
-
-                </div>
-            </form>
-
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="delete_pbsettings" tabindex="-1" aria-labelledby="deletePbSettingsLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deletePbSettingsLabel">Delete Payroll Batch</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="deletePbSettingsForm">
-                @csrf
-                <input type="hidden" name="id" id="delete_pbsettings_id">
-                <div class="modal-body">
-                    <p>Are you sure you want to delete <strong id="delete_pbsettings_name"></strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </div>
-            </form>
-
-        </div>
-    </div>
-</div>
-
-@endif
-@if (Route::is(['payroll-batch-users']))
-    <div class="modal fade" id="editPayrollBatchUsersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="create_payroll_batch" tabindex="-1" aria-labelledby="createPayrollBatchLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" >Edit Payroll Batch</h5>
+                    <h5 class="modal-title" id="createPayrollBatchLabel">Create Payroll Batch</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="editPayrollBatchUsersForm" method="POST">
+
+                <form id="createPayrollBatchForm">
                     @csrf
-                    <input type="hidden" id="edit_user_id" name="user_id">
                     <div class="modal-body">
-                        <label for="edit_batch_users_select">Select Payroll Batches</label>
-                        <select id="edit_batch_users_select" name="batch_ids[]" class="select form-control select2" multiple>
-                            <option value="" selected disabled>Select Payroll Batches</option>
-                            @foreach($payrollBatchSettings as $batch)
-                                <option value="{{ $batch->id }}">{{ $batch->name }}</option>
-                            @endforeach
-                        </select>
+                        <div class="mb-3">
+                            <label for="batch_name" class="form-label">Batch Name</label>
+                            <input type="text" name="batch_name" id="batch_name" class="form-control" required>
+                        </div>
                     </div>
+
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-    <!-- Bulk Payroll Batch Assigning Modal -->
-<div class="modal fade" id="bulk_pb_assigning_modal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content">
-            <form id="bulkAssignForm" method="POST" action="{{ route('payroll-batch-bulk-assign') }}">
-                @csrf
+    <div class="modal fade" id="edit_pbsettings" tabindex="-1" aria-labelledby="editPbSettingsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Bulk Assign to Payroll Batch</h5>
+                    <h5 class="modal-title" id="editPbSettingsLabel">Edit Payroll Batch</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="payrollBatch" class="form-label">Select Payroll Batch</label>
-                        <select id="payrollBatch" name="payroll_batch_id[]" class="form-control select2" required multiple>
-                            @foreach($payrollBatchSettings as $batch)
-                                <option value="{{ $batch->id }}">{{ $batch->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Select Branches</label>
-                        <select id="branchSelect" name="branches[]" class="form-select select2" multiple>
-                            @foreach($branches as $branch)
-                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Select Departments</label>
-                        <select id="departmentSelect" name="departments[]" class="form-select select2" multiple>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Select Designations</label>
-                        <select id="designationSelect" name="designations[]" class="form-select select2" multiple>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Select Employees</label>
-                        <select id="employeeSelect" name="employees[]" class="form-select select2" multiple>
-                        </select>
-                    </div>
-                </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Assign</button>
-                </div>
-            </form>
+                <form id="editPbSettingsForm">
+                    @csrf
+                    <input type="hidden" name="id" id="edit_pbsettings_id">
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="edit_batch_name" class="form-label">Batch Name</label>
+                            <input type="text" name="batch_name" id="edit_batch_name" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
+
+                    </div>
+                </form>
+
+            </div>
         </div>
     </div>
-</div>
+    <div class="modal fade" id="delete_pbsettings" tabindex="-1" aria-labelledby="deletePbSettingsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deletePbSettingsLabel">Delete Payroll Batch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="deletePbSettingsForm">
+                    @csrf
+                    <input type="hidden" name="id" id="delete_pbsettings_id">
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete <strong id="delete_pbsettings_name"></strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+@endif
+@if (Route::is(['payroll-batch-users']))
+        <div class="modal fade" id="editPayrollBatchUsersModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" >Edit Payroll Batch</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="editPayrollBatchUsersForm" method="POST">
+                        @csrf
+                        <input type="hidden" id="edit_user_id" name="user_id">
+                        <div class="modal-body">
+                            <label for="edit_batch_users_select">Select Payroll Batches</label>
+                            <select id="edit_batch_users_select" name="batch_ids[]" class="select form-control select2" multiple>
+                                <option value="" selected disabled>Select Payroll Batches</option>
+                                @foreach($payrollBatchSettings as $batch)
+                                    <option value="{{ $batch->id }}">{{ $batch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Payroll Batch Assigning Modal -->
+    <div class="modal fade" id="bulk_pb_assigning_modal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <form id="bulkAssignForm" method="POST" action="{{ route('payroll-batch-bulk-assign') }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Bulk Assign to Payroll Batch</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="payrollBatch" class="form-label">Select Payroll Batch</label>
+                            <select id="payrollBatch" name="payroll_batch_id[]" class="form-control select2" required multiple>
+                                @foreach($payrollBatchSettings as $batch)
+                                    <option value="{{ $batch->id }}">{{ $batch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select Branches</label>
+                            <select id="branchSelect" name="branches[]" class="form-select select2" multiple>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select Departments</label>
+                            <select id="departmentSelect" name="departments[]" class="form-select select2" multiple>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select Designations</label>
+                            <select id="designationSelect" name="designations[]" class="form-select select2" multiple>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select Employees</label>
+                            <select id="employeeSelect" name="employees[]" class="form-select select2" multiple>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 
 @endif

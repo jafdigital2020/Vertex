@@ -273,14 +273,14 @@
                             @if (in_array(7, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('leaves', 'leave/leave-employee', 'leave/leave-settings', 'leave/leave-admin') ? 'active subdrop' : '' }}">
+                                        class="{{ Request::is('leaves', 'leave/leave-employee', 'leave/leave-settings', 'leave/leave-admin', 'leave/sil-eligibility-report', 'leave/sil-accrual-history') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-rocket"></i><span>Leaves</span>
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][19]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('leave-admin') }}"
-                                                    class="{{ Request::is('leave/leave-admin') ? 'active' : '' }}">Leaves
+                                                    class="{{ Request::is('leave/leave-admin', 'leave/sil-eligibility-report', 'leave/sil-accrual-history') ? 'active' : '' }}">Leaves
                                                     (Admin)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][20]) || $role_data['role_id'] == 'global_user')
@@ -653,7 +653,7 @@
                                                                         class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
                                                                         Type</a></li>
                                                                 <li><a href="{{ url('settings/biometrics') }}"
-                                                                                    class=" {{ Request::is('settings/biometrics') ? 'active' : '' }}">ZKTeco
+                                                                        class=" {{ Request::is('settings/biometrics') ? 'active' : '' }}">ZKTeco
                                                                         Biometrics
                                                                     </a></li>
                                                             </ul>
@@ -3628,8 +3628,7 @@
     'invoices',
 )
     ? ' show active '
-    : '' }} " title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application"
-                                    aria-selected="false">
+    : '' }} " title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application" aria-selected="false">
                                     <span><i class="ti ti-layout-grid-add"></i></span>
                                     <p>Applications</p>
                                 </a>
@@ -3661,8 +3660,7 @@
     'layout-dark',
 )
     ? 'show active'
-    : '' }}" title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout"
-                                    aria-selected="false">
+    : '' }}" title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout" aria-selected="false">
                                     <span><i class="ti ti-layout-board-split"></i></span>
                                     <p>Layouts</p>
                                 </a>
@@ -3705,8 +3703,7 @@
     'termination',
 )
     ? ' show active '
-    : '' }}" title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project"
-                                    aria-selected="false">
+    : '' }}" title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project" aria-selected="false">
                                     <span><i class="ti ti-folder"></i></span>
                                     <p>Projects</p>
                                 </a>
@@ -3730,8 +3727,7 @@
     'activity',
 )
     ? 'show active'
-    : '' }}" title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm"
-                                    aria-selected="false">
+    : '' }}" title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm" aria-selected="false">
                                     <span><i class="ti ti-user-shield"></i></span>
                                     <p>Crm</p>
                                 </a>
@@ -3769,8 +3765,7 @@
     'termination',
 )
     ? ' show active '
-    : '' }}" title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm"
-                                    aria-selected="false">
+    : '' }}" title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm" aria-selected="false">
                                     <span><i class="ti ti-users"></i></span>
                                     <p>Hrm</p>
                                 </a>
@@ -3840,8 +3835,7 @@
     'clear-cache',
 )
     ? 'show active '
-    : '' }}" title="Administration" data-bs-toggle="tab"
-                                    data-bs-target="#menu-administration" aria-selected="false">
+    : '' }}" title="Administration" data-bs-toggle="tab" data-bs-target="#menu-administration" aria-selected="false">
                                     <span><i class="ti ti-cash"></i></span>
                                     <p>Administration</p>
                                 </a>
@@ -3889,8 +3883,7 @@
     'error-500',
 )
     ? ' show active'
-    : '' }} " title="Authentication" data-bs-toggle="tab"
-                                    data-bs-target="#menu-authentication" aria-selected="false">
+    : '' }} " title="Authentication" data-bs-toggle="tab" data-bs-target="#menu-authentication" aria-selected="false">
                                     <span><i class="ti ti-lock-check"></i></span>
                                     <p>Authentication</p>
                                 </a>
@@ -3980,8 +3973,7 @@
     'icon-flag',
 )
     ? ' show active '
-    : '' }}" title="UI Elements" data-bs-toggle="tab"
-                                    data-bs-target="#menu-ui-elements" aria-selected="false">
+    : '' }}" title="UI Elements" data-bs-toggle="tab" data-bs-target="#menu-ui-elements" aria-selected="false">
                                     <span><i class="ti ti-ux-circle"></i></span>
                                     <p>Basic UI</p>
                                 </a>

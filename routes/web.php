@@ -45,8 +45,9 @@ use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Employees\ViolationController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
+use App\Http\Controllers\Tenant\Leave\SilReportController;
 use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
-use App\Http\Controllers\Tenant\Employees\SalaryBondController; 
+use App\Http\Controllers\Tenant\Employees\SalaryBondController;
 use App\Http\Controllers\Tenant\Payroll\CustomOtRateController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Report\PayrollReportController;
@@ -226,6 +227,12 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/leave/leave-admin', [LeaveAdminController::class, 'leaveAdminIndex'])->name('leave-admin')->middleware(CheckPermission::class . ':19');
     Route::get('/leave/leave-admin-filter', [LeaveAdminController::class, 'filter'])->name('leave-admin-filter');
     Route::get('/leave/leave-settings/{id}/assigned-users', [LeaveSettingsController::class, 'assignedUsersIndex'])->name('assignedUsersIndex');
+
+    // SIL Reports
+    Route::get('/leave/sil-eligibility-report', [SilReportController::class, 'eligibilityReport'])->name('sil-eligibility-report')->middleware(CheckPermission::class . ':21');
+    Route::get('/leave/sil-accrual-history', [SilReportController::class, 'accrualHistory'])->name('sil-accrual-history')->middleware(CheckPermission::class . ':21');
+    Route::get('/leave/sil-eligibility-export', [SilReportController::class, 'exportEligibility'])->name('sil-eligibility-export')->middleware(CheckPermission::class . ':21');
+
     // Holiday
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13');
     Route::get('/holiday-filter', [HolidayController::class, 'holidayFilter'])->name('holiday_filter');

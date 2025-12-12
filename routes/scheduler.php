@@ -13,3 +13,4 @@ Schedule::command('leaves:process-earned --type=monthly')
     ->monthlyOn(1, '00:45')->when(function () {
         return Carbon::now()->month % 2 === 1;
     })->description('Process every-other-month earned leaves');
+Schedule::command('sil:process-accrual')->daily()->at('01:00');

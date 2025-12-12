@@ -25,6 +25,8 @@ class LeaveType extends Model
         'tenant_id',
         'is_cash_convertible',
         'conversion_rate',
+        'is_sil',
+        'sil_minimum_service_months',
     ];
 
     protected $casts = [
