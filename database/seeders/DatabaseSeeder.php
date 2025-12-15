@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             SubscriptionsTableSeeder::class,
             InvoicesTableSeeder::class,
             CustomFieldTableSeeder::class,
+            BranchTableSeeder::class,
         ]);
     }
 }
