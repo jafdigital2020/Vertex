@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             PlanSeeder::class,
             SubscriptionsTableSeeder::class,
             InvoicesTableSeeder::class,
+            CustomFieldTableSeeder::class,
         ]);
     }
 }
