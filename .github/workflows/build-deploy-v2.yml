@@ -2,7 +2,7 @@ name: Cloud Panel Deployment Workflow V2
 
 on:
   repository_dispatch:
-    types: [provision-timora] # ✅ CHANGED: Added repository_dispatch trigger
+    types: [provision-timora]
   workflow_dispatch:
     inputs:
       system:
@@ -593,6 +593,24 @@ jobs:
           echo "### ✅ App Deployed Successfully" >> $GITHUB_STEP_SUMMARY
           echo "🔗 [https://${{ env.SUBDOMAIN }}](https://${{ env.SUBDOMAIN }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
+      # ✅ Send Account Credentials Email After Successful Deployment
+      - name: 📧 Send Account Credentials Email
+        if: success()
+        run: |
+          curl -X POST "https://api-wizard.timora.ph/api/wizard/send-payment-email" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d '{
+              "email": "${{ env.EMAIL }}",
+              "company_name": "${{ env.COMPANY_NAME }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
+              "subdomain": "${{ env.SUBDOMAIN }}",
+              "system": "${{ env.SYSTEM }}",
+              "plan": "${{ env.PLAN }}",
+              "username": "${{ env.USERNAME }}",
+              "password": "${{ env.PASSWORD }}"
+            }' || echo "Credentials email failed - continuing..."
 
       # ✅ UPDATED: Use dynamic variables and add progress percentage
       - name: ✅ Notify Success

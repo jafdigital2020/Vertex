@@ -436,6 +436,11 @@ class PayslipController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $payslips = Payroll::findOrFail($id);
 
+        // Allow template selection via query parameter
+        if ($request->has('template')) {
+            $payslips->payslip_template = $request->input('template');
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -534,7 +539,6 @@ class PayslipController extends Controller
                 'message' => 'Your file has been uploaded successfully! We are now processing ' . count($formattedData) . ' payslip records. This may take a few moments...',
                 'total_rows' => count($formattedData)
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error uploading payslips: ' . $e->getMessage());
 
@@ -654,7 +658,7 @@ class PayslipController extends Controller
             ]
         ];
 
-        $callback = function() use ($headers, $sampleData) {
+        $callback = function () use ($headers, $sampleData) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $headers);
 
