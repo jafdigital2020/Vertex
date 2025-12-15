@@ -1,8 +1,8 @@
 {{-- Template 2: Wecall Classic Design --}}
 <div class="container-fluid py-4 printable-area" style="max-width: 900px;">
-    <div class="card border-2 border-dark shadow-sm p-0 mb-4" style="background: #fff;">
+    <div class="card border shadow-sm p-0 mb-4" style="background: #fff;">
         <!-- Header with Logo and Company Info -->
-        <div class="border-bottom border-dark p-3">
+        <div class="border-bottom p-3">
             <div class="text-center mb-3">
                 @if (
                         $payslips->user &&
@@ -34,7 +34,7 @@
                     </td>
                     <td style="width: 50%; border: none; padding: 2px 8px;" class="text-end">
                         <span>{{ number_format($payslips->basic_pay, 0) }} Basic Monthly</span>
-                        <span class="fw-bold ms-3">#N/A</span>
+                        <span class="fw-bold ms-3">-</span>
                     </td>
                 </tr>
                 <tr>
@@ -46,7 +46,7 @@
                     </td>
                     <td style="border: none; padding: 2px 8px;" class="text-end">
                         <span>Daily Rate:</span>
-                        <span class="fw-bold ms-3">#N/A</span>
+                        <span class="fw-bold ms-3">-</span>
                     </td>
                 </tr>
                 <tr>
@@ -58,7 +58,7 @@
                     </td>
                     <td style="border: none; padding: 2px 8px;" class="text-end">
                         <span>Hourly Rate:</span>
-                        <span class="fw-bold ms-3">#N/A</span>
+                        <span class="fw-bold ms-3">-</span>
                     </td>
                 </tr>
                 <tr>
@@ -70,16 +70,16 @@
                     </td>
                     <td style="border: none; padding: 2px 8px;" class="text-end">
                         <span>Total Work Hours:</span>
-                        <span class="fw-bold ms-3">#N/A</span>
+                        <span class="fw-bold ms-3">-</span>
                     </td>
                 </tr>
             </table>
 
             <!-- Earnings and Deductions Table -->
-            <table class="table table-bordered table-sm mb-3" style="border: 1px solid #000; font-size: 0.85rem;">
+            <table class="table table-bordered table-sm mb-3" style="border: 1px solid #dee2e6; font-size: 0.85rem;">
                 <thead>
-                    <tr style="border-bottom: 2px solid #000;">
-                        <th style="width: 50%; border-right: 2px solid #000;">
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <th style="width: 50%; border-right: 1px solid #dee2e6;">
                             <div class="row g-0">
                                 <div class="col-5 px-2">Earnings</div>
                                 <div class="col-2 px-1 text-center" style="border-left: 1px solid #dee2e6;">Rate</div>
@@ -100,62 +100,63 @@
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="width: 41.67%; border: none;">REGULAR HOUR</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">1.00 ▼</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">#N/A</td>
-                                    <td class="text-end px-1" style="width: 25%; border: none;">#N/A</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">1.00</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">-</td>
+                                    <td class="text-center px-1" style="width: 25%; border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">REGULAR OT</td>
-                                    <td class="text-center" style="border: none;">1.25 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">1.25</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">ND RATE</td>
-                                    <td class="text-center" style="border: none;">1.10 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">1.10</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">ND OT RATE</td>
-                                    <td class="text-center" style="border: none;">1.38 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">1.38</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                             </table>
                         </td>
                         <td style="padding: 0; vertical-align: top;">
                             <table class="w-100 mb-0" style="border: none;">
                                 <tr style="background-color: #f8f9fa;">
-                                    <td colspan="2" class="fw-bold px-2 py-1" style="border: none;"><i>MANDATORY CONTRIBUTION</i></td>
+                                    <td colspan="2" class="fw-bold px-2 py-1" style="border: none;"><i>MANDATORY
+                                            CONTRIBUTION</i></td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="width: 50%; border: none;">SSS</td>
-                                    <td class="text-end px-2" style="width: 50%; border: none;">
+                                    <td class="text-center px-2" style="width: 50%; border: none;">
                                         @if($payslips->sss_contribution != 0)
                                             {{ number_format($payslips->sss_contribution, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">Philhealth</td>
-                                    <td class="text-end px-2" style="border: none;">
+                                    <td class="text-center px-2" style="border: none;">
                                         @if($payslips->philhealth_contribution != 0)
                                             {{ number_format($payslips->philhealth_contribution, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">Pagibig</td>
-                                    <td class="text-end px-2" style="border: none;">
+                                    <td class="text-center px-2" style="border: none;">
                                         @if($payslips->pagibig_contribution != 0)
                                             {{ number_format($payslips->pagibig_contribution, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
@@ -164,46 +165,47 @@
                     </tr>
                     <!-- DUTY ON REST DAY Section -->
                     <tr>
-                        <td style="border-right: 2px solid #000; padding: 0;">
+                        <td style="border-right: 1px solid #dee2e6; padding: 0;">
                             <table class="w-100 mb-0" style="border: none;">
                                 <tr style="background-color: #f8f9fa;">
-                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>DUTY ON REST DAY</i></td>
+                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>DUTY ON REST
+                                            DAY</i></td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="width: 41.67%; border: none;">SPEC HOL/ RD</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">1.30 ▼</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="width: 25%; border: none;">
+                                    <td class="text-center" style="width: 16.67%; border: none;">1.30</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">-</td>
+                                    <td class="text-center px-1" style="width: 25%; border: none;">
                                         @if($payslips->restday_pay != 0)
                                             {{ number_format($payslips->restday_pay, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">SPEC HOL/ RD OT</td>
-                                    <td class="text-center" style="border: none;">1.69 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">
+                                    <td class="text-center" style="border: none;">1.69</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">
                                         @if($payslips->overtime_restday_pay != 0)
                                             {{ number_format($payslips->overtime_restday_pay, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">SPEC HOL/RD ND</td>
-                                    <td class="text-center" style="border: none;">1.43 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">1.43</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">SPEC HOL/RD ND OT</td>
-                                    <td class="text-center" style="border: none;">2.42 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">2.42</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                             </table>
                         </td>
@@ -232,21 +234,22 @@
                                     @foreach($loanItems as $loan)
                                         <tr>
                                             <td class="px-2" style="width: 50%; border: none;">{{ $loan['label'] }}</td>
-                                            <td class="text-end px-2" style="width: 50%; border: none;">{{ number_format($loan['amount'], 2) }}</td>
+                                            <td class="text-end px-2" style="width: 50%; border: none;">
+                                                {{ number_format($loan['amount'], 2) }}</td>
                                         </tr>
                                     @endforeach
                                 @else
                                     <tr>
                                         <td class="px-2" style="width: 50%; border: none;">SSS</td>
-                                        <td class="text-end px-2" style="width: 50%; border: none;">#N/A</td>
+                                        <td class="text-center px-2" style="width: 50%; border: none;">-</td>
                                     </tr>
                                     <tr>
                                         <td class="px-2" style="border: none;">Pagibig</td>
-                                        <td class="text-end px-2" style="border: none;">#N/A</td>
+                                        <td class="text-center px-2" style="border: none;">-</td>
                                     </tr>
                                     <tr>
                                         <td class="px-2" style="border: none;">Cash Advance</td>
-                                        <td class="text-end px-2" style="border: none;">#N/A</td>
+                                        <td class="text-center px-2" style="border: none;">-</td>
                                     </tr>
                                 @endif
                             </table>
@@ -255,20 +258,21 @@
 
                     <!-- SPECIAL HOLIDAY Section -->
                     <tr>
-                        <td style="border-right: 2px solid #000; padding: 0;">
+                        <td style="border-right: 1px solid #dee2e6; padding: 0;">
                             <table class="w-100 mb-0" style="border: none;">
                                 <tr style="background-color: #f8f9fa;">
-                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>SPECIAL HOLIDAY/ DUTY</i></td>
+                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>SPECIAL HOLIDAY/
+                                            DUTY</i></td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="width: 41.67%; border: none;">SPEC HOL/ RD</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">1.30 ▼</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="width: 25%; border: none;">
+                                    <td class="text-center" style="width: 16.67%; border: none;">1.30</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">-</td>
+                                    <td class="text-center px-1" style="width: 25%; border: none;">
                                         @if($payslips->holiday_pay != 0)
                                             {{ number_format($payslips->holiday_pay, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
@@ -301,10 +305,11 @@
                                 @if(!empty($otherDeductionItems))
                                     @foreach($otherDeductionItems as $deduction)
                                         <tr>
-                                            <td class="px-2" style="width: 50%; border: none;">{{ $deduction['label'] ?? $deduction['deduction_type_name'] }}</td>
-                                            <td class="text-end px-2" style="width: 50%; border: none;">
+                                            <td class="px-2" style="width: 50%; border: none;">
+                                                {{ $deduction['label'] ?? $deduction['deduction_type_name'] }}</td>
+                                            <td class="text-center px-2" style="width: 50%; border: none;">
                                                 @if($deduction['label'] ?? $deduction['deduction_type_name'] == 'Pantry')
-                                                    #N/A
+                                                    -
                                                 @else
                                                     {{ number_format($deduction['amount'] ?? $deduction['applied_amount'], 2) }}
                                                 @endif
@@ -314,26 +319,26 @@
                                 @else
                                     <tr>
                                         <td class="px-2" style="width: 50%; border: none;">Pantry</td>
-                                        <td class="text-end px-2" style="width: 50%; border: none;">#N/A</td>
+                                        <td class="text-center px-2" style="width: 50%; border: none;">-</td>
                                     </tr>
                                 @endif
                                 <tr>
                                     <td class="px-2" style="border: none;">Salary Adjustment (-)</td>
-                                    <td class="text-end px-2" style="border: none;">
+                                    <td class="text-center px-2" style="border: none;">
                                         @if($payslips->late_deduction != 0)
                                             {{ number_format($payslips->late_deduction, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">Withholding Tax</td>
-                                    <td class="text-end px-2" style="border: none;">
+                                    <td class="text-center px-2" style="border: none;">
                                         @if($payslips->withholding_tax != 0)
                                             {{ number_format($payslips->withholding_tax, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
@@ -342,34 +347,37 @@
                     </tr>
                     <!-- REGULAR OR LEGAL HOLIDAY Section -->
                     <tr>
-                        <td style="border-right: 2px solid #000; padding: 0;">
+                        <td style="border-right: 1px solid #dee2e6; padding: 0;">
                             <table class="w-100 mb-0" style="border: none;">
                                 <tr style="background-color: #f8f9fa;">
-                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>REGULAR OR LEGAL HOLIDAY</i></td>
+                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>REGULAR OR LEGAL
+                                            HOLIDAY</i></td>
                                 </tr>
                                 <tr>
-                                    <td class="px-2" style="width: 41.67%; border: none;">LEG HOL<span style="border: 1px solid #000; display: inline-block; width: 20px; height: 15px; margin-left: 5px;"></span></td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">2.00 ▼</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="width: 25%; border: none;">#N/A</td>
+                                    <td class="px-2" style="width: 41.67%; border: none;">LEG HOL<span
+                                            style="border: 1px solid #000; display: inline-block; width: 20px; height: 15px; margin-left: 5px;"></span>
+                                    </td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">2.00</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">-</td>
+                                    <td class="text-center px-1" style="width: 25%; border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">LEG HOL OT</td>
-                                    <td class="text-center" style="border: none;">2.50 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">2.50</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">LEG HOL ND</td>
-                                    <td class="text-center" style="border: none;">2.75 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">2.75</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">LEG HOL/REST ND OT</td>
-                                    <td class="text-center" style="border: none;">3.44 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">3.44</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                             </table>
                         </td>
@@ -378,34 +386,35 @@
 
                     <!-- SPECIAL HOLIDAY FALLING Section -->
                     <tr>
-                        <td style="border-right: 2px solid #000; padding: 0;">
+                        <td style="border-right: 1px solid #dee2e6; padding: 0;">
                             <table class="w-100 mb-0" style="border: none;">
                                 <tr style="background-color: #f8f9fa;">
-                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>SPECIAL HOLIDAY FALLING ON A REST DAY</i></td>
+                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>SPECIAL HOLIDAY
+                                            FALLING ON A REST DAY</i></td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="width: 41.67%; border: none;">SPEC HOL ON RD</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">1.69 ▼</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="width: 25%; border: none;">#N/A</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">1.69</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">-</td>
+                                    <td class="text-center px-1" style="width: 25%; border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">SPEC HOL ON RD OT</td>
-                                    <td class="text-center" style="border: none;">2.20 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">2.20</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">SPEC HOL ON RD ND</td>
-                                    <td class="text-center" style="border: none;">2.42 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">2.42</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">SPEC HOL ON RD ND OT</td>
-                                    <td class="text-center" style="border: none;">3.14 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">3.14</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                             </table>
                         </td>
@@ -414,34 +423,35 @@
 
                     <!-- REGULAR HOLIDAY FALLING Section -->
                     <tr>
-                        <td style="border-right: 2px solid #000; padding: 0;">
+                        <td style="border-right: 1px solid #dee2e6; padding: 0;">
                             <table class="w-100 mb-0" style="border: none;">
                                 <tr style="background-color: #f8f9fa;">
-                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>REGULAR HOLIDAY FALLING ON A REST DAY</i></td>
+                                    <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>REGULAR HOLIDAY
+                                            FALLING ON A REST DAY</i></td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="width: 41.67%; border: none;">LEG HOL ON RD</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">2.60 ▼</td>
-                                    <td class="text-center" style="width: 16.67%; border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="width: 25%; border: none;">#N/A</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">2.60</td>
+                                    <td class="text-center" style="width: 16.67%; border: none;">-</td>
+                                    <td class="text-center px-1" style="width: 25%; border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">LEG HOL ON RD OT</td>
-                                    <td class="text-center" style="border: none;">3.38 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">3.38</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">LEG HOL ON RD ND</td>
-                                    <td class="text-center" style="border: none;">3.72 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">3.72</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                                 <tr>
                                     <td class="px-2" style="border: none;">LEG HOL ON RD ND OT</td>
-                                    <td class="text-center" style="border: none;">3.72 ▼</td>
-                                    <td class="text-center" style="border: none;">#N/A ▼</td>
-                                    <td class="text-end px-1" style="border: none;">#N/A</td>
+                                    <td class="text-center" style="border: none;">3.72</td>
+                                    <td class="text-center" style="border: none;">-</td>
+                                    <td class="text-center px-1" style="border: none;">-</td>
                                 </tr>
                             </table>
                         </td>
@@ -454,7 +464,7 @@
             <div class="row mt-3">
                 <div class="col-md-6">
                     <table class="table table-bordered table-sm mb-0"
-                        style="border: 1px solid #000; font-size: 0.85rem;">
+                        style="border: 1px solid #dee2e6; font-size: 0.85rem;">
                         <tbody>
                             <tr>
                                 <td class="fw-bold" style="width: 60%;">Basic Salary</td>
@@ -465,7 +475,7 @@
                                     @if($basicSalaryValue != 0)
                                         {{ number_format($basicSalaryValue, 2) }}
                                     @else
-                                        #N/A
+                                        -
                                     @endif
                                 </td>
                             </tr>
@@ -483,7 +493,7 @@
                             @foreach($bonusFields as $bonusField)
                                 <tr>
                                     <td>{{ $bonusField }}</td>
-                                    <td class="text-end">#N/A</td>
+                                    <td class="text-center">-</td>
                                 </tr>
                             @endforeach
                             <tr>
@@ -492,7 +502,7 @@
                                     @if($payslips->total_earnings != 0)
                                         {{ number_format($payslips->total_earnings, 2) }}
                                     @else
-                                        #N/A
+                                        -
                                     @endif
                                 </td>
                             </tr>
@@ -502,7 +512,7 @@
                                     @if($payslips->net_salary != 0)
                                         {{ number_format($payslips->net_salary, 2) }}
                                     @else
-                                        #N/A
+                                        -
                                     @endif
                                 </td>
                             </tr>
@@ -518,11 +528,11 @@
                             @foreach($employerShares as $shareName => $shareValue)
                                 <tr>
                                     <td>Employer Share - {{ $shareName }}</td>
-                                    <td class="text-end">
+                                    <td class="text-center">
                                         @if($shareValue != 0)
                                             {{ number_format($shareValue, 2) }}
                                         @else
-                                            #N/A
+                                            -
                                         @endif
                                     </td>
                                 </tr>
@@ -541,7 +551,7 @@
                                     @if($payslips->total_deductions != 0)
                                         {{ number_format($payslips->total_deductions, 2) }}
                                     @else
-                                        #N/A
+                                        -
                                     @endif
                                 </td>
                             </tr>
@@ -563,11 +573,11 @@
 
                             <tr>
                                 <td>Cash Advance</td>
-                                <td class="text-end">
+                                <td class="text-center">
                                     @if($cashAdvanceAmount != 0)
                                         {{ number_format($cashAdvanceAmount, 2) }}
                                     @else
-                                        #N/A
+                                        -
                                     @endif
                                 </td>
                             </tr>
@@ -581,7 +591,7 @@
                                     @if($totalReceivable != 0)
                                         {{ number_format($totalReceivable, 2) }}
                                     @else
-                                        #N/A
+                                        -
                                     @endif
                                 </td>
                             </tr>
