@@ -166,7 +166,7 @@ class EmployeeListController extends Controller
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
-                'employees' => $employees->map(function ($user) {
+                'employees' => $employees->get()->map(function ($user) {
                     return [
                         'user' => [
                             'id' => $user->id,
@@ -175,8 +175,7 @@ class EmployeeListController extends Controller
                             'role' => $user->userPermission->role->role_name ?? null,
                         ],
                         'employment_detail' => $user->employmentDetail,
-                        'personal_information' => $user->employmentPersonalInformation,
-
+                        'personal_information' => $user->personalInformation,
                     ];
                 }),
             ]);
