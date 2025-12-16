@@ -65,7 +65,7 @@ class Payroll extends Model
         'pagibig_contribution_employer',
     ];
 
-    protected $cast = [
+    protected $casts = [
         'earnings' => 'array',
         'deminimis' => 'array',
         'loan_deductions' => 'array',

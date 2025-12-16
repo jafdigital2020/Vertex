@@ -38,6 +38,12 @@ use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\PhilhealthContribution;
 use App\Http\Controllers\DataAccessController;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class PayrollController extends Controller
 {
@@ -3094,9 +3100,10 @@ class PayrollController extends Controller
             }
 
             $summaryTotals = $exporter->getSummaryTotals($payrolls);
+            $insights = $exporter->getPayrollInsights($payrolls);
 
             // Create new Spreadsheet
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
 
             // Set document properties
@@ -3106,112 +3113,537 @@ class PayrollController extends Controller
                 ->setSubject('Payroll Export')
                 ->setDescription('Payroll records export');
 
-            // Add title
-            $sheet->setCellValue('A1', 'PAYROLL REPORT');
-            $sheet->mergeCells('A1:U1');
-            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
-            $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            // Create professional header section
+            $sheet->setCellValue('A1', 'PAYROLL REGISTER - DETAILED REPORT');
+            $sheet->mergeCells('A1:AO1');
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(18)->setColor(new Color(Color::COLOR_WHITE));
+            $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF2E4057');
 
-            // Add export date
+            // Add company/report information
             $sheet->setCellValue('A2', 'Generated: ' . now()->format('F d, Y h:i A'));
-            $sheet->mergeCells('A2:U2');
-            $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue('AK2', 'Report Type: Comprehensive Payroll Analysis');
+            $sheet->mergeCells('A2:AJ2');
+            $sheet->mergeCells('AK2:AO2');
+            $sheet->getStyle('A2:AO2')->getFont()->setBold(true)->setSize(10);
+            $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            $sheet->getStyle('AK2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-            // Add filters if any
+            // Add filter information with better formatting
             $currentRow = 3;
-            if (!empty($filters['dateRange'])) {
-                $sheet->setCellValue('A' . $currentRow, 'Date Range: ' . $filters['dateRange']);
-                $sheet->mergeCells('A' . $currentRow . ':U' . $currentRow);
+            if (!empty($filters['dateRange']) || !empty($filters['branch']) || !empty($filters['department'])) {
+                $sheet->setCellValue('A' . $currentRow, 'FILTER CRITERIA:');
+                $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(11);
                 $currentRow++;
+                
+                if (!empty($filters['dateRange'])) {
+                    $sheet->setCellValue('A' . $currentRow, 'Period: ' . $filters['dateRange']);
+                    $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true);
+                    $currentRow++;
+                }
+                if (!empty($filters['branch'])) {
+                    $sheet->setCellValue('A' . $currentRow, 'Branch: ' . $filters['branch']);
+                    $currentRow++;
+                }
+                if (!empty($filters['department'])) {
+                    $sheet->setCellValue('A' . $currentRow, 'Department: ' . $filters['department']);
+                    $currentRow++;
+                }
+                $currentRow++; // Extra spacing
             }
 
-            // Add headers row (skip a row for spacing)
+            // Add professional section headers with grouped columns
             $headerRow = $currentRow + 1;
             $headers = $exporter->getHeaders();
+            
+            // Create section headers for better organization
+            $sectionHeaders = [
+                'A' => ['text' => 'EMPLOYEE INFORMATION', 'range' => 'A' . $headerRow . ':J' . $headerRow, 'color' => 'FF34495E'],
+                'K' => ['text' => 'TIME TRACKING', 'range' => 'K' . $headerRow . ':O' . $headerRow, 'color' => 'FF16A085'],
+                'P' => ['text' => 'EARNINGS BREAKDOWN', 'range' => 'P' . $headerRow . ':Z' . $headerRow, 'color' => 'FF27AE60'],
+                'AA' => ['text' => 'DEDUCTIONS BREAKDOWN', 'range' => 'AA' . $headerRow . ':AJ' . $headerRow, 'color' => 'FFE74C3C'],
+                'AK' => ['text' => 'FINAL AMOUNTS', 'range' => 'AK' . $headerRow . ':AO' . $headerRow, 'color' => 'FF8E44AD']
+            ];
+
+            foreach ($sectionHeaders as $column => $section) {
+                $sheet->setCellValue($column . $headerRow, $section['text']);
+                $sheet->mergeCells($section['range']);
+                $sheet->getStyle($section['range'])->getFont()->setBold(true)->setSize(11)->setColor(new Color(Color::COLOR_WHITE));
+                $sheet->getStyle($section['range'])->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($section['color']);
+                $sheet->getStyle($section['range'])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+
+            // Add detailed column headers
+            $detailHeaderRow = $headerRow + 1;
             $col = 'A';
             foreach ($headers as $header) {
-                $sheet->setCellValue($col . $headerRow, $header);
-                $sheet->getStyle($col . $headerRow)->getFont()->setBold(true);
-                $sheet->getStyle($col . $headerRow)->getFill()
-                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FF4472C4');
-                $sheet->getStyle($col . $headerRow)->getFont()->getColor()->setARGB('FFFFFFFF');
-                $sheet->getStyle($col . $headerRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->setCellValue($col . $detailHeaderRow, $header);
+                $sheet->getStyle($col . $detailHeaderRow)->getFont()->setBold(true)->setSize(9);
+                $sheet->getStyle($col . $detailHeaderRow)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFF8F9FA');
+                $sheet->getStyle($col . $detailHeaderRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle($col . $detailHeaderRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet->getStyle($col . $detailHeaderRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
                 $col++;
             }
 
-            // Add data
-            $row = $headerRow + 1;
+            // Add data with professional formatting
+            $row = $detailHeaderRow + 1;
             foreach ($payrolls as $index => $payroll) {
                 $data = $exporter->formatRow($payroll, $index);
                 $col = 'A';
                 foreach ($data as $colIndex => $value) {
                     $sheet->setCellValue($col . $row, $value);
 
-                    // Center align number column and date columns
-                    if ($col == 'A' || in_array($colIndex, [8, 9, 19, 20])) { // No, Period Start, Period End, Payment Date, Processed Date
-                        $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    // Apply alternating row colors for better readability
+                    if ($index % 2 == 0) {
+                        $sheet->getStyle($col . $row)->getFill()
+                            ->setFillType(Fill::FILL_SOLID)
+                            ->getStartColor()->setARGB('FFFAFBFC');
                     }
 
-                    // Right align amount columns (Basic Pay, Gross Pay, Earnings, Deductions, Net Salary)
-                    if (in_array($colIndex, [13, 14, 15, 16, 17])) {
-                        $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                    // Center align number column, date columns, and time columns
+                    if ($col == 'A' || in_array($colIndex, [8, 9, 10, 11, 12, 13, 14, 37, 38, 39])) { 
+                        $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     }
+
+                    // Right align all monetary amount columns with number formatting
+                    if (in_array($colIndex, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36])) {
+                        $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        $sheet->getStyle($col . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    }
+
+                    // Add borders for professional appearance
+                    $sheet->getStyle($col . $row)->getBorders()->getAllBorders()
+                        ->setBorderStyle(Border::BORDER_THIN)
+                        ->setColor(new Color('FFE0E0E0'));
 
                     $col++;
                 }
                 $row++;
             }
 
-            // Add summary totals
-            $summaryRow = $row + 1;
+            // Add professional summary section
+            $summaryRow = $row + 2; // Extra spacing
 
-            $sheet->setCellValue('A' . $summaryRow, 'SUMMARY TOTALS');
-            $sheet->mergeCells('A' . $summaryRow . ':J' . $summaryRow);
-            $sheet->getStyle('A' . $summaryRow)->getFont()->setBold(true);
+            // Summary header with enhanced styling
+            $sheet->setCellValue('A' . $summaryRow, 'PAYROLL SUMMARY TOTALS');
+            $sheet->mergeCells('A' . $summaryRow . ':AO' . $summaryRow);
+            $sheet->getStyle('A' . $summaryRow)->getFont()->setBold(true)->setSize(14)->setColor(new Color(Color::COLOR_WHITE));
             $sheet->getStyle('A' . $summaryRow)->getFill()
-                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FFE7E6E6');
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FF2C3E50');
+            $sheet->getStyle('A' . $summaryRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-            // Add total values (columns K-R: Total Hours, Late, Undertime, Basic Pay, Gross Pay, Earnings, Deductions, Net Pay)
-            $sheet->setCellValue('K' . $summaryRow, $summaryTotals['total_worked_hours_formatted']);
-            $sheet->setCellValue('L' . $summaryRow, $summaryTotals['total_late_hours_formatted']);
-            $sheet->setCellValue('M' . $summaryRow, $summaryTotals['total_undertime_hours_formatted']);
-            $sheet->setCellValue('N' . $summaryRow, number_format($summaryTotals['total_basic_pay'], 2));
-            $sheet->setCellValue('O' . $summaryRow, number_format($summaryTotals['total_gross_pay'], 2));
-            $sheet->setCellValue('P' . $summaryRow, number_format($summaryTotals['total_earnings'], 2));
-            $sheet->setCellValue('Q' . $summaryRow, number_format($summaryTotals['total_deductions'], 2));
-            $sheet->setCellValue('R' . $summaryRow, number_format($summaryTotals['total_net_pay'], 2));
+            // Add employee count summary
+            $summaryRow++;
+            $sheet->setCellValue('A' . $summaryRow, 'Total Employees Processed:');
+            $sheet->setCellValue('C' . $summaryRow, $summaryTotals['total_employees']);
+            $sheet->getStyle('A' . $summaryRow)->getFont()->setBold(true);
+            $sheet->getStyle('C' . $summaryRow)->getFont()->setBold(true)->getColor(new Color('FF2980B9'));
+            $sheet->getStyle('C' . $summaryRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-            $sheet->getStyle('K' . $summaryRow . ':R' . $summaryRow)->getFont()->setBold(true);
-            $sheet->getStyle('K' . $summaryRow . ':M' . $summaryRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('N' . $summaryRow . ':R' . $summaryRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('K' . $summaryRow . ':R' . $summaryRow)->getFill()
-                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            $summaryRow++;
+
+            // Map columns K through AJ for detailed summary
+            $summaryColumns = [
+                'K' => $summaryTotals['total_worked_hours_formatted'],
+                'L' => $summaryTotals['total_late_hours_formatted'],
+                'M' => $summaryTotals['total_undertime_hours_formatted'],
+                'N' => $summaryTotals['total_overtime_hours_formatted'] ?? '0 hrs 0 mins',
+                'O' => $summaryTotals['total_night_diff_hours_formatted'] ?? '0 hrs 0 mins',
+                'P' => number_format($summaryTotals['total_basic_pay'], 2),
+                'Q' => number_format($summaryTotals['total_holiday_pay'], 2),
+                'R' => number_format($summaryTotals['total_overtime_pay'], 2),
+                'S' => number_format($summaryTotals['total_night_differential_pay'], 2),
+                'T' => number_format($summaryTotals['total_restday_pay'], 2),
+                'U' => number_format($summaryTotals['total_overtime_restday_pay'], 2),
+                'V' => number_format($summaryTotals['total_leave_pay'], 2),
+                'W' => number_format($summaryTotals['total_allowances'], 2),
+                'X' => number_format($summaryTotals['total_other_earnings'], 2),
+                'Y' => number_format($summaryTotals['total_gross_pay'], 2),
+                'Z' => number_format($summaryTotals['total_earnings'], 2),
+                'AA' => number_format($summaryTotals['total_late_deduction'], 2),
+                'AB' => number_format($summaryTotals['total_undertime_deduction'], 2),
+                'AC' => number_format($summaryTotals['total_absent_deduction'], 2),
+                'AD' => number_format($summaryTotals['total_sss_contribution'], 2),
+                'AE' => number_format($summaryTotals['total_philhealth_contribution'], 2),
+                'AF' => number_format($summaryTotals['total_pagibig_contribution'], 2),
+                'AG' => number_format($summaryTotals['total_withholding_tax'], 2),
+                'AH' => number_format($summaryTotals['total_loan_deductions'], 2),
+                'AI' => number_format($summaryTotals['total_other_deductions'], 2),
+                'AJ' => number_format($summaryTotals['total_deductions'], 2),
+                'AK' => number_format($summaryTotals['total_taxable_income'], 2),
+                'AL' => number_format($summaryTotals['total_net_pay'], 2)
+            ];
+
+            foreach ($summaryColumns as $column => $value) {
+                $sheet->setCellValue($column . $summaryRow, $value);
+            }
+
+            $sheet->getStyle('K' . $summaryRow . ':AL' . $summaryRow)->getFont()->setBold(true);
+            $sheet->getStyle('K' . $summaryRow . ':O' . $summaryRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('P' . $summaryRow . ':AL' . $summaryRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $sheet->getStyle('K' . $summaryRow . ':AL' . $summaryRow)->getFill()
+                ->setFillType(Fill::FILL_SOLID)
                 ->getStartColor()->setARGB('FFE7E6E6');
 
             // Add employee count
             $countRow = $summaryRow + 1;
             $sheet->setCellValue('A' . $countRow, 'Total Employees: ' . $summaryTotals['total_employees']);
-            $sheet->mergeCells('A' . $countRow . ':U' . $countRow);
+            $sheet->mergeCells('A' . $countRow . ':AO' . $countRow);
             $sheet->getStyle('A' . $countRow)->getFont()->setBold(true);
 
             // Auto-size columns
-            foreach (range('A', 'U') as $col) {
+            foreach (range('A', 'Z') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            foreach (['AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO'] as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
             // Add borders to data area
             $lastRow = $row - 1;
-            $sheet->getStyle('A' . $headerRow . ':U' . $lastRow)->getBorders()->getAllBorders()
-                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+            $sheet->getStyle('A' . $headerRow . ':AO' . $lastRow)->getBorders()->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
 
             // Add borders to summary
-            $sheet->getStyle('A' . $summaryRow . ':R' . $summaryRow)->getBorders()->getAllBorders()
-                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+            $sheet->getStyle('A' . $summaryRow . ':AL' . $summaryRow)->getBorders()->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
+
+            // Create Professional Accounting Summary Sheet
+            $accountingSheet = $spreadsheet->createSheet(1);
+            $accountingSheet->setTitle('Financial Analysis');
+            
+            // Professional header
+            $accountingSheet->setCellValue('A1', 'PAYROLL FINANCIAL ANALYSIS & COST BREAKDOWN');
+            $accountingSheet->mergeCells('A1:F1');
+            $accountingSheet->getStyle('A1')->getFont()->setBold(true)->setSize(16)->setColor(new Color(Color::COLOR_WHITE));
+            $accountingSheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF2E4057');
+            $accountingSheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            // Add report metadata
+            $accountingSheet->setCellValue('A2', 'Generated: ' . now()->format('F d, Y h:i A'));
+            $accountingSheet->setCellValue('D2', 'Total Employees: ' . $summaryTotals['total_employees']);
+            $accountingSheet->getStyle('A2:F2')->getFont()->setBold(true);
+            $accountingSheet->mergeCells('A2:C2');
+            $accountingSheet->mergeCells('D2:F2');
+            
+            // Enhanced Earnings Analysis
+            $accountingSheet->setCellValue('A4', 'EARNINGS ANALYSIS');
+            $accountingSheet->mergeCells('A4:C4');
+            $accountingSheet->getStyle('A4')->getFont()->setBold(true)->setSize(12)->setColor(new Color(Color::COLOR_WHITE));
+            $accountingSheet->getStyle('A4')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF27AE60');
+            $accountingSheet->getStyle('A4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            $earningsData = [
+                ['EARNINGS CATEGORY', 'AMOUNT (PHP)', 'PERCENTAGE', 'COST PER EMPLOYEE'],
+                ['Basic Pay', $summaryTotals['total_basic_pay'], round(($summaryTotals['total_basic_pay'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_basic_pay'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['Holiday Pay', $summaryTotals['total_holiday_pay'], round(($summaryTotals['total_holiday_pay'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_holiday_pay'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['Overtime Pay', $summaryTotals['total_overtime_pay'], round(($summaryTotals['total_overtime_pay'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_overtime_pay'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['Night Differential', $summaryTotals['total_night_differential_pay'], round(($summaryTotals['total_night_differential_pay'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_night_differential_pay'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['Rest Day Pay', $summaryTotals['total_restday_pay'], round(($summaryTotals['total_restday_pay'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_restday_pay'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['Overtime Rest Day', $summaryTotals['total_overtime_restday_pay'], round(($summaryTotals['total_overtime_restday_pay'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_overtime_restday_pay'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['Leave Pay', $summaryTotals['total_leave_pay'], round(($summaryTotals['total_leave_pay'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_leave_pay'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['Allowances', $summaryTotals['total_allowances'], round(($summaryTotals['total_allowances'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_allowances'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['Other Earnings', $summaryTotals['total_other_earnings'], round(($summaryTotals['total_other_earnings'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_other_earnings'] / max($summaryTotals['total_employees'], 1), 2)],
+                ['TOTAL GROSS PAY', $summaryTotals['total_gross_pay'], '100.00%', round($summaryTotals['total_gross_pay'] / max($summaryTotals['total_employees'], 1), 2)],
+            ];
+            
+            $row = 4;
+            foreach ($earningsData as $rowData) {
+                $col = 'A';
+                foreach ($rowData as $value) {
+                    $accountingSheet->setCellValue($col . $row, $value);
+                    if ($row == 4) {
+                        $accountingSheet->getStyle($col . $row)->getFont()->setBold(true);
+                    }
+                    if ($col == 'B' && $row > 4) {
+                        $accountingSheet->setCellValue($col . $row, number_format($value, 2));
+                    }
+                    $col++;
+                }
+                $row++;
+            }
+            
+            $deductionsStartRow = $row + 2;
+            $accountingSheet->setCellValue('A' . $deductionsStartRow, 'DEDUCTIONS BREAKDOWN');
+            $accountingSheet->getStyle('A' . $deductionsStartRow)->getFont()->setBold(true);
+            
+            $deductionsData = [
+                ['Category', 'Amount', 'Percentage'],
+                ['Late Deductions', $summaryTotals['total_late_deduction'], round(($summaryTotals['total_late_deduction'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['Undertime Deductions', $summaryTotals['total_undertime_deduction'], round(($summaryTotals['total_undertime_deduction'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['Absent Deductions', $summaryTotals['total_absent_deduction'], round(($summaryTotals['total_absent_deduction'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['SSS Contributions', $summaryTotals['total_sss_contribution'], round(($summaryTotals['total_sss_contribution'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['PhilHealth Contributions', $summaryTotals['total_philhealth_contribution'], round(($summaryTotals['total_philhealth_contribution'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['Pag-IBIG Contributions', $summaryTotals['total_pagibig_contribution'], round(($summaryTotals['total_pagibig_contribution'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['Withholding Tax', $summaryTotals['total_withholding_tax'], round(($summaryTotals['total_withholding_tax'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['Loan Deductions', $summaryTotals['total_loan_deductions'], round(($summaryTotals['total_loan_deductions'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['Other Deductions', $summaryTotals['total_other_deductions'], round(($summaryTotals['total_other_deductions'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
+                ['TOTAL DEDUCTIONS', $summaryTotals['total_deductions'], '100.00%'],
+            ];
+            
+            $row = $deductionsStartRow + 1;
+            foreach ($deductionsData as $rowData) {
+                $col = 'A';
+                foreach ($rowData as $value) {
+                    $accountingSheet->setCellValue($col . $row, $value);
+                    if ($row == $deductionsStartRow + 1) {
+                        $accountingSheet->getStyle($col . $row)->getFont()->setBold(true);
+                    }
+                    if ($col == 'B' && $row > $deductionsStartRow + 1) {
+                        $accountingSheet->setCellValue($col . $row, number_format($value, 2));
+                    }
+                    $col++;
+                }
+                $row++;
+            }
+            
+            // Auto-size columns for accounting sheet
+            foreach (range('A', 'D') as $col) {
+                $accountingSheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            // Create Insights & Analytics Sheet
+            $insightsSheet = $spreadsheet->createSheet(2);
+            $insightsSheet->setTitle('HR Analytics');
+            
+            // Professional header for insights
+            $insightsSheet->setCellValue('A1', 'PAYROLL INSIGHTS & HR ANALYTICS');
+            $insightsSheet->mergeCells('A1:D1');
+            $insightsSheet->getStyle('A1')->getFont()->setBold(true)->setSize(16)->setColor(new Color(Color::COLOR_WHITE));
+            $insightsSheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF8E44AD');
+            $insightsSheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            // Add insights data
+            $insightsData = [
+                ['METRIC', 'VALUE', 'BENCHMARK', 'STATUS'],
+                ['Average Salary per Employee', 'PHP ' . number_format($insights['average_salary_per_employee'], 2), 'Industry Avg', $insights['average_salary_per_employee'] > 25000 ? 'Above Average' : 'Below Average'],
+                ['Average Gross per Employee', 'PHP ' . number_format($insights['average_gross_per_employee'], 2), 'Target: 30K+', $insights['average_gross_per_employee'] > 30000 ? 'Target Met' : 'Below Target'],
+                ['Overtime Percentage', $insights['overtime_percentage'] . '%', 'Target: <15%', $insights['overtime_percentage'] < 15 ? 'Optimal' : 'High'],
+                ['Deduction Rate', $insights['deduction_rate'] . '%', 'Typical: 25-35%', ($insights['deduction_rate'] >= 25 && $insights['deduction_rate'] <= 35) ? 'Normal' : 'Review Needed'],
+                ['Take-home Rate', $insights['take_home_rate'] . '%', 'Target: 65%+', $insights['take_home_rate'] >= 65 ? 'Good' : 'Low'],
+                ['Government Contributions', 'PHP ' . number_format($insights['government_contributions_total'], 2), 'Compliance', 'Compliant'],
+                ['Average Hours per Employee', $insights['average_hours_per_employee'] . ' hrs', 'Standard: 160-180', ($insights['average_hours_per_employee'] >= 160 && $insights['average_hours_per_employee'] <= 180) ? 'Standard' : 'Review'],
+                ['Productivity Score', $insights['productivity_score'] . '%', 'Target: 85%+', $insights['productivity_score'] >= 85 ? 'Excellent' : 'Improvement Needed'],
+                ['Basic Pay Percentage', $insights['basic_pay_percentage'] . '%', 'Typical: 70-80%', 'Normal Range'],
+                ['Labor Cost Analysis', 'PHP ' . number_format($insights['total_labor_cost'], 2), 'Total Cost', 'Complete']
+            ];
+            
+            $row = 3;
+            foreach ($insightsData as $rowIndex => $rowData) {
+                $col = 'A';
+                foreach ($rowData as $value) {
+                    $insightsSheet->setCellValue($col . $row, $value);
+                    if ($rowIndex == 0) {
+                        $insightsSheet->getStyle($col . $row)->getFont()->setBold(true);
+                        $insightsSheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF34495E');
+                        $insightsSheet->getStyle($col . $row)->getFont()->setColor(new Color(Color::COLOR_WHITE));
+                    }
+                    $insightsSheet->getStyle($col . $row)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                    $col++;
+                }
+                $row++;
+            }
+            
+            // Auto-size columns for insights sheet
+            foreach (range('A', 'D') as $col) {
+                $insightsSheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            // Create Detailed Earnings & Benefits Sheet
+            $earningsSheet = $spreadsheet->createSheet(3);
+            $earningsSheet->setTitle('Detailed Earnings & Benefits');
+            
+            // Header
+            $earningsSheet->setCellValue('A1', 'DETAILED EARNINGS & BENEFITS BREAKDOWN');
+            $earningsSheet->mergeCells('A1:O1');
+            $earningsSheet->getStyle('A1')->getFont()->setBold(true)->setSize(16)->setColor(new Color(Color::COLOR_WHITE));
+            $earningsSheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF39C12');
+            $earningsSheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            $row = 3;
+            
+            foreach ($payrolls as $payroll) {
+                $earnings = is_string($payroll->earnings) ? json_decode($payroll->earnings, true) : ($payroll->earnings ?? []);
+                $deminimis = is_string($payroll->deminimis) ? json_decode($payroll->deminimis, true) : ($payroll->deminimis ?? []);
+                
+                // Enhance deminimis data with benefit names if missing
+                if (!empty($deminimis)) {
+                    $deminimisBenefits = \App\Models\DeminimisBenefits::all()->keyBy('id');
+                    foreach ($deminimis as &$benefit) {
+                        if (empty($benefit['benefit_name']) && !empty($benefit['deminimis_benefit_id'])) {
+                            $deminimisBenefit = $deminimisBenefits->get($benefit['deminimis_benefit_id']);
+                            if ($deminimisBenefit) {
+                                $benefit['benefit_name'] = $deminimisBenefit->name;
+                                $benefit['description'] = $benefit['description'] ?? 'No description available';
+                            }
+                        }
+                    }
+                }
+                
+                // Only show employees with additional earnings or benefits
+                if (!empty($earnings) || !empty($deminimis)) {
+                    $user = $payroll->user;
+                    $personalInfo = $user->personalInformation;
+                    
+                    // Employee header
+                    $earningsSheet->setCellValue('A' . $row, $personalInfo->last_name . ', ' . $personalInfo->first_name . ' (' . ($user->employmentDetail->employee_id ?? 'N/A') . ')');
+                    $earningsSheet->mergeCells('A' . $row . ':O' . $row);
+                    $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
+                    $earningsSheet->getStyle('A' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE8F4F8');
+                    $row++;
+                    
+                    // Earnings Section
+                    if (!empty($earnings)) {
+                        $earningsSheet->setCellValue('A' . $row, 'Additional Earnings:');
+                        $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(new Color('FF27AE60'));
+                        $row++;
+                        
+                        // Earnings headers
+                        $headers = ['Earning Type', 'Type ID', 'Method', 'Default Amount', 'Override Amount', 'Applied Amount', 'Taxable', 'Frequency', 'Status'];
+                        $col = 'A';
+                        foreach ($headers as $header) {
+                            $earningsSheet->setCellValue($col . $row, $header);
+                            $earningsSheet->getStyle($col . $row)->getFont()->setBold(true);
+                            $earningsSheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF8F9FA');
+                            $col++;
+                        }
+                        $row++;
+                        
+                        // Earnings data
+                        foreach ($earnings as $earning) {
+                            $earningsSheet->setCellValue('A' . $row, $earning['earning_type_name'] ?? 'Unknown');
+                            $earningsSheet->setCellValue('B' . $row, $earning['earning_type_id'] ?? 'N/A');
+                            $earningsSheet->setCellValue('C' . $row, ucfirst($earning['calculation_method'] ?? 'N/A'));
+                            $earningsSheet->setCellValue('D' . $row, 'PHP ' . number_format($earning['default_amount'] ?? 0, 2));
+                            $earningsSheet->setCellValue('E' . $row, 'PHP ' . number_format($earning['user_amount_override'] ?? 0, 2));
+                            $earningsSheet->setCellValue('F' . $row, 'PHP ' . number_format($earning['applied_amount'] ?? 0, 2));
+                            $earningsSheet->setCellValue('G' . $row, ($earning['is_taxable'] ?? 1) ? 'Yes' : 'No');
+                            $earningsSheet->setCellValue('H' . $row, ucfirst($earning['frequency'] ?? 'N/A'));
+                            $earningsSheet->setCellValue('I' . $row, ucfirst($earning['status'] ?? 'active'));
+                            
+                            // Highlight applied amount
+                            $earningsSheet->getStyle('F' . $row)->getFont()->setBold(true);
+                            $earningsSheet->getStyle('F' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE8F5E8');
+                            
+                            $row++;
+                        }
+                        $row++; // Space
+                    }
+                    
+                    // De minimis Section
+                    if (!empty($deminimis)) {
+                        $earningsSheet->setCellValue('A' . $row, 'De Minimis Benefits:');
+                        $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(new Color('FF9B59B6'));
+                        $row++;
+                        
+                        // De minimis headers
+                        $headers = ['Benefit Name', 'Amount', 'Description', 'Type', 'Status'];
+                        $col = 'A';
+                        foreach ($headers as $header) {
+                            $earningsSheet->setCellValue($col . $row, $header);
+                            $earningsSheet->getStyle($col . $row)->getFont()->setBold(true);
+                            $earningsSheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF3E5F5');
+                            $col++;
+                        }
+                        $row++;
+                        
+                        // De minimis data
+                        foreach ($deminimis as $benefit) {
+                            $earningsSheet->setCellValue('A' . $row, $benefit['benefit_name'] ?? $benefit['name'] ?? 'Unknown');
+                            $earningsSheet->setCellValue('B' . $row, 'PHP ' . number_format($benefit['amount'] ?? 0, 2));
+                            $earningsSheet->setCellValue('C' . $row, $benefit['description'] ?? 'N/A');
+                            $earningsSheet->setCellValue('D' . $row, $benefit['type'] ?? 'N/A');
+                            $earningsSheet->setCellValue('E' . $row, $benefit['status'] ?? 'active');
+                            
+                            // Highlight amount
+                            $earningsSheet->getStyle('B' . $row)->getFont()->setBold(true);
+                            $earningsSheet->getStyle('B' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF3E5F5');
+                            
+                            $row++;
+                        }
+                        $row++; // Space
+                    }
+                    
+                    // Allowances Section
+                    $allowances = is_string($payroll->allowance) ? json_decode($payroll->allowance, true) : ($payroll->allowance ?? []);
+                    if (!empty($allowances)) {
+                        $earningsSheet->setCellValue('A' . $row, 'Allowances Breakdown:');
+                        $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(new Color('FF008080'));
+                        $row++;
+                        
+                        // Allowances headers
+                        $allowanceHeaders = ['Allowance Type', 'Amount'];
+                        $col = 'A';
+                        foreach ($allowanceHeaders as $header) {
+                            $earningsSheet->setCellValue($col . $row, $header);
+                            $earningsSheet->getStyle($col . $row)->getFont()->setBold(true);
+                            $earningsSheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF8F9FA');
+                            $col++;
+                        }
+                        $row++;
+                        
+                        // Allowances data
+                        foreach ($allowances as $allowance) {
+                            $earningsSheet->setCellValue('A' . $row, $allowance['type'] ?? 'Unknown');
+                            $earningsSheet->setCellValue('B' . $row, 'PHP ' . number_format($allowance['amount'] ?? 0, 2));
+                            
+                            // Highlight amount
+                            $earningsSheet->getStyle('B' . $row)->getFont()->setBold(true);
+                            $earningsSheet->getStyle('B' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE0F2F1');
+                            
+                            $row++;
+                        }
+                        $row++; // Space
+                    }
+                    
+                    // Loan Deductions Section  
+                    $loanDeductions = is_string($payroll->loan_deductions) ? json_decode($payroll->loan_deductions, true) : ($payroll->loan_deductions ?? []);
+                    if (!empty($loanDeductions)) {
+                        $earningsSheet->setCellValue('A' . $row, 'Loan Deductions:');
+                        $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(new Color('FFB53654'));
+                        $row++;
+                        
+                        // Loan headers
+                        $loanHeaders = ['Loan Type', 'Amount', 'Status'];
+                        $col = 'A';
+                        foreach ($loanHeaders as $header) {
+                            $earningsSheet->setCellValue($col . $row, $header);
+                            $earningsSheet->getStyle($col . $row)->getFont()->setBold(true);
+                            $earningsSheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF8F9FA');
+                            $col++;
+                        }
+                        $row++;
+                        
+                        // Loan deductions data
+                        foreach ($loanDeductions as $loan) {
+                            $earningsSheet->setCellValue('A' . $row, $loan['deduction_type'] ?? $loan['type'] ?? 'Unknown');
+                            $earningsSheet->setCellValue('B' . $row, 'PHP ' . number_format($loan['amount'] ?? 0, 2));
+                            $earningsSheet->setCellValue('C' . $row, $loan['status'] ?? 'Active');
+                            
+                            // Highlight amount
+                            $earningsSheet->getStyle('B' . $row)->getFont()->setBold(true);
+                            $earningsSheet->getStyle('B' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFCE4EC');
+                            
+                            $row++;
+                        }
+                        $row++; // Space
+                    }
+                    
+                    $row += 2; // Extra space between employees
+                }
+            }
+            
+            // Auto-size columns for earnings sheet
+            foreach (range('A', 'O') as $col) {
+                $earningsSheet->getColumnDimension($col)->setAutoSize(true);
+            }
 
             // Create Excel file
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer = new Xlsx($spreadsheet);
             $fileName = 'payroll-report-' . now()->format('Y-m-d-His') . '.xlsx';
             $tempFile = tempnam(sys_get_temp_dir(), $fileName);
 
@@ -3234,7 +3666,6 @@ class PayrollController extends Controller
     {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(24);
-        $tenantId = $authUser->tenant_id ?? null;
 
         if (!in_array('Export', $permission)) {
             return response()->json([
@@ -3254,10 +3685,12 @@ class PayrollController extends Controller
         $exporter = new PayrollExport($authUser, $filters);
         $payrolls = $exporter->getData();
         $summaryTotals = $exporter->getSummaryTotals($payrolls);
+        $insights = $exporter->getPayrollInsights($payrolls);
 
         $data = [
             'payrolls' => $payrolls,
             'summaryTotals' => $summaryTotals,
+            'insights' => $insights,
             'filters' => $filters,
             'generatedDate' => now()->format('F d, Y h:i A'),
             'exporter' => $exporter,
