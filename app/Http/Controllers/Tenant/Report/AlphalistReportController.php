@@ -180,8 +180,14 @@ class AlphalistReportController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'Alphalist Report Index',
-                'status' => 'success'
+                'message' => 'Alphalist report retrieved successfully.',
+                'status' => 'success',
+                'data' => [
+                    'payrolls' => $payrollsGrouped->values(),
+                    'branches' => $branches,
+                    'selected_branch' => $selectedBranch,
+                ],
+                'permission' => $permission
             ]);
         }
 

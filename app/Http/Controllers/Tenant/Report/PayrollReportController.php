@@ -149,6 +149,23 @@ class PayrollReportController extends Controller
 
         $branches = Branch::where('tenant_id', $tenantId)->get();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Payroll report retrieved successfully.',
+                'status' => 'success',
+                'data' => [
+                    'payrolls' => $payrollsGrouped->values(),
+                    'branches' => $branches,
+                    'filters' => [
+                        'date_range' => $request->date_range ?? null,
+                        'branch_filter' => $request->branch_filter ?? null,
+                        'sortby_filter' => $request->sortby_filter ?? null,
+                    ]
+                ],
+                'permission' => $permission
+            ]);
+        }
+
         return view('tenant.reports.payrollreport', compact('payrollsGrouped', 'branches','permission'));
     }
 }
