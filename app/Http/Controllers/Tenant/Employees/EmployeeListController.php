@@ -167,6 +167,7 @@ class EmployeeListController extends Controller
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'employees' => $employees->get()->map(function ($user) {
+                    $employmentDetail = $user->employmentDetail;
                     return [
                         'user' => [
                             'id' => $user->id,
@@ -174,7 +175,25 @@ class EmployeeListController extends Controller
                             'email' => $user->email,
                             'role' => $user->userPermission->role->role_name ?? null,
                         ],
-                        'employment_detail' => $user->employmentDetail,
+                        'employment_detail' => $employmentDetail ? [
+                            'id' => $employmentDetail->id,
+                            'employee_id' => $employmentDetail->employee_id,
+                            'date_hired' => $employmentDetail->date_hired,
+                            'employment_type' => $employmentDetail->employment_type,
+                            'employment_status' => $employmentDetail->employment_status,
+                            'branch_id' => $employmentDetail->branch_id,
+                            'department_id' => $employmentDetail->department_id,
+                            'designation_id' => $employmentDetail->designation_id,
+                            'status' => $employmentDetail->status,
+                            'department' => $employmentDetail->department ? [
+                                'id' => $employmentDetail->department->id,
+                                'name' => $employmentDetail->department->department_name
+                            ] : null,
+                            'designation' => $employmentDetail->designation ? [
+                                'id' => $employmentDetail->designation->id,
+                                'name' => $employmentDetail->designation->designation_name
+                            ] : null,
+                        ] : null,
                         'personal_information' => $user->personalInformation,
                     ];
                 }),
