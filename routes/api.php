@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ================== Authentication ================ //
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/test-error-logging', [AuthController::class, 'testErrorLogging']);
 
     Route::middleware('auth:sanctum')->get('/verify-token', function (Request $request) {
         return response()->json([
