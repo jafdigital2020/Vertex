@@ -13,6 +13,7 @@ use App\Models\OvertimeApproval;
 use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Notifications\UserNotification;
 use App\Http\Controllers\DataAccessController;
 
@@ -277,92 +278,108 @@ class EmployeeOvertimeController extends Controller
     {
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(45);
 
-          if (!in_array('Create', $permission)) {
+        if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
             ], 403);
         }
 
-        // if (!$this->hasPermission('Create')) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'You do not have the permission to create.'
-        //     ], 403);
-        // }
-        // Validation
-        $request->validate([
-            'overtime_date'      => 'required|date',
-            'date_ot_in'         => 'required|date',
-            'date_ot_out'        => 'required|date|after_or_equal:date_ot_in',
-            'total_ot_minutes'   => 'nullable|numeric',
-            'total_night_diff_minutes'   => 'nullable|numeric',
-            'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120', // max 5MB
-            'offset_date'        => 'nullable|date',
-            'reason'             => 'required|string|max:500',
-        ]);
+        try {
+            // Validation
+            $request->validate([
+                'overtime_date'      => 'required|date',
+                'date_ot_in'         => 'required|date',
+                'date_ot_out'        => 'required|date|after_or_equal:date_ot_in',
+                'total_ot_minutes'   => 'nullable|numeric',
+                'total_night_diff_minutes'   => 'nullable|numeric',
+                'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120', // max 5MB
+                'offset_date'        => 'nullable|date',
+                'reason'             => 'required|string|max:500',
+            ]);
 
-        // Check if an overtime exists for this user & date
-        $existing = Overtime::where('user_id', $authUserId)
-            ->whereDate('overtime_date', $request->overtime_date)
-            ->first();
+            // Check if an overtime exists for this user & date
+            $existing = Overtime::where('user_id', $authUserId)
+                ->whereDate('overtime_date', $request->overtime_date)
+                ->first();
 
-        if ($existing) {
+            if ($existing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already have an overtime entry for this date.',
+                ], 422);
+            }
+
+            // File upload
+            $filePath = null;
+            if ($request->hasFile('file_attachment')) {
+                $filePath = $request->file('file_attachment')->store('overtime_attachments', 'public');
+            }
+
+            $overtime = Overtime::create([
+                'user_id'           => $authUserId,
+                'overtime_date'     => $request->overtime_date,
+                'date_ot_in'        => $request->date_ot_in,
+                'date_ot_out'       => $request->date_ot_out,
+                'total_ot_minutes'  => $request->total_ot_minutes,
+                'total_night_diff_minutes'  => $request->total_night_diff_minutes ?? 0,
+                'file_attachment'   => $filePath,
+                'reason'            => $request->reason,
+                'offset_date'       => $request->offset_date,
+                'status'            => 'pending',
+                'ot_login_type'    => 'manual',
+            ]);
+
+            $this->sendOvertimeNotificationToApprover($authUser, $request->overtime_date);
+
+            // Logging Start
+            $userId = null;
+            $globalUserId = null;
+
+            if (Auth::guard('web')->check()) {
+                $userId = Auth::guard('web')->id();
+            } elseif (Auth::guard('global')->check()) {
+                $globalUserId = Auth::guard('global')->id();
+            }
+
+            UserLog::create([
+                'user_id'    => $userId,
+                'global_user_id' => $globalUserId,
+                'module'     => 'Employee Overtime',
+                'action'     => 'add_overtime',
+                'description' => 'Added manual overtime, ID: ' . $overtime->id,
+                'affected_id' => $overtime->id,
+                'old_data'   => null,
+                'new_data'   => json_encode($overtime->toArray()),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Overtime added successfully.',
+                'data'    => $overtime,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Manual overtime creation validation failed', [
+                'user_id' => $authUserId,
+                'request_data' => $request->except('file_attachment'),
+                'errors' => $e->errors(),
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Manual overtime creation failed', [
+                'user_id' => $authUserId,
+                'request_data' => $request->except('file_attachment'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'You already have an overtime entry for this date.',
-            ], 422);
+                'message' => 'Failed to create overtime request. Please try again.',
+            ], 500);
         }
-
-        // File upload
-        $filePath = null;
-        if ($request->hasFile('file_attachment')) {
-            $filePath = $request->file('file_attachment')->store('overtime_attachments', 'public');
-        }
-
-        $overtime = Overtime::create([
-            'user_id'           => $authUserId,
-            'overtime_date'     => $request->overtime_date,
-            'date_ot_in'        => $request->date_ot_in,
-            'date_ot_out'       => $request->date_ot_out,
-            'total_ot_minutes'  => $request->total_ot_minutes,
-            'total_night_diff_minutes'  => $request->total_night_diff_minutes,
-            'file_attachment'   => $filePath,
-            'reason'            => $request->reason,
-            'offset_date'       => $request->offset_date,
-            'status'            => 'pending',
-            'ot_login_type'    => 'manual',
-        ]);
-
-        $this->sendOvertimeNotificationToApprover($authUser, $request->overtime_date);
-
-        // Logging Start
-        $userId = null;
-        $globalUserId = null;
-
-        if (Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $globalUserId = Auth::guard('global')->id();
-        }
-
-        UserLog::create([
-            'user_id'    => $userId,
-            'global_user_id' => $globalUserId,
-            'module'     => 'Employee Overtime',
-            'action'     => 'add_overtime',
-            'description' => 'Added manual overtime, ID: ' . $overtime->id,
-            'affected_id' => $overtime->id,
-            'old_data'   => null,
-            'new_data'   => json_encode($overtime->toArray()),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Overtime added successfully.',
-            'data'    => $overtime,
-        ]);
     }
 
     /**
@@ -410,98 +427,126 @@ class EmployeeOvertimeController extends Controller
     {
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(45);
 
-        // if (!$this->hasPermission('Update')) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'You do not have the permission to update.'
-        //     ], 403);
-        // }
-
-          if (!in_array('Update', $permission)) {
+        if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
             ], 403);
         }
 
-        $request->validate([
-            'overtime_date'      => 'required|date',
-            'date_ot_in'         => 'required|date',
-            'date_ot_out'        => 'required|date|after:date_ot_in',
-            'total_ot_minutes'   => 'required|numeric',
-            'total_night_diff_minutes'   => 'nullable|numeric',
-            'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
-            'offset_date'        => 'nullable|date',
-            'reason'             => 'required|string|max:500',
-        ]);
+        try {
+            $request->validate([
+                'overtime_date'      => 'required|date',
+                'date_ot_in'         => 'required|date',
+                'date_ot_out'        => 'required|date|after:date_ot_in',
+                'total_ot_minutes'   => 'required|numeric',
+                'total_night_diff_minutes'   => 'nullable|numeric',
+                'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
+                'offset_date'        => 'nullable|date',
+                'reason'             => 'required|string|max:500',
+            ]);
 
-        $overtime = Overtime::findOrFail($id);
+            $overtime = Overtime::findOrFail($id);
 
-        if ($overtime->status === 'approved') {
+            if ($overtime->status === 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This overtime entry is already approved and cannot be edited.',
+                ], 403);
+            }
+
+            // Prevent duplicate for same user & date, excluding this record
+            $exists = Overtime::where('user_id', $authUserId)
+                ->whereDate('overtime_date', $request->overtime_date)
+                ->where('id', '!=', $id)
+                ->first();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already have an overtime entry for this date.',
+                ], 422);
+            }
+
+            // Save old data for logging
+            $oldData = $overtime->toArray();
+
+            // Handle file upload if new file
+            if ($request->hasFile('file_attachment')) {
+                $filePath = $request->file('file_attachment')->store('overtime_attachments', 'public');
+                $overtime->file_attachment = $filePath;
+            }
+
+            $overtime->overtime_date = $request->overtime_date;
+            $overtime->date_ot_in = $request->date_ot_in;
+            $overtime->date_ot_out = $request->date_ot_out;
+            $overtime->total_ot_minutes = $request->total_ot_minutes;
+            $overtime->total_night_diff_minutes = $request->total_night_diff_minutes ?? 0;
+            $overtime->offset_date = $request->offset_date;
+            $overtime->reason = $request->reason;
+
+            $overtime->save();
+
+            $userId = null;
+            $globalUserId = null;
+
+            if (Auth::guard('web')->check()) {
+                $userId = Auth::guard('web')->id();
+            } elseif (Auth::guard('global')->check()) {
+                $globalUserId = Auth::guard('global')->id();
+            }
+
+            UserLog::create([
+                'user_id'    => $userId,
+                'global_user_id' => $globalUserId,
+                'module'     => 'Employee Overtime',
+                'action'     => 'edit_overtime',
+                'description' => 'Edited manual overtime, ID: ' . $overtime->id,
+                'affected_id' => $overtime->id,
+                'old_data'   => json_encode($oldData),
+                'new_data'   => json_encode($overtime->toArray()),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Overtime updated successfully.',
+                'data'    => $overtime,
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Manual overtime update failed - overtime not found', [
+                'user_id' => $authUserId,
+                'overtime_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'This overtime entry is already approved and cannot be edited.',
-            ], 403);
-        }
+                'message' => 'Overtime request not found.',
+            ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Manual overtime update validation failed', [
+                'user_id' => $authUserId,
+                'overtime_id' => $id,
+                'request_data' => $request->except('file_attachment'),
+                'errors' => $e->errors(),
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Manual overtime update failed', [
+                'user_id' => $authUserId,
+                'overtime_id' => $id,
+                'request_data' => $request->except('file_attachment'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-        // Prevent duplicate for same user & date, excluding this record
-        $exists = Overtime::where('user_id', $authUserId)
-            ->whereDate('overtime_date', $request->overtime_date)
-            ->where('id', '!=', $id)
-            ->first();
-
-        if ($exists) {
             return response()->json([
                 'success' => false,
-                'message' => 'You already have an overtime entry for this date.',
-            ], 422);
+                'message' => 'Failed to update overtime request. Please try again.',
+            ], 500);
         }
-
-        // Save old data for logging
-        $oldData = $overtime->toArray();
-
-        // Handle file upload if new file
-        if ($request->hasFile('file_attachment')) {
-            $filePath = $request->file('file_attachment')->store('overtime_attachments', 'public');
-            $overtime->file_attachment = $filePath;
-        }
-
-        $overtime->overtime_date = $request->overtime_date;
-        $overtime->date_ot_in = $request->date_ot_in;
-        $overtime->date_ot_out = $request->date_ot_out;
-        $overtime->total_ot_minutes = $request->total_ot_minutes;
-        $overtime->total_night_diff_minutes = $request->total_night_diff_minutes;
-        $overtime->offset_date = $request->offset_date;
-        $overtime->reason = $request->reason;
-
-        $overtime->save();
-
-        $userId = null;
-        $globalUserId = null;
-
-        if (Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $globalUserId = Auth::guard('global')->id();
-        }
-
-        UserLog::create([
-            'user_id'    => $userId,
-            'global_user_id' => $globalUserId,
-            'module'     => 'Employee Overtime',
-            'action'     => 'edit_overtime',
-            'description' => 'Edited manual overtime, ID: ' . $overtime->id,
-            'affected_id' => $overtime->id,
-            'old_data'   => json_encode($oldData),
-            'new_data'   => json_encode($overtime->toArray()),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Overtime updated successfully.',
-            'data'    => $overtime,
-        ]);
     }
 
     /**
@@ -531,10 +576,8 @@ class EmployeeOvertimeController extends Controller
     public function overtimeEmployeeManualDelete($id)
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(47);
-        $authUserTenantId = $authUser->tenant_id ?? null;
-        $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(45);
 
         if (!in_array('Delete', $permission)) {
             return response()->json([
@@ -543,48 +586,67 @@ class EmployeeOvertimeController extends Controller
             ], 403);
         }
 
-        // if (!$this->hasPermission('Delete')) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'You do not have the permission to delete.'
-        //     ], 403);
-        // }
+        try {
+            $overtime = Overtime::findOrFail($id);
 
-        $overtime = Overtime::findOrFail($id);
+            if ($overtime->status === 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This overtime entry is already approved and cannot be deleted.',
+                ], 403);
+            }
 
-        if ($overtime->status === 'approved') {
+            $overtimeData = $overtime->toArray();
+            $overtime->delete();
+
+            $userId = null;
+            $globalUserId = null;
+
+            if (Auth::guard('web')->check()) {
+                $userId = Auth::guard('web')->id();
+            } elseif (Auth::guard('global')->check()) {
+                $globalUserId = Auth::guard('global')->id();
+            }
+
+            UserLog::create([
+                'user_id'    => $userId,
+                'global_user_id' => $globalUserId,
+                'module'     => 'Employee Overtime',
+                'action'     => 'delete_overtime',
+                'description' => 'Deleted manual overtime, ID: ' . $id,
+                'affected_id' => $id,
+                'old_data'   => json_encode($overtimeData),
+                'new_data'   => null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Overtime deleted successfully.',
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Manual overtime deletion failed - overtime not found', [
+                'user_id' => $authUserId,
+                'overtime_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'This overtime entry is already approved and cannot be deleted.',
-            ], 403);
+                'message' => 'Overtime request not found.',
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Manual overtime deletion failed', [
+                'user_id' => $authUserId,
+                'overtime_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete overtime request. Please try again.',
+            ], 500);
         }
-
-        $overtime->delete();
-
-        $userId = null;
-        $globalUserId = null;
-
-        if (Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $globalUserId = Auth::guard('global')->id();
-        }
-
-        UserLog::create([
-            'user_id'    => $userId,
-            'global_user_id' => $globalUserId,
-            'module'     => 'Employee Overtime',
-            'action'     => 'delete_overtime',
-            'description' => 'Deleted manual overtime, ID: ' . $overtime->id,
-            'affected_id' => $overtime->id,
-            'old_data'   => json_encode($overtime->toArray()),
-            'new_data'   => null,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Overtime deleted successfully.',
-        ]);
     }
 
     /**
