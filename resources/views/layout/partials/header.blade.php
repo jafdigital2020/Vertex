@@ -1105,7 +1105,8 @@
                                                     Policy</span></a></li>
                                         <li><a href="{{ url('terms-condition') }}"
                                                 class="{{ Request::is('terms-condition') ? 'active' : '' }}"><span>Terms
-                                                    & Conditions</span></a></li>
+                                                    & Conditions</span></a>
+                                        </li>
 
                                         <li class="submenu">
                                             <a href="#"
@@ -1969,8 +1970,6 @@
                                             </ul>
                                         </li>
                                     </ul>
-                                </li>
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -2163,7 +2162,16 @@
                 </div>
                 @endif
 
-                <div class="dropdown profile-dropdown">
+                {{-- Upgrade Button --}}
+                @if($tenantId && $package && !$isElitePlan)
+                <div class="ms-1">
+                    <a href="{{ route('subscriptions') }}" class="btn btn-sm d-flex align-items-center" style="background: #0f8b8d; color: #ffffff; border: none; padding: 7px 14px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+                        <i class="ti ti-arrow-up me-1"></i>Upgrade
+                    </a>
+                </div>
+                @endif
+
+                <div class="dropdown profile-dropdown ms-2">
                     <a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center"
                         data-bs-toggle="dropdown">
                         <span class="avatar avatar-sm online">
@@ -2234,15 +2242,6 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- Upgrade Button --}}
-                @if($tenantId && $package && !$isElitePlan)
-                <div class="ms-2">
-                    <a href="{{ route('subscriptions') }}" class="btn btn-sm" style="background: #0f8b8d; color: #ffffff; border: none; padding: 7px 14px; border-radius: 4px; font-weight: 600; font-size: 11px;">
-                        <i class="ti ti-arrow-up me-1"></i>Upgrade
-                    </a>
-                </div>
-                @endif
             </div>
         </div>
 
