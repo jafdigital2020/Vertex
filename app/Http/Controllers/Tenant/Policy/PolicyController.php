@@ -74,13 +74,16 @@ class PolicyController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        $policies = $accessData['policy']->get();
+        $policies = $accessData['policy']->with(['targets', 'createdBy'])->get();
         $branches = $accessData['branches']->get();
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'This is the policy index endpoint.',
+                'message' => 'Policies retrieved successfully.',
                 'status' => 'success',
+                'policies' => $policies,
+                // 'branches' => $branches,
+                // 'permission' => $permission
             ]);
         }
 
