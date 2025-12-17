@@ -193,7 +193,16 @@ class AuthController extends Controller
 
     public function verifyToken(Request $request)
     {
-        // Sanctum automatically validates the token via middleware
-        return response()->json(['valid' => true, 'user' => $request->user()]);
+        $user = $request->user();
+        
+        // Always load tenant relationship if user has tenant_id
+        if ($user && isset($user->tenant_id)) {
+            $user->load('tenant');
+        }
+        
+        return response()->json([
+            'valid' => true,
+            'user' => $user
+        ]);
     }
 }

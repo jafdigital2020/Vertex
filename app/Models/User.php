@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Models\Bank;
-
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Branch;
 use App\Models\UserLog;
 use App\Models\Overtime;
+use App\Models\Tenant; // Add this import
 use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
@@ -82,6 +82,8 @@ class User extends Authenticatable
         ];
     }
 
+    protected $appends = ['role_data', 'tenant_name']; // Add tenant_name here
+
     // Scope for active license users
     public function scopeActiveLicense($query)
     {
@@ -94,6 +96,28 @@ class User extends Authenticatable
         return $query->where('tenant_id', $tenantId);
     }
 
+    // Add Tenant Relationship
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+
+    // Tenant Name Accessor
+    public function getTenantNameAttribute()
+    {
+        if ($this->tenant_id) {
+            // Try to get from loaded relationship first
+            if ($this->relationLoaded('tenant') && $this->tenant) {
+                return $this->tenant->tenant_name;
+            }
+            
+            // Otherwise, fetch it (this will make an extra query)
+            $tenant = Tenant::find($this->tenant_id);
+            return $tenant ? $tenant->tenant_name : null;
+        }
+        
+        return null;
+    }
 
     // Department Relationship (Head)
     public function headOfDepartment()
@@ -376,8 +400,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(ThirteenthMonthPay::class, 'user_id');
     }
-
-    protected $appends = ['role_data'];
 
     public function getRoleDataAttribute()
     {

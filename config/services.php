@@ -48,4 +48,10 @@ return [
         'type' => 'public', // No authentication required
     ],
 
+    'error_system' => [
+        'url' => env('EMS_API_URL', 'https://api-timora-ems.timora.ph'),
+        'api_key' => env('EMS_API_KEY', '8be98cf36dc1b22e5a25b5523c04e8925501ecd3c3a9da5fcee01823d2a41c34'),
+    ],
+
+
 ];

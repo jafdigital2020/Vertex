@@ -17,7 +17,7 @@ class GlobalUser extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'username', // Changed from name to username
+        'username',
         'email',
         'password',
         'tenant_id',
@@ -29,28 +29,34 @@ class GlobalUser extends Authenticatable
         'remember_token',
     ];
 
-    protected $appends = ['role_data'];
+    // ✅ SINGLE appends definition
+    protected $appends = ['role_data', 'tenant_name'];
 
+    // ✅ Relationship should be belongsTo (correct semantics)
     public function tenant()
     {
-        return $this->hasOne(Tenant::class, 'id', 'tenant_id');
-    }
-     public function global_role()
-    {
-        return $this->hasOne(GlobalRole::class, 'id', 'global_role_id');
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
-     public function getRoleDataAttribute()
-    { 
-    
+    public function global_role()
+    {
+        return $this->belongsTo(GlobalRole::class, 'global_role_id');
+    }
+
+    // ✅ Tenant name accessor
+    public function getTenantNameAttribute()
+    {
+        return $this->tenant?->tenant_name;
+    }
+
+    public function getRoleDataAttribute()
+    {
         return [
             'role_id'             => 'global_user',
             'menu_ids'            => [],
             'module_ids'          => [],
             'user_permission_ids' => [],
             'status'              => null,
-        ]; 
+        ];
     }
-
-
 }
