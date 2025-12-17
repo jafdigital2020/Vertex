@@ -193,6 +193,10 @@ class EmployeeListController extends Controller
                                 'id' => $employmentDetail->designation->id,
                                 'name' => $employmentDetail->designation->designation_name
                             ] : null,
+                             'branch' => $employmentDetail->branch ? [
+                                'id' => $employmentDetail->branch->id,
+                                'name' => $employmentDetail->branch->name
+                            ] : null,
                         ] : null,
                         'personal_information' => $user->personalInformation,
                     ];
