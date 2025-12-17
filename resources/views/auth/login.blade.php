@@ -128,12 +128,21 @@
 @push('scripts')
     <script src="{{ asset('build/js/login.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             localStorage.clear();
             sessionStorage.clear();
-            ['laravel_session', 'XSRF-TOKEN', 'remember_web', 'remember_global'].forEach(name => {
+
+            // Remove remember-me cookies but keep session/CSRF cookies intact so Sanctum can validate requests
+            ['remember_web', 'remember_global'].forEach(name => {
                 document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
             });
+
+            // Make sure the XSRF token cookie exists before hitting /api/login
+            try {
+                await fetch('/sanctum/csrf-cookie', { credentials: 'same-origin' });
+            } catch (e) {
+                console.error('Unable to refresh CSRF cookie', e);
+            }
         });
     </script>
 @endpush
