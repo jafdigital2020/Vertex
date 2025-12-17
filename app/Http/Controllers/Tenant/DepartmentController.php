@@ -25,7 +25,7 @@ class DepartmentController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function departmentIndex(Request $request)
