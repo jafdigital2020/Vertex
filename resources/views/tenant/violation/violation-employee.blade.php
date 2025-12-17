@@ -27,15 +27,22 @@
                          <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                             <h5 class="mb-0">Violation List</h5>
                               <div class="d-flex align-items-center flex-wrap row-gap-2"> 
-                               <div class="form-group me-2" style="max-width:200px;">
+                               <div class="form-group me-2" style="max-width:200px;"> 
                                 <select id="violation-status" class="form-select select2" style="max-width:200px;" oninput="filter()">
                                     <option value="">All Status</option>
                                     <option value="pending">Pending</option>
                                     <option value="awaiting_reply">Awaiting Reply</option>
                                     <option value="under_investigation">Under Investigation</option>
                                     <option value="for_dam_issuance">For DAM Issuance</option>
-                                    <option value="suspended">Suspended</option>
-                                    <option value="completed">Completed</option>
+                                    <option value="implemented">Implemented</option> 
+                                </select>
+                                </div>
+                                 <div class="form-group me-2" style="max-width:200px;"> 
+                                <select id="violation-type-filter" class="form-select select2" style="max-width:200px;" oninput="filter()">
+                                    <option value="">All Violation Types</option>
+                                     @foreach($violationTypes as $vT)
+                                        <option value="{{$vT->id}}">{{$vT->name}}</option> 
+                                     @endforeach
                                 </select>
                                 </div>
                             </div>
@@ -50,8 +57,10 @@
                                             <th>Offense Details</th>
                                             <th class="text-center">Status</th>
                                             <th class="text-center">Type</th>
-                                            <th class="text-center">Start Date</th>
-                                            <th class="text-center">End Date</th>
+                                            <th class="text-center">Reprimand Date</th>
+                                            <th class="text-center">Suspension Start Date</th>
+                                            <th class="text-center">Suspension End Date</th>
+                                            <th class="text-center">Termination Date</th>
                                             <th class="text-center">Report File</th>
                                             <th class="text-center">Actions</th>
                                         </tr>
@@ -91,8 +100,18 @@
                                                     </span>
                                                 </td>
                                                 <td class="text-center">{{ $s->violationType->name?? ''  }}</td>
-                                                <td class="text-center">{{ $s->violation_start_date ?? '' }}</td>
-                                                <td class="text-center">{{ $s->violation_end_date ?? '' }}</td>
+                                                <td class="text-center">
+                                                    @if($s->verbal_reprimand_date)
+                                                        {{ $s->verbal_reprimand_date }}
+                                                    @elseif($s->written_reprimand_date)
+                                                        {{ $s->written_reprimand_date }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td> 
+                                                <td class="text-center">{{ $s->suspension_start_date ?? '-' }}</td>
+                                                <td class="text-center">{{ $s->suspension_end_date ?? '-' }}</td>
+                                                <td class="text-center">{{ $s->termination_date ?? '-' }}</td>
                                                 <td class="text-center">
                                                     @if($s->information_report_file)
                                                         <a href="{{ asset('storage/' . $s->information_report_file) }}" target="_blank" class="btn btn-sm btn-outline-primary">
@@ -217,7 +236,7 @@
                                                 <small class="text-muted">Decision & administrative memo</small>
                                             </div>
                                         </div>
-                                        <div class="timeline-step" id="step-suspended">
+                                        <div class="timeline-step" id="step-implemented">
                                             <div class="timeline-icon">
                                                 <i class="ti ti-clock-pause"></i>
                                             </div>
@@ -225,16 +244,7 @@
                                                 <h6 class="mb-0">Disciplinary Action Implemented</h6>
                                                 <small class="text-muted">Implementation period</small>
                                             </div>
-                                        </div>
-                                        <div class="timeline-step" id="step-completed">
-                                            <div class="timeline-icon">
-                                                <i class="ti ti-circle-check"></i>
-                                            </div>
-                                            <div class="timeline-content">
-                                                <h6 class="mb-0">Return to Work</h6>
-                                                <small class="text-muted">Case completed</small>
-                                            </div>
-                                        </div>
+                                        </div> 
                                     </div>
                                 </div>
                             </div>
@@ -262,9 +272,20 @@
                                             <p class="mb-2"><strong>Filed Date:</strong> <span id="view-filed-date"></span></p>
                                         </div>
                                         <div class="col-md-6">
-                                            <p class="mb-2"><strong>Start Date:</strong> <span id="view-start-date"></span></p>
-                                            <p class="mb-2"><strong>End Date:</strong> <span id="view-end-date"></span></p>
-                                            <p class="mb-2"><strong>Duration:</strong> <span id="view-duration"></span></p>
+                                            <div id="view_verbal" style="display:none;">
+                                                <p class="mb-2"><strong>Verbal Reprimand Date:</strong> <span id="view_verbal_date"></span></p>
+                                            </div>
+                                                <div id="view_written" style="display:none;">
+                                                <p class="mb-2"><strong>Written Reprimand Date:</strong> <span id="view_written_date"></span></p>
+                                            </div>
+                                            <div id="view_suspension" style="display:none;">
+                                                <p class="mb-2"><strong>Start Date:</strong> <span id="view_start_date"></span></p>
+                                                <p class="mb-2"><strong>End Date:</strong> <span id="view_end_date"></span></p>
+                                                <p class="mb-2"><strong>Duration:</strong> <span id="view_duration"></span></p> 
+                                            </div> 
+                                            <div id="view_termination" style="display:none;">
+                                                <p class="mb-2"><strong>Termination Date:</strong> <span id="view_termination_date"></span></p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -414,11 +435,13 @@
             <script> 
             function filter() {  
                 const status = $('#violation-status').val(); 
+                const type = $('#violation-type-filter').val();
                 $.ajax({
                         url: '{{ route('violation-employee-filter') }}',
                         type: 'GET',
                         data: { 
                             status,
+                            type
                         },
                         success: function(response) {
                             if (response.status === 'success') {
@@ -533,9 +556,7 @@
                 }
 
                 function displayViolationDetails(violation) {
-                    updateProgressFlow(violation.status);
-                
-
+                    updateProgressFlow(violation.status); 
                     $('#view-offense-details').text(violation.offense_details || 'No details provided.');
 
                     const status = violation.status || 'N/A';
@@ -544,9 +565,38 @@
 
                     $('#view-type').text(violation.violation_type ? violation.violation_type.replace('_',' ').toUpperCase() : 'N/A');
                     $('#view-filed-date').text(violation.created_at || 'N/A');
-                    $('#view-start-date').text(violation.violation_start_date || 'N/A');
-                    $('#view-end-date').text(violation.violation_end_date || 'N/A');
-                    $('#view-duration').text(violation.violation_days ? violation.violation_days + ' day(s)' : 'N/A');
+                    if(violation.violation_type == 'Verbal Reprimand'){
+                        $('#view_verbal').show();
+                        $('#view_verbal_date').text(violation.verbal_reprimand_date || 'N/A');
+                        $('#view_written').hide();
+                        $('#view_suspension').hide(); 
+                        $('#view_termination').hide();
+                    }else if(violation.violation_type == 'Written Reprimand') {
+                        $('#view_written').show();
+                        $('#view_written_date').text(violation.written_reprimand_date || 'N/A');
+                        $('#view_verbal').hide(); 
+                        $('#view_suspension').hide(); 
+                        $('#view_termination').hide();
+                    }else if(violation.violation_type == 'Suspension') { 
+                        $('#view_written').hide();
+                        $('#view_verbal').hide(); 
+                        $('#view_suspension').show(); 
+                        $('#view_termination').hide(); 
+                        $('#view_start_date').text(violation.suspension_start_date || 'N/A');
+                        $('#view_end_date').text(violation.suspension_end_date || 'N/A');
+                        $('#view_duration').text(violation.suspension_days ? `${violation.suspension_days} day(s)` : 'N/A');
+                    }else if(violation.violation_type == 'Termination') {
+                        $('#view_verbal').hide();
+                        $('#view_written').hide();
+                        $('#view_suspension').hide(); 
+                        $('#view_termination').show();
+                        $('#view_termination_date').text(violation.termination_date || 'N/A');
+                    }else{
+                        $('#view_verbal').hide(); 
+                        $('#view_written').hide();
+                        $('#view_suspension').hide(); 
+                        $('#view_termination').hide();
+                    }
 
                     const $replyCard = $('#view-reply-card');
                     if (violation.employee_reply) {
@@ -643,8 +693,8 @@
                         'awaiting_reply': ['step-pending','step-nowe'],
                         'under_investigation': ['step-pending','step-nowe','step-investigation'],
                         'for_dam_issuance': ['step-pending','step-nowe','step-investigation'],
-                        'dam_issued': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended'],
-                        'completed': ['step-pending','step-nowe','step-investigation','step-dam','step-suspended','step-completed']
+                        'dam_issued': ['step-pending','step-nowe','step-investigation','step-dam','step-dam_issued'],
+                        'implemented': ['step-pending','step-nowe','step-investigation','step-dam','step-dam_issued','step-implemented']
                     };
 
                     const currentStepMap = {
@@ -652,8 +702,8 @@
                         'awaiting_reply': 'step-nowe',
                         'under_investigation': 'step-investigation',
                         'for_dam_issuance': 'step-dam',
-                        'dam_issued': 'step-suspended',
-                        'completed': 'step-completed'
+                        'dam_issued': 'step-dam_issued',
+                        'implemented': 'step-implemented'
                     };
 
                     const completedSteps = statusFlow[status] || [];
@@ -662,10 +712,10 @@
                     completedSteps.forEach(stepId => {
                         const $stepEl = $('#' + stepId);
                         if ($stepEl.length) {
-                            if (stepId === currentStep && status !== 'completed') {
+                            if (stepId === currentStep ) {
                                 $stepEl.addClass('active');
                             } else {
-                                $stepEl.addClass('completed');
+                                $stepEl.addClass('implemented');
                             }
                         }
                     });
@@ -677,8 +727,8 @@
                         case 'awaiting_reply': return 'info';
                         case 'under_investigation': return 'primary';
                         case 'for_dam_issuance': return 'secondary';
-                        case 'suspended': return 'danger';
-                        case 'completed': return 'success';
+                        case 'dam_issued': return 'danger';
+                        case 'implemented': return 'success';
                         default: return 'secondary';
                     }
                 }

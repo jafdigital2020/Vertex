@@ -1,16 +1,29 @@
- @foreach($violations as $index => $s)
+  @foreach ($violations as $index => $s)
                                             <tr>
                                                 <td class="text-center">{{ $index + 1 }}</td>
                                                 <td>{{ $s->offense_details ?? '—' }}</td>
                                                 @php
-                                                    switch($s->status) {
-                                                        case 'pending': $statusColor = 'warning'; break;
-                                                        case 'awaiting_reply': $statusColor = 'info'; break;
-                                                        case 'under_investigation': $statusColor = 'primary'; break;
-                                                        case 'for_dam_issuance': $statusColor = 'secondary'; break;
-                                                        case 'suspended': $statusColor = 'danger'; break;
-                                                        case 'completed': $statusColor = 'success'; break;
-                                                        default: $statusColor = 'secondary';
+                                                    switch ($s->status) {
+                                                        case 'pending':
+                                                            $statusColor = 'warning';
+                                                            break;
+                                                        case 'awaiting_reply':
+                                                            $statusColor = 'info';
+                                                            break;
+                                                        case 'under_investigation':
+                                                            $statusColor = 'primary';
+                                                            break;
+                                                        case 'for_dam_issuance':
+                                                            $statusColor = 'secondary';
+                                                            break;
+                                                        case 'suspended':
+                                                            $statusColor = 'danger';
+                                                            break;
+                                                        case 'completed':
+                                                            $statusColor = 'success';
+                                                            break;
+                                                        default:
+                                                            $statusColor = 'secondary';
                                                     }
                                                 @endphp
                                                 <td class="text-center">
@@ -18,9 +31,19 @@
                                                         {{ ucfirst(str_replace('_', ' ', $s->status)) }}
                                                     </span>
                                                 </td>
-                                                <td class="text-center">{{ $s->violation_type ? strtoupper(str_replace('_', ' ', $s->violation_type)) : '' }}</td>
-                                                <td class="text-center">{{ $s->violation_start_date ?? '' }}</td>
-                                                <td class="text-center">{{ $s->violation_end_date ?? '' }}</td>
+                                                <td class="text-center">{{ $s->violationType->name?? ''  }}</td>
+                                                <td class="text-center">
+                                                    @if($s->verbal_reprimand_date)
+                                                        {{ $s->verbal_reprimand_date }}
+                                                    @elseif($s->written_reprimand_date)
+                                                        {{ $s->written_reprimand_date }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td> 
+                                                <td class="text-center">{{ $s->suspension_start_date ?? '-' }}</td>
+                                                <td class="text-center">{{ $s->suspension_end_date ?? '-' }}</td>
+                                                <td class="text-center">{{ $s->termination_date ?? '-' }}</td>
                                                 <td class="text-center">
                                                     @if($s->information_report_file)
                                                         <a href="{{ asset('storage/' . $s->information_report_file) }}" target="_blank" class="btn btn-sm btn-outline-primary">
@@ -34,8 +57,8 @@
                                                     <button class="btn btn-sm btn-info view-violation" data-id="{{ $s->id }}" title="View Details">
                                                         <i class="ti ti-eye"></i>
                                                     </button>
-                                                    @if( $s->status === 'awaiting_reply')
-                                                        <button class="btn btn-sm btn-success ms-1" onclick="openReplySuspensionModal({{ $s->id }})" title="Submit Reply">
+                                                    @if($s->status === 'awaiting_reply')
+                                                        <button class="btn btn-sm btn-success ms-1" onclick="openReplyViolationModal({{ $s->id }})" title="Submit Reply">
                                                             <i class="ti ti-message"></i>
                                                         </button>
                                                     @endif

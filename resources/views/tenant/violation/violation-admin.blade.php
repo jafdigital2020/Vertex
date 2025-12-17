@@ -71,17 +71,24 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="form-group me-2"> 
-                                    <select id="violation-status" class="form-select select2" style="width:150px;" oninput="filter()">
-                                        <option value="">All Status</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="implemented">Implemented</option>
-                                        <option value="completed">Completed</option>
-                                    </select>
+                                    <div class="form-group me-2" style="max-width:200px;"> 
+                                        <select id="violation-status" class="form-select select2" style="max-width:200px;" oninput="filter()">
+                                            <option value="">All Status</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="awaiting_reply">Awaiting Reply</option>
+                                            <option value="under_investigation">Under Investigation</option>
+                                            <option value="for_dam_issuance">For DAM Issuance</option>
+                                            <option value="implemented">Implemented</option> 
+                                        </select>
                                     </div>
-
-                                    <!-- File Violation Button -->
-                                
+                                    <div class="form-group me-2" style="max-width:200px;"> 
+                                        <select id="violation-type-filter" class="form-select select2" style="max-width:200px;" oninput="filter()">
+                                            <option value="">All Violation Types</option>
+                                            @foreach($violationTypes as $vT)
+                                                <option value="{{$vT->id}}">{{$vT->name}}</option> 
+                                            @endforeach
+                                        </select>
+                                    </div>  
                                 </div>
                             </div>
 
@@ -97,8 +104,10 @@
                                                 <th class="text-center">Designation</th>
                                                 <th class="text-center">Status</th>
                                                 <th class="text-center">Type</th>
-                                                <th class="text-center">Start Date</th>
-                                                <th class="text-center">End Date</th>
+                                                <th class="text-center">Reprimand Date</th> 
+                                                <th class="text-center">Suspension Start Date</th>
+                                                <th class="text-center">Suspension End Date</th>
+                                                <th class="text-center">Termination Date</th>
                                                 <th class="text-center">Actions</th>
                                             </tr>
                                         </thead>
@@ -135,76 +144,94 @@
                                                                 </span>
                                                             @endif
                                                         </td>
-                                                        <td class="text-center">{{ $sus->violationType->name ?? '' }}</td>
-                                                        <td class="text-center">{{ $sus->violation_start_date ?? '' }}</td>
-                                                        <td class="text-center">{{ $sus->violation_end_date ?? '' }}</td>  
-                                                    <td class="text-center">
-                                                        <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
-
-                                                        <button class="btn btn-sm btn-secondary view-violation"
-                                                            data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                            title="View Violation Details">
-                                                            <i class="ti ti-eye"></i>
-                                                        </button>
-
-                                                        <button class="btn btn-sm btn-primary edit-violation"
-                                                            data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                            title="Edit Violation">
-                                                            <i class="ti ti-edit"></i>
-                                                        </button>
-
-                                                        @if ($sus->status === 'pending')
-                                                            <button class="btn btn-sm btn-warning issue-nowe"
+                                                        <td class="text-center">{{ $sus->violationType->name ?? '-' }}</td>
+                                                        <td class="text-center">
+                                                            @if($sus->verbal_reprimand_date)
+                                                                {{ $sus->verbal_reprimand_date }}
+                                                            @elseif($sus->written_reprimand_date)
+                                                                {{ $sus->written_reprimand_date }}
+                                                            @else
+                                                                -
+                                                            @endif
+                                                        </td> 
+                                                        <td class="text-center">{{ $sus->suspension_start_date ?? '-' }}</td>
+                                                        <td class="text-center">{{ $sus->suspension_end_date ?? '-' }}</td>  
+                                                        <td class="text-center">{{ $sus->termination_date ?? '-' }}</td>
+                                                        <td class="text-center">
+                                                            <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap"> 
+                                                            <button class="btn btn-sm btn-secondary view-violation"
                                                                 data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                title="Issue NOWE">
-                                                                <i class="ti ti-mail"></i>
+                                                                title="View Violation Details">
+                                                                <i class="ti ti-eye"></i>
                                                             </button>
-                                                        @endif                                                            @switch($sus->status)  
-                                                                @case('under_investigation')
-                                                                    <button class="btn btn-sm btn-info"
-                                                                        onclick="openInvestigationModal({{ $sus->id ?? $sus->employee->id }})"
-                                                                        title="Upload Investigation Report">
-                                                                        <i class="ti ti-upload"></i>
-                                                                    </button>
-                                                                    @break
 
-                                                                @case('for_dam_issuance')
-                                                                    @if (!$sus->dam_file)
-                                                                        <button class="btn btn-sm btn-success"
-                                                                            onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
-                                                                            title="Issue DAM">
-                                                                            <i class="ti ti-file-check"></i>
+                                                            <button class="btn btn-sm btn-primary edit-violation"
+                                                                data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                title="Edit Violation">
+                                                                <i class="ti ti-edit"></i>
+                                                            </button>
+
+                                                            @if ($sus->status === 'pending')
+                                                                <button class="btn btn-sm btn-warning issue-nowe"
+                                                                    data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                    title="Issue NOWE">
+                                                                    <i class="ti ti-mail"></i>
+                                                                </button>
+                                                            @endif                                                            @switch($sus->status)  
+                                                                    @case('under_investigation')
+                                                                        <button class="btn btn-sm btn-info"
+                                                                            onclick="openInvestigationModal({{ $sus->id ?? $sus->employee->id }})"
+                                                                            title="Upload Investigation Report">
+                                                                            <i class="ti ti-upload"></i>
                                                                         </button>
-                                                                    @endif
-                                                                    @break
+                                                                        @break
 
-                                                                @case('dam_issued')
-                                                                    @if (!$sus->dam_file)
-                                                                        <button class="btn btn-sm btn-success"
-                                                                            onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
-                                                                            title="Issue DAM">
-                                                                            <i class="ti ti-file-check"></i>
+                                                                    @case('for_dam_issuance')
+                                                                        @if (!$sus->dam_file)
+                                                                            <button class="btn btn-sm btn-success"
+                                                                                onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
+                                                                                title="Issue DAM">
+                                                                                <i class="ti ti-file-check"></i>
+                                                                            </button>
+                                                                        @endif
+                                                                        @break
+
+                                                                    @case('dam_issued')
+                                                                        @if (!$sus->dam_file)
+                                                                            <button class="btn btn-sm btn-success"
+                                                                                onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
+                                                                                title="Issue DAM">
+                                                                                <i class="ti ti-file-check"></i>
+                                                                            </button>
+                                                                        @endif
+                                                                        <button class="btn btn-sm btn-danger"
+                                                                            onclick="openViolationModal(
+                                                                                {{ $sus->id ?? $sus->employee->id }},
+                                                                                '{{ addslashes($sus->violationType->name) }}'
+                                                                            )"
+                                                                            title="Implement Violation">
+                                                                            <i class="ti ti-ban"></i>
                                                                         </button>
-                                                                    @endif
-                                                                    @if($sus->violation_start_date === null && $sus->violation_end_date === null)
-                                                                    <button class="btn btn-sm btn-danger"
-                                                                        onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
-                                                                        title="Implement Violation">
-                                                                        <i class="ti ti-ban"></i>
-                                                                    </button>
-                                                                    @endif
-                                                                    @if($sus->violation_start_date !== null && $sus->violation_end_date !== null)
-                                                                    <button class="btn btn-sm btn-secondary"
-                                                                        onclick="completeViolation({{ $sus->id ?? $sus->employee->id }})"
-                                                                        title="Complete Violation">
-                                                                        <i class="ti ti-check"></i>
-                                                                    </button>
-                                                                    @endif
-                                                                    @break  
-                                                            @endswitch
 
-                                                        </div>
-                                                    </td>  
+                                                                        <!-- @if($sus->violation_start_date === null && $sus->violation_end_date === null)
+                                                                        <button class="btn btn-sm btn-danger"
+                                                                            onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
+                                                                            title="Implement Violation">
+                                                                            <i class="ti ti-ban"></i>
+                                                                        </button>
+                                                                        @endif
+                                                                        @if($sus->violation_start_date !== null && $sus->violation_end_date !== null)
+                                                                        <button class="btn btn-sm btn-secondary"
+                                                                            onclick="completeViolation({{ $sus->id ?? $sus->employee->id }})"
+                                                                            title="Complete Violation">
+                                                                            <i class="ti ti-check"></i>
+                                                                        </button>
+                                                                        @endif -->
+                                                                        @break  
+                                                                @endswitch
+
+                                                            </div>
+                                                        </td>  
                                                     </tr> 
                                                 @endforeach
                                         </tbody>
@@ -444,7 +471,7 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="implementViolationModalLabel">Implement Violation</h5>
+                            <h5 class="modal-title" id="implementViolationModalLabel">Implement Violation: <span id="violationTypeName"></span> </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
@@ -452,29 +479,56 @@
                             @csrf
                             <div class="modal-body">
                                 <input type="hidden" id="implement_violation_id" name="violation_id">
-
-                                <div class="mb-3">
-                                    <label for="violation_start_date" class="form-label">Violation Start Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="violation_start_date" id="violation_start_date" class="form-control" required>
+                                <div id="violation-verbal" style="display:none;">
+                                    <div class="mb-3">
+                                        <label for="verbal_reprimand_date" class="form-label">Verbal Reprimand Date</label>
+                                        <input type="date" class="form-control" id="verbal_reprimand_date">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="verbal_reprimand_file" class="form-label">Verbal Reprimand File (optional)</label> 
+                                        <input type="file" name="verbal_reprimand_file[]" id="verbal_reprimand_file" class="form-control"
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple> 
+                                    </div>
                                 </div>
-
-                                <div class="mb-3">
-                                    <label for="violation_end_date" class="form-label">Violation End Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="violation_end_date" id="violation_end_date" class="form-control" required>
+                                <div id="violation-written" style="display:none;">
+                                     <div class="mb-3">
+                                        <label for="written_reprimand_date" class="form-label">Written Reprimand Date (optional)</label>
+                                        <input type="date" class="form-control" id="written_reprimand_date">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="written_reprimand_file" class="form-label">Written Reprimand File</label>
+                                        <input type="file" name="written_reprimand_file[]" id="written_reprimand_file" class="form-control"
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+                                    </div>
+                                    
                                 </div>
+                                <div id="violation-suspension" style="display:none;">
+                                    <div class="mb-3">
+                                        <label for="suspension_start_date" class="form-label">Suspension Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="suspension_start_date" id="suspension_start_date" class="form-control">
+                                    </div>
 
+                                    <div class="mb-3">
+                                        <label for="suspension_end_date" class="form-label">Suspension End Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="suspension_end_date" id="suspension_end_date" class="form-control">
+                                    </div>
+                                    <div class="alert alert-info">
+                                        <i class="ti ti-info-circle me-2"></i>
+                                        <strong>Note:</strong> This will implement suspension without pay. The employee's status will be updated accordingly.
+                                    </div> 
+                                </div> 
+                                 <div id="violation-termination" style="display:none;">
+                                    <div class="mb-3">
+                                        <label for="termination_date" class="form-label">Termination Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="termination_date" id="termination_date" class="form-control">
+                                    </div> 
+                                </div> 
                                 <div class="mb-3">
                                     <label for="implementation_remarks" class="form-label">Implementation Remarks (Optional)</label>
                                     <textarea name="implementation_remarks" id="implementation_remarks" class="form-control" rows="3" 
                                         placeholder="Enter any remarks..." maxlength="1000"></textarea>
                                     <small class="text-muted">Maximum 1000 characters</small>
-                                </div>
-
-                                <div class="alert alert-info">
-                                    <i class="ti ti-info-circle me-2"></i>
-                                    <strong>Note:</strong> This will implement violation without pay. The employee's status will be updated accordingly.
-                                </div>
-
+                                </div> 
                                 <div id="implement-violation-error" class="alert alert-danger d-none"></div>
                                 <div id="implement-violation-success" class="alert alert-success d-none"></div>
                             </div>
@@ -537,14 +591,26 @@
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <p class="mb-2"><strong>Status:</strong> <span id="view_status" class="badge"></span></p>
+                                                <p class="mb-2"><strong>Filed Date:</strong> <span id="view_filed_date"></span></p> 
                                                 <p class="mb-2"><strong>Type:</strong> <span id="view_type"></span></p>
-                                                <p class="mb-2"><strong>Filed Date:</strong> <span id="view_filed_date"></span></p>
+                                                <p class="mb-2"><strong>Status:</strong> <span id="view_status" class="badge"></span></p>
+                                               
                                             </div>
                                             <div class="col-md-6">
-                                                <p class="mb-2"><strong>Start Date:</strong> <span id="view_start_date"></span></p>
-                                                <p class="mb-2"><strong>End Date:</strong> <span id="view_end_date"></span></p>
-                                                <p class="mb-2"><strong>Duration:</strong> <span id="view_duration"></span></p>
+                                                <div id="view_verbal" style="display:none;">
+                                                    <p class="mb-2"><strong>Verbal Reprimand Date:</strong> <span id="view_verbal_date"></span></p>
+                                                </div>
+                                                  <div id="view_written" style="display:none;">
+                                                    <p class="mb-2"><strong>Written Reprimand Date:</strong> <span id="view_written_date"></span></p>
+                                                </div>
+                                                <div id="view_suspension" style="display:none;">
+                                                    <p class="mb-2"><strong>Start Date:</strong> <span id="view_start_date"></span></p>
+                                                    <p class="mb-2"><strong>End Date:</strong> <span id="view_end_date"></span></p>
+                                                    <p class="mb-2"><strong>Duration:</strong> <span id="view_duration"></span></p> 
+                                                </div> 
+                                                <div id="view_termination" style="display:none;">
+                                                    <p class="mb-2"><strong>Termination Date:</strong> <span id="view_termination_date"></span></p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -751,6 +817,7 @@
                     const department = $('#department_filter').val();
                     const designation = $('#designation_filter').val();
                     const status = $('#violation-status').val(); 
+                    const type = $('#violation-type-filter').val();
                     $.ajax({
                             url: '{{ route('violation-admin-filter') }}',
                             type: 'GET',
@@ -759,6 +826,7 @@
                                 department,
                                 designation, 
                                 status,
+                                type
                             },
                             success: function(response) {
                                 if (response.status === 'success') {
@@ -1273,9 +1341,39 @@
 
                         $('#view_type').text(violation.violation_type ? violation.violation_type: 'N/A');
                         $('#view_filed_date').text(violation.created_at ? new Date(violation.created_at).toLocaleDateString() : 'N/A');
-                        $('#view_start_date').text(violation.violation_start_date || 'N/A');
-                        $('#view_end_date').text(violation.violation_end_date || 'N/A');
-                        $('#view_duration').text(violation.violation_days ? `${violation.violation_days} day(s)` : 'N/A');
+
+                        if(violation.violation_type == 'Verbal Reprimand'){
+                            $('#view_verbal').show();
+                            $('#view_verbal_date').text(violation.verbal_reprimand_date || 'N/A');
+                            $('#view_written').hide();
+                            $('#view_suspension').hide(); 
+                            $('#view_termination').hide();
+                        }else if(violation.violation_type == 'Written Reprimand') {
+                            $('#view_written').show();
+                            $('#view_written_date').text(violation.written_reprimand_date || 'N/A');
+                            $('#view_verbal').hide(); 
+                            $('#view_suspension').hide(); 
+                            $('#view_termination').hide();
+                        }else if(violation.violation_type == 'Suspension') { 
+                            $('#view_written').hide();
+                            $('#view_verbal').hide(); 
+                            $('#view_suspension').show(); 
+                            $('#view_termination').hide(); 
+                            $('#view_start_date').text(violation.suspension_start_date || 'N/A');
+                            $('#view_end_date').text(violation.suspension_end_date || 'N/A');
+                            $('#view_duration').text(violation.suspension_days ? `${violation.suspension_days} day(s)` : 'N/A');
+                        }else if(violation.violation_type == 'Termination') {
+                            $('#view_verbal').hide();
+                            $('#view_written').hide();
+                            $('#view_suspension').hide(); 
+                            $('#view_termination').show();
+                            $('#view_termination_date').text(violation.termination_date || 'N/A');
+                        }else{
+                            $('#view_verbal').hide(); 
+                            $('#view_written').hide();
+                            $('#view_suspension').hide(); 
+                            $('#view_termination').hide();
+                        }
 
                         // Offense Details
                         $('#view_offense_details').text(violation.offense_details || 'No details provided.'); 
@@ -1402,7 +1500,7 @@
                     const implementViolationId = document.getElementById('implement_violation_id');
 
                     // Open modal function
-                    window.openSuspendModal = function (violationId) {
+                    window.openViolationModal = function (violationId,violationType) {
                         implementForm.reset();
                         implementError.classList.add('d-none');
                         implementSuccess.classList.add('d-none');
@@ -1412,93 +1510,144 @@
                             implementError.classList.remove('d-none');
                             return;
                         }
-                        
+                        document.getElementById('violationTypeName').textContent = violationType;
+                        if(violationType == 'Verbal Reprimand'){
+                            $('#violation-verbal').show();
+                            $('#violation-written').hide();
+                            $('#violation-suspension').hide();
+                            $('#violation-termination').hide();
+                        }else if(violationType == 'Written Reprimand'){
+                            $('#violation-verbal').hide();
+                            $('#violation-written').show();
+                            $('#violation-suspension').hide();
+                            $('#violation-termination').hide();
+                        }else if(violationType == 'Suspension'){
+                            $('#violation-verbal').hide();
+                            $('#violation-written').hide();
+                            $('#violation-suspension').show();
+                            $('#violation-termination').hide();
+                        }else if(violationType == 'Termination'){
+                            $('#violation-verbal').hide();
+                            $('#violation-written').hide();
+                            $('#violation-suspension').hide();
+                            $('#violation-termination').show();
+                        }
                         implementViolationId.value = violationId;
                         
                         // Set minimum date to today
                         const today = new Date().toISOString().split('T')[0];
-                        document.getElementById('violation_start_date').setAttribute('min', today);
-                        document.getElementById('violation_end_date').setAttribute('min', today);
+                        document.getElementById('suspension_start_date').setAttribute('min', today);
+                        document.getElementById('suspension_end_date').setAttribute('min', today);
                         
                         implementModal.show();
                     };
-
-                    // Update end date minimum when start date changes
-                    document.getElementById('violation_start_date').addEventListener('change', function() {
+ 
+                    document.getElementById('suspension_start_date').addEventListener('change', function() {
                         const startDate = this.value;
                         if (startDate) {
-                            document.getElementById('violation_end_date').setAttribute('min', startDate);
+                            document.getElementById('suspension_end_date').setAttribute('min', startDate);
                         }
                     });
 
                     // Handle form submission
                     implementForm.addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        implementError.classList.add('d-none');
-                        implementSuccess.classList.add('d-none');
+                    e.preventDefault();
+                    implementError.classList.add('d-none');
+                    implementSuccess.classList.add('d-none');
 
-                        const id = implementViolationId.value;
-                        const startDate = document.getElementById('violation_start_date').value;
-                        const endDate = document.getElementById('violation_end_date').value;
-                        const remarks = document.getElementById('implementation_remarks').value;
-                        
-                        if (!id) {
-                            implementError.textContent = 'Invalid violation record.';
-                            implementError.classList.remove('d-none');
-                            return;
+                    const id = implementViolationId.value;
+                    const violationType = document.getElementById('violationTypeName').textContent.trim();
+                    const remarks = document.getElementById('implementation_remarks').value;
+
+                    if (!id) {
+                        implementError.textContent = 'Invalid violation record.';
+                        implementError.classList.remove('d-none');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    if(violationType === 'Verbal Reprimand'){   
+
+                        const verbal_reprimand_date = document.getElementById('verbal_reprimand_date').value; 
+                        formData.append('verbal_reprimand_date', verbal_reprimand_date);
+                        const fileInput = document.getElementById('verbal_reprimand_file');
+
+                        if (fileInput && fileInput.files.length > 0) {
+                            for (let i = 0; i < fileInput.files.length; i++) {
+                                formData.append('verbal_reprimand_file[]', fileInput.files[i]);
+                            }
                         }
-                        
+
+                    }else if(violationType === 'Written Reprimand'){
+                        const written_reprimand_date = document.getElementById('written_reprimand_date').value; 
+                        formData.append('written_reprimand_date', written_reprimand_date);
+                        const fileInput = document.getElementById('written_reprimand_file');
+
+                        if (fileInput && fileInput.files.length > 0) {
+                            for (let i = 0; i < fileInput.files.length; i++) {
+                                formData.append('written_reprimand_file[]', fileInput.files[i]);
+                            }
+                        }
+
+                    }else if (violationType === 'Suspension') {
+
+                        const startDate = document.getElementById('suspension_start_date').value;
+                        const endDate = document.getElementById('suspension_end_date').value; 
                         if (!startDate || !endDate) {
                             implementError.textContent = 'Please provide both start and end dates.';
                             implementError.classList.remove('d-none');
                             return;
-                        }
-
-                        // Validate end date is after or equal to start date
+                        } 
                         if (new Date(endDate) < new Date(startDate)) {
                             implementError.textContent = 'End date must be after or equal to start date.';
                             implementError.classList.remove('d-none');
                             return;
+                        } 
+                        formData.append('suspension_start_date', startDate);
+                        formData.append('suspension_end_date', endDate);
+
+                    }else if(violationType === 'Termination'){
+
+                        const termination_date = document.getElementById('termination_date').value; 
+                        formData.append('termination_date', termination_date);
+                    
+                    }
+ 
+                    if (remarks) {
+                        formData.append('implementation_remarks', remarks);
+                    }
+
+                    try {
+                        const res = await fetch(`${apiViolationBase}/${id}/implement`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: formData,
+                            credentials: 'same-origin'
+                        });
+
+                        const text = await res.text();
+                        let data;
+                        try { 
+                            data = JSON.parse(text); 
+                        } catch (_) {
+                            throw new Error('Unexpected server response.');
                         }
 
-                        const formData = new FormData();
-                        formData.append('violation_start_date', startDate);
-                        formData.append('violation_end_date', endDate);
-                        if (remarks) {
-                            formData.append('implementation_remarks', remarks);
+                        if (res.ok && data.status === 'success') {
+                            toastr.success(data.message || 'Violation implemented successfully.','Success'); 
+                            implementModal.hide();
+                            filter();
+                        } else {
+                            throw new Error(data.message || `Server error (${res.status}).`);
                         }
+                    } catch (err) {
+                        toastr.error(err.message || 'Error implementing violation.','Error');
+                    }
+                });
 
-                        try {
-                            const res = await fetch(`${apiViolationBase}/${id}/implement`, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
-                                },
-                                body: formData,
-                                credentials: 'same-origin'
-                            });
-
-                            const text = await res.text();
-                            let data;
-                            try { 
-                                data = JSON.parse(text); 
-                            } catch (_) {
-                                throw new Error('Unexpected server response.');
-                            }
-
-                            if (res.ok && data.status === 'success') {
-                                toastr.success(data.message || 'Violation implemented successfully.','Success'); 
-                                implementModal.hide();
-                                filter();
-                            } else {
-                                throw new Error(data.message || `Server error (${res.status}).`);
-                            }
-                        } catch (err) {
-                            toastr.error(err.message || 'Error implementing violation.','Error');
-                            
-                        }
-                    });
                 });
             </script>
             <script>

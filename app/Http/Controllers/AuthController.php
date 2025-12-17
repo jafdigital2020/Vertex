@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Carbon\Carbon;
 use App\Models\CRUD;
 use App\Models\User;
 use App\Models\Tenant;
 use App\Models\GlobalUser;
 use App\Models\Organization;
+use App\Models\Violation;
+use App\Models\EmploymentDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -147,6 +149,35 @@ class AuthController extends Controller
                     'type' => 'password'
                 ], 401);
             }
+            if ($tenantUser) {
+                
+                $terminated = EmploymentDetail::where('user_id', $tenantUser->id)
+                ->where('employment_state', 'Terminated')
+                ->exists();
+
+                if ($terminated) {
+                    return response()->json([
+                        'message' => 'Your account has been terminated. Please contact HR for further assistance.',
+                        'type' => 'login'
+                    ], 403);
+                }
+                $suspended = Violation::where('user_id', $tenantUser->id)
+                    ->where('status', 'implemented')
+                    ->whereDate('suspension_start_date', '<=', Carbon::now())
+                    ->whereDate('suspension_end_date', '>=', Carbon::now())
+                    ->exists();
+
+                if ($suspended) { 
+                    return response()->json([
+                        'message' => 'Your account is currently suspended due to an active violation. Access will be restored after the suspension period. Please contact HR for further assistance.',
+                        'type' => 'login'
+                    ], 401);
+                }
+
+           
+                
+            }
+
 
             Auth::guard('web')->login($tenantUser);
             $token = $tenantUser->createToken('authToken')->plainTextToken;

@@ -106,13 +106,22 @@ class ViolationController extends Controller
                     'designation' => $violation->employee->employmentDetail->designation->designation_name ?? 'N/A',
                     'status' => $violation->status,
                     'violation_type' => $violation->violationType->name ?? '',
-                    'violation_start_date' => $violation->violation_start_date
-                        ? Carbon::parse($violation->violation_start_date)->format('M d, Y')
+                    'verbal_reprimand_date' => $violation->verbal_reprimand_date
+                    ? Carbon::parse($violation->verbal_reprimand_date)->format('M d, Y')
+                    : null,
+                    'written_reprimand_date' => $violation->written_reprimand_date
+                    ? Carbon::parse($violation->written_reprimand_date)->format('M d, Y')
+                    : null, 
+                    'suspension_start_date' => $violation->suspension_start_date
+                        ? Carbon::parse($violation->suspension_start_date)->format('M d, Y')
                         : null,
-                    'violation_end_date' => $violation->violation_end_date
-                        ? Carbon::parse($violation->violation_end_date)->format('M d, Y')
+                    'suspension_end_date' => $violation->suspension_end_date
+                        ? Carbon::parse($violation->suspension_end_date)->format('M d, Y')
                         : null,
-                    'violation_days' => $violation->violation_days,
+                    'suspension_days' => $violation->suspension_days,
+                    'termination_date' => $violation->termination_date
+                        ? Carbon::parse($violation->termination_date)->format('M d, Y')
+                        : null,
                     'offense_details' => $violation->offense_details,
                     'disciplinary_action' => $violation->disciplinary_action,
                     'remarks' => $violation->remarks,
@@ -244,7 +253,7 @@ class ViolationController extends Controller
         $department  = $request->input('department');
         $designation = $request->input('designation');
         $status = $request->input('status');
- 
+        $type = $request->input('type');
         $query =Violation::
             with([
                 'employee.personalInformation',
@@ -277,6 +286,10 @@ class ViolationController extends Controller
         if (!is_null($status)) {
             $query->where('status', $status);
         }
+        if (!is_null($type)) {
+            $query->where('violation_type_id', $type);
+        }
+
  
         $violation = $query->get(); 
    
@@ -339,6 +352,7 @@ class ViolationController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
   
         $status = $request->input('status');
+        $type =  $request->input('type');
  
         $query = Violation::with([
             'employee.personalInformation',
@@ -353,6 +367,9 @@ class ViolationController extends Controller
             $query->where('status', $status);
         }
  
+        if (!is_null($type)) {
+            $query->where('violation_type_id', $type);
+        }
         $violation = $query->get(); 
    
 
@@ -385,6 +402,8 @@ class ViolationController extends Controller
         ->latest()
         ->get();
 
+        $violationTypes  = ViolationTypes::all();
+
         // // If frontend calls via AJAX or fetch()
         // if ($request->wantsJson()) {
         //     return response()->json([
@@ -412,6 +431,7 @@ class ViolationController extends Controller
         return view('tenant.violation.violation-employee', [
             'permission' => $permission,
             'violations' => $violations,
+            'violationTypes' => $violationTypes
         ]);
     }
 
@@ -750,12 +770,20 @@ class ViolationController extends Controller
             
             if ($violation->user_id) { 
                 $user = User::find($violation->user_id); 
-                if ($user) {
-                    $user->notify(
-                        new UserNotification(
-                            "A Disciplinary Action Memo has been uploaded for your violation."
-                        )
-                    );
+
+                if ($user && $request->violation_type_id !== null ) { 
+
+                   $violationName = ViolationTypes::where('id', $request->violation_type_id)
+                    ->value('name');
+
+                    if ($violationName) {
+                        $user->notify(
+                            new UserNotification(
+                                "A Disciplinary Action Memo has been uploaded for your violation: {$violationName}."
+                            )
+                        );
+                    }
+
                 }
             }
  
@@ -763,7 +791,7 @@ class ViolationController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'DAM issued successfully with violation type: ' . str_replace('_', ' ', $request->violation_type_id) . '.',
+                'message' => 'DAM issued successfully with violation type: ' .  $violationName . '.',
                 'data' => $violation
             ]);
         } catch (\Exception $e) {
@@ -777,56 +805,311 @@ class ViolationController extends Controller
         }
     }
 
+    
     public function implementViolation(Request $request, $id)
     {
         $authUser = $this->authUser();
-        $request->validate([
-            'violation_start_date' => 'required|date',
-            'violation_end_date' => 'required|date|after_or_equal:violation_start_date',
-            'implementation_remarks' => 'nullable|string|max:1000',
-        ]);
 
+        $violation = Violation::findOrFail($id);
+        $user = User::find($violation->user_id);   
+
+        $rules = [
+            'implementation_remarks' => 'nullable|string|max:1000',
+        ];
+
+        switch ($violation->violationType->name) {
+            case 'Verbal Reprimand':
+
+                $rules['verbal_reprimand_date'] = 'required|date';
+                $rules['verbal_reprimand_file'] = 'nullable|array';
+                $rules['verbal_reprimand_file.*'] = 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120';
+
+                break;
+
+            case 'Written Reprimand':
+
+                $rules['written_reprimand_date'] = 'nullable|date';
+                $rules['written_reprimand_file'] = 'required|array';
+                $rules['written_reprimand_file.*'] = 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120';
+                break;
+
+            case 'Suspension':
+
+                $rules['suspension_start_date'] = 'required|date';
+                $rules['suspension_end_date'] = 'required|date|after_or_equal:suspension_start_date';
+                break;
+
+            case 'Termination':
+
+                $rules['termination_date'] = 'required|date';
+                break;
+        }
+ 
+        try {
+            $request->validate($rules);
+        } catch (ValidationException $e) {
+            Log::warning('Violation validation failed', [
+                'violation_id'   => $id,
+                'violation_type' => $violation->violationType->name,
+                'errors'         => $e->errors(),
+                'user_id'        => $authUser->id ?? null,
+            ]);
+            throw $e;
+        } 
         try {
             DB::beginTransaction();
 
-            $violation =Violation::findOrFail($id);
-            $days = Carbon::parse($request->violation_start_date)
-                ->diffInDays(Carbon::parse($request->violation_end_date)) + 1;
+            switch ($violation->violationType->name) { 
 
-            $violation->update([
-                'violation_type' => 'without_pay',
-                'violation_start_date' => $request->violation_start_date,
-                'violation_end_date' => $request->violation_end_date,
-                'violation_days' => $days,
-                'implemented_by' => $authUser->id,
-                'implementation_remarks' => $request->implementation_remarks,
-                'status' => 'suspended',
-            ]);
+                case 'Verbal Reprimand':
 
-            // Update employee's employment_state to 'Suspended'
-            EmploymentDetail::where('user_id', $violation->user_id)
-                ->update(['employment_state' => 'Suspended']);
+                    try {
+                        $violation->update([ 
+                            'verbal_reprimand_date' => $request->verbal_reprimand_date, 
+                            'status' => 'implemented',
+                            'implemented_by' => $authUser->id,
+                            'implementation_remarks' => $request->implementation_remarks,
+                        ]);
+  
+                        if ($user) { 
+                            $user->notify(
+                            new UserNotification(
+                                "HR has scheduled a verbal reprimand meeting with your department head / reporting to on {$request->verbal_reprimand_date}."
+                            )
+                            );
+                            $employment = $user->employmentDetail;
+                            $fullName = trim(
+                                ($user->personalInformation->first_name ?? '') . ' ' . 
+                                ($user->personalInformation->last_name ?? '')
+                            );
 
-           ViolationAction::create([
-                'violation_id' => $violation->id,
-                'action_type' => 'violation_implemented',
-                'action_by' => $authUser->id,
-                'action_date' => now(),
-                'description' => 'Violation implemented without pay.',
-                'remarks' => 'Duration: ' . $days . ' days'
-            ]);
-                
-            if ($violation->user_id) { 
-                $user = User::find($violation->user_id); 
-                if ($user) {
-                    $user->notify(
-                        new UserNotification(
-                             "Your violation #{$violation->id} has been implemented from {$request->violation_start_date} to {$request->violation_end_date} ({$days} days)."
-                        )
-                    );
-                }
-            } 
+                            if ($employment && $employment->reporting_to) {
+                                $reportingTo = User::find($employment->reporting_to);
 
+                                if ($reportingTo) {
+                                    
+                                    $reportingTo->notify(
+                                        new UserNotification(
+                                          "HR has scheduled a verbal reprimand meeting with {$fullName} on {$request->verbal_reprimand_date}."
+                                        )
+                                    );
+                                }
+                            }  
+                            if ($employment && $employment->department?->head_of_department) {
+                                $deptHead = User::find($employment->department->head_of_department);
+
+                                if ($deptHead) {
+                                    $deptHead->notify(
+                                        new UserNotification(
+                                          "HR has scheduled a verbal reprimand meeting with {$fullName} on {$request->verbal_reprimand_date}."
+                                        )
+                                    );
+                                }
+                            }
+                        }  
+
+                    } catch (\Exception $e) {
+                        Log::error('Verbal Reprimand update failed', [
+                            'violation_id' => $violation->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        throw $e;
+                    }
+
+                    if ($request->hasFile('verbal_reprimand_file')) {
+                        try {
+                            $files = is_array($request->file('verbal_reprimand_file'))
+                                ? $request->file('verbal_reprimand_file')
+                                : [$request->file('verbal_reprimand_file')];
+
+                         foreach ($files as $index => $file) { 
+                            $originalName = $file->getClientOriginalName();
+                            $mimeType     = $file->getClientMimeType();
+                            $fileSize     = $file->getSize();   
+                            $fileName = time().'_'.$index.'_'.$originalName;
+                            $file->move(public_path('storage/violation_reports'), $fileName); 
+                            $filePath = 'violation_reports/'.$fileName; 
+                            ViolationAttachment::create([
+                                'violation_id'   => $violation->id,
+                                'file_name'      => $originalName,
+                                'file_path'      => $filePath,
+                                'file_type'      => $mimeType,
+                                'file_size'      => $fileSize,
+                                'attachment_type' => 'verbal_reprimand_file',
+                                'uploaded_by'    => $authUser->id,
+                            ]);
+                        }
+                        } catch (\Exception $e) {
+                            Log::error('Verbal Reprimand file upload failed', [
+                                'violation_id' => $violation->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                            throw $e;
+                        }
+                    }
+                    break;
+ 
+                case 'Written Reprimand':
+                    try {
+                         $violation->update([ 
+                            'written_reprimand_date' => $request->written_reprimand_date ?? null, 
+                            'status' => 'implemented',
+                            'implemented_by' => $authUser->id,
+                            'implementation_remarks' => $request->implementation_remarks,
+                        ]);
+
+                        
+                        if($request->written_reprimand_date !== null ){
+
+                         if ($user) { 
+                            
+                            $user->notify(
+                            new UserNotification(
+                                "HR has scheduled a written reprimand meeting with your department head / reporting to on {$request->written_reprimand_date}."
+                            )
+                            );
+                            $employment = $user->employmentDetail;
+                            $fullName = trim(
+                                ($user->personalInformation->first_name ?? '') . ' ' . 
+                                ($user->personalInformation->last_name ?? '')
+                            );
+
+                            if ($employment && $employment->reporting_to) {
+                                $reportingTo = User::find($employment->reporting_to);
+
+                                if ($reportingTo) {
+                                    
+                                    $reportingTo->notify(
+                                        new UserNotification(
+                                          "HR has scheduled a written reprimand meeting with {$fullName} on {$request->written_reprimand_date}."
+                                        )
+                                    );
+                                }
+                            }  
+                            if ($employment && $employment->department?->head_of_department) {
+                                $deptHead = User::find($employment->department->head_of_department);
+
+                                if ($deptHead) {
+                                    $deptHead->notify(
+                                        new UserNotification(
+                                          "HR has scheduled a written reprimand meeting with {$fullName} on {$request->written_reprimand_date}."
+                                        )
+                                    );
+                                }
+                            }
+                        } 
+                    }
+
+
+                    } catch (\Exception $e) {
+                        Log::error('Written Reprimand update failed', [
+                            'violation_id' => $violation->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        throw $e;
+                    }
+
+                    try {
+                        if ($request->hasFile('written_reprimand_file')) {
+                        try {
+                            $files = is_array($request->file('written_reprimand_file'))
+                                ? $request->file('written_reprimand_file')
+                                : [$request->file('written_reprimand_file')];
+
+                         foreach ($files as $index => $file) { 
+                            $originalName = $file->getClientOriginalName();
+                            $mimeType     = $file->getClientMimeType();
+                            $fileSize     = $file->getSize();   
+                            $fileName = time().'_'.$index.'_'.$originalName;
+                            $file->move(public_path('storage/violation_reports'), $fileName); 
+                            $filePath = 'violation_reports/'.$fileName; 
+                            ViolationAttachment::create([
+                                'violation_id'   => $violation->id,
+                                'file_name'      => $originalName,
+                                'file_path'      => $filePath,
+                                'file_type'      => $mimeType,
+                                'file_size'      => $fileSize,
+                                'attachment_type' => 'written_reprimand_file',
+                                'uploaded_by'    => $authUser->id,
+                            ]);
+                        }
+                        } catch (\Exception $e) {
+                            Log::error('Verbal Reprimand file upload failed', [
+                                'violation_id' => $violation->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                            throw $e;
+                        }
+                    }
+                    } catch (\Exception $e) {
+                        Log::error('Written Reprimand file upload failed', [
+                            'violation_id' => $violation->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        throw $e;
+                    }
+                    break; 
+
+                case 'Suspension':
+                    try {
+                         
+                        $days = Carbon::parse($request->suspension_start_date)
+                            ->diffInDays(Carbon::parse($request->suspension_end_date)) + 1;
+
+                        $violation->update([ 
+                            'suspension_start_date' => $request->suspension_start_date,
+                            'suspension_end_date' => $request->suspension_end_date,
+                            'suspension_days' => $days,
+                            'implemented_by' => $authUser->id,
+                            'implementation_remarks' => $request->implementation_remarks,
+                            'status' => 'implemented',
+                        ]);
+
+                        EmploymentDetail::where('user_id', $violation->user_id)
+                            ->update(['employment_state' => 'Suspended']);
+
+                        $user->notify(
+                            new UserNotification(
+                                "HR has implemented a suspension for you from {$request->suspension_start_date} to {$request->suspension_end_date} ({$days} day(s))."
+                            )
+                        ); 
+
+                    } catch (\Exception $e) {
+                        Log::error('Suspension implementation failed', [
+                            'violation_id' => $violation->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        throw $e;
+                    }
+                    break; 
+
+                case 'Termination':
+                    try {
+                        $violation->update([
+                            'termination_date' => $request->termination_date,
+                            'implementation_remarks' => $request->implementation_remarks,
+                            'implemented_by' => $authUser->id,
+                            'status' => 'implemented',
+                        ]);
+
+                        EmploymentDetail::where('user_id', $violation->user_id)
+                            ->update(['employment_state' => 'Terminated']);
+
+                        $user->notify(
+                            new UserNotification(
+                                "HR has terminated your employment effective from {$request->termination_date}. Please contact HR if you have any questions regarding this action."
+                            )
+                        ); 
+
+                    } catch (\Exception $e) {
+                        Log::error('Termination implementation failed', [
+                            'violation_id' => $violation->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        throw $e;
+                    }
+                    break;
+            }
 
             DB::commit();
 
@@ -835,9 +1118,17 @@ class ViolationController extends Controller
                 'message' => 'Violation implemented successfully.',
                 'data' => $violation
             ]);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error implementing violation: ' . $e->getMessage());
+
+            Log::critical('Violation implementation failed', [
+                'violation_id' => $id,
+                'violation_type' => $violation->violationType->name ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $authUser->id ?? null,
+            ]);
 
             return response()->json([
                 'status' => 'error',
@@ -845,6 +1136,7 @@ class ViolationController extends Controller
             ], 500);
         }
     }
+
 
     public function markReturnToWork(Request $request, $id)
     {
