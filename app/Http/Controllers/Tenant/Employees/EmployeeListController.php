@@ -1017,7 +1017,7 @@ class EmployeeListController extends Controller
         ]);
     }
 
-    public function employeeActivate(Request $request)
+    public function employeeActivate(Request $request, $id = null)
     {
         $permission = PermissionHelper::get(9);
         if (!in_array('Update', $permission)) {
@@ -1027,7 +1027,17 @@ class EmployeeListController extends Controller
             ], 403);
         }
 
-        $user_id = $request->input('act_id');
+        // Support both route parameter (API: /api/employees/activate/{id}) 
+        // and request body (Web: act_id)
+        $user_id = $id ?? $request->input('act_id');
+        
+        if (!$user_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User ID is required.'
+            ], 400);
+        }
+        
         $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
 
         $oldData = [
@@ -1076,7 +1086,7 @@ class EmployeeListController extends Controller
         return response()->json($response);
     }
 
-    public function employeeDeactivate(Request $request)
+    public function employeeDeactivate(Request $request, $id = null)
     {
         $permission = PermissionHelper::get(9);
         if (!in_array('Update', $permission)) {
@@ -1086,7 +1096,17 @@ class EmployeeListController extends Controller
             ], 403);
         }
 
-        $user_id = $request->input('deact_id');
+        // Support both route parameter (API: /api/employees/deactivate/{id}) 
+        // and request body (Web: deact_id)
+        $user_id = $id ?? $request->input('deact_id');
+        
+        if (!$user_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User ID is required.'
+            ], 400);
+        }
+        
         $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
 
         $oldData = [
