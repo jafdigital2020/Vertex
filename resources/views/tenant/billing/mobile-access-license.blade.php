@@ -497,6 +497,20 @@ $page = 'mobile-access-license'; ?>
     @endcomponent
 @endsection
 
+@push('styles')
+    <style>
+        .table-empty {
+            border-collapse: collapse;
+        }
+        .table-empty thead th {
+            border-bottom: 1px solid #dee2e6;
+        }
+        .table-empty tbody tr td {
+            border-top: 0;
+        }
+    </style>
+@endpush
+
 @push('scripts')
     <script>
         $(document).ready(function() {
@@ -508,41 +522,55 @@ $page = 'mobile-access-license'; ?>
                         $('#mobile_access_assignments_table').DataTable().destroy();
                     }
                     
-                    $('#mobile_access_assignments_table').DataTable({
-                        "bFilter": true,
-                        "ordering": true,
-                        "info": true,
-                        "responsive": true,
-                        "pageLength": 10,
-                        "autoWidth": false,
-                        "processing": true,
-                        "language": {
-                            search: ' ',
-                            sLengthMenu: 'Show _MENU_ entries',
-                            searchPlaceholder: "Search assignments...",
-                            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                            paginate: {
-                                next: '<i class="ti ti-chevron-right"></i>',
-                                previous: '<i class="ti ti-chevron-left"></i>'
+                    // Check if table has data rows (excluding header and empty state)
+                    const hasData = $('#mobile_access_assignments_table tbody tr').length > 0 && 
+                                   !$('#mobile_access_assignments_table tbody tr').first().find('td[colspan]').length;
+                    
+                    if (hasData) {
+                        // Initialize DataTable with full functionality
+                        $('#mobile_access_assignments_table').DataTable({
+                            "bFilter": true,
+                            "ordering": true,
+                            "info": true,
+                            "responsive": true,
+                            "pageLength": 10,
+                            "autoWidth": false,
+                            "processing": true,
+                            "language": {
+                                search: ' ',
+                                sLengthMenu: 'Show _MENU_ entries',
+                                searchPlaceholder: "Search assignments...",
+                                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                                paginate: {
+                                    next: '<i class="ti ti-chevron-right"></i>',
+                                    previous: '<i class="ti ti-chevron-left"></i>'
+                                },
                             },
-                        },
-                        "columnDefs": [
-                            { "orderable": false, "targets": [0, 7] }, // Disable sorting on Employee and Actions columns
-                            { "width": "20%", "targets": 0 }, // Employee column
-                            { "width": "12%", "targets": 1 }, // Employee ID column
-                            { "width": "15%", "targets": 2 }, // Email column
-                            { "width": "12%", "targets": 3 }, // Department column
-                            { "width": "12%", "targets": 4 }, // Designation column
-                            { "width": "10%", "targets": 5 }, // Status column
-                            { "width": "15%", "targets": 6 }, // Assigned Date column
-                            { "width": "10%", "targets": 7 }  // Actions column
-                        ],
-                        "order": [[6, 'desc']], // Sort by assigned date descending
-                        "drawCallback": function() {
-                            // Reinitialize tooltips after table draw
-                            $('[data-bs-toggle="tooltip"]').tooltip();
-                        }
-                    });
+                            "columnDefs": [
+                                { "orderable": false, "targets": [0, 7] }, // Disable sorting on Employee and Actions columns
+                                { "width": "20%", "targets": 0 }, // Employee column
+                                { "width": "12%", "targets": 1 }, // Employee ID column
+                                { "width": "15%", "targets": 2 }, // Email column
+                                { "width": "12%", "targets": 3 }, // Department column
+                                { "width": "12%", "targets": 4 }, // Designation column
+                                { "width": "10%", "targets": 5 }, // Status column
+                                { "width": "15%", "targets": 6 }, // Assigned Date column
+                                { "width": "10%", "targets": 7 }  // Actions column
+                            ],
+                            "order": [[6, 'desc']], // Sort by assigned date descending
+                            "drawCallback": function() {
+                                // Reinitialize tooltips after table draw
+                                $('[data-bs-toggle="tooltip"]').tooltip();
+                            }
+                        });
+                    } else {
+                        // For empty tables, just apply basic styling without DataTable functionality
+                        console.log('Empty table detected, skipping DataTable initialization');
+                        $('#mobile_access_assignments_table').addClass('table-empty');
+                        
+                        // Hide DataTable controls that aren't relevant for empty tables
+                        $('.dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate').hide();
+                    }
                 } catch (error) {
                     console.error('DataTable initialization error:', error);
                     // Fallback: Hide DataTable specific features if initialization fails

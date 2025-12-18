@@ -25,8 +25,8 @@ class DatabaseTestingSeeder extends Seeder
         
         // 2. Switch to tenant context and seed tenant data
         try {
-            // Initialize tenant
-            $tenant = \App\Models\Tenant::find('test-company');
+            // Initialize tenant by tenant code instead of ID
+            $tenant = \App\Models\Tenant::where('tenant_code', 'TEST001')->first();
             if (!$tenant) {
                 $this->command->error('❌ Test tenant not found! Make sure TestingSeeder ran successfully.');
                 return;

@@ -43,6 +43,11 @@ class DatabaseSeeder extends Seeder
             BranchTableSeeder::class,
             DepartmentTableSeeder::class,
             DesignationTableSeeder::class,
+            
+            // Testing seeders - adds TEST001 tenant for development
+            TestingSeeder::class,
+            // Uncomment the line below for complete testing environment with sample employees
+            // DatabaseTestingSeeder::class,
         ]);
     }
 }

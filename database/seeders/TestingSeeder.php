@@ -23,14 +23,9 @@ class TestingSeeder extends Seeder
         // 2. Create global admin user
         $this->seedGlobalUser();
         
-        // 3. Create subscription data
-        $this->seedSubscription();
-        
-        // 4. Create plans if not exist
-        $this->seedPlans();
-        
-        // 5. Create mobile access licenses
-        $this->seedMobileAccessLicenses();
+        // Note: Skipping complex subscriptions, plans and mobile licenses for basic testing
+        // Focus on core login functionality
+        $this->command->info('Skipping subscription/mobile license setup for basic testing');
 
         $this->command->info('✅ Testing Seeder completed successfully!');
         $this->command->info('🔑 Login Credentials:');
@@ -42,6 +37,13 @@ class TestingSeeder extends Seeder
     private function seedTenant(): void
     {
         $this->command->info('Creating test tenant...');
+        
+        // Check if tenant already exists
+        $existingTenant = DB::table('tenants')->where('tenant_code', 'TEST001')->first();
+        if ($existingTenant) {
+            $this->command->info('Test tenant already exists, skipping...');
+            return;
+        }
         
         $tenantId = DB::table('tenants')->insertGetId([
             'tenant_name' => 'Test Company',
@@ -63,6 +65,13 @@ class TestingSeeder extends Seeder
     private function seedGlobalUser(): void
     {
         $this->command->info('Creating global admin user...');
+        
+        // Check if user already exists
+        $existingUser = DB::table('global_users')->where('email', 'admin@test.com')->first();
+        if ($existingUser) {
+            $this->command->info('Test global user already exists, skipping...');
+            return;
+        }
         
         // Get the tenant we just created
         $tenant = DB::table('tenants')->where('tenant_code', 'TEST001')->first();
@@ -156,19 +165,8 @@ class TestingSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ]);
 
-        // Create invoice for the subscription
-        DB::table('invoices')->insert([
-            'tenant_id' => $tenant->id,
-            'invoice_number' => 'INV-' . Carbon::now()->format('Ymd') . '-001',
-            'description' => 'Starter Plan - Monthly Subscription',
-            'amount' => 299.00,
-            'due_date' => Carbon::now()->addDays(7)->format('Y-m-d'),
-            'status' => 'paid',
-            'payment_method' => 'HitPay',
-            'paid_at' => Carbon::now(),
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-        ]);
+        // Skip invoice creation for now - complex table structure
+        // Focus on basic functionality
     }
 
     private function seedMobileAccessLicenses(): void

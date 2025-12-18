@@ -127,7 +127,7 @@ class MobileAccessLicenseController extends Controller
             $invoice = Invoice::create([
                 'tenant_id' => $tenantId,
                 'subscription_id' => null, // No subscription for mobile access licenses
-                'invoice_type' => 'mobile_access_license',
+                'invoice_type' => 'license_overage',
                 'invoice_number' => $invoiceNumber,
                 'amount_due' => $totalCost,
                 'amount_paid' => 0,
@@ -230,7 +230,7 @@ class MobileAccessLicenseController extends Controller
             $authUser = $this->authUser();
             $invoice = Invoice::where('id', $invoiceId)
                 ->where('tenant_id', $authUser->tenant_id)
-                ->where('invoice_type', 'mobile_access_license')
+                ->where('invoice_type', 'license_overage')
                 ->with(['paymentTransactions'])
                 ->first();
 
