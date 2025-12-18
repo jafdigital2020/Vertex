@@ -245,34 +245,41 @@ $page = 'mobile-access-license'; ?>
                             </thead>
                             <tbody id="mobileAccessAssignmentsTableBody">
                                 @forelse($assignments as $assignment)
+                                    @php
+                                        $user = $assignment->user ?? null;
+                                        $personalInfo = $user->personalInformation ?? null;
+                                        $employmentDetail = $user->employmentDetail ?? null;
+                                        $department = $employmentDetail->department ?? null;
+                                        $designation = $employmentDetail->designation ?? null;
+                                    @endphp
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar avatar-sm me-3">
                                                     <span class="avatar-title rounded-circle bg-primary text-white">
-                                                        {{ substr($assignment->user->personalInformation->first_name ?? $assignment->user->username, 0, 1) }}
+                                                        {{ substr($personalInfo->first_name ?? ($user->username ?? 'U'), 0, 1) }}
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-0">{{ $assignment->user->personalInformation->full_name ?? $assignment->user->username }}</h6>
-                                                    <small class="text-muted">{{ $assignment->user->username }}</small>
+                                                    <h6 class="mb-0">{{ $personalInfo->full_name ?? ($user->username ?? 'Unknown User') }}</h6>
+                                                    <small class="text-muted">{{ $user->username ?? 'N/A' }}</small>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="fw-medium">{{ $assignment->user->employmentDetail->employee_id ?? 'N/A' }}</span>
+                                            <span class="fw-medium">{{ $employmentDetail->employee_id ?? 'N/A' }}</span>
                                         </td>
                                         <td>
-                                            <span class="text-muted">{{ $assignment->user->email ?? 'No Email' }}</span>
+                                            <span class="text-muted">{{ $user->email ?? 'No Email' }}</span>
                                         </td>
                                         <td>
                                             <span class="badge bg-light text-dark">
-                                                {{ $assignment->user->employmentDetail->department->department_name ?? 'No Department' }}
+                                                {{ $department->department_name ?? 'No Department' }}
                                             </span>
                                         </td>
                                         <td>
                                             <span class="text-muted">
-                                                {{ $assignment->user->employmentDetail->designation->designation_name ?? 'No Designation' }}
+                                                {{ $designation->designation_name ?? 'No Designation' }}
                                             </span>
                                         </td>
                                         <td>
@@ -299,7 +306,7 @@ $page = 'mobile-access-license'; ?>
                                             @if($assignment->status === 'active')
                                                 <button class="btn btn-sm btn-danger revoke-access-btn" 
                                                         data-assignment-id="{{ $assignment->id }}"
-                                                        data-employee-name="{{ $assignment->user->personalInformation->full_name ?? $assignment->user->username }}"
+                                                        data-employee-name="{{ $personalInfo->full_name ?? ($user->username ?? 'Unknown User') }}"
                                                         data-bs-toggle="tooltip" 
                                                         title="Revoke Mobile Access">
                                                     <i class="ti ti-x me-1"></i>Revoke
@@ -495,27 +502,52 @@ $page = 'mobile-access-license'; ?>
         $(document).ready(function() {
             // Initialize DataTable manually with better control
             if ($('#mobile_access_assignments_table').length) {
-                $('#mobile_access_assignments_table').DataTable({
-                    "bFilter": true,
-                    "ordering": true,
-                    "info": true,
-                    "responsive": true,
-                    "pageLength": 10,
-                    "language": {
-                        search: ' ',
-                        sLengthMenu: 'Show _MENU_ entries',
-                        searchPlaceholder: "Search assignments...",
-                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                        paginate: {
-                            next: '<i class="ti ti-chevron-right"></i>',
-                            previous: '<i class="ti ti-chevron-left"></i>'
+                try {
+                    // Check if DataTable is already initialized
+                    if ($.fn.DataTable.isDataTable('#mobile_access_assignments_table')) {
+                        $('#mobile_access_assignments_table').DataTable().destroy();
+                    }
+                    
+                    $('#mobile_access_assignments_table').DataTable({
+                        "bFilter": true,
+                        "ordering": true,
+                        "info": true,
+                        "responsive": true,
+                        "pageLength": 10,
+                        "autoWidth": false,
+                        "processing": true,
+                        "language": {
+                            search: ' ',
+                            sLengthMenu: 'Show _MENU_ entries',
+                            searchPlaceholder: "Search assignments...",
+                            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                            paginate: {
+                                next: '<i class="ti ti-chevron-right"></i>',
+                                previous: '<i class="ti ti-chevron-left"></i>'
+                            },
                         },
-                    },
-                    "columnDefs": [
-                        { "orderable": false, "targets": [0, 7] } // Disable sorting on Employee and Actions columns
-                    ],
-                    "order": [[6, 'desc']] // Sort by assigned date descending
-                });
+                        "columnDefs": [
+                            { "orderable": false, "targets": [0, 7] }, // Disable sorting on Employee and Actions columns
+                            { "width": "20%", "targets": 0 }, // Employee column
+                            { "width": "12%", "targets": 1 }, // Employee ID column
+                            { "width": "15%", "targets": 2 }, // Email column
+                            { "width": "12%", "targets": 3 }, // Department column
+                            { "width": "12%", "targets": 4 }, // Designation column
+                            { "width": "10%", "targets": 5 }, // Status column
+                            { "width": "15%", "targets": 6 }, // Assigned Date column
+                            { "width": "10%", "targets": 7 }  // Actions column
+                        ],
+                        "order": [[6, 'desc']], // Sort by assigned date descending
+                        "drawCallback": function() {
+                            // Reinitialize tooltips after table draw
+                            $('[data-bs-toggle="tooltip"]').tooltip();
+                        }
+                    });
+                } catch (error) {
+                    console.error('DataTable initialization error:', error);
+                    // Fallback: Hide DataTable specific features if initialization fails
+                    $('.dataTables_wrapper').hide();
+                }
             }
 
             // Add filter function similar to employee list
