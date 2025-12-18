@@ -630,6 +630,7 @@
                                         'settings/email-settings',
                                         'settings/sms-settings',
                                         'settings/payment-gateway',
+                                        'contract-templates',
                                     )
                                         ? 'active subdrop'
                                         : '' }}">
@@ -639,7 +640,7 @@
                                                     <ul>
                                                         <li class="submenu submenu-two">
                                                             <a href="javascript:void(0);"
-                                                                class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
+                                                                class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type', 'contract-templates') ? 'active subdrop' : '' }}">App
                                                                 Settings<span class="menu-arrow inside-submenu"></span></a>
                                                             <ul>
                                                                 <li><a href="{{ route('attendance-settings') }}"
@@ -655,6 +656,10 @@
                                                                 <li><a href="{{ url('settings/biometrics') }}"
                                                                         class=" {{ Request::is('settings/biometrics') ? 'active' : '' }}">ZKTeco
                                                                         Biometrics
+                                                                    </a></li>
+                                                                <li><a href="{{ route('contract-templates.index') }}"
+                                                                        class="{{ Request::is('contract-templates*') ? 'active' : '' }}">Contract
+                                                                        Templates
                                                                     </a></li>
                                                             </ul>
                                                         </li>

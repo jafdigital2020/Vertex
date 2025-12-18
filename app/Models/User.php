@@ -35,6 +35,7 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\EmploymentPersonalInformation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\Contract;
 
 class User extends Authenticatable
 {
@@ -359,27 +360,27 @@ class User extends Authenticatable
 
     public function suspensions()
     {
-        return $this->hasMany(Suspension::class, 'user_id');
+        return $this->hasMany(Violation::class, 'user_id');
     }
 
     public function implementedSuspensions()
     {
-        return $this->hasMany(Suspension::class, 'implemented_by');
+        return $this->hasMany(Violation::class, 'implemented_by');
     }
 
     public function handledSuspensionCases()
     {
-        return $this->hasMany(SuspensionHR::class, 'hr_id');
+        return $this->hasMany(ViolationHR::class, 'hr_id');
     }
 
     public function assignedSuspensionCases()
     {
-        return $this->hasMany(SuspensionHR::class, 'assigned_by');
+        return $this->hasMany(ViolationHR::class, 'assigned_by');
     }
 
     public function suspensionActions()
     {
-        return $this->hasMany(SuspensionAction::class, 'action_by');
+        return $this->hasMany(ViolationAction::class, 'action_by');
     }
 
     protected $appends = ['role_data'];
@@ -465,5 +466,17 @@ class User extends Authenticatable
             'user_permission_ids' => $permissions,
             'status'             => $userPermission->status
         ];
+    }
+
+    // Contracts Relationship
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    // Active Contract
+    public function activeContract()
+    {
+        return $this->hasOne(Contract::class)->where('status', 'Active')->latest();
     }
 }

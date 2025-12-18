@@ -67,6 +67,8 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\ContractController;
+use App\Http\Controllers\Tenant\ContractTemplateController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -385,6 +387,16 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/payroll-items/custom-ot-rate/{id}', [CustomOtRateController::class, 'getTemplateRates'])->name('custom-ot-rate.show');
     Route::post('/payroll/payroll-items/custom-ot-rate/update', [CustomOtRateController::class, 'update'])->name('custom-ot-rate.update');
     Route::post('/payroll/payroll-items/custom-ot-rate/delete', [CustomOtRateController::class, 'destroy'])->name('custom-ot-rate.delete');
+
+    // Contract Templates
+    Route::resource('contract-templates', ContractTemplateController::class)->middleware(CheckPermission::class . ':9');
+    Route::get('/contract-templates/{contractTemplate}/preview', [ContractTemplateController::class, 'preview'])->name('contract-templates.preview');
+
+    // Contracts
+    Route::resource('contracts', ContractController::class)->middleware(CheckPermission::class . ':9');
+    Route::post('/contracts/generate', [ContractController::class, 'generate'])->name('contracts.generate');
+    Route::post('/contracts/{contract}/sign', [ContractController::class, 'sign'])->name('contracts.sign');
+    Route::get('/contracts/{contract}/print', [ContractController::class, 'print'])->name('contracts.print');
 });
 
 Route::get('/send-test-notif', function () {

@@ -942,12 +942,28 @@ class BiometricsController extends Controller
             }
 
             if (!empty($employment->employee_id)) {
+                // Map the original employee_id
                 $userMap[$employment->employee_id] = $user->id;
-                Log::debug('User mapped via employee_id', [
-                    'user_id' => $user->id,
-                    'employee_id' => $employment->employee_id,
-                    'name' => $user->name
-                ]);
+
+                // Also map the normalized version (remove -EMP and -SP)
+                // This allows biometric devices to match THSAC-06-2025-0007 
+                // with portal IDs like THSAC-EMP-06-2025-0007 or THSAC-SP-06-2025-0007
+                $normalizedId = $this->normalizeEmployeeId($employment->employee_id);
+                if ($normalizedId !== $employment->employee_id) {
+                    $userMap[$normalizedId] = $user->id;
+                    Log::debug('User mapped via normalized employee_id', [
+                        'user_id' => $user->id,
+                        'original_employee_id' => $employment->employee_id,
+                        'normalized_employee_id' => $normalizedId,
+                        'name' => $user->name
+                    ]);
+                } else {
+                    Log::debug('User mapped via employee_id', [
+                        'user_id' => $user->id,
+                        'employee_id' => $employment->employee_id,
+                        'name' => $user->name
+                    ]);
+                }
             }
         }
 
@@ -962,6 +978,17 @@ class BiometricsController extends Controller
         ]);
 
         return $userMap;
+    }
+
+    /**
+     * Normalize employee ID by removing -EMP and -SP prefixes
+     * Converts THSAC-EMP-06-2025-0007 to THSAC-06-2025-0007
+     * Converts THSAC-SP-06-2025-0007 to THSAC-06-2025-0007
+     */
+    private function normalizeEmployeeId($employeeId)
+    {
+        // Remove -EMP- and -SP- from employee IDs to match biometric device format
+        return preg_replace('/-(?:EMP|SP)-/', '-', $employeeId);
     }
 
     /**
