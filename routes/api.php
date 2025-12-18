@@ -115,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('roles-permission', [UserManagementController::class, 'roleStore'])->name('api.roleStore');
 
     // ============ Department and Designation API ================= //
+    Route::get('departments', [DepartmentController::class, 'departmentIndex'])->name('api.departmentIndex');
     Route::post('departments', [DepartmentController::class, 'departmentStore'])->name('api.departmentStore');
     Route::put('/departments/update/{id}', [DepartmentController::class, 'departmentUpdate'])->name('api.departmentUpdate');
     Route::delete('/departments/delete/{id}', [DepartmentController::class, 'departmentDelete'])->name('api.departmentDelete');

@@ -40,6 +40,17 @@ class DepartmentController extends Controller
         $departments = $accessData['departments']->withCount(['employees as employee_count'])->get();
         $users  = $accessData['employees']->get();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Departments retrieved successfully.',
+                'status' => 'success',
+                'departments' => $departments,
+                'branches' => $branches,
+                'users' => $users,
+                'permission' => $permission
+            ]);
+        }
+
         return view('tenant.departments', [
             'departments' => $departments ,
             'users' => $users,
