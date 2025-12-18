@@ -56,6 +56,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayslipController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Api\MobileAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,6 +72,26 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 Route::post('/login', [AuthController::class, 'apiLogin'])
     ->middleware('throttle:login')
     ->name('api.login');
+
+// Mobile App Authentication Routes
+Route::prefix('mobile')->group(function () {
+    Route::post('/login', [MobileAuthController::class, 'login'])
+        ->middleware('throttle:login')
+        ->name('api.mobile.login');
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [MobileAuthController::class, 'logout'])
+            ->name('api.mobile.logout');
+            
+        Route::get('/validate-access', [MobileAuthController::class, 'validateAccess'])
+            ->middleware('mobile_access')
+            ->name('api.mobile.validate-access');
+            
+        Route::post('/refresh-token', [MobileAuthController::class, 'refreshToken'])
+            ->middleware('mobile_access')
+            ->name('api.mobile.refresh-token');
+    });
+});
 
 Route::prefix('zkapi')->group(function () {
     // Standard API endpoints

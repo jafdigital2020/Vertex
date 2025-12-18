@@ -21,7 +21,20 @@ class HitPayService
     {
         $this->apiKey = config('services.hitpay.api_key');
         $this->salt = config('services.hitpay.salt');
-        $this->baseUrl = config('services.hitpay.base_url', 'https://api.hitpayapp.com/');
+        $environment = config('services.hitpay.environment', 'sandbox');
+        
+        // Set the correct API URL based on environment
+        if ($environment === 'production') {
+            $this->baseUrl = 'https://api.hitpay.com/';
+        } else {
+            $this->baseUrl = 'https://api.sandbox.hitpay.com/';
+        }
+        
+        // Allow override from config if provided
+        if (config('services.hitpay.base_url')) {
+            $this->baseUrl = config('services.hitpay.base_url');
+        }
+        
         $this->webhookUrl = config('services.hitpay.webhook_url');
 
         $this->client = new Client([
@@ -100,23 +113,36 @@ class HitPayService
         } catch (RequestException $e) {
             $errorMessage = 'HitPay API Error: ' . $e->getMessage();
 
-            if ($e->hasResponse()) {
+            // Check for network/DNS issues
+            if (strpos($e->getMessage(), 'Could not resolve host') !== false) {
+                $errorMessage = 'Unable to connect to HitPay API. Please check your internet connection or try again later.';
+            } elseif ($e->hasResponse()) {
                 $errorBody = json_decode($e->getResponse()->getBody(), true);
                 $errorMessage .= ' - ' . ($errorBody['message'] ?? 'Unknown error');
             }
 
-            Log::error($errorMessage);
+            Log::error('HitPay API Request Failed', [
+                'error' => $e->getMessage(),
+                'base_url' => $this->baseUrl,
+                'environment' => config('services.hitpay.environment'),
+                'invoice_id' => $invoice->id ?? 'unknown',
+                'api_key_set' => !empty($this->apiKey)
+            ]);
 
             return [
                 'success' => false,
                 'error' => $errorMessage,
             ];
         } catch (\Exception $e) {
-            Log::error('HitPay Payment Creation Failed: ' . $e->getMessage());
+            Log::error('HitPay Payment Creation Failed', [
+                'error' => $e->getMessage(),
+                'invoice_id' => $invoice->id ?? 'unknown',
+                'base_url' => $this->baseUrl
+            ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => 'HitPay Service Error: ' . $e->getMessage(),
             ];
         }
     }
@@ -132,6 +158,10 @@ class HitPayService
             case 'license_overage':
                 $count = $invoice->license_overage_count ?? 0;
                 return "License Overage Payment - {$count} additional licenses (Invoice #{$invoice->invoice_number})";
+
+            case 'mobile_access_license':
+                $count = $invoice->license_overage_count ?? 0; // Reusing this field for mobile access count
+                return "Mobile Access Licenses - {$count} licenses (Invoice #{$invoice->invoice_number})";
 
             case 'subscription':
                 $planName = $invoice->subscription->plan->name ?? 'Subscription';

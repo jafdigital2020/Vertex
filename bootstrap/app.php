@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'isSuperAdmin' => \App\Http\Middleware\IsSuperAdmin::class,
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'auth:sanctum' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            'mobile_access' => \App\Http\Middleware\ValidateMobileAccess::class,
         ]);
     })
     ->withCommands([

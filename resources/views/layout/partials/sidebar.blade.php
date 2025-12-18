@@ -744,6 +744,10 @@
                                                 <a href="{{ url('subscriptions') }}"
                                                     class="{{ Request::is('subscriptions') ? 'active' : '' }}"><i class="ti ti-list"></i>&nbsp;Subscriptions</a>
                                             </li>
+                                            <li>
+                                                <a href="{{ route('billing.mobile-access-license') }}"
+                                                    class="{{ Request::is('billing/mobile-access-license*') ? 'active' : '' }}"><i class="ti ti-device-mobile"></i>&nbsp;Mobile Access License</a>
+                                            </li>
                                         @endif
                                     </ul>
                                 </li>

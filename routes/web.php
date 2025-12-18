@@ -30,6 +30,7 @@ use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Billing\BillingController;
+use App\Http\Controllers\Tenant\Billing\MobileAccessLicenseController;
 use App\Http\Controllers\Tenant\Billing\InvoiceController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
@@ -372,6 +373,16 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
         Route::get('/payment/return/{invoice}', [TenantPaymentController::class, 'paymentReturn'])->name('payment.return');
         Route::get('/payment/success', [TenantPaymentController::class, 'success'])->name('payment.success');
         Route::get('/payment/status/{transaction}', [TenantPaymentController::class, 'checkStatus'])->name('payment.status');
+
+        // Mobile Access License routes
+        Route::get('/mobile-access-license', [MobileAccessLicenseController::class, 'index'])->name('mobile-access-license')->middleware(CheckPermission::class . ':58');
+        Route::post('/mobile-access-license/purchase', [MobileAccessLicenseController::class, 'purchaseLicenses'])->name('mobile-access-license.purchase')->middleware(CheckPermission::class . ':58');
+        Route::get('/mobile-access-license/payment-return/{invoice}', [MobileAccessLicenseController::class, 'paymentReturn'])->name('mobile-access-license.payment-return');
+        Route::post('/mobile-access-license/assign', [MobileAccessLicenseController::class, 'assignAccess'])->name('mobile-access-license.assign')->middleware(CheckPermission::class . ':58');
+        Route::post('/mobile-access-license/revoke', [MobileAccessLicenseController::class, 'revokeAccess'])->name('mobile-access-license.revoke')->middleware(CheckPermission::class . ':58');
+        Route::get('/mobile-access-license/employee/{user}/status', [MobileAccessLicenseController::class, 'getEmployeeStatus'])->name('mobile-access-license.employee-status')->middleware(CheckPermission::class . ':58');
+        Route::get('/mobile-access-license/employees/filter', [MobileAccessLicenseController::class, 'filterEmployees'])->name('mobile-access-license.filter-employees')->middleware(CheckPermission::class . ':58');
+        Route::get('/mobile-access-license/test-hitpay', [MobileAccessLicenseController::class, 'testHitPayConnection'])->name('mobile-access-license.test-hitpay');
     });
 
 

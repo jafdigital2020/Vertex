@@ -251,6 +251,24 @@ class User extends Authenticatable
         return $this->hasMany(LeaveApproval::class, 'approver_id');
     }
 
+    // Mobile Access Assignments Accessor
+    public function mobileAccessAssignments()
+    {
+        return $this->hasMany(\App\Models\MobileAccessAssignment::class, 'user_id');
+    }
+
+    // Active Mobile Access Assignment Accessor
+    public function activeMobileAccessAssignment()
+    {
+        return $this->hasOne(\App\Models\MobileAccessAssignment::class, 'user_id')->where('status', 'active');
+    }
+
+    // Check if user has active mobile access
+    public function hasMobileAccess()
+    {
+        return $this->activeMobileAccessAssignment()->exists();
+    }
+
     // Overtime Accessor
     public function overtime()
     {
