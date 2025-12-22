@@ -22,7 +22,7 @@ class DesignationController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     } 
     public function designationIndex(Request $request)
     {
@@ -33,6 +33,18 @@ class DesignationController extends Controller
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get(); 
         $designations = $accessData['designations']->get();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Designations retrieved successfully.',
+                'status' => 'success',
+                'designations' => $designations,
+                'departments' => $departments,
+                'branches' => $branches,
+                'permission' => $permission
+            ]);
+        }
+
         return view('tenant.designations', [
             'designations'         => $designations,
             'departments'          => $departments,

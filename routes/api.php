@@ -119,6 +119,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('departments', [DepartmentController::class, 'departmentStore'])->name('api.departmentStore');
     Route::put('/departments/update/{id}', [DepartmentController::class, 'departmentUpdate'])->name('api.departmentUpdate');
     Route::delete('/departments/delete/{id}', [DepartmentController::class, 'departmentDelete'])->name('api.departmentDelete');
+    Route::get('/designations', [DesignationController::class, 'designationIndex'])->name('api.designationIndex');
     Route::post('/designations/create', [DesignationController::class, 'designationStore'])->name('api.designationStore');
     Route::put('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('api.designationUpdate');
     Route::delete('/designations/delete/{id}', [DesignationController::class, 'designationDelete'])->name('api.designationDelete');
