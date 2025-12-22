@@ -19,6 +19,9 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap">
+                    <a href="{{ route('contracts.viewHtml', $contract->id) }}" class="btn btn-success me-2" target="_blank">
+                        <i class="ti ti-eye me-1"></i>View HTML Contract
+                    </a>
                     <a href="{{ route('contracts.print', $contract->id) }}" class="btn btn-primary me-2" target="_blank">
                         <i class="ti ti-printer me-1"></i>Print
                     </a>
@@ -90,28 +93,29 @@
                             <hr>
 
                             <div class="contract-content mt-4">
-                                <h6 class="mb-3">Contract Content</h6>
+                                <h6 class="mb-3">Contract Preview</h6>
 
-                                @if($contract->template && $contract->template->isPdfTemplate())
-                                    <!-- PDF Template -->
+                                @if($contract->template)
+                                    <!-- HTML Template Preview -->
                                     <div class="alert alert-info mb-3">
-                                        <i class="ti ti-file-type-pdf me-2"></i>
-                                        This contract uses a PDF template: <strong>{{ $contract->template->name }}</strong>
+                                        <i class="ti ti-file-text me-2"></i>
+                                        This contract uses template: <strong>{{ $contract->template->name }}</strong>
                                     </div>
-                                    <div class="text-center">
-                                        <a href="{{ $contract->template->getPdfUrl() }}" class="btn btn-primary btn-lg"
-                                            target="_blank">
-                                            <i class="ti ti-download me-2"></i>Download Contract PDF
+                                    <div class="text-center mb-3">
+                                        <a href="{{ route('contracts.viewHtml', $contract->id) }}"
+                                            class="btn btn-success btn-lg" target="_blank">
+                                            <i class="ti ti-eye me-2"></i>View Full HTML Contract
                                         </a>
-                                        <p class="text-muted mt-2">
-                                            <small>{{ basename($contract->template->pdf_template_path) }}</small>
-                                        </p>
+                                        <a href="{{ route('contracts.print', $contract->id) }}" class="btn btn-primary btn-lg"
+                                            target="_blank">
+                                            <i class="ti ti-printer me-2"></i>Print Contract
+                                        </a>
                                     </div>
 
-                                    <!-- PDF Preview -->
+                                    <!-- HTML Preview in iframe -->
                                     <div class="mt-4">
-                                        <iframe src="{{ $contract->template->getPdfUrl() }}" width="100%" height="800px"
-                                            style="border: 1px solid #ddd;">
+                                        <iframe src="{{ route('contracts.viewHtml', $contract->id) }}" width="100%"
+                                            height="800px" style="border: 1px solid #ddd; border-radius: 4px;">
                                         </iframe>
                                     </div>
                                 @elseif($contract->content)

@@ -1,0 +1,137 @@
+/* Contract Template Styles */
+.contract-page {
+    max-width: 8.5in;
+    min-height: 11in;
+    margin: 0 auto;
+    padding: 0.5in;
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+@media print {
+    .contract-page {
+        box-shadow: none;
+        margin: 0;
+    }
+}
+
+.contract-header {
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.logo-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.logo {
+    max-width: 120px;
+    height: auto;
+    object-fit: contain;
+}
+
+.header-center {
+    flex: 1;
+    padding: 0 20px;
+}
+
+.company-name {
+    font-size: 16pt;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin: 10px 0;
+    line-height: 1.2;
+}
+
+.company-tagline {
+    font-size: 10pt;
+    font-style: italic;
+    margin: 5px 0;
+}
+
+.contract-title {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.contract-subtitle {
+    font-size: 11pt;
+    font-style: italic;
+    margin: 5px 0;
+}
+
+.page-number {
+    font-size: 10pt;
+    margin: 5px 0;
+}
+
+.section-title {
+    font-weight: bold;
+    text-align: center;
+    margin: 30px 0 20px 0;
+    font-size: 12pt;
+}
+
+.contract-body {
+    text-align: justify;
+    text-indent: 50px;
+    margin: 20px 0;
+    font-size: 12pt;
+    line-height: 1.5;
+}
+
+.contract-body.no-indent {
+    text-indent: 0;
+}
+
+.party-section {
+    margin: 20px 0;
+    text-align: justify;
+    font-size: 12pt;
+    line-height: 1.5;
+}
+
+.employer-name {
+    font-weight: bold;
+}
+
+.centered-text {
+    text-align: center;
+    text-indent: 0;
+    margin: 20px 0;
+}
+
+.variable-placeholder {
+    font-weight: bold;
+    text-decoration: underline;
+    color: #0066cc;
+}
+
+/* Print specific styles */
+@media print {
+    @page {
+        margin: 0.5in;
+        size: letter;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .contract-page {
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+}

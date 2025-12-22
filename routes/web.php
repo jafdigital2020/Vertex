@@ -397,6 +397,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/contracts/generate', [ContractController::class, 'generate'])->name('contracts.generate');
     Route::post('/contracts/{contract}/sign', [ContractController::class, 'sign'])->name('contracts.sign');
     Route::get('/contracts/{contract}/print', [ContractController::class, 'print'])->name('contracts.print');
+    Route::get('/contracts/{contract}/view-html', [ContractController::class, 'viewHtml'])->name('contracts.viewHtml');
+    Route::post('/contracts/preview-html', [ContractController::class, 'previewHtml'])->name('contracts.previewHtml');
 });
 
 Route::get('/send-test-notif', function () {

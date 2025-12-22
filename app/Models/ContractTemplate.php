@@ -13,8 +13,8 @@ class ContractTemplate extends Model
         'name',
         'contract_type',
         'content',
-        'pdf_template_path',
-        'pdf_fillable_content',
+        'html_template_path',
+        'html_content',
         'is_active',
         'tenant_id',
     ];
@@ -36,11 +36,11 @@ class ContractTemplate extends Model
      */
     public function getPdfTemplatePath()
     {
-        if (!$this->pdf_template_path) {
+        if (!$this->html_template_path) {
             return null;
         }
 
-        return public_path($this->pdf_template_path);
+        return public_path($this->html_template_path);
     }
 
     /**
@@ -88,9 +88,9 @@ class ContractTemplate extends Model
     public function generateContract($employee, $additionalData = [])
     {
         // For PDF templates with fillable content, use that
-        if ($this->pdf_template_path && $this->pdf_fillable_content) {
-            $content = $this->pdf_fillable_content;
-        } elseif ($this->pdf_template_path) {
+        if ($this->html_template_path && $this->html_content) {
+            $content = $this->html_content;
+        } elseif ($this->html_template_path) {
             // PDF without fillable content returns null
             return null;
         } else {
@@ -114,7 +114,7 @@ class ContractTemplate extends Model
      */
     public function isPdfTemplate()
     {
-        return !empty($this->pdf_template_path);
+        return !empty($this->html_template_path);
     }
 
     /**
@@ -122,10 +122,10 @@ class ContractTemplate extends Model
      */
     public function getPdfUrl()
     {
-        if (!$this->pdf_template_path) {
+        if (!$this->html_template_path) {
             return null;
         }
 
-        return asset($this->pdf_template_path);
+        return asset($this->html_template_path);
     }
 }

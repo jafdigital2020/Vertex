@@ -148,7 +148,7 @@
                         </div>
                         <div class="mb-3" id="pdf_template_section_add" style="display: none;">
                             <label class="form-label">PDF Template File <span class="text-danger">*</span></label>
-                            <select class="form-select" name="pdf_template_path" id="pdf_template_path_add">
+                            <select class="form-select" name="html_template_path" id="html_template_path_add">
                                 <option value="">Select PDF Template</option>
                                 <option value="templates/contracts/01 Rev. 04 Probationary Employment 2024.pdf">01 Rev. 04
                                     Probationary Employment 2024.pdf</option>
@@ -161,7 +161,7 @@
                         </div>
                         <div class="mb-3" id="pdf_fillable_content_section_add" style="display: none;">
                             <label class="form-label">PDF Fillable Content (Optional)</label>
-                            <textarea class="form-control" name="pdf_fillable_content" id="pdf_fillable_content_add"
+                            <textarea class="form-control" name="html_content" id="html_content_add"
                                 rows="15" placeholder="Paste your contract text here with {{placeholders}}..."></textarea>
                             <small class="text-muted">
                                 Add editable contract text with placeholders: @{{ '{{party_name}}' }}, @{{ '{{start_date}}'
@@ -242,19 +242,19 @@
                     $('#pdf_template_section_add').show();
                     $('#pdf_fillable_content_section_add').show();
                     $('#content_section_add').hide();
-                    $('#pdf_template_path_add').prop('required', true);
+                    $('#html_template_path_add').prop('required', true);
                     $('#content_add').prop('required', false);
                 } else if (source === 'text') {
                     $('#pdf_template_section_add').hide();
                     $('#pdf_fillable_content_section_add').hide();
                     $('#content_section_add').show();
-                    $('#pdf_template_path_add').prop('required', false);
+                    $('#html_template_path_add').prop('required', false);
                     $('#content_add').prop('required', true);
                 } else {
                     $('#pdf_template_section_add').hide();
                     $('#pdf_fillable_content_section_add').hide();
                     $('#content_section_add').hide();
-                    $('#pdf_template_path_add').prop('required', false);
+                    $('#html_template_path_add').prop('required', false);
                     $('#content_add').prop('required', false);
                 }
             });
@@ -266,9 +266,9 @@
 
                 if (templateSource === 'pdf') {
                     if (contractType === 'Probationary') {
-                        $('#pdf_template_path_add').val('templates/contracts/01 Rev. 04 Probationary Employment 2024.pdf');
+                        $('#html_template_path_add').val('templates/contracts/01 Rev. 04 Probationary Employment 2024.pdf');
                     } else if (contractType === 'Regular') {
-                        $('#pdf_template_path_add').val('templates/contracts/02 Rev. 02 Regular Employment 2024.pdf');
+                        $('#html_template_path_add').val('templates/contracts/02 Rev. 02 Regular Employment 2024.pdf');
                     }
                 }
             });

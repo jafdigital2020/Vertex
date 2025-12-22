@@ -295,4 +295,85 @@ class ContractController extends Controller
         $contract->load(['user.personalInformation', 'template', 'signedBy.personalInformation']);
         return view('tenant.contracts.print', compact('contract'));
     }
+
+    /**
+     * View HTML contract template
+     */
+    public function viewHtml(Contract $contract)
+    {
+        $contract->load(['user.personalInformation', 'template', 'signedBy.personalInformation']);
+
+        $employee = $contract->user;
+        $template = $contract->template;
+
+        // Get contract data
+        $contractData = $template ? $template->getContractData($employee, [
+            'start_date' => \Carbon\Carbon::parse($contract->start_date)->format('F d, Y'),
+            'end_date' => $contract->end_date ? \Carbon\Carbon::parse($contract->end_date)->format('F d, Y') : '',
+        ]) : [];
+
+        // Determine which template to use
+        $templateView = 'tenant.contract-templates.html.probationary-employment';
+
+        if ($template) {
+            switch ($template->contract_type) {
+                case 'Regular':
+                    $templateView = 'tenant.contract-templates.html.regular-employment';
+                    break;
+                case 'Probationary':
+                default:
+                    $templateView = 'tenant.contract-templates.html.probationary-employment';
+                    break;
+            }
+        }
+
+        return view($templateView, ['contractData' => $contractData]);
+    }
+
+    /**
+     * Preview HTML contract template
+     */
+    public function previewHtml(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'template_id' => 'required|exists:contract_templates,id',
+                'start_date' => 'nullable|date',
+            ]);
+
+            $employee = User::with(['personalInformation', 'employmentDetail', 'designation', 'department'])
+                ->findOrFail($validated['user_id']);
+
+            $template = ContractTemplate::findOrFail($validated['template_id']);
+
+            $startDate = $validated['start_date'] ?? now()->format('Y-m-d');
+
+            // Get contract data
+            $contractData = $template->getContractData($employee, [
+                'start_date' => \Carbon\Carbon::parse($startDate)->format('F d, Y'),
+            ]);
+
+            // Determine which template to use
+            $templateView = 'tenant.contract-templates.html.probationary-employment';
+
+            switch ($template->contract_type) {
+                case 'Regular':
+                    $templateView = 'tenant.contract-templates.html.regular-employment';
+                    break;
+                case 'Probationary':
+                default:
+                    $templateView = 'tenant.contract-templates.html.probationary-employment';
+                    break;
+            }
+
+            return view($templateView, compact('contractData'));
+        } catch (\Exception $e) {
+            Log::error('Contract Preview Error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to preview contract: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

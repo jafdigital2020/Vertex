@@ -1153,6 +1153,21 @@ class BiometricsController extends Controller
     {
         // ✅ CRITICAL FIX: Prevent clock-out without clock-in
         if (!$attendance->date_time_in) {
+            // ✅ NEW FEATURE: Check if yesterday has incomplete attendance
+            $yesterdayAttendance = $this->findYesterdayIncompleteAttendance($attendanceLog->user_id);
+            
+            if ($yesterdayAttendance) {
+                Log::info('🔄 Yesterday has incomplete attendance, processing clock-out for yesterday', [
+                    'yesterday_attendance_id' => $yesterdayAttendance->id,
+                    'yesterday_date' => $yesterdayAttendance->attendance_date,
+                    'employee_id' => $attendanceLog->employee_id,
+                    'clock_out_time' => $attendanceLog->check_time->toDateTimeString()
+                ]);
+                
+                // Process clock-out for yesterday's attendance
+                return $this->processClockOut($yesterdayAttendance, $attendanceLog, $yesterdayAttendance->shift);
+            }
+            
             Log::warning('❌ BLOCKED: Clock-out without clock-in detected', [
                 'attendance_id' => $attendance->id,
                 'employee_id' => $attendanceLog->employee_id,
@@ -1272,6 +1287,33 @@ class BiometricsController extends Controller
         ];
 
         $attendance->update(['invalid_logout_attempts' => $invalidAttempts]);
+    }
+
+    /**
+     * ✅ NEW: Find yesterday's incomplete attendance (has clock-in but no clock-out)
+     * @param int $userId
+     * @return Attendance|null
+     */
+    private function findYesterdayIncompleteAttendance($userId)
+    {
+        $yesterday = Carbon::yesterday()->format('Y-m-d');
+        
+        $yesterdayAttendance = Attendance::where('user_id', $userId)
+            ->where('attendance_date', $yesterday)
+            ->whereNotNull('date_time_in')  // Has clock-in
+            ->whereNull('date_time_out')    // But no clock-out
+            ->first();
+        
+        if ($yesterdayAttendance) {
+            Log::info('✅ Found incomplete attendance from yesterday', [
+                'attendance_id' => $yesterdayAttendance->id,
+                'user_id' => $userId,
+                'date' => $yesterday,
+                'clock_in' => $yesterdayAttendance->date_time_in->toDateTimeString()
+            ]);
+        }
+        
+        return $yesterdayAttendance;
     }
 
     /**

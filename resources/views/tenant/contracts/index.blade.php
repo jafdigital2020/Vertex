@@ -39,8 +39,8 @@
                         <div class="card-header">
                             <h4 class="card-title mb-0">Contracts List</h4>
                         </div>
-                        <div class="card-body">
-                            <div class="custom-datatable-filter table-responsive">
+                        <div class="card-body" style="overflow: visible;">
+                            <div class="table-responsive" style="overflow: visible;">
                                 <table class="table datatable" id="contracts_table">
                                     <thead class="thead-light">
                                         <tr>
@@ -91,41 +91,48 @@
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="dropdown table-action">
-                                                        <a href="#" class="action-icon dropdown-toggle"
-                                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <a href="#" class="action-icon" data-bs-toggle="dropdown"
+                                                            aria-expanded="false">
                                                             <i class="ti ti-dots-vertical"></i>
                                                         </a>
-                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                        <ul class="dropdown-menu dropdown-menu-end"
+                                                            style="position: absolute !important;">
                                                             <li>
                                                                 <a href="{{ route('contracts.show', $contract->id) }}"
-                                                                    class="dropdown-item rounded-1">
-                                                                    <i class="ti ti-eye me-2"></i>View
+                                                                    class="dropdown-item">
+                                                                    <i class="ti ti-eye me-2"></i>View Details
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="{{ route('contracts.viewHtml', $contract->id) }}"
+                                                                    class="dropdown-item" target="_blank">
+                                                                    <i class="ti ti-file-text me-2"></i>View Contract
                                                                 </a>
                                                             </li>
                                                             <li>
                                                                 <a href="{{ route('contracts.print', $contract->id) }}"
-                                                                    class="dropdown-item rounded-1" target="_blank">
+                                                                    class="dropdown-item" target="_blank">
                                                                     <i class="ti ti-printer me-2"></i>Print
                                                                 </a>
                                                             </li>
                                                             @if($contract->status === 'Draft')
                                                                 <li>
                                                                     <a href="javascript:void(0);"
-                                                                        class="dropdown-item rounded-1 sign-contract"
+                                                                        class="dropdown-item sign-contract"
                                                                         data-id="{{ $contract->id }}">
                                                                         <i class="ti ti-signature me-2"></i>Sign
                                                                     </a>
                                                                 </li>
                                                                 <li>
                                                                     <a href="{{ route('contracts.edit', $contract->id) }}"
-                                                                        class="dropdown-item rounded-1">
+                                                                        class="dropdown-item">
                                                                         <i class="ti ti-edit me-2"></i>Edit
                                                                     </a>
                                                                 </li>
                                                             @endif
                                                             <li>
                                                                 <a href="javascript:void(0);"
-                                                                    class="dropdown-item rounded-1 delete-contract"
+                                                                    class="dropdown-item delete-contract"
                                                                     data-id="{{ $contract->id }}">
                                                                     <i class="ti ti-trash me-2"></i>Delete
                                                                 </a>
