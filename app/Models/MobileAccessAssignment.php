@@ -19,6 +19,7 @@ class MobileAccessAssignment extends Model
     protected $fillable = [
         'tenant_id',
         'user_id',
+        'user_type',
         'mobile_access_license_id',
         'branch_id',
         'status',

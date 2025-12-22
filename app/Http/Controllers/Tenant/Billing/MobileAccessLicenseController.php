@@ -76,8 +76,14 @@ class MobileAccessLicenseController extends Controller
                 ];
                 $globalUser->employmentDetail = (object)[
                     'employee_id' => 'ADMIN-' . str_pad($globalUser->id, 3, '0', STR_PAD_LEFT),
-                    'department' => (object)['department_name' => 'Administration'],
-                    'designation' => (object)['designation_name' => 'Global Admin'],
+                    'department' => (object)[
+                        'id' => 999, // Virtual department ID for Administration
+                        'department_name' => 'Administration'
+                    ],
+                    'designation' => (object)[
+                        'id' => 999, // Virtual designation ID
+                        'designation_name' => 'Global Admin'
+                    ],
                     'branch' => null,
                 ];
                 $globalUser->user_type = 'global_admin';
@@ -100,17 +106,10 @@ class MobileAccessLicenseController extends Controller
             ->orderBy('assigned_at', 'desc')
             ->get();
 
-        // Manually load user data for both tenant users and global users
+        // Manually load user data based on user_type field
         $assignments = $rawAssignments->map(function ($assignment) {
-            // Try to find as tenant user first
-            $tenantUser = User::with(['personalInformation', 'employmentDetail.department', 'employmentDetail.designation'])
-                ->find($assignment->user_id);
-            
-            if ($tenantUser) {
-                $assignment->user = $tenantUser;
-                $assignment->user_type = 'tenant_user';
-            } else {
-                // Try to find as global user
+            if ($assignment->user_type === 'global_user') {
+                // Find as global user
                 $globalUser = \App\Models\GlobalUser::find($assignment->user_id);
                 if ($globalUser) {
                     // Transform global user to match expected structure
@@ -126,11 +125,24 @@ class MobileAccessLicenseController extends Controller
                     ];
                     $globalUser->employmentDetail = (object)[
                         'employee_id' => 'ADMIN-' . str_pad($globalUser->id, 3, '0', STR_PAD_LEFT),
-                        'department' => (object)['department_name' => 'Administration'],
-                        'designation' => (object)['designation_name' => 'Global Admin'],
+                        'department' => (object)[
+                            'id' => 999, // Virtual department ID for Administration
+                            'department_name' => 'Administration'
+                        ],
+                        'designation' => (object)[
+                            'id' => 999, // Virtual designation ID
+                            'designation_name' => 'Global Admin'
+                        ],
                     ];
                     $assignment->user = $globalUser;
-                    $assignment->user_type = 'global_user';
+                }
+            } else {
+                // Find as tenant user (default)
+                $tenantUser = User::with(['personalInformation', 'employmentDetail.department', 'employmentDetail.designation'])
+                    ->find($assignment->user_id);
+                
+                if ($tenantUser) {
+                    $assignment->user = $tenantUser;
                 }
             }
             
@@ -471,6 +483,7 @@ class MobileAccessLicenseController extends Controller
             $assignment = MobileAccessAssignment::create([
                 'tenant_id' => $tenantId,
                 'user_id' => $user->id,
+                'user_type' => $request->user_type,
                 'mobile_access_license_id' => $licensePool->id,
                 'branch_id' => $branchId,
                 'status' => 'active',
