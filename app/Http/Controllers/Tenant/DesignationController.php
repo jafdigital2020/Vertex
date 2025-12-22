@@ -32,7 +32,10 @@ class DesignationController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get(); 
-        $designations = $accessData['designations']->with('department.branch')->get();
+        $designations = $accessData['designations']
+            ->with('department.branch')
+            ->withCount('employmentDetail')
+            ->get();
 
         if ($request->wantsJson()) {
             // Transform designations to include only department_name and branch_name
@@ -46,6 +49,7 @@ class DesignationController extends Controller
                     'branch_name' => $designation->department && $designation->department->branch ? $designation->department->branch->name : null,
                     'job_description' => $designation->job_description,
                     'status' => $designation->status,
+                    'employee_count' => $designation->employment_detail_count ?? 0,
                     'created_at' => $designation->created_at,
                     'updated_at' => $designation->updated_at,
                 ];
