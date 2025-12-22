@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('mobile_access_assignments', function (Blueprint $table) {
-            // Try to drop the problematic constraint if it exists
-            try {
-                $table->dropIndex('unique_active_user_assignment');
-            } catch (\Exception $e) {
-                // Index might not exist, ignore
-            }
-        });
+        // This migration is no longer needed as the constraint removal
+        // is handled by a later migration (2025_12_22_161039)
+        // Keeping this empty to avoid conflicts
     }
 
     /**
