@@ -32,13 +32,29 @@ class DesignationController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get(); 
-        $designations = $accessData['designations']->get();
+        $designations = $accessData['designations']->with('department.branch')->get();
 
         if ($request->wantsJson()) {
+            // Transform designations to include only department_name and branch_name
+            $designationsTransformed = $designations->map(function ($designation) {
+                return [
+                    'id' => $designation->id,
+                    'designation_name' => $designation->designation_name,
+                    'department_id' => $designation->department_id,
+                    'department_name' => $designation->department ? $designation->department->department_name : null,
+                    'branch_id' => $designation->department && $designation->department->branch ? $designation->department->branch->id : null,
+                    'branch_name' => $designation->department && $designation->department->branch ? $designation->department->branch->name : null,
+                    'job_description' => $designation->job_description,
+                    'status' => $designation->status,
+                    'created_at' => $designation->created_at,
+                    'updated_at' => $designation->updated_at,
+                ];
+            });
+
             return response()->json([
                 'message' => 'Designations retrieved successfully.',
                 'status' => 'success',
-                'designations' => $designations,
+                'designations' => $designationsTransformed,
                 'departments' => $departments,
                 'branches' => $branches,
                 'permission' => $permission
