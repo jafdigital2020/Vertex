@@ -30,6 +30,10 @@ class MobileAccessAssignment extends Model
         'assigned_by_id',
         'revoked_by_type',
         'revoked_by_id',
+        'expires_at',
+        'last_renewed_at',
+        'renewal_count',
+        'auto_renewal',
     ];
 
     /**
@@ -40,6 +44,9 @@ class MobileAccessAssignment extends Model
     protected $casts = [
         'assigned_at' => 'datetime',
         'revoked_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'last_renewed_at' => 'datetime',
+        'auto_renewal' => 'boolean',
     ];
 
     /**
@@ -99,6 +106,28 @@ class MobileAccessAssignment extends Model
     }
 
     /**
+     * Scope a query to only include non-expired active assignments.
+     */
+    public function scopeActiveAndValid($query)
+    {
+        return $query->where('status', 'active')
+                    ->where(function($q) {
+                        $q->whereNull('expires_at')
+                          ->orWhere('expires_at', '>', now());
+                    });
+    }
+
+    /**
+     * Scope a query to only include expired assignments.
+     */
+    public function scopeExpired($query)
+    {
+        return $query->where('status', 'active')
+                    ->whereNotNull('expires_at')
+                    ->where('expires_at', '<=', now());
+    }
+
+    /**
      * Scope a query to only include revoked assignments.
      */
     public function scopeRevoked($query)
@@ -128,6 +157,55 @@ class MobileAccessAssignment extends Model
     public function isRevoked(): bool
     {
         return $this->status === 'revoked';
+    }
+
+    /**
+     * Check if the assignment is expired.
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at && $this->expires_at <= now();
+    }
+
+    /**
+     * Check if the assignment is active and valid (not expired).
+     */
+    public function isActiveAndValid(): bool
+    {
+        return $this->isActive() && !$this->isExpired();
+    }
+
+    /**
+     * Get days until expiration.
+     */
+    public function getDaysUntilExpiration(): ?int
+    {
+        if (!$this->expires_at) {
+            return null; // No expiration set
+        }
+
+        $diff = now()->diffInDays($this->expires_at, false);
+        return $diff >= 0 ? $diff : 0;
+    }
+
+    /**
+     * Renew the mobile access assignment for another month.
+     */
+    public function renew(?Model $renewedBy = null): void
+    {
+        $this->expires_at = $this->expires_at 
+            ? $this->expires_at->addMonth() 
+            : now()->addMonth();
+        
+        $this->last_renewed_at = now();
+        $this->renewal_count++;
+
+        if ($renewedBy) {
+            $this->updated_by_type = get_class($renewedBy);
+            $this->updated_by_id = $renewedBy->id;
+        }
+
+        $this->save();
     }
 
     /**

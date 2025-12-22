@@ -452,12 +452,12 @@ class MobileAccessLicenseController extends Controller
                 ], 404);
             }
 
-            // Check if user already has active mobile access
+            // Check if user already has active and valid (non-expired) mobile access
             $userTypeForStorage = $request->user_type === 'global_admin' ? 'global_user' : $request->user_type;
             $existingAssignment = MobileAccessAssignment::forTenant($tenantId)
                 ->forUser($user->id)
                 ->where('user_type', $userTypeForStorage)
-                ->active()
+                ->activeAndValid()
                 ->first();
 
             if ($existingAssignment) {
@@ -497,6 +497,9 @@ class MobileAccessLicenseController extends Controller
                 'branch_id' => $branchId,
                 'status' => 'active',
                 'assigned_at' => now(),
+                'expires_at' => now()->addMonth(), // Monthly subscription - expires in 30 days
+                'auto_renewal' => true,
+                'renewal_count' => 0,
                 'assigned_by_type' => get_class($authUser),
                 'assigned_by_id' => $authUser->id,
             ]);

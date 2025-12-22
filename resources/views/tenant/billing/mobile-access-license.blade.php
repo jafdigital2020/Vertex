@@ -250,6 +250,7 @@ $page = 'mobile-access-license'; ?>
                                     <th>Designation</th>
                                     <th>Status</th>
                                     <th>Assigned Date</th>
+                                <th>Expires</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -294,9 +295,19 @@ $page = 'mobile-access-license'; ?>
                                         </td>
                                         <td>
                                             @if($assignment->status === 'active')
-                                                <span class="badge bg-success">
-                                                    <i class="ti ti-check me-1"></i>Active
-                                                </span>
+                                                @if($assignment->expires_at && $assignment->expires_at <= now())
+                                                    <span class="badge bg-warning">
+                                                        <i class="ti ti-clock me-1"></i>Expired
+                                                    </span>
+                                                @elseif($assignment->expires_at && $assignment->expires_at <= now()->addDays(7))
+                                                    <span class="badge bg-warning">
+                                                        <i class="ti ti-alert-triangle me-1"></i>Expiring Soon
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-success">
+                                                        <i class="ti ti-check me-1"></i>Active
+                                                    </span>
+                                                @endif
                                             @else
                                                 <span class="badge bg-danger">
                                                     <i class="ti ti-x me-1"></i>Revoked
@@ -312,8 +323,37 @@ $page = 'mobile-access-license'; ?>
                                                 </small>
                                             @endif
                                         </td>
+                                        <td>
+                                            @if($assignment->expires_at)
+                                                {{ $assignment->expires_at->format('M d, Y') }}
+                                                <br>
+                                                <small class="text-muted">
+                                                    @php
+                                                        $daysLeft = now()->diffInDays($assignment->expires_at, false);
+                                                    @endphp
+                                                    @if($daysLeft > 0)
+                                                        {{ $daysLeft }} day{{ $daysLeft > 1 ? 's' : '' }} left
+                                                    @elseif($daysLeft === 0)
+                                                        Expires today
+                                                    @else
+                                                        Expired {{ abs($daysLeft) }} day{{ abs($daysLeft) > 1 ? 's' : '' }} ago
+                                                    @endif
+                                                </small>
+                                            @else
+                                                <span class="text-muted">No expiration</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
                                             @if($assignment->status === 'active')
+                                                @if($assignment->expires_at && $assignment->expires_at <= now()->addDays(7))
+                                                    <button class="btn btn-sm btn-warning renew-access-btn me-1" 
+                                                            data-assignment-id="{{ $assignment->id }}"
+                                                            data-employee-name="{{ $personalInfo->full_name ?? ($user->username ?? 'Unknown User') }}"
+                                                            data-bs-toggle="tooltip" 
+                                                            title="Renew Mobile Access">
+                                                        <i class="ti ti-refresh me-1"></i>Renew
+                                                    </button>
+                                                @endif
                                                 <button class="btn btn-sm btn-danger revoke-access-btn" 
                                                         data-assignment-id="{{ $assignment->id }}"
                                                         data-employee-name="{{ $personalInfo->full_name ?? ($user->username ?? 'Unknown User') }}"
@@ -432,10 +472,11 @@ $page = 'mobile-access-license'; ?>
                                 $userType = $employee->user_type ?? 'tenant_user';
                                 // Normalize user_type for database comparison
                                 $normalizedUserType = $userType === 'global_admin' ? 'global_user' : $userType;
-                                $hasAccess = $assignments->where('user_id', $employee->id)
-                                                        ->where('user_type', $normalizedUserType)
-                                                        ->where('status', 'active')
-                                                        ->isNotEmpty();
+                                $activeAssignment = $assignments->where('user_id', $employee->id)
+                                                              ->where('user_type', $normalizedUserType)
+                                                              ->where('status', 'active')
+                                                              ->first();
+                                $hasAccess = $activeAssignment && (!$activeAssignment->expires_at || $activeAssignment->expires_at > now());
                             @endphp
                             <div class="employee-item border rounded mb-2 {{ $hasAccess ? 'bg-light' : '' }}" 
                                  data-employee-id="{{ $employee->id }}"
