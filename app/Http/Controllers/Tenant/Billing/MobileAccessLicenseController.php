@@ -64,13 +64,20 @@ class MobileAccessLicenseController extends Controller
             ->get()
             ->map(function($globalUser) {
                 // Transform global user to match employee structure
+                $fullName = trim(($globalUser->first_name ?? '') . ' ' . ($globalUser->last_name ?? ''));
+                if (empty($fullName)) {
+                    $fullName = $globalUser->username; // Fallback to username
+                }
+                
                 $globalUser->personalInformation = (object)[
-                    'full_name' => $globalUser->first_name . ' ' . $globalUser->last_name,
-                    'first_name' => $globalUser->first_name,
-                    'last_name' => $globalUser->last_name,
+                    'full_name' => $fullName,
+                    'first_name' => $globalUser->first_name ?: $globalUser->username,
+                    'last_name' => $globalUser->last_name ?: '',
                 ];
                 $globalUser->employmentDetail = (object)[
+                    'employee_id' => 'ADMIN-' . str_pad($globalUser->id, 3, '0', STR_PAD_LEFT),
                     'department' => (object)['department_name' => 'Administration'],
+                    'designation' => (object)['designation_name' => 'Global Admin'],
                     'branch' => null,
                 ];
                 $globalUser->user_type = 'global_admin';
@@ -107,12 +114,18 @@ class MobileAccessLicenseController extends Controller
                 $globalUser = \App\Models\GlobalUser::find($assignment->user_id);
                 if ($globalUser) {
                     // Transform global user to match expected structure
+                    $fullName = trim(($globalUser->first_name ?? '') . ' ' . ($globalUser->last_name ?? ''));
+                    if (empty($fullName)) {
+                        $fullName = $globalUser->username; // Fallback to username
+                    }
+                    
                     $globalUser->personalInformation = (object)[
-                        'full_name' => trim($globalUser->first_name . ' ' . $globalUser->last_name),
-                        'first_name' => $globalUser->first_name,
-                        'last_name' => $globalUser->last_name,
+                        'full_name' => $fullName,
+                        'first_name' => $globalUser->first_name ?: $globalUser->username,
+                        'last_name' => $globalUser->last_name ?: '',
                     ];
                     $globalUser->employmentDetail = (object)[
+                        'employee_id' => 'ADMIN-' . str_pad($globalUser->id, 3, '0', STR_PAD_LEFT),
                         'department' => (object)['department_name' => 'Administration'],
                         'designation' => (object)['designation_name' => 'Global Admin'],
                     ];
