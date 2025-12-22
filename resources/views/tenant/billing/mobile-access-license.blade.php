@@ -23,17 +23,27 @@ $page = 'mobile-access-license'; ?>
                         </ol>
                     </nav>
                 </div>
-                <div class="head-icons ms-2 gap-2">
+                <div class="d-flex my-xl-auto right-content align-items-center flex-wrap">
                     @if ($licensePool->canAssignLicense())
-                        <button type="button" class="btn btn-white border" data-bs-toggle="modal" data-bs-target="#assignAccessModal">
-                            <i class="ti ti-plus"></i>
-                            Assign Mobile Access
-                        </button>
+                        <div class="me-2 mb-2">
+                            <button type="button" class="btn btn-white border d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#assignAccessModal">
+                                <i class="ti ti-plus me-1"></i>
+                                Assign Mobile Access
+                            </button>
+                        </div>
                     @endif
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#purchaseLicensesModal">
-                        <i class="ti ti-shopping-cart"></i>
-                        Purchase Licenses
-                    </button>
+                    <div class="me-2 mb-2">
+                        <button type="button" class="btn btn-primary d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#purchaseLicensesModal">
+                            <i class="ti ti-shopping-cart me-1"></i>
+                            Purchase Licenses
+                        </button>
+                    </div>
+                    <div class="head-icons ms-2">
+                        <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-original-title="Collapse" id="collapse-header">
+                            <i class="ti ti-chevrons-up"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
             <!-- /Breadcrumb -->
@@ -346,6 +356,7 @@ $page = 'mobile-access-license'; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="purchaseLicensesForm">
+                    @csrf
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Number of Licenses</label>
@@ -419,8 +430,10 @@ $page = 'mobile-access-license'; ?>
                         @foreach($employees as $employee)
                             @php
                                 $userType = $employee->user_type ?? 'tenant_user';
+                                // Normalize user_type for database comparison
+                                $normalizedUserType = $userType === 'global_admin' ? 'global_user' : $userType;
                                 $hasAccess = $assignments->where('user_id', $employee->id)
-                                                        ->where('user_type', $userType)
+                                                        ->where('user_type', $normalizedUserType)
                                                         ->where('status', 'active')
                                                         ->isNotEmpty();
                             @endphp
@@ -474,6 +487,7 @@ $page = 'mobile-access-license'; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="revokeAccessForm">
+                    @csrf
                     <div class="modal-body">
                         <div class="mb-3">
                             <p>Are you sure you want to revoke mobile access from <strong id="revokeEmployeeName"></strong>?</p>
@@ -647,9 +661,6 @@ $page = 'mobile-access-license'; ?>
                     data: formData,
                     processData: false,
                     contentType: false,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
                     success: function(data) {
                         console.log('Purchase response:', data);
                         
