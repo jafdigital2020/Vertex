@@ -418,7 +418,11 @@ $page = 'mobile-access-license'; ?>
                     <div id="employeeList" style="max-height: 400px; overflow-y: auto;">
                         @foreach($employees as $employee)
                             @php
-                                $hasAccess = $assignments->where('user_id', $employee->id)->where('status', 'active')->isNotEmpty();
+                                $userType = $employee->user_type ?? 'tenant_user';
+                                $hasAccess = $assignments->where('user_id', $employee->id)
+                                                        ->where('user_type', $userType)
+                                                        ->where('status', 'active')
+                                                        ->isNotEmpty();
                             @endphp
                             <div class="employee-item border rounded mb-2 {{ $hasAccess ? 'bg-light' : '' }}" 
                                  data-employee-id="{{ $employee->id }}"
@@ -446,6 +450,7 @@ $page = 'mobile-access-license'; ?>
                                         @else
                                             <button class="btn btn-sm btn-primary assign-access-btn" 
                                                     data-user-id="{{ $employee->id }}"
+                                                    data-user-type="{{ $employee->user_type ?? 'tenant_user' }}"
                                                     data-employee-name="{{ $employee->personalInformation->full_name ?? $employee->username }}">
                                                 <i class="ti ti-plus me-1"></i>Assign Access
                                             </button>
@@ -692,6 +697,7 @@ $page = 'mobile-access-license'; ?>
             // Assign Access functionality
             $(document).on('click', '.assign-access-btn', function() {
                 const userId = $(this).data('user-id');
+                const userType = $(this).data('user-type');
                 const employeeName = $(this).data('employee-name');
                 
                 if (confirm(`Assign mobile access to ${employeeName}?`)) {
@@ -704,6 +710,7 @@ $page = 'mobile-access-license'; ?>
                         method: 'POST',
                         data: {
                             user_id: userId,
+                            user_type: userType,
                             _token: $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(data) {
