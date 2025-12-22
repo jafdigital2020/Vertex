@@ -426,7 +426,7 @@ class MobileAccessLicenseController extends Controller
         try {
             $request->validate([
                 'user_id' => 'required|integer',
-                'user_type' => 'required|in:tenant_user,global_user',
+                'user_type' => 'required|in:tenant_user,global_user,global_admin',
             ]);
 
             $authUser = $this->authUser();
@@ -435,7 +435,7 @@ class MobileAccessLicenseController extends Controller
             DB::beginTransaction();
 
             // Find user based on type
-            if ($request->user_type === 'global_user') {
+            if (in_array($request->user_type, ['global_user', 'global_admin'])) {
                 $user = \App\Models\GlobalUser::where('id', $request->user_id)
                     ->where('tenant_id', $tenantId)
                     ->first();
@@ -476,6 +476,13 @@ class MobileAccessLicenseController extends Controller
 
             // Create the assignment
             $branchId = null;
+            $userTypeForStorage = $request->user_type;
+            
+            // Normalize user_type for storage - convert global_admin to global_user
+            if ($request->user_type === 'global_admin') {
+                $userTypeForStorage = 'global_user';
+            }
+            
             if ($request->user_type === 'tenant_user' && isset($user->employmentDetail)) {
                 $branchId = $user->employmentDetail->branch_id ?? null;
             }
@@ -483,7 +490,7 @@ class MobileAccessLicenseController extends Controller
             $assignment = MobileAccessAssignment::create([
                 'tenant_id' => $tenantId,
                 'user_id' => $user->id,
-                'user_type' => $request->user_type,
+                'user_type' => $userTypeForStorage,
                 'mobile_access_license_id' => $licensePool->id,
                 'branch_id' => $branchId,
                 'status' => 'active',
@@ -495,7 +502,7 @@ class MobileAccessLicenseController extends Controller
             DB::commit();
 
             // Get user name based on user type
-            if ($request->user_type === 'global_user') {
+            if (in_array($request->user_type, ['global_user', 'global_admin'])) {
                 $employeeName = $user->first_name . ' ' . $user->last_name;
             } else {
                 $employeeName = $user->personalInformation->full_name ?? $user->username;
