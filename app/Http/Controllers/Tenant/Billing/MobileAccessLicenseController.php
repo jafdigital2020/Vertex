@@ -453,8 +453,10 @@ class MobileAccessLicenseController extends Controller
             }
 
             // Check if user already has active mobile access
+            $userTypeForStorage = $request->user_type === 'global_admin' ? 'global_user' : $request->user_type;
             $existingAssignment = MobileAccessAssignment::forTenant($tenantId)
                 ->forUser($user->id)
+                ->where('user_type', $userTypeForStorage)
                 ->active()
                 ->first();
 
