@@ -37,10 +37,16 @@ class DepartmentController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
-        $departments = $accessData['departments']->withCount(['employees as employee_count'])->get();
+        $departments = $accessData['departments']->with('branch')->withCount(['employees as employee_count'])->get();
         $users  = $accessData['employees']->get();
 
         if ($request->wantsJson()) {
+            // Add branch_name to each department and hide the branch relationship
+            $departments->each(function ($department) {
+                $department->branch_name = $department->branch?->name;
+                $department->makeHidden('branch');
+            });
+
             return response()->json([
                 'message' => 'Departments retrieved successfully.',
                 'status' => 'success',
