@@ -41,6 +41,8 @@ class DatabaseSeeder extends Seeder
             InvoicesTableSeeder::class,
             CustomFieldTableSeeder::class,
             BranchTableSeeder::class,
+            DepartmentTableSeeder::class,
+            DesignationTableSeeder::class,
         ]);
     }
 }
