@@ -88,11 +88,44 @@ class MobileAccessLicenseController extends Controller
         );
 
         // Get mobile access assignments for this tenant
-        $assignments = MobileAccessAssignment::forTenant($tenantId)
-            ->with(['user.personalInformation', 'user.employmentDetail.department', 'user.employmentDetail.designation', 'assignedBy', 'revokedBy'])
+        $rawAssignments = MobileAccessAssignment::forTenant($tenantId)
             ->orderBy('status', 'asc')
             ->orderBy('assigned_at', 'desc')
             ->get();
+
+        // Manually load user data for both tenant users and global users
+        $assignments = $rawAssignments->map(function ($assignment) {
+            // Try to find as tenant user first
+            $tenantUser = User::with(['personalInformation', 'employmentDetail.department', 'employmentDetail.designation'])
+                ->find($assignment->user_id);
+            
+            if ($tenantUser) {
+                $assignment->user = $tenantUser;
+                $assignment->user_type = 'tenant_user';
+            } else {
+                // Try to find as global user
+                $globalUser = \App\Models\GlobalUser::find($assignment->user_id);
+                if ($globalUser) {
+                    // Transform global user to match expected structure
+                    $globalUser->personalInformation = (object)[
+                        'full_name' => trim($globalUser->first_name . ' ' . $globalUser->last_name),
+                        'first_name' => $globalUser->first_name,
+                        'last_name' => $globalUser->last_name,
+                    ];
+                    $globalUser->employmentDetail = (object)[
+                        'department' => (object)['department_name' => 'Administration'],
+                        'designation' => (object)['designation_name' => 'Global Admin'],
+                    ];
+                    $assignment->user = $globalUser;
+                    $assignment->user_type = 'global_user';
+                }
+            }
+            
+            return $assignment;
+        })->filter(function ($assignment) {
+            // Only keep assignments where we found the user
+            return isset($assignment->user);
+        });
 
         // Get summary statistics
         $stats = [
