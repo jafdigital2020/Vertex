@@ -15,7 +15,7 @@ class DepartmentTableSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get all existing tenants
+        // Get all existing tenants test
         $tenants = Tenant::all();
 
         // Default departments to create for each tenant
