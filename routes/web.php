@@ -71,6 +71,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\Tenant\Billing\PaymentController as TenantPaymentController;
 use App\Http\Controllers\Tenant\Billing\SubscriptionController as TenantSubscriptionController;
+use App\Http\Controllers\Tenant\Requests\RequestController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -125,6 +126,13 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/admin-dashboard/attendance-overview', [TenantDashboardController::class, 'attendanceSummaryToday'])->name('attendance-overview');
     Route::get('/admin-dashboard/payroll-overview', [TenantDashboardController::class, 'payrollOverview'])->name('payroll-overview');
     Route::get('/admin-dashboard/overtime-overview', [TenantDashboardController::class, 'overtimeOverview'])->name('overtime-overview');
+
+    // Employee Requests
+    Route::get('/request-loan', [RequestController::class, 'loanIndex'])->name('request-loan')->middleware(CheckPermission::class . ':51');
+    Route::get('/request-budget', [RequestController::class, 'budgetIndex'])->name('request-budget')->middleware(CheckPermission::class . ':52');
+    Route::get('/request-asset', [RequestController::class, 'assetIndex'])->name('request-asset')->middleware(CheckPermission::class . ':53');
+    Route::get('/request-hmo', [RequestController::class, 'hmoIndex'])->name('request-hmo')->middleware(CheckPermission::class . ':54');
+    Route::get('/request-coe', [RequestController::class, 'coeIndex'])->name('request-coe')->middleware(CheckPermission::class . ':55');
 
     //User Management
     //   User
@@ -395,26 +403,6 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Invoice Items
     Route::get('/billing/invoices/{invoice}/items', [InvoiceController::class, 'getInvoiceItems']);
 
-    // Request Routes (Employee Requests)
-    Route::get('/request-loan', function () {
-        return view('tenant.requests.loan');
-    })->name('request-loan')->middleware(CheckPermission::class . ':51');
-
-    Route::get('/request-budget', function () {
-        return view('tenant.requests.budget');
-    })->name('request-budget')->middleware(CheckPermission::class . ':52');
-
-    Route::get('/request-asset', function () {
-        return view('tenant.requests.asset');
-    })->name('request-asset')->middleware(CheckPermission::class . ':53');
-
-    Route::get('/request-hmo', function () {
-        return view('tenant.requests.hmo');
-    })->name('request-hmo')->middleware(CheckPermission::class . ':54');
-
-    Route::get('/request-coe', function () {
-        return view('tenant.requests.coe');
-    })->name('request-coe')->middleware(CheckPermission::class . ':55');
 });
 
 Route::get('/send-test-notif', function () {
