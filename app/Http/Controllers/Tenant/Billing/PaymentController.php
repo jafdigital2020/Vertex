@@ -43,7 +43,7 @@ class PaymentController extends Controller
     public function __construct(HitPayService $hitPayService)
     {
         $this->hitPayService = $hitPayService;
-        $this->centralAdminApiUrl = config('services.central_admin.api_url', 'https://api-staging-admin.timora.ph');
+        $this->centralAdminApiUrl = config('services.central_admin.api_url', 'https://api-admin.timora.ph');
     }
 
     public function authUser()
