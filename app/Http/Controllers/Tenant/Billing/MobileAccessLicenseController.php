@@ -54,10 +54,38 @@ class MobileAccessLicenseController extends Controller
             ]);
         }
 
-        // Get all employees for this tenant
-        $employees = User::where('tenant_id', $tenantId)
+        // Get all users for this tenant (both employees and global users)
+        $tenantEmployees = User::where('tenant_id', $tenantId)
             ->with(['personalInformation', 'employmentDetail.department', 'employmentDetail.branch'])
-            ->paginate(15);
+            ->get();
+        
+        // Get global users associated with this tenant
+        $globalUsers = \App\Models\GlobalUser::where('tenant_id', $tenantId)
+            ->get()
+            ->map(function($globalUser) {
+                // Transform global user to match employee structure
+                $globalUser->personalInformation = (object)[
+                    'full_name' => $globalUser->first_name . ' ' . $globalUser->last_name,
+                    'first_name' => $globalUser->first_name,
+                    'last_name' => $globalUser->last_name,
+                ];
+                $globalUser->employmentDetail = (object)[
+                    'department' => (object)['department_name' => 'Administration'],
+                    'branch' => null,
+                ];
+                $globalUser->user_type = 'global_admin';
+                return $globalUser;
+            });
+        
+        // Combine both user types and paginate
+        $allUsers = $tenantEmployees->concat($globalUsers);
+        $employees = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allUsers->forPage(request('page', 1), 15),
+            $allUsers->count(),
+            15,
+            request('page', 1),
+            ['path' => request()->url(), 'pageName' => 'page']
+        );
 
         // Get mobile access assignments for this tenant
         $assignments = MobileAccessAssignment::forTenant($tenantId)
@@ -339,7 +367,8 @@ class MobileAccessLicenseController extends Controller
     {
         try {
             $request->validate([
-                'user_id' => 'required|exists:users,id',
+                'user_id' => 'required|integer',
+                'user_type' => 'required|in:tenant_user,global_user',
             ]);
 
             $authUser = $this->authUser();
@@ -347,14 +376,21 @@ class MobileAccessLicenseController extends Controller
 
             DB::beginTransaction();
 
-            $user = User::where('id', $request->user_id)
-                ->where('tenant_id', $tenantId)
-                ->first();
+            // Find user based on type
+            if ($request->user_type === 'global_user') {
+                $user = \App\Models\GlobalUser::where('id', $request->user_id)
+                    ->where('tenant_id', $tenantId)
+                    ->first();
+            } else {
+                $user = User::where('id', $request->user_id)
+                    ->where('tenant_id', $tenantId)
+                    ->first();
+            }
 
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Employee not found.',
+                    'message' => 'User not found.',
                 ], 404);
             }
 
@@ -381,11 +417,16 @@ class MobileAccessLicenseController extends Controller
             }
 
             // Create the assignment
+            $branchId = null;
+            if ($request->user_type === 'tenant_user' && isset($user->employmentDetail)) {
+                $branchId = $user->employmentDetail->branch_id ?? null;
+            }
+
             $assignment = MobileAccessAssignment::create([
                 'tenant_id' => $tenantId,
                 'user_id' => $user->id,
                 'mobile_access_license_id' => $licensePool->id,
-                'branch_id' => $user->employmentDetail->branch_id ?? null,
+                'branch_id' => $branchId,
                 'status' => 'active',
                 'assigned_at' => now(),
                 'assigned_by_type' => get_class($authUser),
@@ -394,7 +435,12 @@ class MobileAccessLicenseController extends Controller
 
             DB::commit();
 
-            $employeeName = $user->personalInformation->full_name ?? $user->username;
+            // Get user name based on user type
+            if ($request->user_type === 'global_user') {
+                $employeeName = $user->first_name . ' ' . $user->last_name;
+            } else {
+                $employeeName = $user->personalInformation->full_name ?? $user->username;
+            }
             
             return response()->json([
                 'success' => true,
