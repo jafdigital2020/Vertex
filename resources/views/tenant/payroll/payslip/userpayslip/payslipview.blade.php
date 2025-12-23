@@ -33,9 +33,9 @@
                                 <li><a class="dropdown-item template-option" href="#" data-template="template2">
                                         <i class="ti ti-table me-2"></i>Template 2 - Classic
                                     </a></li>
-                                <li><a class="dropdown-item template-option" href="#" data-template="template3">
+                                {{-- <li><a class="dropdown-item template-option" href="#" data-template="template3">
                                         <i class="ti ti-palette me-2"></i>Template 3 - Minimal
-                                    </a></li>
+                                    </a></li> --}}
                             </ul>
                         </div>
                     </div>

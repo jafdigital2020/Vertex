@@ -187,7 +187,7 @@ class PayrollController extends Controller
             $totals = $this->sumMinutes($tenantId, $data);
             $salaryData = $this->getSalaryData($data['user_id']);
             $deductions = $this->calculateDeductions($data['user_id'], $totals, $salaryData);
-            $holidayInfo = $this->calculateHolidayPay($attendances, $data, $salaryData, $data['user_id']);
+            $holidayInfo = $this->calculateHolidayPay($attendances, $data, $salaryData);
             $nightDiffInfo = $this->calculateNightDifferential($data['user_id'], $data, $salaryData);
             $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
             $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
@@ -198,7 +198,7 @@ class PayrollController extends Controller
             $grossPay = $this->calculateGrossPay($data['user_id'], $data, $salaryData);
             $sssContributions = $this->calculateSSSContribution($data['user_id'], $data, $salaryData, $sssOption, $cuttoffOption);
             $philhealthContributions = $this->calculatePhilhealthContribution($data['user_id'], $data, $salaryData, $philhealthOption, $cuttoffOption);
-            $pagibigContributions = $this->calculatePagibigContribution($data['user_id'], $data, $salaryData, $pagibigOption, $cuttoffOption);
+            $pagibigContributions = $this->calculatePagibigContribution($data['user_id'], $data, $salaryData, $pagibigOption);
             $withholdingTax = $this->calculateWithholdingTax($data['user_id'], $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption);
             $leavePay = $this->calculateLeavePay($data['user_id'], $data, $salaryData);
             $deminimisBenefits = $this->calculateUserDeminimis($data['user_id'], $data, $salaryData);
@@ -509,11 +509,15 @@ class PayrollController extends Controller
         $end   = Carbon::parse($data['end_date'])->endOfDay();
         $period = CarbonPeriod::create($start->toDateString(), $end->toDateString());
         $monthDays = collect($period)
-            ->map(fn($d) => $d->format('m-d'))
+            ->map(fn(\Carbon\Carbon $d) => $d->format('m-d'))
             ->unique()->values()->all();
 
-        $hols = Holiday::whereBetween('date', [$start->toDateString(), $end->toDateString()])
-            ->orWhere(fn($q) => $q->where('recurring', 1)->whereIn('month_day', $monthDays))
+        $hols = Holiday::where(function($query) use ($start, $end, $monthDays) {
+                $query->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+                    ->orWhere(function($q) use ($monthDays) {
+                        $q->where('recurring', 1)->whereIn('month_day', $monthDays);
+                    });
+            })
             ->get(['id', 'date', 'type', 'month_day', 'recurring']);
 
         $exceptions = HolidayException::whereIn('holiday_id', $hols->pluck('id'))
@@ -554,8 +558,18 @@ class PayrollController extends Controller
             foreach ($hols as $h) {
                 if (in_array($id, $exceptions->get($h->id, []))) continue;
 
+                // For recurring holidays, match by month_day (MM-DD format)
+                // For non-recurring holidays, match by exact date
                 $att = $attendances->first(function ($a) use ($id, $h) {
-                    return $a->user_id == $id && $a->attendance_date->toDateString() == Carbon::parse($h->date)->toDateString();
+                    if ($a->user_id != $id) return false;
+                    
+                    if ($h->recurring && $h->month_day) {
+                        // Match by month-day format
+                        return $a->attendance_date->format('m-d') == $h->month_day;
+                    } else {
+                        // Match by exact date
+                        return $a->attendance_date->toDateString() == Carbon::parse($h->date)->toDateString();
+                    }
                 });
 
                 $worked = (bool)$att;
@@ -599,9 +613,22 @@ class PayrollController extends Controller
                     }
                 }
                 $payTotal += $pay;
+                
+                // Determine the actual holiday date for display
+                $holidayDate = $h->date;
+                if ($h->recurring && $h->month_day) {
+                    // For recurring holidays, find the actual date within the payroll period
+                    foreach ($period as $periodDate) {
+                        if ($periodDate->format('m-d') == $h->month_day) {
+                            $holidayDate = $periodDate->toDateString();
+                            break;
+                        }
+                    }
+                }
+                
                 $breakdown[] = [
                     'holiday_id' => $h->id,
-                    'holiday_date' => $h->date,
+                    'holiday_date' => $holidayDate,
                     'holiday_type' => $h->type,
                     'worked' => $worked,
                     'minutes_worked' => $mins,
@@ -1530,7 +1557,7 @@ class PayrollController extends Controller
                     // Count attended days in this period
                     $userAtt = $attendances->get($id, collect());
                     $attendedDays = $userAtt->filter(function ($att) use ($periodStart, $periodEnd) {
-                        return $att->attendance_date->between($periodStart, $periodEnd) && $att->status !== 'absent';
+                        return $att->attendance_date >= $periodStart && $att->attendance_date <= $periodEnd && $att->status !== 'absent';
                     })->count();
 
                     $finalAmount = $amount * $attendedDays;
@@ -1548,7 +1575,7 @@ class PayrollController extends Controller
 
                     $userAtt = $attendances->get($id, collect());
                     $attendedMinutes = $userAtt->filter(function ($att) use ($periodStart, $periodEnd) {
-                        return $att->attendance_date->between($periodStart, $periodEnd) && $att->status !== 'absent';
+                        return $att->attendance_date >= $periodStart && $att->attendance_date <= $periodEnd && $att->status !== 'absent';
                     })->sum('total_work_minutes');
 
                     $hours = $attendedMinutes / 60;
@@ -1658,8 +1685,7 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData,
-            $userIds
+            $salaryData
         );
 
         // Calculate Overtime Pay
@@ -2398,8 +2424,7 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData,
-            $userIds
+            $salaryData
         );
         $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
         $deductions = $this->calculateDeductions($userIds, $data, $salaryData);
@@ -2407,7 +2432,7 @@ class PayrollController extends Controller
         // Mandates
         $sss = $this->calculateSSSContribution($userIds, $data, $salaryData, $sssOption, $cuttoffOption);
         $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData, $philhealthOption, $cuttoffOption);
-        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData, $pagibigOption, $cuttoffOption);
+        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData, $pagibigOption);
 
         $result = [];
         foreach ($userIds as $userId) {
@@ -2649,8 +2674,7 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData,
-            $userIds
+            $salaryData
         );
         $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
         $deminimis = $this->calculateUserDeminimis($userIds, $data, $salaryData);
@@ -2930,7 +2954,12 @@ class PayrollController extends Controller
 
         // Handle JSON fields (earnings, deductions, deminimis)
         if ($request->has('earnings')) {
-            $oldEarnings = json_decode($payroll->earnings, true) ?? [];
+            $oldEarnings = [];
+            if (is_array($payroll->earnings)) {
+                $oldEarnings = $payroll->earnings;
+            } elseif (is_string($payroll->earnings)) {
+                $oldEarnings = json_decode((string)$payroll->earnings, true) ?? [];
+            }
             $updates = $request->input('earnings');
 
             $merged = [];
@@ -2947,7 +2976,12 @@ class PayrollController extends Controller
 
         // DEDUCTIONS: keep all fields, not just applied_amount
         if ($request->has('deductions')) {
-            $oldDeductions = json_decode($payroll->deductions, true) ?? [];
+            $oldDeductions = [];
+            if (is_array($payroll->deductions)) {
+                $oldDeductions = $payroll->deductions;
+            } elseif (is_string($payroll->deductions)) {
+                $oldDeductions = json_decode((string)$payroll->deductions, true) ?? [];
+            }
             $updates = $request->input('deductions');
 
             $merged = [];
@@ -3135,7 +3169,7 @@ class PayrollController extends Controller
                 $sheet->setCellValue('A' . $currentRow, 'FILTER CRITERIA:');
                 $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(11);
                 $currentRow++;
-                
+
                 if (!empty($filters['dateRange'])) {
                     $sheet->setCellValue('A' . $currentRow, 'Period: ' . $filters['dateRange']);
                     $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true);
@@ -3155,7 +3189,7 @@ class PayrollController extends Controller
             // Add professional section headers with grouped columns
             $headerRow = $currentRow + 1;
             $headers = $exporter->getHeaders();
-            
+
             // Create section headers for better organization
             $sectionHeaders = [
                 'A' => ['text' => 'EMPLOYEE INFORMATION', 'range' => 'A' . $headerRow . ':J' . $headerRow, 'color' => 'FF34495E'],
@@ -3204,7 +3238,7 @@ class PayrollController extends Controller
                     }
 
                     // Center align number column, date columns, and time columns
-                    if ($col == 'A' || in_array($colIndex, [8, 9, 10, 11, 12, 13, 14, 37, 38, 39])) { 
+                    if ($col == 'A' || in_array($colIndex, [8, 9, 10, 11, 12, 13, 14, 37, 38, 39])) {
                         $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     }
 
@@ -3241,7 +3275,7 @@ class PayrollController extends Controller
             $sheet->setCellValue('A' . $summaryRow, 'Total Employees Processed:');
             $sheet->setCellValue('C' . $summaryRow, $summaryTotals['total_employees']);
             $sheet->getStyle('A' . $summaryRow)->getFont()->setBold(true);
-            $sheet->getStyle('C' . $summaryRow)->getFont()->setBold(true)->getColor(new Color('FF2980B9'));
+            $sheet->getStyle('C' . $summaryRow)->getFont()->setBold(true)->getColor()->setARGB('FF2980B9');
             $sheet->getStyle('C' . $summaryRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
             $summaryRow++;
@@ -3315,28 +3349,28 @@ class PayrollController extends Controller
             // Create Professional Accounting Summary Sheet
             $accountingSheet = $spreadsheet->createSheet(1);
             $accountingSheet->setTitle('Financial Analysis');
-            
+
             // Professional header
             $accountingSheet->setCellValue('A1', 'PAYROLL FINANCIAL ANALYSIS & COST BREAKDOWN');
             $accountingSheet->mergeCells('A1:F1');
             $accountingSheet->getStyle('A1')->getFont()->setBold(true)->setSize(16)->setColor(new Color(Color::COLOR_WHITE));
             $accountingSheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF2E4057');
             $accountingSheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            
+
             // Add report metadata
             $accountingSheet->setCellValue('A2', 'Generated: ' . now()->format('F d, Y h:i A'));
             $accountingSheet->setCellValue('D2', 'Total Employees: ' . $summaryTotals['total_employees']);
             $accountingSheet->getStyle('A2:F2')->getFont()->setBold(true);
             $accountingSheet->mergeCells('A2:C2');
             $accountingSheet->mergeCells('D2:F2');
-            
+
             // Enhanced Earnings Analysis
             $accountingSheet->setCellValue('A4', 'EARNINGS ANALYSIS');
             $accountingSheet->mergeCells('A4:C4');
             $accountingSheet->getStyle('A4')->getFont()->setBold(true)->setSize(12)->setColor(new Color(Color::COLOR_WHITE));
             $accountingSheet->getStyle('A4')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF27AE60');
             $accountingSheet->getStyle('A4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            
+
             $earningsData = [
                 ['EARNINGS CATEGORY', 'AMOUNT (PHP)', 'PERCENTAGE', 'COST PER EMPLOYEE'],
                 ['Basic Pay', $summaryTotals['total_basic_pay'], round(($summaryTotals['total_basic_pay'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_basic_pay'] / max($summaryTotals['total_employees'], 1), 2)],
@@ -3350,7 +3384,7 @@ class PayrollController extends Controller
                 ['Other Earnings', $summaryTotals['total_other_earnings'], round(($summaryTotals['total_other_earnings'] / max($summaryTotals['total_gross_pay'], 1)) * 100, 2) . '%', round($summaryTotals['total_other_earnings'] / max($summaryTotals['total_employees'], 1), 2)],
                 ['TOTAL GROSS PAY', $summaryTotals['total_gross_pay'], '100.00%', round($summaryTotals['total_gross_pay'] / max($summaryTotals['total_employees'], 1), 2)],
             ];
-            
+
             $row = 4;
             foreach ($earningsData as $rowData) {
                 $col = 'A';
@@ -3366,11 +3400,11 @@ class PayrollController extends Controller
                 }
                 $row++;
             }
-            
+
             $deductionsStartRow = $row + 2;
             $accountingSheet->setCellValue('A' . $deductionsStartRow, 'DEDUCTIONS BREAKDOWN');
             $accountingSheet->getStyle('A' . $deductionsStartRow)->getFont()->setBold(true);
-            
+
             $deductionsData = [
                 ['Category', 'Amount', 'Percentage'],
                 ['Late Deductions', $summaryTotals['total_late_deduction'], round(($summaryTotals['total_late_deduction'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
@@ -3384,7 +3418,7 @@ class PayrollController extends Controller
                 ['Other Deductions', $summaryTotals['total_other_deductions'], round(($summaryTotals['total_other_deductions'] / $summaryTotals['total_deductions']) * 100, 2) . '%'],
                 ['TOTAL DEDUCTIONS', $summaryTotals['total_deductions'], '100.00%'],
             ];
-            
+
             $row = $deductionsStartRow + 1;
             foreach ($deductionsData as $rowData) {
                 $col = 'A';
@@ -3400,7 +3434,7 @@ class PayrollController extends Controller
                 }
                 $row++;
             }
-            
+
             // Auto-size columns for accounting sheet
             foreach (range('A', 'D') as $col) {
                 $accountingSheet->getColumnDimension($col)->setAutoSize(true);
@@ -3409,14 +3443,14 @@ class PayrollController extends Controller
             // Create Insights & Analytics Sheet
             $insightsSheet = $spreadsheet->createSheet(2);
             $insightsSheet->setTitle('HR Analytics');
-            
+
             // Professional header for insights
             $insightsSheet->setCellValue('A1', 'PAYROLL INSIGHTS & HR ANALYTICS');
             $insightsSheet->mergeCells('A1:D1');
             $insightsSheet->getStyle('A1')->getFont()->setBold(true)->setSize(16)->setColor(new Color(Color::COLOR_WHITE));
             $insightsSheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF8E44AD');
             $insightsSheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            
+
             // Add insights data
             $insightsData = [
                 ['METRIC', 'VALUE', 'BENCHMARK', 'STATUS'],
@@ -3431,7 +3465,7 @@ class PayrollController extends Controller
                 ['Basic Pay Percentage', $insights['basic_pay_percentage'] . '%', 'Typical: 70-80%', 'Normal Range'],
                 ['Labor Cost Analysis', 'PHP ' . number_format($insights['total_labor_cost'], 2), 'Total Cost', 'Complete']
             ];
-            
+
             $row = 3;
             foreach ($insightsData as $rowIndex => $rowData) {
                 $col = 'A';
@@ -3447,7 +3481,7 @@ class PayrollController extends Controller
                 }
                 $row++;
             }
-            
+
             // Auto-size columns for insights sheet
             foreach (range('A', 'D') as $col) {
                 $insightsSheet->getColumnDimension($col)->setAutoSize(true);
@@ -3456,20 +3490,20 @@ class PayrollController extends Controller
             // Create Detailed Earnings & Benefits Sheet
             $earningsSheet = $spreadsheet->createSheet(3);
             $earningsSheet->setTitle('Detailed Earnings & Benefits');
-            
+
             // Header
             $earningsSheet->setCellValue('A1', 'DETAILED EARNINGS & BENEFITS BREAKDOWN');
             $earningsSheet->mergeCells('A1:O1');
             $earningsSheet->getStyle('A1')->getFont()->setBold(true)->setSize(16)->setColor(new Color(Color::COLOR_WHITE));
             $earningsSheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF39C12');
             $earningsSheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            
+
             $row = 3;
-            
+
             foreach ($payrolls as $payroll) {
                 $earnings = is_string($payroll->earnings) ? json_decode($payroll->earnings, true) : ($payroll->earnings ?? []);
                 $deminimis = is_string($payroll->deminimis) ? json_decode($payroll->deminimis, true) : ($payroll->deminimis ?? []);
-                
+
                 // Enhance deminimis data with benefit names if missing
                 if (!empty($deminimis)) {
                     $deminimisBenefits = \App\Models\DeminimisBenefits::all()->keyBy('id');
@@ -3483,25 +3517,25 @@ class PayrollController extends Controller
                         }
                     }
                 }
-                
+
                 // Only show employees with additional earnings or benefits
                 if (!empty($earnings) || !empty($deminimis)) {
                     $user = $payroll->user;
                     $personalInfo = $user->personalInformation;
-                    
+
                     // Employee header
                     $earningsSheet->setCellValue('A' . $row, $personalInfo->last_name . ', ' . $personalInfo->first_name . ' (' . ($user->employmentDetail->employee_id ?? 'N/A') . ')');
                     $earningsSheet->mergeCells('A' . $row . ':O' . $row);
                     $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
                     $earningsSheet->getStyle('A' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE8F4F8');
                     $row++;
-                    
+
                     // Earnings Section
                     if (!empty($earnings)) {
                         $earningsSheet->setCellValue('A' . $row, 'Additional Earnings:');
                         $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(new Color('FF27AE60'));
                         $row++;
-                        
+
                         // Earnings headers
                         $headers = ['Earning Type', 'Type ID', 'Method', 'Default Amount', 'Override Amount', 'Applied Amount', 'Taxable', 'Frequency', 'Status'];
                         $col = 'A';
@@ -3512,7 +3546,7 @@ class PayrollController extends Controller
                             $col++;
                         }
                         $row++;
-                        
+
                         // Earnings data
                         foreach ($earnings as $earning) {
                             $earningsSheet->setCellValue('A' . $row, $earning['earning_type_name'] ?? 'Unknown');
@@ -3524,22 +3558,22 @@ class PayrollController extends Controller
                             $earningsSheet->setCellValue('G' . $row, ($earning['is_taxable'] ?? 1) ? 'Yes' : 'No');
                             $earningsSheet->setCellValue('H' . $row, ucfirst($earning['frequency'] ?? 'N/A'));
                             $earningsSheet->setCellValue('I' . $row, ucfirst($earning['status'] ?? 'active'));
-                            
+
                             // Highlight applied amount
                             $earningsSheet->getStyle('F' . $row)->getFont()->setBold(true);
                             $earningsSheet->getStyle('F' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE8F5E8');
-                            
+
                             $row++;
                         }
                         $row++; // Space
                     }
-                    
+
                     // De minimis Section
                     if (!empty($deminimis)) {
                         $earningsSheet->setCellValue('A' . $row, 'De Minimis Benefits:');
                         $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(new Color('FF9B59B6'));
                         $row++;
-                        
+
                         // De minimis headers
                         $headers = ['Benefit Name', 'Amount', 'Description', 'Type', 'Status'];
                         $col = 'A';
@@ -3550,7 +3584,7 @@ class PayrollController extends Controller
                             $col++;
                         }
                         $row++;
-                        
+
                         // De minimis data
                         foreach ($deminimis as $benefit) {
                             $earningsSheet->setCellValue('A' . $row, $benefit['benefit_name'] ?? $benefit['name'] ?? 'Unknown');
@@ -3558,23 +3592,23 @@ class PayrollController extends Controller
                             $earningsSheet->setCellValue('C' . $row, $benefit['description'] ?? 'N/A');
                             $earningsSheet->setCellValue('D' . $row, $benefit['type'] ?? 'N/A');
                             $earningsSheet->setCellValue('E' . $row, $benefit['status'] ?? 'active');
-                            
+
                             // Highlight amount
                             $earningsSheet->getStyle('B' . $row)->getFont()->setBold(true);
                             $earningsSheet->getStyle('B' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF3E5F5');
-                            
+
                             $row++;
                         }
                         $row++; // Space
                     }
-                    
+
                     // Allowances Section
                     $allowances = is_string($payroll->allowance) ? json_decode($payroll->allowance, true) : ($payroll->allowance ?? []);
                     if (!empty($allowances)) {
                         $earningsSheet->setCellValue('A' . $row, 'Allowances Breakdown:');
                         $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(new Color('FF008080'));
                         $row++;
-                        
+
                         // Allowances headers
                         $allowanceHeaders = ['Allowance Type', 'Amount'];
                         $col = 'A';
@@ -3585,28 +3619,28 @@ class PayrollController extends Controller
                             $col++;
                         }
                         $row++;
-                        
+
                         // Allowances data
                         foreach ($allowances as $allowance) {
                             $earningsSheet->setCellValue('A' . $row, $allowance['type'] ?? 'Unknown');
                             $earningsSheet->setCellValue('B' . $row, 'PHP ' . number_format($allowance['amount'] ?? 0, 2));
-                            
+
                             // Highlight amount
                             $earningsSheet->getStyle('B' . $row)->getFont()->setBold(true);
                             $earningsSheet->getStyle('B' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE0F2F1');
-                            
+
                             $row++;
                         }
                         $row++; // Space
                     }
-                    
+
                     // Loan Deductions Section  
                     $loanDeductions = is_string($payroll->loan_deductions) ? json_decode($payroll->loan_deductions, true) : ($payroll->loan_deductions ?? []);
                     if (!empty($loanDeductions)) {
                         $earningsSheet->setCellValue('A' . $row, 'Loan Deductions:');
                         $earningsSheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(new Color('FFB53654'));
                         $row++;
-                        
+
                         // Loan headers
                         $loanHeaders = ['Loan Type', 'Amount', 'Status'];
                         $col = 'A';
@@ -3617,26 +3651,26 @@ class PayrollController extends Controller
                             $col++;
                         }
                         $row++;
-                        
+
                         // Loan deductions data
                         foreach ($loanDeductions as $loan) {
                             $earningsSheet->setCellValue('A' . $row, $loan['deduction_type'] ?? $loan['type'] ?? 'Unknown');
                             $earningsSheet->setCellValue('B' . $row, 'PHP ' . number_format($loan['amount'] ?? 0, 2));
                             $earningsSheet->setCellValue('C' . $row, $loan['status'] ?? 'Active');
-                            
+
                             // Highlight amount
                             $earningsSheet->getStyle('B' . $row)->getFont()->setBold(true);
                             $earningsSheet->getStyle('B' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFCE4EC');
-                            
+
                             $row++;
                         }
                         $row++; // Space
                     }
-                    
+
                     $row += 2; // Extra space between employees
                 }
             }
-            
+
             // Auto-size columns for earnings sheet
             foreach (range('A', 'O') as $col) {
                 $earningsSheet->getColumnDimension($col)->setAutoSize(true);
