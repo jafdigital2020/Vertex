@@ -8,7 +8,7 @@
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
-                    <h2 class="mb-1">Request COE</h2>
+                    <h2 class="mb-1">Certificate of Employment Requests</h2>
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
@@ -17,67 +17,129 @@
                             <li class="breadcrumb-item">
                                 Requests
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Request COE</li>
+                            <li class="breadcrumb-item active" aria-current="page">COE Requests</li>
                         </ol>
                     </nav>
                 </div>
             </div>
             <!-- /Breadcrumb -->
 
+            @php
+                $hour = now()->hour;
+                if ($hour < 12) {
+                    $greeting = 'Good Morning';
+                } elseif ($hour < 18) {
+                    $greeting = 'Good Afternoon';
+                } else {
+                    $greeting = 'Good Evening';
+                }
+
+                $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+                $name = $user?->personalInformation->first_name ?? ($user?->username ?? 'Guest');
+
+                // TODO: Replace with actual data from controller
+                $pendingCount = 0;
+                $approvedCount = 0;
+                $rejectedCount = 0;
+                $totalCOE = 0;
+            @endphp
+
             <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                            <h5>COE Request Management</h5>
-                            <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_coe_request">
-                                    <i class="ti ti-plus"></i>New COE Request
+                <!-- Left Column - Quick Action Card -->
+                <div class="col-xl-3 col-lg-4 d-flex">
+                    <div class="card flex-fill">
+                        <div class="card-body">
+                            <div class="mb-3 text-center">
+                                <h6 class="fw-medium text-gray-5 mb-2">{{ $greeting }}, {{ $name }}</h6>
+                                <p class="text-muted mb-0 small">Submit and manage your COE requests</p>
+                            </div>
+
+                            <div class="attendance-circle-progress mx-auto mb-3" data-value='65'>
+                                <span class="progress-left">
+                                    <span class="progress-bar border-warning"></span>
+                                </span>
+                                <span class="progress-right">
+                                    <span class="progress-bar border-warning"></span>
+                                </span>
+                                <div class="avatar avatar-xxl avatar-rounded bg-light-warning">
+                                    <i class="ti ti-certificate text-warning" style="font-size: 48px;"></i>
+                                </div>
+                            </div>
+
+                            <div class="text-center mb-3">
+                                <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#add_coe_request">
+                                    <i class="ti ti-circle-plus me-2"></i>Submit New Request
                                 </button>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="text-muted small">Pending Requests</span>
+                                    <span class="badge badge-warning">{{ $pendingCount }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="text-muted small">Approved</span>
+                                    <span class="badge badge-success">{{ $approvedCount }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="text-muted small">Rejected</span>
+                                    <span class="badge badge-danger">{{ $rejectedCount }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-warning-transparent rounded">
+                                    <span class="text-warning small fw-medium">Total Requests</span>
+                                    <span class="badge badge-warning">{{ $totalCOE }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Request History -->
+                <div class="col-xl-9 col-lg-8 d-flex">
+                    <div class="card flex-fill">
+                        <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                            <h5>My COE Requests</h5>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ti ti-filter me-1"></i>All Status
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+                                        <li><a class="dropdown-item" href="#" data-filter="all">All Status</a></li>
+                                        <li><a class="dropdown-item" href="#" data-filter="pending">Pending</a></li>
+                                        <li><a class="dropdown-item" href="#" data-filter="approved">Approved</a></li>
+                                        <li><a class="dropdown-item" href="#" data-filter="rejected">Rejected</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="custom-datatable-filter table-responsive">
-                                <table class="table datatable">
+                                <table class="table datatable" id="coeRequestsTable">
                                     <thead class="thead-light">
                                         <tr>
-                                            <th class="no-sort">
-                                                <div class="form-check form-check-md">
-                                                    <input class="form-check-input" type="checkbox" id="select-all">
-                                                </div>
-                                            </th>
-                                            <th>Employee</th>
-                                            <th>COE Type</th>
+                                            <th>Purpose</th>
+                                            <th>Recipient</th>
+                                            <th>Needed By</th>
                                             <th>Request Date</th>
                                             <th>Status</th>
-                                            <th class="no-sort">Action</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{-- Add your data rows here when you have data --}}
-                                        {{-- Example:
-                                        @forelse($coeRequests as $request)
                                         <tr>
-                                            <td><input type="checkbox" class="form-check-input"></td>
-                                            <td>{{ $request->employee_name }}</td>
-                                            <td>{{ $request->coe_type }}</td>
-                                            <td>{{ $request->request_date }}</td>
-                                            <td><span class="badge">{{ $request->status }}</span></td>
-                                            <td>Actions</td>
+                                            <td colspan="6">
+                                                <div class="text-center py-5">
+                                                    <div class="avatar avatar-xl bg-light-warning mx-auto mb-3">
+                                                        <i class="ti ti-certificate text-warning" style="font-size: 32px;"></i>
+                                                    </div>
+                                                    <h6 class="text-muted">No COE requests yet</h6>
+                                                    <p class="text-muted small mb-3">Click "Submit New Request" to get started</p>
+                                                </div>
+                                            </td>
                                         </tr>
-                                        @empty
-                                        @endforelse
-                                        --}}
                                     </tbody>
                                 </table>
-                            </div>
-                            @if(!isset($coeRequests) || count($coeRequests ?? []) === 0)
-                            <div class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="ti ti-certificate fs-1 d-block mb-3"></i>
-                                    <p class="mt-2">No COE requests found</p>
-                                </div>
-                            </div>
-                            @endif
                             </div>
                         </div>
                     </div>
@@ -85,6 +147,9 @@
             </div>
 
         </div>
+
+        @include('layout.partials.footer-company')
+
     </div>
     <!-- /Page Wrapper -->
 
@@ -98,63 +163,47 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="#" method="POST">
+                <form id="coeRequestForm" action="#" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="employee_name" class="form-label">Employee Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="employee_name" name="employee_name" required>
+                            <div class="col-md-12 mb-3">
+                                <label for="purpose" class="form-label">Purpose <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="purpose" name="purpose" rows="3" placeholder="Why do you need a Certificate of Employment?" required></textarea>
+                                <small class="text-muted">e.g., Visa Application, Bank Loan, Employment Verification, etc.</small>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="coe_type" class="form-label">COE Type <span class="text-danger">*</span></label>
-                                <select class="form-select" id="coe_type" name="coe_type" required>
-                                    <option value="">Select COE Type</option>
-                                    <option value="Standard COE">Standard COE</option>
-                                    <option value="COE with Compensation">COE with Compensation</option>
-                                    <option value="COE for Visa Application">COE for Visa Application</option>
-                                    <option value="COE for Bank Loan">COE for Bank Loan</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                                <label for="recipient_name" class="form-label">Recipient Name</label>
+                                <input type="text" class="form-control" id="recipient_name" name="recipient_name" placeholder="Who will receive this?">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="recipient_company" class="form-label">Recipient Company/Institution</label>
+                                <input type="text" class="form-control" id="recipient_company" name="recipient_company" placeholder="Company or institution name">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="address_to" class="form-label">Address To</label>
+                                <textarea class="form-control" id="address_to" name="address_to" rows="2" placeholder="To Whom It May Concern or specific addressee..."></textarea>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="request_date" class="form-label">Request Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="request_date" name="request_date" required>
+                                <input type="date" class="form-control" id="request_date" name="request_date" value="{{ date('Y-m-d') }}" readonly>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="needed_date" class="form-label">Date Needed <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="needed_date" name="needed_date" required>
+                                <label for="needed_by_date" class="form-label">Needed By Date</label>
+                                <input type="date" class="form-control" id="needed_by_date" name="needed_by_date" min="{{ date('Y-m-d') }}">
+                                <small class="text-muted">When do you need this certificate?</small>
                             </div>
-                            <div class="col-md-12 mb-3">
-                                <label for="purpose" class="form-label">Purpose <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="purpose" name="purpose" rows="2" placeholder="State the purpose of the COE..." required></textarea>
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <label for="addressee" class="form-label">Addressee (To Whom It May Concern)</label>
-                                <input type="text" class="form-control" id="addressee" name="addressee" placeholder="e.g., Philippine Embassy, Bank Manager, etc.">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="copies_needed" class="form-label">Number of Copies <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="copies_needed" name="copies_needed" min="1" value="1" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="delivery_method" class="form-label">Delivery Method <span class="text-danger">*</span></label>
-                                <select class="form-select" id="delivery_method" name="delivery_method" required>
-                                    <option value="">Select Delivery Method</option>
-                                    <option value="Pick-up">Pick-up at HR</option>
-                                    <option value="Email">Email (PDF)</option>
-                                    <option value="Courier">Courier</option>
-                                </select>
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <label for="special_instructions" class="form-label">Special Instructions</label>
-                                <textarea class="form-control" id="special_instructions" name="special_instructions" rows="2" placeholder="Any special formatting or content requirements..."></textarea>
+                            <div class="col-md-12">
+                                <div class="alert alert-info mb-0">
+                                    <i class="ti ti-info-circle me-2"></i>
+                                    <small>COE requests are typically processed within 2-3 business days. Please allow sufficient time for approval and processing.</small>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-warning">
                             <i class="ti ti-check me-1"></i>Submit Request
                         </button>
                     </div>
@@ -163,4 +212,19 @@
         </div>
     </div>
     <!-- /Add COE Request Modal -->
+
+    @component('components.modal-popup')
+    @endcomponent
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#coeRequestForm').on('submit', function(e) {
+                e.preventDefault();
+                // TODO: Implement form submission
+                toastr.info('COE request submission - Coming soon!');
+            });
+        });
+    </script>
+@endpush
