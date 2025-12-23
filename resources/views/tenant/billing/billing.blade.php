@@ -379,7 +379,7 @@ $page = 'bills-payment'; ?>
                                                     data-invoice-type="{{ $inv->invoice_type ?? 'subscription' }}"
                                                     data-amount-due="{{ $inv->amount_due }}"
                                                     data-amount-paid="{{ $inv->amount_paid }}"
-                                                    data-subscription-amount="{{ $inv->subscription_amount ?? 0 }}"
+                                                    data-subscription-amount="{{ $inv->subscription_amount ?? $inv->amount_due }}"
                                                     data-license-overage-count="{{ $inv->license_overage_count ?? 0 }}"
                                                     data-license-overage-amount="{{ $inv->license_overage_amount ?? 0 }}"
                                                     data-license-overage-rate="{{ $inv->license_overage_rate ?? 49 }}"
@@ -786,6 +786,24 @@ $page = 'bills-payment'; ?>
             let invoiceItemsHTML = '';
 
             if (data.invoiceType === 'combo' || data.invoiceType === 'subscription') {
+                // Implementation Fee
+                if (implementationFee > 0) {
+                    invoiceItemsHTML += showQtyRateInPDF ? `
+                        <tr>
+                            <td>Implementation Fee</td>
+                            <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(implementationFee, data.currency)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, data.currency)}</td>
+                        </tr>
+                    ` : `
+                        <tr>
+                            <td>Implementation Fee</td>
+                            <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, data.currency)}</td>
+                        </tr>
+                    `;
+                }
                 // Subscription + License Overage
                 if (subscriptionAmount > 0) {
                     invoiceItemsHTML += showQtyRateInPDF ? `
