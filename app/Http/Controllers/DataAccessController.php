@@ -23,6 +23,11 @@ use App\Models\EarningType;
 use App\Models\UserEarning;
 use App\Models\GeofenceUser;
 use App\Models\LeaveRequest;
+use App\Models\LoanRequest;
+use App\Models\BudgetRequest;
+use App\Models\AssetRequest;
+use App\Models\HmoRequest;
+use App\Models\CoeRequest;
 use Illuminate\Http\Request;
 use App\Models\AssetsHistory;
 use App\Models\DeductionType;
@@ -331,6 +336,71 @@ class DataAccessController extends Controller
                             });
                     });
 
+                $loanRequests = LoanRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $budgetRequests = BudgetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $assetRequests = AssetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $hmoRequests = HmoRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $coeRequests = CoeRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
                 break;
 
             case 'Branch-Level Access':
@@ -534,6 +604,71 @@ class DataAccessController extends Controller
                 });
 
                 $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $loanRequests = LoanRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $budgetRequests = BudgetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $assetRequests = AssetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $hmoRequests = HmoRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                    $q2->whereIn('branch_id', $allBranchIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $coeRequests = CoeRequest::with(['user.personalInformation', 'user.employmentDetail'])
                     ->where(function ($query) use ($tenantId, $allBranchIds, $authUserId) {
                         $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
                             $q->where('tenant_id', $tenantId)
@@ -778,6 +913,71 @@ class DataAccessController extends Controller
                             });
                     });
 
+                $loanRequests = LoanRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $departmentIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
+                                    $edQ->whereIn('department_id', $departmentIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $budgetRequests = BudgetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $departmentIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
+                                    $edQ->whereIn('department_id', $departmentIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $assetRequests = AssetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $departmentIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
+                                    $edQ->whereIn('department_id', $departmentIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $hmoRequests = HmoRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $departmentIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
+                                    $edQ->whereIn('department_id', $departmentIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
+                $coeRequests = CoeRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $departmentIds, $authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                            $q->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
+                                    $edQ->whereIn('department_id', $departmentIds);
+                                });
+                        })
+                            ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                                $q->where('reporting_to', $authUserId);
+                            });
+                    });
+
 
 
                 break;
@@ -958,6 +1158,22 @@ class DataAccessController extends Controller
 
                 $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
                     ->where('user_id', $authUserId);
+
+                $loanRequests = LoanRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where('user_id', $authUserId);
+
+                $budgetRequests = BudgetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where('user_id', $authUserId);
+
+                $assetRequests = AssetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where('user_id', $authUserId);
+
+                $hmoRequests = HmoRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where('user_id', $authUserId);
+
+                $coeRequests = CoeRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                    ->where('user_id', $authUserId);
+
                 break;
 
             default:
@@ -1053,6 +1269,21 @@ class DataAccessController extends Controller
                     $payrolls = Payroll::where('tenant_id', $tenantId)->where('status', 'Pending');
 
                     $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+                        ->where('tenant_id', $authUser->tenant_id);
+
+                    $loanRequests = LoanRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('tenant_id', $authUser->tenant_id);
+
+                    $budgetRequests = BudgetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('tenant_id', $authUser->tenant_id);
+
+                    $assetRequests = AssetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('tenant_id', $authUser->tenant_id);
+
+                    $hmoRequests = HmoRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('tenant_id', $authUser->tenant_id);
+
+                    $coeRequests = CoeRequest::with(['user.personalInformation', 'user.employmentDetail'])
                         ->where('tenant_id', $authUser->tenant_id);
                 } else {
                     // default access employees
@@ -1227,14 +1458,22 @@ class DataAccessController extends Controller
                     $payrolls = Payroll::where('user_id', $authUserId)->where('status', 'Pending');
 
                     $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
-                        ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId) {
-                            $query->where('tenant_id', $tenantId)
-                                ->whereHas('employmentDetail', function ($edQ) use ($branchId, $departmentId) {
-                                    $edQ->where('status', '1')
-                                        ->where('branch_id', $branchId)
-                                        ->where('department_id', $departmentId);
-                                });
-                        });
+                        ->where('user_id', $authUserId);
+
+                    $loanRequests = LoanRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('user_id', $authUserId);
+
+                    $budgetRequests = BudgetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('user_id', $authUserId);
+
+                    $assetRequests = AssetRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('user_id', $authUserId);
+
+                    $hmoRequests = HmoRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('user_id', $authUserId);
+
+                    $coeRequests = CoeRequest::with(['user.personalInformation', 'user.employmentDetail'])
+                        ->where('user_id', $authUserId);
                 }
                 break;
         }
@@ -1252,6 +1491,11 @@ class DataAccessController extends Controller
             'banks' => $banks,
             'leaveTypes' => $leaveTypes,
             'leaveRequests' => $leaveRequests,
+            'loanRequests' => $loanRequests,
+            'budgetRequests' => $budgetRequests,
+            'assetRequests' => $assetRequests,
+            'hmoRequests' => $hmoRequests,
+            'coeRequests' => $coeRequests,
             'roles' => $roles,
             'payslips' => $payslips,
             'customFields' => $customFields,

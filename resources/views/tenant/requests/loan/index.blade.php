@@ -8,7 +8,7 @@
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
-                    <h2 class="mb-1">Request Loan</h2>
+                    <h2 class="mb-1">Loan Requests</h2>
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
@@ -17,67 +17,168 @@
                             <li class="breadcrumb-item">
                                 Requests
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Request Loan</li>
+                            <li class="breadcrumb-item active" aria-current="page">Loan Requests</li>
                         </ol>
                     </nav>
                 </div>
             </div>
             <!-- /Breadcrumb -->
 
+            @php
+                $hour = now()->hour;
+                if ($hour < 12) {
+                    $greeting = 'Good Morning';
+                } elseif ($hour < 18) {
+                    $greeting = 'Good Afternoon';
+                } else {
+                    $greeting = 'Good Evening';
+                }
+
+                $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+                $name = $user?->personalInformation->first_name ?? ($user?->username ?? 'Guest');
+
+                // TODO: Replace with actual data from controller
+                $pendingCount = 0;
+                $approvedCount = 0;
+                $rejectedCount = 0;
+                $totalLoanAmount = 0;
+            @endphp
+
             <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                            <h5>Loan Request Management</h5>
-                            <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_loan_request">
-                                    <i class="ti ti-plus"></i>New Loan Request
+                <!-- Left Column - Quick Action Card -->
+                <div class="col-xl-3 col-lg-4 d-flex">
+                    <div class="card flex-fill">
+                        <div class="card-body">
+                            <div class="mb-3 text-center">
+                                <h6 class="fw-medium text-gray-5 mb-2">{{ $greeting }}, {{ $name }}</h6>
+                                <p class="text-muted mb-0 small">Submit and manage your loan requests</p>
+                            </div>
+
+                            <div class="attendance-circle-progress mx-auto mb-3" data-value='65'>
+                                <span class="progress-left">
+                                    <span class="progress-bar border-primary"></span>
+                                </span>
+                                <span class="progress-right">
+                                    <span class="progress-bar border-primary"></span>
+                                </span>
+                                <div class="avatar avatar-xxl avatar-rounded bg-light-primary">
+                                    <i class="ti ti-currency-dollar text-primary" style="font-size: 48px;"></i>
+                                </div>
+                            </div>
+
+                            <div class="text-center mb-3">
+                                <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#add_loan_request">
+                                    <i class="ti ti-circle-plus me-2"></i>Submit New Request
                                 </button>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="text-muted small">Pending Requests</span>
+                                    <span class="badge badge-warning">{{ $pendingCount }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="text-muted small">Approved</span>
+                                    <span class="badge badge-success">{{ $approvedCount }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="text-muted small">Rejected</span>
+                                    <span class="badge badge-danger">{{ $rejectedCount }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-primary-transparent rounded">
+                                    <span class="text-primary small fw-medium">Total Requested</span>
+                                    <span class="badge badge-primary">₱{{ number_format($totalLoanAmount, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Request History -->
+                <div class="col-xl-9 col-lg-8 d-flex">
+                    <div class="card flex-fill">
+                        <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                            <h5>My Loan Requests</h5>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ti ti-filter me-1"></i>All Status
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+                                        <li><a class="dropdown-item" href="#" data-filter="all">All Status</a></li>
+                                        <li><a class="dropdown-item" href="#" data-filter="pending">Pending</a></li>
+                                        <li><a class="dropdown-item" href="#" data-filter="approved">Approved</a></li>
+                                        <li><a class="dropdown-item" href="#" data-filter="rejected">Rejected</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="custom-datatable-filter table-responsive">
-                                <table class="table datatable">
+                                <table class="table datatable" id="loanRequestsTable">
                                     <thead class="thead-light">
                                         <tr>
-                                            <th class="no-sort">
-                                                <div class="form-check form-check-md">
-                                                    <input class="form-check-input" type="checkbox" id="select-all">
-                                                </div>
-                                            </th>
-                                            <th>Employee</th>
-                                            <th>Loan Amount</th>
+                                            <th>Loan Type</th>
+                                            <th>Amount</th>
+                                            <th>Repayment Period</th>
                                             <th>Request Date</th>
                                             <th>Status</th>
-                                            <th class="no-sort">Action</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{-- Add your data rows here when you have data --}}
-                                        {{-- Example:
-                                        @forelse($loanRequests as $request)
+                                        {{-- TODO: Replace with actual data from controller --}}
+                                        {{-- @forelse($loanRequests as $request)
                                         <tr>
-                                            <td><input type="checkbox" class="form-check-input"></td>
-                                            <td>{{ $request->employee_name }}</td>
-                                            <td>{{ $request->loan_amount }}</td>
-                                            <td>{{ $request->request_date }}</td>
-                                            <td><span class="badge">{{ $request->status }}</span></td>
-                                            <td>Actions</td>
+                                            <td>{{ $request->loan_type }}</td>
+                                            <td>₱{{ number_format($request->loan_amount, 2) }}</td>
+                                            <td>{{ $request->repayment_period }} months</td>
+                                            <td>{{ $request->created_at->format('M d, Y') }}</td>
+                                            <td>
+                                                @if($request->status == 'pending')
+                                                    <span class="badge badge-warning-transparent d-inline-flex align-items-center">
+                                                        <i class="ti ti-clock me-1"></i>Pending
+                                                    </span>
+                                                @elseif($request->status == 'approved')
+                                                    <span class="badge badge-success-transparent d-inline-flex align-items-center">
+                                                        <i class="ti ti-check me-1"></i>Approved
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-danger-transparent d-inline-flex align-items-center">
+                                                        <i class="ti ti-x me-1"></i>Rejected
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="ti ti-dots-vertical"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><a class="dropdown-item" href="#"><i class="ti ti-eye me-2"></i>View</a></li>
+                                                        @if($request->status == 'pending')
+                                                            <li><a class="dropdown-item" href="#"><i class="ti ti-edit me-2"></i>Edit</a></li>
+                                                            <li><a class="dropdown-item text-danger" href="#"><i class="ti ti-x me-2"></i>Cancel</a></li>
+                                                        @endif
+                                                    </ul>
+                                                </div>
+                                            </td>
                                         </tr>
-                                        @empty
-                                        @endforelse
-                                        --}}
+                                        @empty --}}
+                                        <tr>
+                                            <td colspan="6">
+                                                <div class="text-center py-5">
+                                                    <div class="avatar avatar-xl bg-light-primary mx-auto mb-3">
+                                                        <i class="ti ti-currency-dollar text-primary" style="font-size: 32px;"></i>
+                                                    </div>
+                                                    <h6 class="text-muted">No loan requests yet</h6>
+                                                    <p class="text-muted small mb-3">Click "Submit New Request" to get started</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {{-- @endforelse --}}
                                     </tbody>
                                 </table>
-                            </div>
-                            @if(!isset($loanRequests) || count($loanRequests ?? []) === 0)
-                            <div class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="ti ti-currency-dollar fs-1 d-block mb-3"></i>
-                                    <p class="mt-2">No loan requests found</p>
-                                </div>
-                            </div>
-                            @endif
                             </div>
                         </div>
                     </div>
@@ -85,6 +186,9 @@
             </div>
 
         </div>
+
+        @include('layout.partials.footer-company')
+
     </div>
     <!-- /Page Wrapper -->
 
@@ -98,14 +202,11 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="#" method="POST">
+                <form id="loanRequestForm" action="#" method="POST">
+                    {{-- TODO: Update action with actual API endpoint --}}
                     @csrf
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="employee_name" class="form-label">Employee Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="employee_name" name="employee_name" required>
-                            </div>
                             <div class="col-md-6 mb-3">
                                 <label for="loan_type" class="form-label">Loan Type <span class="text-danger">*</span></label>
                                 <select class="form-select" id="loan_type" name="loan_type" required>
@@ -120,23 +221,20 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="loan_amount" class="form-label">Loan Amount <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="loan_amount" name="loan_amount" step="0.01" required>
+                                <input type="number" class="form-control" id="loan_amount" name="loan_amount" step="0.01" min="0" placeholder="0.00" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="repayment_period" class="form-label">Repayment Period (Months) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="repayment_period" name="repayment_period" min="1" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="request_date" class="form-label">Request Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="request_date" name="request_date" required>
+                                <input type="number" class="form-control" id="repayment_period" name="repayment_period" min="1" placeholder="12" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="interest_rate" class="form-label">Interest Rate (%)</label>
                                 <input type="number" class="form-control" id="interest_rate" name="interest_rate" step="0.01" value="0" readonly>
+                                <small class="text-muted">Rate will be determined by HR</small>
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="purpose" class="form-label">Purpose of Loan <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="purpose" name="purpose" rows="2" placeholder="Explain the purpose of the loan..." required></textarea>
+                                <textarea class="form-control" id="purpose" name="purpose" rows="3" placeholder="Explain the purpose of the loan..." required></textarea>
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="collateral" class="form-label">Collateral (if any)</label>
@@ -144,7 +242,7 @@
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="attachment" class="form-label">Supporting Documents</label>
-                                <input type="file" class="form-control" id="attachment" name="attachment">
+                                <input type="file" class="form-control" id="attachment" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
                                 <small class="text-muted">Upload any supporting documents (ID, proof of income, etc.) - Maximum file size: 5MB</small>
                             </div>
                             <div class="col-md-12">
@@ -166,4 +264,56 @@
         </div>
     </div>
     <!-- /Add Loan Request Modal -->
+
+    @component('components.modal-popup')
+    @endcomponent
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            // TODO: Implement form submission handler
+            $('#loanRequestForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+
+                // TODO: Replace with actual API endpoint
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/loan-requests',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success('Loan request submitted successfully.');
+                            $('#add_loan_request').modal('hide');
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 500);
+                        } else {
+                            toastr.error('Error: ' + (response.message || 'Unable to submit loan request.'));
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = 'An error occurred while processing your request.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        toastr.error(msg);
+                    }
+                });
+            });
+
+            // Filter functionality
+            $('.dropdown-item[data-filter]').on('click', function(e) {
+                e.preventDefault();
+                var filter = $(this).data('filter');
+
+                // TODO: Implement filter logic
+                console.log('Filter by:', filter);
+            });
+        });
+    </script>
+@endpush

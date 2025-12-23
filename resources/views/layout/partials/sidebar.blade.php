@@ -396,6 +396,37 @@
                                     </ul>
                                 </li>
                             @endif
+                            @if (in_array(20, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('admin/loan-requests', 'admin/budget-requests', 'admin/asset-requests', 'admin/hmo-requests', 'admin/coe-requests') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-checkbox"></i><span>Request Management</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][56]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('admin.loan-requests') }}"
+                                                    class="{{ Request::is('admin/loan-requests') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i>&nbsp;Loan Requests</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][57]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('admin.budget-requests') }}"
+                                                    class="{{ Request::is('admin/budget-requests') ? 'active' : '' }}"><i class="ti ti-chart-pie"></i>&nbsp;Budget Requests</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][58]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('admin.asset-requests') }}"
+                                                    class="{{ Request::is('admin/asset-requests') ? 'active' : '' }}"><i class="ti ti-building"></i>&nbsp;Asset Requests</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][59]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('admin.hmo-requests') }}"
+                                                    class="{{ Request::is('admin/hmo-requests') ? 'active' : '' }}"><i class="ti ti-heart-plus"></i>&nbsp;HMO Requests</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][60]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('admin.coe-requests') }}"
+                                                    class="{{ Request::is('admin/coe-requests') ? 'active' : '' }}"><i class="ti ti-certificate"></i>&nbsp;COE Requests</a></li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
                         </ul>
                     </li>
                 @endif

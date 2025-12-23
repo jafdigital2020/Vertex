@@ -72,6 +72,11 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 use App\Http\Controllers\Tenant\Billing\PaymentController as TenantPaymentController;
 use App\Http\Controllers\Tenant\Billing\SubscriptionController as TenantSubscriptionController;
 use App\Http\Controllers\Tenant\Requests\RequestController;
+use App\Http\Controllers\Tenant\Requests\LoanAdminController;
+use App\Http\Controllers\Tenant\Requests\BudgetAdminController;
+use App\Http\Controllers\Tenant\Requests\AssetAdminController;
+use App\Http\Controllers\Tenant\Requests\HmoAdminController;
+use App\Http\Controllers\Tenant\Requests\CoeAdminController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -133,6 +138,42 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/request-asset', [RequestController::class, 'assetIndex'])->name('request-asset')->middleware(CheckPermission::class . ':53');
     Route::get('/request-hmo', [RequestController::class, 'hmoIndex'])->name('request-hmo')->middleware(CheckPermission::class . ':54');
     Route::get('/request-coe', [RequestController::class, 'coeIndex'])->name('request-coe')->middleware(CheckPermission::class . ':55');
+
+    // Admin Request Management
+    // Loan Requests Admin
+    Route::get('/admin/loan-requests', [LoanAdminController::class, 'index'])->name('admin.loan-requests')->middleware(CheckPermission::class . ':56');
+    Route::post('/admin/loan-requests/filter', [LoanAdminController::class, 'filter'])->name('admin.loan-requests.filter');
+    Route::post('/admin/loan-requests/{id}/approve', [LoanAdminController::class, 'approve'])->name('admin.loan-requests.approve');
+    Route::post('/admin/loan-requests/{id}/update', [LoanAdminController::class, 'update'])->name('admin.loan-requests.update');
+    Route::delete('/admin/loan-requests/{id}', [LoanAdminController::class, 'destroy'])->name('admin.loan-requests.destroy');
+
+    // Budget Requests Admin
+    Route::get('/admin/budget-requests', [BudgetAdminController::class, 'index'])->name('admin.budget-requests')->middleware(CheckPermission::class . ':57');
+    Route::post('/admin/budget-requests/filter', [BudgetAdminController::class, 'filter'])->name('admin.budget-requests.filter');
+    Route::post('/admin/budget-requests/{id}/approve', [BudgetAdminController::class, 'approve'])->name('admin.budget-requests.approve');
+    Route::post('/admin/budget-requests/{id}/update', [BudgetAdminController::class, 'update'])->name('admin.budget-requests.update');
+    Route::delete('/admin/budget-requests/{id}', [BudgetAdminController::class, 'destroy'])->name('admin.budget-requests.destroy');
+
+    // Asset Requests Admin
+    Route::get('/admin/asset-requests', [AssetAdminController::class, 'index'])->name('admin.asset-requests')->middleware(CheckPermission::class . ':58');
+    Route::post('/admin/asset-requests/filter', [AssetAdminController::class, 'filter'])->name('admin.asset-requests.filter');
+    Route::post('/admin/asset-requests/{id}/approve', [AssetAdminController::class, 'approve'])->name('admin.asset-requests.approve');
+    Route::post('/admin/asset-requests/{id}/update', [AssetAdminController::class, 'update'])->name('admin.asset-requests.update');
+    Route::delete('/admin/asset-requests/{id}', [AssetAdminController::class, 'destroy'])->name('admin.asset-requests.destroy');
+
+    // HMO Requests Admin
+    Route::get('/admin/hmo-requests', [HmoAdminController::class, 'index'])->name('admin.hmo-requests')->middleware(CheckPermission::class . ':59');
+    Route::post('/admin/hmo-requests/filter', [HmoAdminController::class, 'filter'])->name('admin.hmo-requests.filter');
+    Route::post('/admin/hmo-requests/{id}/approve', [HmoAdminController::class, 'approve'])->name('admin.hmo-requests.approve');
+    Route::post('/admin/hmo-requests/{id}/update', [HmoAdminController::class, 'update'])->name('admin.hmo-requests.update');
+    Route::delete('/admin/hmo-requests/{id}', [HmoAdminController::class, 'destroy'])->name('admin.hmo-requests.destroy');
+
+    // COE Requests Admin
+    Route::get('/admin/coe-requests', [CoeAdminController::class, 'index'])->name('admin.coe-requests')->middleware(CheckPermission::class . ':60');
+    Route::post('/admin/coe-requests/filter', [CoeAdminController::class, 'filter'])->name('admin.coe-requests.filter');
+    Route::post('/admin/coe-requests/{id}/approve', [CoeAdminController::class, 'approve'])->name('admin.coe-requests.approve');
+    Route::post('/admin/coe-requests/{id}/update', [CoeAdminController::class, 'update'])->name('admin.coe-requests.update');
+    Route::delete('/admin/coe-requests/{id}', [CoeAdminController::class, 'destroy'])->name('admin.coe-requests.destroy');
 
     //User Management
     //   User
