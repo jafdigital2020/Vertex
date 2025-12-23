@@ -115,7 +115,7 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="custom-datatable-filter table-responsive">
-                                <table class="table datatable" id="loanRequestsTable">
+                                <table class="table" id="loanRequestsTable">
                                     <thead class="thead-light">
                                         <tr>
                                             <th>Loan Type</th>

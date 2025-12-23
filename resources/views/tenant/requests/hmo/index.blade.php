@@ -115,7 +115,7 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="custom-datatable-filter table-responsive">
-                                <table class="table datatable" id="hmoRequestsTable">
+                                <table class="table" id="hmoRequestsTable">
                                     <thead class="thead-light">
                                         <tr>
                                             <th>HMO Plan</th>

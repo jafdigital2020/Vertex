@@ -115,7 +115,7 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="custom-datatable-filter table-responsive">
-                                <table class="table datatable" id="assetRequestsTable">
+                                <table class="table" id="assetRequestsTable">
                                     <thead class="thead-light">
                                         <tr>
                                             <th>Asset Type</th>
