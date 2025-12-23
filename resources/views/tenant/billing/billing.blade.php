@@ -80,7 +80,10 @@ $page = 'bills-payment'; ?>
                             </div>
 
                             <div class="d-flex align-items-center mb-3">
-                                <h3 class="mb-0 me-2">₱{{ number_format($subscription->amount_paid ?? 0, 2) }}</h3>
+                                @php
+                                    $subscriptionAmount = $invoice->first()->subscription_amount ?? 0;
+                                @endphp
+                                <h3 class="mb-0 me-2">₱{{ number_format($subscriptionAmount, 2) }}</h3>
                                 <span class="text-muted">/ {{ $subscription->billing_cycle ?? 'N/A' }}</span>
                             </div>
 
