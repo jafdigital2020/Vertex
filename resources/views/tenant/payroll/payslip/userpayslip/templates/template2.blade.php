@@ -1,4 +1,77 @@
 {{-- Template 2: Wecall Classic Design --}}
+@php
+    // Helper function to calculate daily rate based on salary type
+    function calculateDailyRate($payslip)
+    {
+        $basicSalary = 0;
+        $salaryType = 'monthly_fixed';
+        $workedDaysPerYear = 261;
+
+        $user = $payslip->user;
+
+        // Try to get salary from user's salary records
+        if ($user && $user->salaryRecords && !$user->salaryRecords->isEmpty()) {
+            $salaryRecord = $user->salaryRecords->where('is_active', 1)->first();
+            if ($salaryRecord) {
+                $basicSalary = $salaryRecord->basic_salary ?? 0;
+                $salaryType = $salaryRecord->salary_type ?? 'monthly_fixed';
+                if ($salaryRecord->salaryDetail) {
+                    $workedDaysPerYear = $salaryRecord->salaryDetail->worked_days_per_year ?? 261;
+                }
+            }
+        }
+
+        // Fallback: Try to get from branch settings
+        if ($basicSalary == 0 && $user && $user->employmentDetail && $user->employmentDetail->branch) {
+            $branch = $user->employmentDetail->branch;
+            $basicSalary = $branch->basic_salary ?? 0;
+            $salaryType = $branch->salary_type ?? 'monthly_fixed';
+        }
+
+        // If still 0, use the basic_pay from payslip as monthly salary
+        if ($basicSalary == 0 && $payslip->basic_pay > 0) {
+            $basicSalary = $payslip->basic_pay;
+            $salaryType = 'monthly_fixed';
+        }
+
+        // Calculate daily rate based on salary type
+        if ($salaryType === 'daily_rate') {
+            return $basicSalary;
+        } elseif ($salaryType === 'monthly_fixed') {
+            $annualSalary = $basicSalary * 12;
+            return $workedDaysPerYear > 0 ? $annualSalary / $workedDaysPerYear : 0;
+        } elseif ($salaryType === 'hourly_rate') {
+            return $basicSalary * 8;
+        }
+
+        return 0;
+    }
+
+    // Helper function to calculate hourly rate
+    function calculateHourlyRate($payslip)
+    {
+        $dailyRate = calculateDailyRate($payslip);
+        return $dailyRate > 0 ? $dailyRate / 8 : 0;
+    }
+
+    // Helper function to format work hours
+    function formatWorkHours($minutes)
+    {
+        if ($minutes <= 0) {
+            return '0';
+        }
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        if ($mins > 0) {
+            return number_format($hours, 0) . '.' . str_pad(round(($mins / 60) * 100), 2, '0', STR_PAD_LEFT);
+        }
+        return number_format($hours, 0);
+    }
+
+    $dailyRate = calculateDailyRate($payslips);
+    $hourlyRate = calculateHourlyRate($payslips);
+    $totalWorkHours = formatWorkHours($payslips->total_worked_minutes ?? 0);
+@endphp
 <div class="container-fluid py-4 printable-area" style="max-width: 900px;">
     <div class="card border shadow-sm p-0 mb-4" style="background: #fff;">
         <!-- Header with Logo and Company Info -->
@@ -33,8 +106,8 @@
                         </div>
                     </td>
                     <td style="width: 50%; border: none; padding: 2px 8px;" class="text-end">
-                        <span>{{ number_format($payslips->basic_pay, 0) }} Basic Monthly</span>
-                        <span class="fw-bold ms-3">-</span>
+                        <span>Basic Monthly:</span>
+                        <span class="fw-bold ms-3">{{ number_format($payslips->basic_pay, 2) }}</span>
                     </td>
                 </tr>
                 <tr>
@@ -46,7 +119,7 @@
                     </td>
                     <td style="border: none; padding: 2px 8px;" class="text-end">
                         <span>Daily Rate:</span>
-                        <span class="fw-bold ms-3">-</span>
+                        <span class="fw-bold ms-3">{{ $dailyRate > 0 ? number_format($dailyRate, 2) : '-' }}</span>
                     </td>
                 </tr>
                 <tr>
@@ -58,7 +131,7 @@
                     </td>
                     <td style="border: none; padding: 2px 8px;" class="text-end">
                         <span>Hourly Rate:</span>
-                        <span class="fw-bold ms-3">-</span>
+                        <span class="fw-bold ms-3">{{ $hourlyRate > 0 ? number_format($hourlyRate, 2) : '-' }}</span>
                     </td>
                 </tr>
                 <tr>
@@ -70,7 +143,7 @@
                     </td>
                     <td style="border: none; padding: 2px 8px;" class="text-end">
                         <span>Total Work Hours:</span>
-                        <span class="fw-bold ms-3">-</span>
+                        <span class="fw-bold ms-3">{{ $totalWorkHours }}</span>
                     </td>
                 </tr>
             </table>
@@ -93,7 +166,7 @@
                 <tbody>
                     <!-- REGULAR Section -->
                     <tr>
-                        <td style="border-right: 2px solid #000; padding: 0;">
+                        <td style="border-right: 2px  padding: 0;">
                             <table class="w-100 mb-0" style="border: none;">
                                 <tr style="background-color: #f8f9fa;">
                                     <td colspan="4" class="fw-bold px-2 py-1" style="border: none;"><i>REGULAR</i></td>
@@ -235,7 +308,8 @@
                                         <tr>
                                             <td class="px-2" style="width: 50%; border: none;">{{ $loan['label'] }}</td>
                                             <td class="text-end px-2" style="width: 50%; border: none;">
-                                                {{ number_format($loan['amount'], 2) }}</td>
+                                                {{ number_format($loan['amount'], 2) }}
+                                            </td>
                                         </tr>
                                     @endforeach
                                 @else
@@ -306,7 +380,8 @@
                                     @foreach($otherDeductionItems as $deduction)
                                         <tr>
                                             <td class="px-2" style="width: 50%; border: none;">
-                                                {{ $deduction['label'] ?? $deduction['deduction_type_name'] }}</td>
+                                                {{ $deduction['label'] ?? $deduction['deduction_type_name'] }}
+                                            </td>
                                             <td class="text-center px-2" style="width: 50%; border: none;">
                                                 @if($deduction['label'] ?? $deduction['deduction_type_name'] == 'Pantry')
                                                     -
@@ -354,8 +429,10 @@
                                             HOLIDAY</i></td>
                                 </tr>
                                 <tr>
-                                    <td class="px-2" style="width: 41.67%; border: none;">LEG HOL<span
-                                            style="border: 1px solid #000; display: inline-block; width: 20px; height: 15px; margin-left: 5px;"></span>
+                                    <td class="px-2" style="width: 41.67%; border: none;">LEG HOL
+                                        {{-- <span
+                                            style="border: 1px solid #000; display: inline-block; width: 20px; height: 15px; margin-left: 5px;">
+                                        </span> --}}
                                     </td>
                                     <td class="text-center" style="width: 16.67%; border: none;">2.00</td>
                                     <td class="text-center" style="width: 16.67%; border: none;">-</td>
