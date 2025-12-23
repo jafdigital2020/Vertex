@@ -1023,7 +1023,7 @@
 
                     const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) ||
                         invoiceType === 'license_overage';
-                    const showQtyRate = hasOverage;
+                    const showQtyRate = hasOverage || (invoiceType === 'subscription' && implementationFee > 0);
 
                     // Show/hide columns
                     document.querySelectorAll('.qty-rate-column').forEach(col => {
@@ -1056,6 +1056,22 @@
                     `;
                         tbody.appendChild(trPlan);
                     } else if (subscriptionAmount > 0) {
+                        if (invoiceType === 'subscription' && implementationFee > 0) {
+                            const trImpl = document.createElement('tr');
+                            trImpl.innerHTML = showQtyRate ? `
+                        <td>Implementation Fee</td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td>1</td>
+                        <td>${fmtMoney(implementationFee, d.currency)}</td>
+                        <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                    ` : `
+                        <td>Implementation Fee</td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                    `;
+                            tbody.appendChild(trImpl);
+                        }
+
                         const tr = document.createElement('tr');
                         tr.innerHTML = showQtyRate ? `
                         <td>${d.plan || '—'} Subscription</td>

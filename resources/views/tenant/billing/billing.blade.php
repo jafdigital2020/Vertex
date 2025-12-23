@@ -1143,7 +1143,7 @@ $page = 'bills-payment'; ?>
                         const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) ||
                             invoiceType === 'license_overage' ||
                             invoiceType === 'custom_order';
-                        const showQtyRate = hasOverage;
+                        const showQtyRate = hasOverage || (invoiceType === 'subscription' && implementationFee > 0);
 
                         // Show/hide Quantity and Rate columns in header
                         document.querySelectorAll('.qty-rate-column').forEach(col => {
@@ -1187,6 +1187,22 @@ $page = 'bills-payment'; ?>
                                     tbody.appendChild(tr);
                                 });
                         } else if (invoiceType === 'subscription') {
+                            if (implementationFee > 0) {
+                                const trImpl = document.createElement('tr');
+                                trImpl.innerHTML = showQtyRate ? `
+                            <td>Implementation Fee</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(implementationFee, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                        ` : `
+                            <td>Implementation Fee</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                        `;
+                                tbody.appendChild(trImpl);
+                            }
+
                             // Existing subscription logic
                             if (subscriptionAmount > 0) {
                                 const tr1 = document.createElement('tr');
@@ -1458,7 +1474,7 @@ $page = 'bills-payment'; ?>
                         // ✅ Determine if we should show Quantity and Rate columns
                         const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) ||
                                           invoiceType === 'license_overage';
-                        const showQtyRate = hasOverage;
+                        const showQtyRate = hasOverage || (invoiceType === 'subscription' && implementationFee > 0);
 
                         // Show/hide Quantity and Rate columns in header
                         document.querySelectorAll('.qty-rate-column').forEach(col => {
@@ -1467,6 +1483,22 @@ $page = 'bills-payment'; ?>
 
                         // ✅ UPDATED: Table rows logic for subscription invoices with overage
                         if (invoiceType === 'subscription') {
+                            if (implementationFee > 0) {
+                                const trImpl = document.createElement('tr');
+                                trImpl.innerHTML = showQtyRate ? `
+                                <td>Implementation Fee</td>
+                                <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                                <td>1</td>
+                                <td>${fmtMoney(implementationFee, d.currency)}</td>
+                                <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                            ` : `
+                                <td>Implementation Fee</td>
+                                <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                                <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                            `;
+                                tbody.appendChild(trImpl);
+                            }
+
                             // Add subscription row if amount > 0
                             if (subscriptionAmount > 0) {
                                 const tr1 = document.createElement('tr');
