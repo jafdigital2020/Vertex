@@ -65,6 +65,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
 use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
+use App\Http\Controllers\Tenant\Settings\CompanySettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayslipController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
@@ -239,6 +240,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/shift-list', [ShiftManagementController::class, 'shiftList'])->name('shift-list');
     Route::get('/shift-list-filter', [ShiftManagementController::class, 'shiftListfilter'])->name('shiftList-filter');
     //Settings
+    Route::get('/settings/company-settings', [CompanySettingsController::class, 'companySettingsIndex'])->name('company-settings')->middleware(CheckPermission::class . ':43');
+    Route::post('/settings/update-tenant-code', [CompanySettingsController::class, 'updateTenantCode'])->name('update-tenant-code')->middleware(CheckPermission::class . ':43');
+    Route::post('/settings/update-company-info', [CompanySettingsController::class, 'updateCompanyInfo'])->name('update-company-info')->middleware(CheckPermission::class . ':43');
     Route::get('/settings/attendance-settings', [AttendanceSettingsController::class, 'attendanceSettingsIndex'])->name('attendance-settings')->middleware(CheckPermission::class . ':18');
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('leave-type')->middleware(CheckPermission::class . ':43');
     Route::get('/settings/approval-steps', [ApprovalController::class, 'approvalIndex'])->name('approval-steps')->middleware(CheckPermission::class . ':43');
@@ -443,7 +447,6 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Invoice Items
     Route::get('/billing/invoices/{invoice}/items', [InvoiceController::class, 'getInvoiceItems']);
-
 });
 
 Route::get('/send-test-notif', function () {

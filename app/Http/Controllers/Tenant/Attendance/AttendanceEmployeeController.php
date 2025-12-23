@@ -1455,6 +1455,13 @@ class AttendanceEmployeeController extends Controller
             ], 403);
         }
 
+        // Check if there's an ongoing break
+        if ($attendance->break_in && !$attendance->break_out) {
+            return response()->json([
+                'message' => 'You cannot clock out while on break. Please end your break first before clocking out.'
+            ], 403);
+        }
+
         // Log if shift is flexible or not
         $isFlexible = $attendance->shift && $attendance->shift->is_flexible;
 
