@@ -177,7 +177,8 @@
                                                                     title="Issue NOWE">
                                                                     <i class="ti ti-mail"></i>
                                                                 </button>
-                                                            @endif                                                            @switch($sus->status)  
+                                                            @endif    
+                                                            @switch($sus->status)  
                                                                     @case('under_investigation')
                                                                         <button class="btn btn-sm btn-info"
                                                                             onclick="openInvestigationModal({{ $sus->id ?? $sus->employee->id }})"

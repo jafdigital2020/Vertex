@@ -20,9 +20,15 @@
                                                         <td class="text-center">{{ $sus->employee->employmentDetail->department->department_name ?? '' }}</td>
                                                         <td class="text-center">{{ $sus->employee->employmentDetail->designation->designation_name ?? '' }}</td>
                                                         <td class="text-center">
-                                                            <span class="badge bg-{{ getStatusColor($sus->status) }}">
-                                                                {{ $sus->status ?? '' }}
-                                                            </span>
+                                                            @if($sus->status === 'suspended' && $sus->violation_start_date === null && $sus->violation_end_date === null)
+                                                                <span class="badge bg-secondary">
+                                                                    For Violation
+                                                                </span>
+                                                            @else
+                                                                <span class="badge bg-{{ getStatusColor($sus->status) }}">
+                                                                    {{ $sus->status ?? '' }}
+                                                                </span>
+                                                            @endif
                                                         </td>
                                                         <td class="text-center">{{ $sus->violationType->name ?? '' }}</td>
                                                         <td class="text-center">
@@ -38,8 +44,12 @@
                                                         <td class="text-center">{{ $sus->suspension_end_date ?? '-' }}</td>  
                                                         <td class="text-center">{{ $sus->termination_date ?? '-' }}</td>
                                                         <td class="text-center">
-                                                            <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
-
+                                                            <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap"> 
+                                                                <button class="btn btn-sm btn-secondary view-violation"
+                                                                    data-id="{{ $sus->id ?? $sus->employee->id }}"
+                                                                    title="View Violation Details">
+                                                                    <i class="ti ti-eye"></i>
+                                                                </button>
                                                                 <button class="btn btn-sm btn-primary edit-violation"
                                                                     data-id="{{ $sus->id ?? $sus->employee->id }}"
                                                                     title="Edit Violation">
@@ -51,12 +61,6 @@
                                                                         data-id="{{ $sus->id ?? $sus->employee->id }}"
                                                                         title="Issue NOWE">
                                                                         <i class="ti ti-mail"></i>
-                                                                    </button>
-                                                                @else
-                                                                    <button class="btn btn-sm btn-secondary view-violation"
-                                                                        data-id="{{ $sus->id ?? $sus->employee->id }}"
-                                                                        title="View Violation Details">
-                                                                        <i class="ti ti-eye"></i>
                                                                     </button>
                                                                 @endif
 
@@ -79,7 +83,7 @@
                                                                         @endif
                                                                         @break
 
-                                                                    @case('suspended')
+                                                                    @case('dam_issued')
                                                                         @if (!$sus->dam_file)
                                                                             <button class="btn btn-sm btn-success"
                                                                                 onclick="openDamModal({{ $sus->id ?? $sus->employee->id }})"
@@ -87,7 +91,16 @@
                                                                                 <i class="ti ti-file-check"></i>
                                                                             </button>
                                                                         @endif
-                                                                        @if($sus->violation_start_date === null && $sus->violation_end_date === null)
+                                                                        <button class="btn btn-sm btn-danger"
+                                                                            onclick="openViolationModal(
+                                                                                {{ $sus->id ?? $sus->employee->id }},
+                                                                                '{{ addslashes($sus->violationType->name) }}'
+                                                                            )"
+                                                                            title="Implement Violation">
+                                                                            <i class="ti ti-ban"></i>
+                                                                        </button>
+
+                                                                        <!-- @if($sus->violation_start_date === null && $sus->violation_end_date === null)
                                                                         <button class="btn btn-sm btn-danger"
                                                                             onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
                                                                             title="Implement Violation">
@@ -100,7 +113,7 @@
                                                                             title="Complete Violation">
                                                                             <i class="ti ti-check"></i>
                                                                         </button>
-                                                                        @endif
+                                                                        @endif -->
                                                                         @break  
                                                                 @endswitch
 
