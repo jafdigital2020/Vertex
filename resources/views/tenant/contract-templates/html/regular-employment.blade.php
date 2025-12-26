@@ -627,7 +627,9 @@
             <div style="margin-bottom: 50px;">
                 <div style="border-bottom: 2px solid #000; width: 500px; display: inline-block;"></div>
                 <div style="margin-top: 5px;">
-                    <strong><span class="variable-placeholder">{{ $contractData['party_name'] ?? 'EMPLOYEE NAME' }}</span>, Employee</strong>
+                    <strong><span
+                            class="variable-placeholder">{{ $contractData['party_name'] ?? 'EMPLOYEE NAME' }}</span>,
+                        Employee</strong>
                 </div>
             </div>
 

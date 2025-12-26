@@ -47,6 +47,28 @@ class PayrollController extends Controller
         return Auth::guard('web')->user();
     }
 
+    // Check employees with non-Active employment states
+    protected function checkNonActiveEmployees(array $userIds, int $tenantId)
+    {
+        $nonActiveEmployees = User::whereIn('id', $userIds)
+            ->where('tenant_id', $tenantId)
+            ->whereHas('employmentDetail', function ($query) {
+                $query->whereIn('employment_state', ['AWOL', 'Resigned', 'Terminated', 'Suspended', 'Floating']);
+            })
+            ->with(['personalInformation', 'employmentDetail'])
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->personalInformation->full_name ?? 'N/A',
+                    'employee_id' => $user->employmentDetail->employee_id ?? 'N/A',
+                    'employment_state' => $user->employmentDetail->employment_state ?? 'Unknown',
+                ];
+            });
+
+        return $nonActiveEmployees;
+    }
+
     // Process Index
     public function payrollProcessIndex(Request $request)
     {
@@ -76,6 +98,29 @@ class PayrollController extends Controller
 
         return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission', 'payrollBatches'));
     }
+    // Check employee employment states
+    public function checkEmploymentStates(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+
+        $userIds = $request->input('user_id', []);
+
+        if (empty($userIds)) {
+            return response()->json([
+                'status' => 'success',
+                'non_active_employees' => []
+            ]);
+        }
+
+        $nonActiveEmployees = $this->checkNonActiveEmployees($userIds, $tenantId);
+
+        return response()->json([
+            'status' => 'success',
+            'non_active_employees' => $nonActiveEmployees
+        ]);
+    }
+
     // payroll filter
     public function payrollProcessIndexFilter(Request $request)
     {
@@ -166,7 +211,7 @@ class PayrollController extends Controller
             $totals = $this->sumMinutes($tenantId, $data);
             $salaryData = $this->getSalaryData($data['user_id']);
             $deductions = $this->calculateDeductions($data['user_id'], $totals, $salaryData);
-            $holidayInfo = $this->calculateHolidayPay($attendances, $data, $salaryData, $data['user_id']);
+            $holidayInfo = $this->calculateHolidayPay($attendances, $data, $salaryData);
             $nightDiffInfo = $this->calculateNightDifferential($data['user_id'], $data, $salaryData);
             $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
             $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
@@ -177,7 +222,7 @@ class PayrollController extends Controller
             $grossPay = $this->calculateGrossPay($data['user_id'], $data, $salaryData);
             $sssContributions = $this->calculateSSSContribution($data['user_id'], $data, $salaryData, $sssOption, $cuttoffOption);
             $philhealthContributions = $this->calculatePhilhealthContribution($data['user_id'], $data, $salaryData, $philhealthOption, $cuttoffOption);
-            $pagibigContributions = $this->calculatePagibigContribution($data['user_id'], $data, $salaryData, $pagibigOption, $cuttoffOption);
+            $pagibigContributions = $this->calculatePagibigContribution($data['user_id'], $data, $salaryData, $pagibigOption);
             $withholdingTax = $this->calculateWithholdingTax($data['user_id'], $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption);
             $leavePay = $this->calculateLeavePay($data['user_id'], $data, $salaryData);
             $deminimisBenefits = $this->calculateUserDeminimis($data['user_id'], $data, $salaryData);
@@ -481,9 +526,11 @@ class PayrollController extends Controller
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
         $period = CarbonPeriod::create($start->toDateString(), $end->toDateString());
-        $monthDays = collect($period)
-            ->map(fn($d) => $d->format('m-d'))
-            ->unique()->values()->all();
+        $monthDays = [];
+        foreach ($period as $date) {
+            $monthDays[] = $date->format('m-d');
+        }
+        $monthDays = array_unique($monthDays);
 
         $hols = Holiday::whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->orWhere(fn($q) => $q->where('recurring', 1)->whereIn('month_day', $monthDays))
@@ -1420,7 +1467,8 @@ class PayrollController extends Controller
                     // Count attended days in this period
                     $userAtt = $attendances->get($id, collect());
                     $attendedDays = $userAtt->filter(function ($att) use ($periodStart, $periodEnd) {
-                        return $att->attendance_date->between($periodStart, $periodEnd) && $att->status !== 'absent';
+                        $attDate = Carbon::parse($att->attendance_date);
+                        return $attDate->between($periodStart, $periodEnd) && $att->status !== 'absent';
                     })->count();
 
                     $finalAmount = $amount * $attendedDays;
@@ -1438,7 +1486,8 @@ class PayrollController extends Controller
 
                     $userAtt = $attendances->get($id, collect());
                     $attendedMinutes = $userAtt->filter(function ($att) use ($periodStart, $periodEnd) {
-                        return $att->attendance_date->between($periodStart, $periodEnd) && $att->status !== 'absent';
+                        $attDate = Carbon::parse($att->attendance_date);
+                        return $attDate->between($periodStart, $periodEnd) && $att->status !== 'absent';
                     })->sum('total_work_minutes');
 
                     $hours = $attendedMinutes / 60;
@@ -1630,8 +1679,7 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData,
-            $userIds
+            $salaryData
         );
 
         // Calculate Overtime Pay
@@ -2380,8 +2428,7 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData,
-            $userIds
+            $salaryData
         );
         $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
         $deductions = $this->calculateDeductions($userIds, $data, $salaryData);
@@ -2389,7 +2436,7 @@ class PayrollController extends Controller
         // Mandates
         $sss = $this->calculateSSSContribution($userIds, $data, $salaryData, $sssOption, $cuttoffOption);
         $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData, $philhealthOption, $cuttoffOption);
-        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData, $pagibigOption, $cuttoffOption);
+        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData, $pagibigOption);
 
         $result = [];
         foreach ($userIds as $userId) {
@@ -2662,8 +2709,7 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData,
-            $userIds
+            $salaryData
         );
         $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
         $deminimis = $this->calculateUserDeminimis($userIds, $data, $salaryData);

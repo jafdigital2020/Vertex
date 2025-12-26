@@ -371,6 +371,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============ Payroll Process ================== //
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
+    Route::post('/payroll/check-employment-states', [PayrollController::class, 'checkEmploymentStates'])->name('api.payroll-check-employment-states');
     Route::post('/payroll/process', [PayrollDispatcherController::class, 'handlePayroll'])->name('api.payrollProcessStore');
     Route::delete('/payroll/delete/{id}', [PayrollController::class, 'deletePayroll'])->name('api.delete-payroll');
     Route::post('/payroll/update/{id}', [PayrollController::class, 'updatePayroll'])->name('api.update-payroll');
@@ -467,7 +468,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('resignation.markCleared');
     Route::post('/resignation/remarks/mark-as-read/{id}', [ResignationController::class, 'markRemarksAsRead']);
     Route::post('/asset-remarks/hr/mark-as-read/{assetId}/{itemNo}', [ResignationController::class, 'HRassetmarkAsRead']);
-    Route::post('/resignations/{id}/undo-clearance', [ResignationController::class, 'undoClearance']); 
+    Route::post('/resignations/{id}/undo-clearance', [ResignationController::class, 'undoClearance']);
     Route::post('/resignations/add-days', [ResignationController::class, 'addRenderingDays'])
         ->name('addRenderingDays');
     // Custom OT Rate
