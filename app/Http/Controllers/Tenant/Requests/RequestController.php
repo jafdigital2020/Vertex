@@ -30,7 +30,7 @@ class RequestController extends Controller
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
-        $permission = PermissionHelper::get(51);
+        $permission = PermissionHelper::get(57); // Loan Requests (Employee)
         $dateRange = $request->input('dateRange');
         $status = $request->input('status');
 
@@ -67,7 +67,7 @@ class RequestController extends Controller
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
-        $permission = PermissionHelper::get(52);
+        $permission = PermissionHelper::get(58); // Budget Requests (Employee)
         $dateRange = $request->input('dateRange');
         $status = $request->input('status');
 
@@ -104,7 +104,7 @@ class RequestController extends Controller
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
-        $permission = PermissionHelper::get(53);
+        $permission = PermissionHelper::get(59); // Asset Requests (Employee)
         $dateRange = $request->input('dateRange');
         $status = $request->input('status');
 
@@ -141,7 +141,7 @@ class RequestController extends Controller
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
-        $permission = PermissionHelper::get(54);
+        $permission = PermissionHelper::get(60); // HMO Requests (Employee)
         $dateRange = $request->input('dateRange');
         $status = $request->input('status');
 
@@ -178,7 +178,7 @@ class RequestController extends Controller
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
-        $permission = PermissionHelper::get(55);
+        $permission = PermissionHelper::get(61); // COE Requests (Employee)
         $dateRange = $request->input('dateRange');
         $status = $request->input('status');
 
@@ -216,7 +216,7 @@ class RequestController extends Controller
     public function loanIndex()
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(51); // Module ID for loan requests
+        $permission = PermissionHelper::get(57); // Loan Requests (Employee)
         $authUserId = $authUser->id ?? null;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -257,7 +257,7 @@ class RequestController extends Controller
     public function budgetIndex()
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(52); // Module ID for budget requests
+        $permission = PermissionHelper::get(58); // Budget Requests (Employee)
         $authUserId = $authUser->id ?? null;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -298,7 +298,7 @@ class RequestController extends Controller
     public function assetIndex()
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(53); // Module ID for asset requests
+        $permission = PermissionHelper::get(59); // Asset Requests (Employee)
         $authUserId = $authUser->id ?? null;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -339,7 +339,7 @@ class RequestController extends Controller
     public function hmoIndex()
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(54); // Module ID for HMO requests
+        $permission = PermissionHelper::get(60); // HMO Requests (Employee)
         $authUserId = $authUser->id ?? null;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -380,7 +380,7 @@ class RequestController extends Controller
     public function coeIndex()
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(55); // Module ID for COE requests
+        $permission = PermissionHelper::get(61); // COE Requests (Employee)
         $authUserId = $authUser->id ?? null;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -419,6 +419,15 @@ class RequestController extends Controller
     public function storeLoanRequest(Request $request)
     {
         $authUser = $this->authUser();
+
+        // Check if user is a global user
+        if (Auth::guard('global')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Global users cannot submit loan requests. Please login as a tenant user.',
+            ], 403);
+        }
+
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -531,6 +540,15 @@ class RequestController extends Controller
     public function storeBudgetRequest(Request $request)
     {
         $authUser = $this->authUser();
+
+        // Check if user is a global user
+        if (Auth::guard('global')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Global users cannot submit budget requests. Please login as a tenant user.',
+            ], 403);
+        }
+
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -648,6 +666,15 @@ class RequestController extends Controller
     public function storeAssetRequest(Request $request)
     {
         $authUser = $this->authUser();
+
+        // Check if user is a global user
+        if (Auth::guard('global')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Global users cannot submit asset requests. Please login as a tenant user.',
+            ], 403);
+        }
+
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -766,6 +793,15 @@ class RequestController extends Controller
     public function storeHMORequest(Request $request)
     {
         $authUser = $this->authUser();
+
+        // Check if user is a global user
+        if (Auth::guard('global')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Global users cannot submit HMO requests. Please login as a tenant user.',
+            ], 403);
+        }
+
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
 
@@ -879,6 +915,15 @@ class RequestController extends Controller
     public function storeCOERequest(Request $request)
     {
         $authUser = $this->authUser();
+
+        // Check if user is a global user
+        if (Auth::guard('global')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Global users cannot submit COE requests. Please login as a tenant user.',
+            ], 403);
+        }
+
         $authUserId = $authUser->id;
         $authUserTenantId = $authUser->tenant_id ?? null;
 

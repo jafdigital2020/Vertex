@@ -37,7 +37,7 @@ class AssetAdminController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(58);
+        $permission = PermissionHelper::get(64) // Asset Requests (Admin);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -92,7 +92,7 @@ class AssetAdminController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(58);
+        $permission = PermissionHelper::get(64) // Asset Requests (Admin);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -167,7 +167,7 @@ class AssetAdminController extends Controller
      */
     public function approve(Request $request, $assetRequestId)
     {
-        $permission = PermissionHelper::get(58);
+        $permission = PermissionHelper::get(64) // Asset Requests (Admin);
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -277,7 +277,7 @@ class AssetAdminController extends Controller
      */
     public function update(Request $request, $assetRequestId)
     {
-        $permission = PermissionHelper::get(58);
+        $permission = PermissionHelper::get(64) // Asset Requests (Admin);
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -370,7 +370,7 @@ class AssetAdminController extends Controller
      */
     public function destroy($assetRequestId)
     {
-        $permission = PermissionHelper::get(58);
+        $permission = PermissionHelper::get(64) // Asset Requests (Admin);
         if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',

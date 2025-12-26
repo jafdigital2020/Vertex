@@ -37,7 +37,7 @@ class BudgetAdminController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(57);
+        $permission = PermissionHelper::get(63) // Budget Requests (Admin);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -92,7 +92,7 @@ class BudgetAdminController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(57);
+        $permission = PermissionHelper::get(63) // Budget Requests (Admin);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -165,7 +165,7 @@ class BudgetAdminController extends Controller
      */
     public function approve(Request $request, $budgetRequestId)
     {
-        $permission = PermissionHelper::get(57);
+        $permission = PermissionHelper::get(63) // Budget Requests (Admin);
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -275,7 +275,7 @@ class BudgetAdminController extends Controller
      */
     public function update(Request $request, $budgetRequestId)
     {
-        $permission = PermissionHelper::get(57);
+        $permission = PermissionHelper::get(63) // Budget Requests (Admin);
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -368,7 +368,7 @@ class BudgetAdminController extends Controller
      */
     public function destroy($budgetRequestId)
     {
-        $permission = PermissionHelper::get(57);
+        $permission = PermissionHelper::get(63) // Budget Requests (Admin);
         if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',
