@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
- 
+
         $this->call([
             CRUDTableSeeder::class,
             DataAccessLevelTableSeeder::class,
@@ -28,21 +28,22 @@ class DatabaseSeeder extends Seeder
             RoleTableSeeder::class,
             SssContribution::class,
             SssContribution2023::class,
-            SubModulesTableSeeder::class, 
+            SubModulesTableSeeder::class,
             SubModuleTableSeeder2::class,
             SubModuleOrderNoSeeder::class,
             SubModuleTableSeeder3::class,
             SubModuleTableSeeder4::class,
             SubModuleTableSeeder5::class,
-            ModulesTableSeeder2::class, 
+            ModulesTableSeeder2::class,
             SubModuleTableSeeder6::class,
             SubModuleTableSeeder7::class,
+            SubModuleTableSeeder8::class,
+            SubModuleTableSeeder9::class,
             TenantTableSeeder::class,
             UserPermissionTableSeeder::class,
             WithholdingTaxSeeder::class,
             ViolationTypeSeeder::class
 
         ]);
- 
     }
 }

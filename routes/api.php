@@ -41,6 +41,7 @@ use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\Employees\EmployeeStatusController;
 use App\Http\Controllers\Tenant\Employees\InactiveListController;
 use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
@@ -118,6 +119,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/employees/delete/{id}', [EmployeeListController::class, 'employeeDelete'])->name('api.employeeDelete');
     Route::put('/employees/deactivate/{id}', [EmployeeListController::class, 'employeeDeactivate'])->name('api.employeeDeactivate');
     Route::put('/employees/activate/{id}', [EmployeeListController::class, 'employeeActivate'])->name('api.employeeActivate');
+
+    // ========== Employee Status Management API ============ //
+    Route::get('/employees/status-management', [EmployeeStatusController::class, 'employeeStatusIndex'])->name('api.employee-status-management');
+    Route::put('/employees/status/update', [EmployeeStatusController::class, 'updateEmployeeStatus'])->name('api.updateEmployeeStatus');
+    Route::put('/employees/status/bulk-update', [EmployeeStatusController::class, 'bulkUpdateEmployeeStatus'])->name('api.bulkUpdateEmployeeStatus');
     Route::put('/employees/employee-details/{id}/government-id', [EmployeeDetailsController::class, 'employeeGovernmentId'])->name('api.employeeGovernmentId');
     Route::put('/employees/employee-details/{id}/bank-details', [EmployeeDetailsController::class, 'employeeBankDetail'])->name('api.employeeBankDetail');
     Route::put('/employees/employee-details/{id}/family-informations', [EmployeeDetailsController::class, 'employeeFamilyInformation'])->name('api.employeeFamilyInformation');

@@ -182,4 +182,29 @@ class ContractTemplateController extends Controller
             'content' => $content
         ]);
     }
+
+    /**
+     * Toggle template active status
+     */
+    public function toggleStatus(Request $request, $id)
+    {
+        try {
+            $template = ContractTemplate::findOrFail($id);
+            $template->is_active = $request->input('is_active', 0);
+            $template->save();
+
+            $statusText = $template->is_active ? 'activated' : 'deactivated';
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Contract template {$statusText} successfully"
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Contract Template Status Toggle Error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update template status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

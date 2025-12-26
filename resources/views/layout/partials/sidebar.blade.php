@@ -171,7 +171,7 @@
                             @if (in_array(4, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('employees', 'employees/inactive', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}">
+                                        class="{{ Request::is('employees', 'employees/inactive', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy', 'employees/status-management', 'contracts') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-users"></i><span>Employees</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -188,7 +188,12 @@
                                                     List</a>
                                             </li>
                                         @endif
-
+                                        @if (isset($role_data['user_permission_ids'][62]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('employees/status-management') }}"
+                                                    class="{{ Request::is('employees/status-management') ? 'active' : '' }}">Employee
+                                                    Status Management</a>
+                                            </li>
+                                        @endif
                                         @if (isset($role_data['user_permission_ids'][10]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('departments') }}"
                                                     class="{{ Request::is('departments') ? 'active' : '' }}">Departments</a>
@@ -202,6 +207,11 @@
                                         @if (isset($role_data['user_permission_ids'][12]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('policy') }}"
                                                     class="{{ Request::is('policy') ? 'active' : '' }}">Policies</a>
+                                            </li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][64]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('contracts') }}"
+                                                    class="{{ Request::is('contracts') ? 'active' : '' }}">Employee Contracts</a>
                                             </li>
                                         @endif
                                     </ul>
@@ -1024,7 +1034,7 @@
                         </li>
                         <li class="submenu">
                             <a href="javascript:void(0);"
-                                class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}"><span>Employees</span>
+                                class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy', 'employees/status-management', 'contracts', 'contract-templates') ? 'active subdrop' : '' }}"><span>Employees</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
@@ -1038,6 +1048,10 @@
                                 <li><a href="{{ url('employee-details') }}"
                                         class="{{ Request::is('employee-details') ? 'active' : '' }}">Employee
                                         Details</a></li>
+                                <li><a href="{{ url('employees/status-management') }}"
+                                        class="{{ Request::is('employees/status-management') ? 'active' : '' }}">Employee
+                                        Status Management</a>
+                                </li>
                                 <li><a href="{{ url('departments') }}"
                                         class="{{ Request::is('departments') ? 'active' : '' }}">Departments</a>
                                 </li>
@@ -1046,6 +1060,19 @@
                                 </li>
                                 <li><a href="{{ url('policy') }}"
                                         class="{{ Request::is('policy') ? 'active' : '' }}">Policies</a></li>
+                                <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('contracts', 'contract-templates') ? 'active subdrop' : '' }}">Contracts<span
+                                            class="menu-arrow"></span></a>
+                                    <ul>
+                                        <li><a href="{{ url('contract-templates') }}"
+                                                class="{{ Request::is('contract-templates') ? 'active' : '' }}">Contract
+                                                Templates</a></li>
+                                        <li><a href="{{ url('contracts') }}"
+                                                class="{{ Request::is('contracts') ? 'active' : '' }}">Employee
+                                                Contracts</a></li>
+                                    </ul>
+                                </li>
                             </ul>
                         </li>
                         <li class="submenu">

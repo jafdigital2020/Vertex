@@ -56,6 +56,7 @@ use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\Employees\EmployeeStatusController;
 use App\Http\Controllers\Tenant\Employees\InactiveListController;
 use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
@@ -159,6 +160,13 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee/download-template', [EmployeeListController::class, 'downloadEmployeeTemplate'])->name('downloadEmployeeTemplate');
     Route::get('/employee/get-next-employee-id', [EmployeeListController::class, 'getNextEmployeeId'])->name('getNextEmployeeId');
     Route::get('/employee/export', [EmployeeListController::class, 'exportEmployee'])->name('exportEmployee');
+
+    // Employee Status Management
+    Route::get('/employees/status-management', [EmployeeStatusController::class, 'employeeStatusIndex'])->name('employee-status-management')->middleware(CheckPermission::class . ':62');
+    Route::get('/employees/status-management-filter', [EmployeeStatusController::class, 'employeeStatusFilter'])->name('employee-status-filter');
+    Route::get('/employees/status-approvals', [EmployeeStatusController::class, 'getPendingApprovals'])->name('employee-status-approvals')->middleware(CheckPermission::class . ':62');
+    Route::post('/employees/status-approve', [EmployeeStatusController::class, 'approveStatusChange'])->name('employee-status-approve')->middleware(CheckPermission::class . ':62');
+    Route::post('/employees/status-reject', [EmployeeStatusController::class, 'rejectStatusChange'])->name('employee-status-reject')->middleware(CheckPermission::class . ':62');
 
     // SG LIST
     Route::get('/employees/security-guards', [EmployeeListController::class, 'sgListIndex'])->name('security-guards');
@@ -390,11 +398,12 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/payroll/payroll-items/custom-ot-rate/delete', [CustomOtRateController::class, 'destroy'])->name('custom-ot-rate.delete');
 
     // Contract Templates
-    Route::resource('contract-templates', ContractTemplateController::class)->middleware(CheckPermission::class . ':9');
+    Route::resource('contract-templates', ContractTemplateController::class)->middleware(CheckPermission::class . ':63');
     Route::get('/contract-templates/{contractTemplate}/preview', [ContractTemplateController::class, 'preview'])->name('contract-templates.preview');
+    Route::post('/contract-templates/{id}/toggle-status', [ContractTemplateController::class, 'toggleStatus'])->name('contract-templates.toggle-status')->middleware(CheckPermission::class . ':63');
 
     // Contracts
-    Route::resource('contracts', ContractController::class)->middleware(CheckPermission::class . ':9');
+    Route::resource('contracts', ContractController::class)->middleware(CheckPermission::class . ':64');
     Route::post('/contracts/generate', [ContractController::class, 'generate'])->name('contracts.generate');
     Route::post('/contracts/{contract}/sign', [ContractController::class, 'sign'])->name('contracts.sign');
     Route::get('/contracts/{contract}/print', [ContractController::class, 'print'])->name('contracts.print');
