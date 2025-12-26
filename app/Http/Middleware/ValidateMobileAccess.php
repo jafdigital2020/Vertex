@@ -51,8 +51,8 @@ class ValidateMobileAccess
 
             return response()->json([
                 'success' => false,
-                'message' => 'Mobile access has been revoked. Please contact your administrator.',
-                'error_code' => 'MOBILE_ACCESS_REVOKED',
+                'message' => 'You do not have mobile access. Please contact your administrator to request access.',
+                'error_code' => 'NO_MOBILE_ACCESS',
                 'timestamp' => now()->toISOString(),
             ], 403);
         }
