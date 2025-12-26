@@ -36,7 +36,7 @@ class CoeAdminController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(66) // COE Requests (Admin);
+        $permission = PermissionHelper::get(66); // COE Requests (Admin)
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -91,7 +91,7 @@ class CoeAdminController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(66) // COE Requests (Admin);
+        $permission = PermissionHelper::get(66); // COE Requests (Admin)
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -161,7 +161,7 @@ class CoeAdminController extends Controller
      */
     public function approve(Request $request, $coeRequestId)
     {
-        $permission = PermissionHelper::get(66) // COE Requests (Admin);
+        $permission = PermissionHelper::get(66); // COE Requests (Admin)
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -271,7 +271,7 @@ class CoeAdminController extends Controller
      */
     public function update(Request $request, $coeRequestId)
     {
-        $permission = PermissionHelper::get(66) // COE Requests (Admin);
+        $permission = PermissionHelper::get(66); // COE Requests (Admin)
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -348,7 +348,7 @@ class CoeAdminController extends Controller
      */
     public function destroy($coeRequestId)
     {
-        $permission = PermissionHelper::get(66) // COE Requests (Admin);
+        $permission = PermissionHelper::get(66); // COE Requests (Admin)
         if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',

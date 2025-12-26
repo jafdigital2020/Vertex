@@ -37,7 +37,7 @@ class LoanAdminController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(62) // Loan Requests (Admin);
+        $permission = PermissionHelper::get(62); // Loan Requests (Admin)
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -92,7 +92,7 @@ class LoanAdminController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(62) // Loan Requests (Admin);
+        $permission = PermissionHelper::get(62); // Loan Requests (Admin)
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -162,7 +162,7 @@ class LoanAdminController extends Controller
      */
     public function approve(Request $request, $loanRequestId)
     {
-        $permission = PermissionHelper::get(62) // Loan Requests (Admin);
+        $permission = PermissionHelper::get(62); // Loan Requests (Admin)
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -272,7 +272,7 @@ class LoanAdminController extends Controller
      */
     public function update(Request $request, $loanRequestId)
     {
-        $permission = PermissionHelper::get(62) // Loan Requests (Admin);
+        $permission = PermissionHelper::get(62); // Loan Requests (Admin)
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -363,7 +363,7 @@ class LoanAdminController extends Controller
      */
     public function destroy($loanRequestId)
     {
-        $permission = PermissionHelper::get(62) // Loan Requests (Admin);
+        $permission = PermissionHelper::get(62); // Loan Requests (Admin)
         if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',
