@@ -510,6 +510,14 @@ class AttendanceEmployeeController extends Controller
             $subscription->trial_end &&
             now()->toDateString() >= \Carbon\Carbon::parse($subscription->trial_end)->toDateString()
         ) {
+            Log::warning('Clock-in blocked: Trial period ended', [
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'subscription_id' => $subscription->id,
+                'trial_end' => $subscription->trial_end,
+                'attempted_at' => now()->toDateTimeString()
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Your 7-day trial period has ended. Please contact your administrator.'
@@ -520,9 +528,39 @@ class AttendanceEmployeeController extends Controller
             $subscription &&
             $subscription->status === 'expired'
         ) {
+            Log::warning('Clock-in blocked: Subscription expired', [
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'subscription_id' => $subscription->id,
+                'subscription_status' => $subscription->status,
+                'subscription_end' => $subscription->subscription_end,
+                'attempted_at' => now()->toDateTimeString()
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Your subscription has expired. Please contact your administrator.'
+            ], 403);
+        }
+
+        // Check if current date exceeds subscription end date
+        if (
+            $subscription &&
+            $subscription->subscription_end &&
+            now()->toDateString() > \Carbon\Carbon::parse($subscription->subscription_end)->toDateString()
+        ) {
+            Log::warning('Clock-in blocked: Subscription end date exceeded', [
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'subscription_id' => $subscription->id,
+                'subscription_end' => $subscription->subscription_end,
+                'current_date' => now()->toDateString(),
+                'attempted_at' => now()->toDateTimeString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your subscription period has ended. Please contact your administrator to renew.'
             ], 403);
         }
 
@@ -1452,6 +1490,13 @@ class AttendanceEmployeeController extends Controller
         if (! $attendance) {
             return response()->json([
                 'message' => 'We could not find your clock-in record. Please make sure you have clocked in before trying to clock out.'
+            ], 403);
+        }
+
+        // Check if there's an ongoing break
+        if ($attendance->break_in && !$attendance->break_out) {
+            return response()->json([
+                'message' => 'You cannot clock out while on break. Please end your break first before clocking out.'
             ], 403);
         }
 
