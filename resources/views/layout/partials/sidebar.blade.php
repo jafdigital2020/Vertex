@@ -378,7 +378,7 @@
                                     </ul>
                                 </li>
                             @endif
-                            @if (in_array(19, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            @if (in_array(20, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('request-loan', 'request-budget', 'request-asset', 'request-hmo', 'request-coe') ? 'active subdrop' : '' }}">
@@ -386,27 +386,27 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (isset($role_data['user_permission_ids'][51]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][57]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('request-loan') }}"
                                                     class="{{ Request::is('request-loan') ? 'active' : '' }}"><i
                                                         class="ti ti-currency-dollar"></i>&nbsp;Request Loan</a></li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][52]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][58]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('request-budget') }}"
                                                     class="{{ Request::is('request-budget') ? 'active' : '' }}"><i
                                                         class="ti ti-calculator"></i>&nbsp;Request Budget</a></li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][53]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][59]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('request-asset') }}"
                                                     class="{{ Request::is('request-asset') ? 'active' : '' }}"><i
                                                         class="ti ti-device-desktop"></i>&nbsp;Request Asset</a></li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][54]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][60]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('request-hmo') }}"
                                                     class="{{ Request::is('request-hmo') ? 'active' : '' }}"><i
                                                         class="ti ti-heart-plus"></i>&nbsp;Request HMO</a></li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][55]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][61]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('request-coe') }}"
                                                     class="{{ Request::is('request-coe') ? 'active' : '' }}"><i
                                                         class="ti ti-certificate"></i>&nbsp;Request COE</a></li>
@@ -422,23 +422,23 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (isset($role_data['user_permission_ids'][56]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][62]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.loan-requests') }}"
                                                     class="{{ Request::is('admin/loan-requests') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i>&nbsp;Loan Requests</a></li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][57]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][63]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.budget-requests') }}"
                                                     class="{{ Request::is('admin/budget-requests') ? 'active' : '' }}"><i class="ti ti-chart-pie"></i>&nbsp;Budget Requests</a></li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][58]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][64]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.asset-requests') }}"
                                                     class="{{ Request::is('admin/asset-requests') ? 'active' : '' }}"><i class="ti ti-building"></i>&nbsp;Asset Requests</a></li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][59]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][65]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.hmo-requests') }}"
                                                     class="{{ Request::is('admin/hmo-requests') ? 'active' : '' }}"><i class="ti ti-heart-plus"></i>&nbsp;HMO Requests</a></li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][60]) || $role_data['role_id'] == 'global_user')
+                                        @if (isset($role_data['user_permission_ids'][66]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.coe-requests') }}"
                                                     class="{{ Request::is('admin/coe-requests') ? 'active' : '' }}"><i class="ti ti-certificate"></i>&nbsp;COE Requests</a></li>
                                         @endif
