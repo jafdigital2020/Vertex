@@ -134,10 +134,15 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Employee Requests
     Route::get('/request-loan', [RequestController::class, 'loanIndex'])->name('request-loan')->middleware(CheckPermission::class . ':51');
+    Route::get('/request-loan-filter', [RequestController::class, 'loanFilter'])->name('loan-request-filter');
     Route::get('/request-budget', [RequestController::class, 'budgetIndex'])->name('request-budget')->middleware(CheckPermission::class . ':52');
+    Route::get('/request-budget-filter', [RequestController::class, 'budgetFilter'])->name('budget-request-filter');
     Route::get('/request-asset', [RequestController::class, 'assetIndex'])->name('request-asset')->middleware(CheckPermission::class . ':53');
+    Route::get('/request-asset-filter', [RequestController::class, 'assetFilter'])->name('asset-request-filter');
     Route::get('/request-hmo', [RequestController::class, 'hmoIndex'])->name('request-hmo')->middleware(CheckPermission::class . ':54');
+    Route::get('/request-hmo-filter', [RequestController::class, 'hmoFilter'])->name('hmo-request-filter');
     Route::get('/request-coe', [RequestController::class, 'coeIndex'])->name('request-coe')->middleware(CheckPermission::class . ':55');
+    Route::get('/request-coe-filter', [RequestController::class, 'coeFilter'])->name('coe-request-filter');
 
     // Admin Request Management
     // Loan Requests Admin

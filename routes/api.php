@@ -471,6 +471,31 @@ Route::middleware('auth:sanctum')->group(function () {
     // Bulk Action Official Business
     Route::post('/official-business/bulk-action', [AdminOfficialBusinessController::class, 'bulkAction'])->name('api.officialBusinessBulkAction');
 
+    // Employee Request Modules - Loan Requests
+    Route::post('/loan-requests/employee/request', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'storeLoanRequest'])->name('api.employeeRequestLoan');
+    Route::post('/loan-requests/employee/update/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'updateLoanRequest'])->name('api.employeeUpdateLoan');
+    Route::delete('/loan-requests/employee/delete/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'deleteLoanRequest'])->name('api.employeeDeleteLoan');
+
+    // Employee Request Modules - Budget Requests
+    Route::post('/budget-requests/employee/request', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'storeBudgetRequest'])->name('api.employeeRequestBudget');
+    Route::post('/budget-requests/employee/update/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'updateBudgetRequest'])->name('api.employeeUpdateBudget');
+    Route::delete('/budget-requests/employee/delete/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'deleteBudgetRequest'])->name('api.employeeDeleteBudget');
+
+    // Employee Request Modules - Asset Requests
+    Route::post('/asset-requests/employee/request', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'storeAssetRequest'])->name('api.employeeRequestAsset');
+    Route::post('/asset-requests/employee/update/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'updateAssetRequest'])->name('api.employeeUpdateAsset');
+    Route::delete('/asset-requests/employee/delete/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'deleteAssetRequest'])->name('api.employeeDeleteAsset');
+
+    // Employee Request Modules - HMO Requests
+    Route::post('/hmo-requests/employee/request', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'storeHMORequest'])->name('api.employeeRequestHMO');
+    Route::post('/hmo-requests/employee/update/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'updateHMORequest'])->name('api.employeeUpdateHMO');
+    Route::delete('/hmo-requests/employee/delete/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'deleteHMORequest'])->name('api.employeeDeleteHMO');
+
+    // Employee Request Modules - COE Requests
+    Route::post('/coe-requests/employee/request', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'storeCOERequest'])->name('api.employeeRequestCOE');
+    Route::post('/coe-requests/employee/update/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'updateCOERequest'])->name('api.employeeUpdateCOE');
+    Route::delete('/coe-requests/employee/delete/{id}', [\App\Http\Controllers\Tenant\Requests\RequestController::class, 'deleteCOERequest'])->name('api.employeeDeleteCOE');
+
     // =================== Billing ================ //
     Route::get('/billing-overview', [BillingController::class, 'billingIndex'])->name('api.billing');
 

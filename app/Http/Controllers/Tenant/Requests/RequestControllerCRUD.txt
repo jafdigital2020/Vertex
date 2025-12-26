@@ -1,0 +1,15 @@
+I'll need to implement CRUD for Budget, Asset, HMO, and COE.
+
+The pattern is:
+1. Validate request input with specific fields for each type
+2. Handle file upload if present
+3. Create/Update/Delete in database
+4. Return JSON response
+
+Field mapping from models:
+- Budget: project_name, budget_category, requested_amount, start_date, end_date, justification, expected_outcome, file_attachment
+- Asset: asset_type, asset_name, quantity, estimated_cost, urgency_level, purpose, justification, file_attachment
+- HMO: hmo_plan, coverage_type, number_of_dependents, dependent_details, effective_date, reason, file_attachment
+- COE: purpose, recipient_name, recipient_company, address_to, needed_by_date
+
+Note: Some fields in views don't match models exactly - need to map them correctly.
