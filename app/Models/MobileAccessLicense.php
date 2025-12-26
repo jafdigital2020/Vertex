@@ -24,6 +24,8 @@ class MobileAccessLicense extends Model
         'license_price',
         'notes',
         'status',
+        'pool_expires_at',
+        'pool_started_at',
         'created_by_type',
         'created_by_id',
         'updated_by_type',
@@ -40,6 +42,8 @@ class MobileAccessLicense extends Model
         'total_licenses' => 'integer',
         'used_licenses' => 'integer',
         'available_licenses' => 'integer',
+        'pool_expires_at' => 'datetime',
+        'pool_started_at' => 'datetime',
     ];
 
     /**
@@ -150,5 +154,54 @@ class MobileAccessLicense extends Model
     public function canAssignLicense(): bool
     {
         return $this->status === 'active' && $this->hasAvailableLicenses();
+    }
+
+    /**
+     * Check if the license pool is expired.
+     */
+    public function isPoolExpired(): bool
+    {
+        return $this->pool_expires_at && $this->pool_expires_at <= now();
+    }
+
+    /**
+     * Check if the license pool is active and not expired.
+     */
+    public function isPoolActive(): bool
+    {
+        return $this->status === 'active' && !$this->isPoolExpired();
+    }
+
+    /**
+     * Get days until pool expiration.
+     */
+    public function getDaysUntilPoolExpiration(): ?int
+    {
+        if (!$this->pool_expires_at) {
+            return null;
+        }
+
+        $diff = now()->diffInDays($this->pool_expires_at, false);
+        return $diff >= 0 ? (int)$diff : 0;
+    }
+
+    /**
+     * Start a new billing cycle for the pool.
+     */
+    public function startBillingCycle(): void
+    {
+        $this->pool_started_at = now();
+        $this->pool_expires_at = now()->addMonth();
+        $this->save();
+    }
+
+    /**
+     * Renew the license pool for another billing cycle.
+     */
+    public function renewPool(): void
+    {
+        $this->pool_started_at = now();
+        $this->pool_expires_at = now()->addMonth();
+        $this->save();
     }
 }

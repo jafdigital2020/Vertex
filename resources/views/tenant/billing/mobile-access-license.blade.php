@@ -163,11 +163,12 @@ $page = 'mobile-access-license'; ?>
                 </div>
             </div>
 
-            <!-- License Usage Progress -->
-            @if ($licensePool->total_licenses > 0)
+            <!-- License Pool Status & Expiration -->
+            @if ($licensePool->total_licenses > 0 || $stats['pool_expires_at'])
                 <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card">
+                    <!-- License Usage Progress -->
+                    <div class="col-lg-8">
+                        <div class="card h-100">
                             <div class="card-body">
                                 <h6 class="card-title mb-3">License Usage</h6>
                                 <div class="d-flex justify-content-between mb-2">
@@ -175,11 +176,11 @@ $page = 'mobile-access-license'; ?>
                                     <span>{{ $licensePool->usage_percentage }}%</span>
                                 </div>
                                 <div class="progress" style="height: 10px;">
-                                    <div class="progress-bar 
+                                    <div class="progress-bar
                                         @if($licensePool->usage_percentage >= 90) bg-danger
                                         @elseif($licensePool->usage_percentage >= 75) bg-warning
-                                        @else bg-success @endif" 
-                                        role="progressbar" 
+                                        @else bg-success @endif"
+                                        role="progressbar"
                                         style="width: {{ $licensePool->usage_percentage }}%">
                                     </div>
                                 </div>
@@ -193,6 +194,52 @@ $page = 'mobile-access-license'; ?>
                                         <i class="ti ti-info-circle me-1"></i>
                                         Note: You've used 75% of your licenses.
                                     </small>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pool Expiration Info -->
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title mb-3">Billing Cycle</h6>
+                                @if ($stats['pool_expires_at'])
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block mb-1">Current Period</small>
+                                        @if ($stats['pool_started_at'])
+                                            <div class="fw-medium">{{ $stats['pool_started_at']->format('M d, Y') }}</div>
+                                            <small class="text-muted">to {{ $stats['pool_expires_at']->format('M d, Y') }}</small>
+                                        @else
+                                            <div class="fw-medium">Expires: {{ $stats['pool_expires_at']->format('M d, Y') }}</div>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        @if ($stats['is_pool_expired'])
+                                            <span class="badge bg-danger">
+                                                <i class="ti ti-alert-circle me-1"></i>EXPIRED
+                                            </span>
+                                            <small class="text-danger d-block mt-2">
+                                                All mobile access has been revoked. Purchase new licenses to renew.
+                                            </small>
+                                        @elseif ($stats['days_until_expiration'] !== null && $stats['days_until_expiration'] <= 7)
+                                            <span class="badge bg-warning">
+                                                <i class="ti ti-clock me-1"></i>{{ $stats['days_until_expiration'] }} day{{ $stats['days_until_expiration'] != 1 ? 's' : '' }} left
+                                            </span>
+                                            <small class="text-warning d-block mt-2">
+                                                Pool expires soon. All {{ $licensePool->total_licenses }} licenses will need renewal.
+                                            </small>
+                                        @else
+                                            <span class="badge bg-success">
+                                                <i class="ti ti-check me-1"></i>Active ({{ $stats['days_until_expiration'] }} days left)
+                                            </span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-center py-3">
+                                        <i class="ti ti-info-circle fs-3 text-muted mb-2 d-block"></i>
+                                        <small class="text-muted">Purchase licenses to start billing cycle</small>
+                                    </div>
                                 @endif
                             </div>
                         </div>

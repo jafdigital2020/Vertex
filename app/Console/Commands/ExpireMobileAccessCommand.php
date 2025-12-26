@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\MobileAccessAssignment;
+use App\Models\MobileAccessLicense;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -20,51 +21,65 @@ class ExpireMobileAccessCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Automatically revoke expired mobile access assignments';
+    protected $description = 'Automatically revoke mobile access for expired license pools';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('Checking for expired mobile access assignments...');
+        $this->info('Checking for expired mobile access license pools...');
 
-        // Find all expired assignments
-        $expiredAssignments = MobileAccessAssignment::expired()->get();
+        // Find all expired license pools
+        $expiredPools = MobileAccessLicense::where('status', 'active')
+            ->whereNotNull('pool_expires_at')
+            ->where('pool_expires_at', '<=', now())
+            ->get();
 
-        if ($expiredAssignments->isEmpty()) {
-            $this->info('No expired mobile access assignments found.');
+        if ($expiredPools->isEmpty()) {
+            $this->info('No expired mobile access license pools found.');
             return 0;
         }
 
-        $count = 0;
+        $totalRevoked = 0;
 
-        foreach ($expiredAssignments as $assignment) {
+        foreach ($expiredPools as $pool) {
             try {
-                // Check if auto-renewal is enabled
-                if ($assignment->auto_renewal) {
-                    $this->line("Auto-renewing assignment for user {$assignment->user_id}");
-                    $assignment->renew();
-                } else {
-                    $this->line("Revoking expired assignment for user {$assignment->user_id}");
-                    $assignment->revoke('Automatically revoked due to expiration');
+                $this->line("Processing expired pool for tenant {$pool->tenant_id}");
+
+                // Get all active assignments for this pool
+                $activeAssignments = $pool->activeAssignments()->get();
+
+                $this->line("  Found {$activeAssignments->count()} active assignments to revoke");
+
+                // Revoke all assignments for this pool
+                foreach ($activeAssignments as $assignment) {
+                    $assignment->revoke('License pool expired - renewal payment required for entire pool');
+                    $totalRevoked++;
                 }
-                $count++;
+
+                Log::info('Revoked all assignments for expired mobile access pool', [
+                    'tenant_id' => $pool->tenant_id,
+                    'pool_id' => $pool->id,
+                    'expired_at' => $pool->pool_expires_at,
+                    'assignments_revoked' => $activeAssignments->count(),
+                ]);
+
             } catch (\Exception $e) {
-                $this->error("Failed to process assignment {$assignment->id}: {$e->getMessage()}");
-                Log::error('Failed to process expired mobile access assignment', [
-                    'assignment_id' => $assignment->id,
-                    'user_id' => $assignment->user_id,
+                $this->error("Failed to process pool {$pool->id}: {$e->getMessage()}");
+                Log::error('Failed to process expired mobile access pool', [
+                    'pool_id' => $pool->id,
+                    'tenant_id' => $pool->tenant_id,
                     'error' => $e->getMessage()
                 ]);
             }
         }
 
-        $this->info("Processed {$count} expired mobile access assignments.");
-        
+        $this->info("Processed {$expiredPools->count()} expired pools and revoked {$totalRevoked} assignments.");
+
         Log::info('Mobile access expiration check completed', [
-            'expired_count' => $expiredAssignments->count(),
-            'processed_count' => $count
+            'expired_pools_count' => $expiredPools->count(),
+            'total_assignments_revoked' => $totalRevoked
         ]);
 
         return 0;

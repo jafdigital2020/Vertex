@@ -29,10 +29,11 @@ class ValidateMobileAccess
             return $next($request);
         }
 
-        // Check if user has active mobile access license
+        // Check if user has active and non-expired mobile access license
         $mobileAccess = MobileAccessAssignment::forTenant($user->tenant_id)
             ->forUser($user->id)
-            ->active()
+            ->activeAndValid()
+            ->with('mobileAccessLicense')
             ->first();
 
         if (!$mobileAccess) {
@@ -53,6 +54,30 @@ class ValidateMobileAccess
                 'success' => false,
                 'message' => 'You do not have mobile access. Please contact your administrator to request access.',
                 'error_code' => 'NO_MOBILE_ACCESS',
+                'timestamp' => now()->toISOString(),
+            ], 403);
+        }
+
+        // Check if the license pool itself is expired
+        if ($mobileAccess->mobileAccessLicense && $mobileAccess->mobileAccessLicense->isPoolExpired()) {
+            // Revoke the current token since pool expired
+            if ($user->currentAccessToken()) {
+                $user->currentAccessToken()->delete();
+            }
+
+            Log::warning('Mobile access denied in middleware - license pool expired', [
+                'user_id' => $user->id,
+                'username' => $user->username,
+                'tenant_id' => $user->tenant_id,
+                'pool_expired_at' => $mobileAccess->mobileAccessLicense->pool_expires_at,
+                'route' => $request->route()->getName(),
+                'url' => $request->url(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Your mobile access license has expired. Please contact your administrator to renew.',
+                'error_code' => 'LICENSE_POOL_EXPIRED',
                 'timestamp' => now()->toISOString(),
             ], 403);
         }

@@ -159,6 +159,10 @@ class MobileAccessLicenseController extends Controller
             'total_licenses' => $licensePool->total_licenses,
             'available_licenses' => $licensePool->available_licenses,
             'monthly_cost' => $licensePool->total_licenses * $licensePool->license_price,
+            'pool_expires_at' => $licensePool->pool_expires_at,
+            'pool_started_at' => $licensePool->pool_started_at,
+            'days_until_expiration' => $licensePool->getDaysUntilPoolExpiration(),
+            'is_pool_expired' => $licensePool->isPoolExpired(),
         ];
 
         return view('tenant.billing.mobile-access-license', compact(
@@ -394,13 +398,32 @@ class MobileAccessLicenseController extends Controller
                 'paid_at' => now(),
             ]);
 
-            // Add licenses to the pool
+            // Add licenses to the pool and start/sync billing cycle
             $licensePool = MobileAccessLicense::forTenant($invoice->tenant_id)->active()->first();
-            
+
             if ($licensePool) {
                 $licenseCount = $invoice->license_overage_count; // We stored license count here
                 $licensePool->addLicenses($licenseCount);
-                
+
+                // If this is the first purchase or pool is expired, start new billing cycle
+                if (!$licensePool->pool_expires_at || $licensePool->isPoolExpired()) {
+                    $licensePool->startBillingCycle();
+                    Log::info('Started new billing cycle for mobile access pool', [
+                        'invoice_id' => $invoice->id,
+                        'tenant_id' => $invoice->tenant_id,
+                        'pool_started_at' => $licensePool->pool_started_at,
+                        'pool_expires_at' => $licensePool->pool_expires_at,
+                    ]);
+                } else {
+                    // New licenses inherit the existing pool expiration date
+                    Log::info('New licenses added to existing billing cycle', [
+                        'invoice_id' => $invoice->id,
+                        'tenant_id' => $invoice->tenant_id,
+                        'pool_expires_at' => $licensePool->pool_expires_at,
+                        'days_remaining' => $licensePool->getDaysUntilPoolExpiration(),
+                    ]);
+                }
+
                 Log::info('Mobile access licenses added after successful payment', [
                     'invoice_id' => $invoice->id,
                     'tenant_id' => $invoice->tenant_id,
@@ -489,6 +512,7 @@ class MobileAccessLicenseController extends Controller
                 $branchId = $user->employmentDetail->branch_id ?? null;
             }
 
+            // Assignment inherits the pool expiration date - all licenses expire together
             $assignment = MobileAccessAssignment::create([
                 'tenant_id' => $tenantId,
                 'user_id' => $user->id,
@@ -497,8 +521,8 @@ class MobileAccessLicenseController extends Controller
                 'branch_id' => $branchId,
                 'status' => 'active',
                 'assigned_at' => now(),
-                'expires_at' => now()->addMonth(), // Monthly subscription - expires in 30 days
-                'auto_renewal' => true,
+                'expires_at' => $licensePool->pool_expires_at, // Inherits pool expiration - all assignments expire together
+                'auto_renewal' => false, // Auto-renewal disabled - requires manual payment for entire pool
                 'renewal_count' => 0,
                 'assigned_by_type' => get_class($authUser),
                 'assigned_by_id' => $authUser->id,
