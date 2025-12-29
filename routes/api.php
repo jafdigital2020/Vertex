@@ -319,7 +319,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/violation/{id}/return', [ViolationController::class, 'markReturnToWork'])
         ->name('api.violationMarkReturnToWork');
 
+    Route::post('/violations/final-pay',[ViolationController::class, 'processFinalPay'] )->name('api.violationProcessLastPay');
 
+    
     // ============= Resignation API ================ //
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('api.resignationIndex');
 

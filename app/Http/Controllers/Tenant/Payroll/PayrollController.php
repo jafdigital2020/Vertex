@@ -48,7 +48,7 @@ class PayrollController extends Controller
     }
 
     // Check employees with non-Active employment states
-    protected function checkNonActiveEmployees(array $userIds, int $tenantId)
+   public function  checkNonActiveEmployees(array $userIds, int $tenantId)
     {
         $nonActiveEmployees = User::whereIn('id', $userIds)
             ->where('tenant_id', $tenantId)
@@ -339,7 +339,7 @@ class PayrollController extends Controller
     }
 
     // Attendance Getter
-    protected function getAttendances(int $tenantId, array $data)
+    public function  getAttendances(int $tenantId, array $data)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -355,7 +355,7 @@ class PayrollController extends Controller
     }
 
     // Overtime Getter
-    protected function getOvertime(int $tenantId, array $data)
+   public function  getOvertime(int $tenantId, array $data)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -372,7 +372,7 @@ class PayrollController extends Controller
     }
 
     // Sum Minutes
-    protected function sumMinutes(int $tenantId, array $data)
+   public function  sumMinutes(int $tenantId, array $data)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -437,7 +437,7 @@ class PayrollController extends Controller
     }
 
     // Get Salary Data
-    protected function getSalaryData(array $userIds)
+   public function  getSalaryData(array $userIds)
     {
         return SalaryRecord::whereIn('user_id', $userIds)
             ->where('is_active', 1)
@@ -472,7 +472,7 @@ class PayrollController extends Controller
     }
 
     // Calculate Deductions (Late, Undertime, Absent)
-    protected function calculateDeductions(array $userIds, array $totals, $salaryData)
+   public function  calculateDeductions(array $userIds, array $totals, $salaryData)
     {
         $lateDeductions      = [];
         $undertimeDeductions = [];
@@ -521,7 +521,7 @@ class PayrollController extends Controller
     }
 
     // Calculate Holiday Pay
-    protected function calculateHolidayPay($attendances, array $data, $salaryData)
+   public function  calculateHolidayPay($attendances, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -641,7 +641,7 @@ class PayrollController extends Controller
     }
 
     // Calculate Night Differential Pay
-    protected function calculateNightDifferential(array $userIds, array $data, $salaryData)
+   public function  calculateNightDifferential(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -888,7 +888,7 @@ class PayrollController extends Controller
     }
 
     // Calculate Overtime Pay
-    protected function calculateOvertimePay(array $userIds, array $data, $salaryData)
+   public function  calculateOvertimePay(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -1070,7 +1070,7 @@ class PayrollController extends Controller
     }
 
     // Calculate Overtime and Night Differential Pay
-    protected function calculateOvertimeNightDiffPay(array $userIds, array $data, $salaryData)
+   public function  calculateOvertimeNightDiffPay(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -1304,7 +1304,7 @@ class PayrollController extends Controller
     }
 
     // Calculate Earnings (Dynamic Earnings)
-    protected function calculateEarnings(array $userIds, array $data, $salaryData)
+   public function  calculateEarnings(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -1385,7 +1385,7 @@ class PayrollController extends Controller
         return $result;
     }
 
-    protected function calculateAllowance(array $userIds, array $data, $salaryData)
+   public function  calculateAllowance(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -1527,7 +1527,7 @@ class PayrollController extends Controller
     }
 
     // Calculate Deductions (Dynamic Deductions)
-    protected function calculateDeduction(array $userIds, array $data, $salaryData)
+   public function  calculateDeduction(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -1609,7 +1609,7 @@ class PayrollController extends Controller
     }
 
     // Basic Pay Calculation
-    protected function calculateBasicPay(array $userIds, array $data, $salaryData)
+   public function  calculateBasicPay(array $userIds, array $data, $salaryData)
     {
         // Use sumMinutes to get work minutes and work days
         $tenantId = Auth::user()->tenant_id ?? null;
@@ -1761,7 +1761,7 @@ class PayrollController extends Controller
     }
 
     // Leave Computation
-    protected function calculateLeavePay(array $userIds, array $data, $salaryData)
+   public function  calculateLeavePay(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
@@ -1843,7 +1843,7 @@ class PayrollController extends Controller
     }
 
     // SSS Contribution Calculation
-    protected function calculateSSSContribution(array $userIds, array $data, $salaryData, $sssOption, $cutoffOption)
+   public function  calculateSSSContribution(array $userIds, array $data, $salaryData, $sssOption, $cutoffOption)
     {
         Log::info('SSS Contribution: Starting calculation', [
             'user_ids' => $userIds,
@@ -2102,7 +2102,7 @@ class PayrollController extends Controller
     }
 
     // Philhealth Contribution Calculation
-    protected function calculatePhilhealthContribution(array $userIds, array $data, $salaryData, $philhealthOption, $cutoffOption)
+   public function  calculatePhilhealthContribution(array $userIds, array $data, $salaryData, $philhealthOption, $cutoffOption)
     {
         // Preload user branch PhilHealth contribution type and fixed amount
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
@@ -2324,7 +2324,7 @@ class PayrollController extends Controller
     }
 
     // Pagibig Contribution Calculation
-    protected function calculatePagibigContribution(array $userIds, array $data, $salaryData, $pagibigOption)
+   public function  calculatePagibigContribution(array $userIds, array $data, $salaryData, $pagibigOption)
     {
         // Preload user branch Pag-IBIG contribution type and fixed amount
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
@@ -2415,7 +2415,7 @@ class PayrollController extends Controller
     }
 
     // Withholding Tax Calculation
-    protected function calculateWithholdingTax(array $userIds, array $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption)
+   public function  calculateWithholdingTax(array $userIds, array $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption)
     {
         // Preload user branch tax type and fixed amount
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
@@ -2555,7 +2555,7 @@ class PayrollController extends Controller
     }
 
     // User Deminimis
-    protected function calculateUserDeminimis(array $userIds, array $data, $salaryData)
+   public function  calculateUserDeminimis(array $userIds, array $data, $salaryData)
     {
         // Get payroll period
         $start = Carbon::parse($data['start_date'])->startOfDay();
@@ -2595,7 +2595,7 @@ class PayrollController extends Controller
     }
 
     // Total Deductions
-    protected function calculateTotalDeductions(array $userIds, array $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption)
+   public function  calculateTotalDeductions(array $userIds, array $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption)
     {
         // Get dynamic deductions (UserDeduction)
         $dynamicDeductions = $this->calculateDeduction($userIds, $data, $salaryData);
@@ -2644,7 +2644,7 @@ class PayrollController extends Controller
     }
 
     // Salary Bond Deduction
-    protected function calculateSalaryBondDeduction(array $userIds, array $data, $salaryData)
+   public function  calculateSalaryBondDeduction(array $userIds, array $data, $salaryData)
     {
         // Get all active salary bonds for the users
         $salaryBonds = SalaryBond::whereIn('user_id', $userIds)
@@ -2700,7 +2700,7 @@ class PayrollController extends Controller
 
 
     // Total Earnings
-    protected function calculateTotalEarnings(array $userIds, array $data, $salaryData)
+   public function  calculateTotalEarnings(array $userIds, array $data, $salaryData)
     {
         // Get  overtime pay, night differential, and holiday pay
         $overtimePay = $this->calculateOvertimePay($userIds, $data, $salaryData);
@@ -2776,7 +2776,7 @@ class PayrollController extends Controller
     }
 
     // 13th Month Pay Calculation
-    protected function calculateThirteenthMonthPay(array $userIds, array $data, $salaryData)
+   public function  calculateThirteenthMonthPay(array $userIds, array $data, $salaryData)
     {
         // Get basic pay data
         $basicPayData = $this->calculateBasicPay($userIds, $data, $salaryData);
@@ -2815,7 +2815,7 @@ class PayrollController extends Controller
     }
 
     // Net Pay Calculation
-    protected function calculateNetPay($userIds, $basicPayData, $earningsData, $deductionsData)
+   public function  calculateNetPay($userIds, $basicPayData, $earningsData, $deductionsData)
     {
         $results = [];
         foreach ($userIds as $userId) {

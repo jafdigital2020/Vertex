@@ -126,7 +126,10 @@
                                                     }
                                                 }
                                             @endphp
+
+                                            
                                                @foreach ($violation as $idx => $sus) 
+                                               
                                                     <tr>    
                                                         <td>{{ $idx + 1 }}</td>
                                                         <td>{{  $sus->employee->personalInformation->first_name ?? '' }}  {{   $sus->employee->personalInformation->last_name ?? '' }}</td> 
@@ -213,7 +216,7 @@
                                                                             title="Implement Violation">
                                                                             <i class="ti ti-ban"></i>
                                                                         </button>
-
+                                                                        
                                                                         <!-- @if($sus->violation_start_date === null && $sus->violation_end_date === null)
                                                                         <button class="btn btn-sm btn-danger"
                                                                             onclick="openSuspendModal({{ $sus->id ?? $sus->employee->id }})"
@@ -229,6 +232,16 @@
                                                                         </button>
                                                                         @endif -->
                                                                         @break  
+
+                                                                        @case('implemented')
+                                                                            @if($sus->termination_date !== null)
+                                                                            <button class="btn btn-sm btn-primary"
+                                                                                onclick="processLastPay({{ $sus->employee->id }})"
+                                                                                title="Process Last Pay">
+                                                                                <i class="ti ti-receipt"></i>
+                                                                            </button> 
+                                                                            @endif
+                                                                        @break
                                                                 @endswitch
 
                                                             </div>
@@ -807,6 +820,143 @@
                     </div>
                 </div>
             </div>
+            @php
+                $currentYear = date('Y');
+                $currentMonth = date('n');
+                $currentDate = date('Y-m-d');
+            @endphp
+                          
+            <div class="modal fade" id="processLastPayModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="ti ti-receipt me-2"></i>Process Last Pay
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+
+                            <form id="finalpayrollProcessForm"
+                                class="row g-4"
+                                method="POST"
+                                >
+                                @csrf
+ 
+                                <input type="hidden" name="user_id[]" id="lastPayEmployeeId">
+ 
+                                <div class="col-xl-5">
+                                    <div class="mb-3 row align-items-center">
+                                        <label class="col-sm-4 col-form-label">Payroll Type</label>
+                                        <div class="col-sm-8">
+                                            <select class="form-select" name="payroll_type" id="payrollType" readonly>
+                                                <option value="normal_payroll" selected>Final Pay</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3 row align-items-center">
+                                        <label class="col-sm-4 col-form-label">Year</label>
+                                        <div class="col-sm-8">
+                                            <select class="form-select" name="year" required>
+                                                @for ($year = $currentYear - 5; $year <= $currentYear + 5; $year++)
+                                                    <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
+                                                        {{ $year }}
+                                                    </option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3 row align-items-center">
+                                        <label class="col-sm-4 col-form-label">Month</label>
+                                        <div class="col-sm-8">
+                                            <select class="form-select" name="month" required>
+                                                @foreach (range(1, 12) as $month)
+                                                    <option value="{{ $month }}" {{ $month == $currentMonth ? 'selected' : '' }}>
+                                                        {{ date('F', mktime(0, 0, 0, $month, 1)) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3 row align-items-center">
+                                        <label class="col-sm-4 col-form-label">Start Date</label>
+                                        <div class="col-sm-8">
+                                            <input type="date" class="form-control" name="start_date" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3 row align-items-center">
+                                        <label class="col-sm-4 col-form-label">End Date</label>
+                                        <div class="col-sm-8">
+                                            <input type="date" class="form-control" name="end_date" required>
+                                        </div>
+                                    </div>
+                                </div>
+ 
+                                <div class="col-xl-5">
+                                    <div class="mb-3 row align-items-center">
+                                        <label class="col-sm-4 col-form-label">Transaction Date</label>
+                                        <div class="col-sm-8">
+                                            <input type="date" class="form-control"
+                                                name="transaction_date"
+                                                value="{{ $currentDate }}" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3 row align-items-center">
+                                        <label class="col-sm-4 col-form-label">Assignment Type</label>
+                                        <div class="col-sm-8">
+                                            <select name="assignment_type" class="form-select" required>
+                                                <option value="">Select</option> 
+                                                <option value="manual" selected>Manual</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="col-xl-2">
+                                    <div class="mb-3">
+                                        <label class="form-label">SSS</label>
+                                        <div class="d-flex gap-2">
+                                            <input type="radio" name="sss_option" value="yes" required> Yes
+                                            <input type="radio" name="sss_option" value="no"> No
+                                            <input type="radio" name="sss_option" value="full"> Full
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">PhilHealth</label>
+                                        <div class="d-flex gap-2">
+                                            <input type="radio" name="philhealth_option" value="yes" required> Yes
+                                            <input type="radio" name="philhealth_option" value="no"> No
+                                            <input type="radio" name="philhealth_option" value="full"> Full
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Pag-IBIG</label>
+                                        <div class="d-flex gap-2">
+                                            <input type="radio" name="pagibig_option" value="yes" required> Yes
+                                            <input type="radio" name="pagibig_option" value="no"> No
+                                            <input type="radio" name="pagibig_option" value="full"> Full
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="ti ti-settings me-1"></i>
+                                        Process Last Pay
+                                    </button>   
+                                </div>
+                            </form> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
 
             @push('scripts')
@@ -1819,8 +1969,66 @@
                     });
                 });
             </script>
+            <script>
+                function processLastPay(employeeId) {
+                    document.getElementById('lastPayEmployeeId').value = employeeId;
+                    
+                    let modal = new bootstrap.Modal(
+                        document.getElementById('processLastPayModal')
+                    );
+                    modal.show();
+                }
+            </script>
 
+            <script>
+                $(document).ready(function() {
 
+                    $('#finalpayrollProcessForm').on('submit', function(e) {
+                        e.preventDefault();
+
+                        let form = $(this);
+                        let submitBtn = form.find('button[type="submit"]');
+ 
+                        submitBtn.prop('disabled', true).html('Processing...');
+
+                        let formData = new FormData(this);
+
+                        $.ajax({
+                            url: "{{ route('api.violationProcessLastPay') }}",
+                            method: "POST",
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            headers: {
+                                'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                            },
+                            success: function(response) {
+                                toastr.success(response.message || 'Last pay processed successfully');
+ 
+                                $('#processLastPayModal').modal('hide');
+ 
+                                form[0].reset();
+                                filter();
+                            },
+                            error: function(xhr) {
+                                let message = 'Something went wrong';
+                                if (xhr.status === 422) {
+                                    let errors = xhr.responseJSON.errors;
+                                    message = Object.values(errors).flat().join('<br>');
+                                } else if (xhr.responseJSON?.message) {
+                                    message = xhr.responseJSON.message;
+                                }
+                                toastr.error(message);
+                            },
+                            complete: function() {
+                                submitBtn.prop('disabled', false)
+                                        .html('<i class="ti ti-settings me-1"></i> Process Last Pay');
+                            }
+                        });
+                    });
+
+                });
+            </script>  
             <script>
                 // Return to Work Modal
                 document.addEventListener('DOMContentLoaded', () => {

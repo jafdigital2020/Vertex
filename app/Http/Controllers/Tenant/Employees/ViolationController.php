@@ -17,6 +17,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\UserNotification;
 use App\Http\Controllers\DataAccessController;
+use App\Http\Controllers\Tenant\Payroll\PayrollController;
+use App\Models\Payroll;
+use App\Models\UserEarning;
 
 class ViolationController extends Controller
 {
@@ -329,6 +332,7 @@ class ViolationController extends Controller
                 $query->where('status', 1); 
             }) 
             ->latest()->get();
+ 
         $violationTypes = ViolationTypes::all();
  
         return view('tenant.violation.violation-admin', [
@@ -1192,4 +1196,169 @@ class ViolationController extends Controller
             ], 500);
         }
     }
+    
+
+    public function processFinalPay(Request $request)
+     {
+
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(24);
+        $tenantId = $authUser->tenant_id ?? null;
+        $payrollController = new PayrollController();
+
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
+
+        $data = $request->validate([
+            'user_id'    => 'required', 
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+ 
+        $pagibigOption = $request->input('pagibig_option');
+        $sssOption = $request->input('sss_option');
+        $philhealthOption = $request->input('philhealth_option');
+        $cuttoffOption = $request->input('cutoff_period');
+        $payrollType = $request->input('payroll_type', 'normal_payroll');
+        $payrollPeriod = $request->input('payroll_period', null);
+        $paymentDate = $request->input('payment_date', now()->toDateString());
+
+
+        if ($payrollType === 'normal_payroll') {
+            $attendances = $payrollController->getAttendances($tenantId, $data);
+            $overtimes = $payrollController->getOvertime($tenantId, $data);
+            $totals = $payrollController->sumMinutes($tenantId, $data);
+            $salaryData = $payrollController->getSalaryData($data['user_id']);
+            $deductions = $payrollController->calculateDeductions($data['user_id'], $totals, $salaryData);
+            $holidayInfo = $payrollController->calculateHolidayPay($attendances, $data, $salaryData);
+            $nightDiffInfo = $payrollController->calculateNightDifferential($data['user_id'], $data, $salaryData);
+            $overtimePay = $payrollController->calculateOvertimePay($data['user_id'], $data, $salaryData);
+            $overtimeNightDiffPay = $payrollController->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
+            $userEarnings = $payrollController->calculateEarnings($data['user_id'], $data, $salaryData);
+            $userAllowances = $payrollController->calculateAllowance($data['user_id'], $data, $salaryData);
+            $userDeductions = $payrollController->calculateDeduction($data['user_id'], $data, $salaryData);
+            $basicPay = $payrollController->calculateBasicPay($data['user_id'], $data, $salaryData);
+            $grossPay = $payrollController->calculateGrossPay($data['user_id'], $data, $salaryData);
+            $sssContributions = $payrollController->calculateSSSContribution($data['user_id'], $data, $salaryData, $sssOption, $cuttoffOption);
+            $philhealthContributions = $payrollController->calculatePhilhealthContribution($data['user_id'], $data, $salaryData, $philhealthOption, $cuttoffOption);
+            $pagibigContributions = $payrollController->calculatePagibigContribution($data['user_id'], $data, $salaryData, $pagibigOption);
+            $withholdingTax = $payrollController->calculateWithholdingTax($data['user_id'], $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption);
+            $leavePay = $payrollController->calculateLeavePay($data['user_id'], $data, $salaryData);
+            $deminimisBenefits = $payrollController->calculateUserDeminimis($data['user_id'], $data, $salaryData);
+            $totalDeductions = $payrollController->calculateTotalDeductions($data['user_id'], $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption);
+            $totalEarnings = $payrollController->calculateTotalEarnings($data['user_id'], $data, $salaryData);
+            $netPay = $payrollController->calculateNetPay($data['user_id'], $basicPay, $totalEarnings, $totalDeductions);
+            $thirteenthMonth = $payrollController->calculateThirteenthMonthPay($data['user_id'], $data, $salaryData);
+            $salaryBond = $payrollController->calculateSalaryBondDeduction($data['user_id'], $data, $salaryData);
+
+            foreach ($data['user_id'] as $userId) {
+                $payroll = Payroll::updateOrCreate(
+                    [
+                        'tenant_id' => $tenantId,
+                        'user_id' => $userId,
+                        'payroll_period_start' => $data['start_date'],
+                        'payroll_period_end' => $data['end_date'],
+                        'payroll_type' => $payrollType,
+                    ],
+                    [
+                        'payroll_period' => $payrollPeriod,
+                        'total_worked_minutes' => $totals['work'][$userId] ?? 0,
+                        'total_late_minutes' => $totals['late'][$userId] ?? 0,
+                        'total_undertime_minutes' => $totals['undertime'][$userId] ?? 0,
+                        'total_overtime_minutes' => $overtimePay[$userId]['total_ot_minutes'] ?? 0,
+                        'total_night_differential_minutes' => $totals['night_diff'][$userId] ?? 0,
+                        'total_overtime_night_diff_minutes' => $overtimeNightDiffPay[$userId]['total_night_diff_minutes'] ?? 0,
+                        'total_worked_days' => $totals['work_days'][$userId] ?? 0,
+                        'total_absent_days' => $totals['absent'][$userId] ?? 0,
+
+                        // Pay breakdown
+                        'holiday_pay' => $holidayInfo[$userId]['holiday_pay_amount'] ?? 0,
+                        'leave_pay' => $leavePay[$userId]['leave_pay_amount'] ?? 0,
+                        'overtime_pay' => ($overtimePay[$userId]['ordinary_pay'] ?? 0) + ($overtimePay[$userId]['holiday_pay'] ?? 0),
+
+                        'night_differential_pay' => ($nightDiffInfo[$userId]['ordinary_pay'] ?? 0) + ($nightDiffInfo[$userId]['rest_day_pay'] ?? 0)
+                            + ($nightDiffInfo[$userId]['holiday_pay'] ?? 0)
+                            + ($nightDiffInfo[$userId]['holiday_rest_day_pay'] ?? 0),
+
+                        'overtime_night_diff_pay' => ($overtimeNightDiffPay[$userId]['ordinary_pay'] ?? 0) +
+                            ($overtimeNightDiffPay[$userId]['rest_day_pay'] ?? 0) +
+                            ($overtimeNightDiffPay[$userId]['holiday_pay'] ?? 0) +
+                            ($overtimeNightDiffPay[$userId]['holiday_rest_day_pay'] ?? 0) +
+                            ($overtimeNightDiffPay[$userId]['holiday_rest_day_pay'] ?? 0),
+
+                        'late_deduction' => $deductions['lateDeductions'][$userId] ?? 0,
+                        'overtime_restday_pay' => ($overtimePay[$userId]['rest_day_pay'] ?? 0) + ($overtimePay[$userId]['holiday_rest_day_pay'] ?? 0),
+                        'undertime_deduction' => $deductions['undertimeDeductions'][$userId] ?? 0,
+                        'absent_deduction' => $deductions['absentDeductions'][$userId] ?? 0,
+                        'earnings' => isset($userEarnings[$userId]['earning_details']) ? json_encode($userEarnings[$userId]['earning_details']) : null,
+                        'total_earnings' => $totalEarnings[$userId]['total_earnings'] ?? 0,
+                        'allowance' => isset($userAllowances[$userId]['allowance_details']) ? json_encode($userAllowances[$userId]['allowance_details']) : null,
+                        'taxable_income' => 0,
+
+                        // De Minimis
+                        'deminimis' => isset($deminimisBenefits[$userId]['details']) ? json_encode($deminimisBenefits[$userId]['details']) : null,
+
+                        // Deductions
+                        'sss_contribution' => $sssContributions[$userId]['employee_total'] ?? 0,
+                        'philhealth_contribution' => $philhealthContributions[$userId]['employee_total'] ?? 0,
+                        'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
+                        'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
+                        'salary_bond' => $salaryBond[$userId]['total_salary_bond_deduction'] ?? 0,
+                        'loan_deductions' => null,
+                        'deductions' => isset($userDeductions[$userId]['deduction_details']) ? json_encode($userDeductions[$userId]['deduction_details']) : null,
+                        'total_deductions' => ($totalDeductions[$userId]['total_deductions'] ?? 0) + ($salaryBond[$userId]['total_salary_bond_deduction'] ?? 0),
+
+                        // Salary Breakdown
+                        'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
+                        'gross_pay' => $grossPay[$userId]['gross_pay'] ?? 0,
+                        'net_salary' => ($netPay[$userId]['net_pay'] ?? 0) - ($salaryBond[$userId]['total_salary_bond_deduction'] ?? 0),
+
+                        // 13th month
+                        'thirteenth_month_pay' => $thirteenthMonth[$userId]['thirteenth_month'] ?? 0,
+
+                        // Payment Info
+                        'payment_date' => $paymentDate,
+                        'processor_type' => Auth::user() ? get_class(Auth::user()) : null,
+                        'processor_id' => Auth::id(),
+                        'status' => 'Pending',
+                        'remarks' => null,
+                    ]
+                );
+            }
+
+            UserEarning::where('user_id', $data['user_id'][0])
+                ->where('frequency', 'one_time')
+                ->where('status', 'terminated')
+                ->whereBetween('effective_start_date', [
+                    Carbon::parse($data['start_date'])->startOfDay(),
+                    Carbon::parse($data['end_date'])->endOfDay()
+                ])
+                ->update(['status' => 'completed']);   
+
+            return response()->json([
+                'attendances'       => $attendances,
+                'totals'            => $totals['work'],
+                'late_totals'       => $totals['late'],
+                'undertime_totals'  => $totals['undertime'],
+                'night_diff_totals' => $totals['night_diff'],
+                'absent_days'       => $totals['absent'],
+                'work_days'         => $totals['work_days'],
+                'deductions'        => $deductions,
+                'holiday'           => $holidayInfo,
+                'night_diff_pay'    => $nightDiffInfo,
+                'overtimes'         => $overtimes,
+                'message'           => 'Last Pay processed successfully.',
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Payroll type not supported yet.',
+            ], 422);
+        }
+    }
+
 }

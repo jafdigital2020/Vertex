@@ -115,6 +115,16 @@
                                                                         </button>
                                                                         @endif -->
                                                                         @break  
+
+                                                                        @case('implemented')
+                                                                            @if($sus->termination_date !== null)
+                                                                            <button class="btn btn-sm btn-primary"
+                                                                                onclick="processLastPay({{ $sus->id ?? $sus->employee->id }})"
+                                                                                title="Process Last Pay">
+                                                                                <i class="ti ti-receipt"></i>
+                                                                            </button> 
+                                                                            @endif
+                                                                        @break
                                                                 @endswitch
 
                                                             </div>
