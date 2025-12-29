@@ -184,7 +184,6 @@ class GenerateManualInvoice extends Command
             }
 
             return self::SUCCESS;
-
         } catch (\Exception $e) {
             $this->error("Failed to create invoice: " . $e->getMessage());
             Log::error('Failed to create manual invoice', [

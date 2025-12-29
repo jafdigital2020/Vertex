@@ -276,7 +276,7 @@ class InvoiceController extends Controller
     {
         $invoice = Invoice::with('items')->findOrFail($invoiceId);
 
-        if ($invoice->invoice_type === 'custom_order') {
+        if ($invoice->invoice_type === 'custom_order' || $invoice->invoice_type === 'implementation_fee') {
             return response()->json($invoice->items);
         }
 

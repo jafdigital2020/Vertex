@@ -61,7 +61,7 @@ class PaymentController extends Controller
             $invoice = Invoice::where('id', $invoiceId)
                 ->where('tenant_id', $authUser->tenant_id)
                 ->where('status', '!=', 'paid')
-                ->with(['subscription.tenant'])
+                ->with(['subscription.tenant', 'items'])
                 ->first();
 
             if (!$invoice) {
