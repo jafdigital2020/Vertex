@@ -163,6 +163,21 @@ class HitPayService
                 $count = $invoice->license_overage_count ?? 0; // Reusing this field for mobile access count
                 return "Mobile Access Licenses - {$count} licenses (Invoice #{$invoice->invoice_number})";
 
+            case 'implementation_fee':
+                // Get custom description from invoice items if available
+                $description = 'Custom Service';
+                if ($invoice->items && $invoice->items->isNotEmpty()) {
+                    $firstItem = $invoice->items->first();
+                    if ($firstItem && $firstItem->description) {
+                        $description = $firstItem->description;
+                    }
+                }
+                return "Implementation Fee - {$description} (Invoice #{$invoice->invoice_number})";
+
+            case 'plan_upgrade':
+                $planName = $invoice->upgradePlan->name ?? 'Plan Upgrade';
+                return "Plan Upgrade to {$planName} (Invoice #{$invoice->invoice_number})";
+
             case 'subscription':
                 $planName = $invoice->subscription->plan->name ?? 'Subscription';
                 if ($invoice->license_overage_count > 0) {
