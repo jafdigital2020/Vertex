@@ -27,7 +27,11 @@ class Violation extends Model
             'termination_date',
             'return_to_work_at',    
             'status',
-            'remarks'
+            'remarks',
+            'last_pay_status',
+            'last_pay_date',
+            'last_payroll_idphp artisan make:migration add_last_payroll_fk_to_violations_table
+'
     ];
 
 

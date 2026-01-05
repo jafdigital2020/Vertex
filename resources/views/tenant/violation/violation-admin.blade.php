@@ -231,17 +231,20 @@
                                                                             <i class="ti ti-check"></i>
                                                                         </button>
                                                                         @endif -->
-                                                                        @break  
+                                                                    @break  
 
-                                                                        @case('implemented')
-                                                                            @if($sus->termination_date !== null)
-                                                                            <button class="btn btn-sm btn-primary"
-                                                                                onclick="processLastPay({{ $sus->employee->id }})"
-                                                                                title="Process Last Pay">
-                                                                                <i class="ti ti-receipt"></i>
-                                                                            </button> 
-                                                                            @endif
-                                                                        @break
+                                                                    @case('implemented')
+                                                                        @if($sus->termination_date !== null && $sus->last_pay_status !== 1 )
+                                                                        <button class="btn btn-sm btn-primary"
+                                                                            onclick="processLastPay({{ $sus->employee->id }} , {{$sus->id}})"
+                                                                            title="Process Last Pay">
+                                                                            <i class="ti ti-receipt"></i>
+                                                                        </button> 
+                                                                        @endif
+                                                                       @if($sus->termination_date !== null && $sus->last_pay_status === 1 )
+                                                                        <button class="btn btn-sm btn-primary" onclick="viewEditLastPay({{$sus->last_payroll_id}})" title="View/Edit Last Pay"><i class="ti ti-report-money"></i></button>
+                                                                       @endif
+                                                                    @break  
                                                                 @endswitch
 
                                                             </div>
@@ -846,13 +849,14 @@
                                 @csrf
  
                                 <input type="hidden" name="user_id[]" id="lastPayEmployeeId">
+                                <input type="hidden" name="violation_id" id="violation_id">
  
                                 <div class="col-xl-5">
                                     <div class="mb-3 row align-items-center">
                                         <label class="col-sm-4 col-form-label">Payroll Type</label>
                                         <div class="col-sm-8">
                                             <select class="form-select" name="payroll_type" id="payrollType" readonly>
-                                                <option value="normal_payroll" selected>Final Pay</option>
+                                                <option value="last_payroll" selected>Last Pay</option>
                                             </select>
                                         </div>
                                     </div>
@@ -956,7 +960,260 @@
                     </div>
                 </div>
             </div>
+            <div class="modal fade" id="edit_payroll" tabindex="-1" aria-labelledby="payrollModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" style="max-width: 85%;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="payrollModalLabel">Last Pay Information</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editPayrollForm" enctype="multipart/form-data">
+                                <!-- Payroll Details -->
+                                <div class="row">
+                                    <input type="hidden" id="payroll_id" name="payroll_id">
+                                    <div class="col-md-3 mb-4">
+                                        <label for="payroll_type" class="form-label">Payroll Type</label>
+                                        <input type="text" class="form-control" id="payroll_type" name="payroll_type">
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="payroll_period" class="form-label">Payroll Period</label>
+                                        <input type="text" class="form-control" id="payroll_period" name="payroll_period">
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="payroll_period_start" class="form-label">Payroll Period Start</label>
+                                        <input type="date" class="form-control" id="payroll_period_start"
+                                            name="payroll_period_start">
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="payroll_period_end" class="form-label">Payroll Period End</label>
+                                        <input type="date" class="form-control" id="payroll_period_end" name="payroll_period_end">
+                                    </div>
+                                </div>
+                                <!-- Time Tracking Fields -->
+                                <div class="row">
+                                    <div class="col-md-4 mb-4">
+                                        <label for="total_worked_minutes" class="form-label">Worked Minutes</label>
+                                        <input type="number" class="form-control" id="total_worked_minutes"
+                                            name="total_worked_minutes">
+                                    </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label for="total_late_minutes" class="form-label">Late Minutes</label>
+                                        <input type="number" class="form-control" id="total_late_minutes" name="total_late_minutes">
+                                    </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label for="total_undertime_minutes" class="form-label">Undertime Minutes</label>
+                                        <input type="number" class="form-control" id="total_undertime_minutes"
+                                            name="total_undertime_minutes">
+                                    </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label for="total_overtime_minutes" class="form-label">Overtime Minutes</label>
+                                        <input type="number" class="form-control" id="total_overtime_minutes"
+                                            name="total_overtime_minutes">
+                                    </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label for="total_night_differential_minutes" class="form-label">Night Differential
+                                            Minutes</label>
+                                        <input type="number" class="form-control" id="total_night_differential_minutes"
+                                            name="total_night_differential_minutes">
+                                    </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label for="total_overtime_night_differential_minutes" class="form-label">OT Night
+                                            Differential Minutes</label>
+                                        <input type="number" class="form-control" id="total_overtime_night_differential_minutes"
+                                            name="total_overtime_night_differential_minutes">
+                                    </div>
+                                </div>
+                                <!-- Pay Breakdown -->
+                                <h4 class="mb-3 text-primary">Pay Breakdown</h4>
+                                <div class="row">
+                                    <div class="col-md-3 mb-4">
+                                        <label for="holiday_pay" class="form-label">Holiday Pay</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="holiday_pay" name="holiday_pay"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="leave_pay" class="form-label">Leave Pay</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="leave_pay" name="leave_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="overtime_pay" class="form-label">Overtime Pay</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="overtime_pay" name="overtime_pay"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="night_differential_pay" class="form-label">Night Differential Pay</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="night_differential_pay"
+                                                name="night_differential_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="overtime_night_differential_pay" class="form-label">Overtime Night
+                                            Differential Pay</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="overtime_night_differential_pay"
+                                                name="overtime_night_differential_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="late_deduction" class="form-label">Late Deduction</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="late_deduction" name="late_deduction"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="undertime_deduction" class="form-label">Undertime Deduction</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="undertime_deduction"
+                                                name="undertime_deduction" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="absent_deduction" class="form-label">Absent Deduction</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="absent_deduction" name="absent_deduction"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
 
+                                <!-- Earnings Section -->
+                                <h4 id="earnings_heading" class="mb-3 text-primary">Earnings</h4>
+                                <div id="earnings_fields" class="row"></div>
+
+                                <!-- Allowance Section -->
+                                <h4 id="allowance_heading" class="mb-3 text-primary">Allowances</h4>
+                                <div id="allowance_fields" class="row"></div>
+
+                                <!-- Deductions Section -->
+                                <h4 id="deductions_heading" class="mb-3 text-primary">Deductions</h4>
+                                <div id="deductions_fields" class="row"></div>
+
+                                <!-- Deminimis Section -->
+                                <h4 id="deminimis_heading" class="mb-3 text-primary">Deminimis Benefits</h4>
+                                <div id="deminimis_fields" class="row"></div>
+
+                                <!-- Government Mandates -->
+                                <h4 class="mb-3 text-primary">Government Mandates Fields</h4>
+                                <div class="row">
+                                    <div class="col-md-3 mb-4">
+                                        <label for="sss_contribution" class="form-label">SSS Contribution</label>
+                                        <input type="number" class="form-control" id="sss_contribution" name="sss_contribution"
+                                            step="0.01">
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="philhealth_contribution" class="form-label">PhilHealth Contribution</label>
+                                        <input type="number" class="form-control" id="philhealth_contribution"
+                                            name="philhealth_contribution" step="0.01">
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="pagibig_contribution" class="form-label">PagIBIG Contribution</label>
+                                        <input type="number" class="form-control" id="pagibig_contribution"
+                                            name="pagibig_contribution" step="0.01">
+                                    </div>
+                                    <div class="col-md-3 mb-4">
+                                        <label for="withholding_tax" class="form-label">Withholding Tax</label>
+                                        <input type="number" class="form-control" id="withholding_tax" name="withholding_tax"
+                                            step="0.01">
+                                    </div>
+                                </div>
+
+                                {{-- Salary Bond --}}
+                                <h4 class="mb-3 text-primary">Salary Bond</h4>
+                                <div class="row">
+                                    <div class="col-md-4 mb-4">
+                                        <label for="salary_bond" class="form-label">Salary Bond Deduction</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="salary_bond" name="salary_bond"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Salary Breakdown -->
+                                <h5 class="mb-3 text-primary">Salary Breakdown</h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <label for="total_earnings" class="form-label">Total Earnings</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="total_earnings" name="total_earnings"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-4">
+                                        <label for="total_deduction" class="form-label">Total Deduction</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="total_deduction" name="total_deductions"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label for="basic_pay" class="form-label">Basic Pay</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="basic_pay" name="basic_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label for="gross_pay" class="form-label">Gross Pay</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="gross_pay" name="gross_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label for="net_salary" class="form-label">Net Salary</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control text-danger" id="net_salary" name="net_salary"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Information -->
+                                <h4 class="mb-3 text-primary">Payment Information</h4>
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <label for="payment_date" class="form-label">Payment Date</label>
+                                        <input type="date" class="form-control" id="payment_date" name="payment_date">
+                                    </div>
+                                    <div class="col-md-6 mb-4">
+                                        <label class="form-label">Processed By</label>
+                                        <input type="text" class="form-control" id="processed_by" name="processed_by" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-white" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Save Payroll</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>                             
 
 
             @push('scripts')
@@ -1970,9 +2227,9 @@
                 });
             </script>
             <script>
-                function processLastPay(employeeId) {
+                function processLastPay(employeeId,violation_id) {
                     document.getElementById('lastPayEmployeeId').value = employeeId;
-                    
+                    document.getElementById('violation_id').value = violation_id;
                     let modal = new bootstrap.Modal(
                         document.getElementById('processLastPayModal')
                     );
@@ -2029,6 +2286,224 @@
 
                 });
             </script>  
+            <script>
+
+                const deminimisBenefits = @json($deminimisBenefits);
+ 
+                function parseJSONSafe(data) {
+                    if (!data) return [];
+                    try {
+                        return JSON.parse(data);
+                    } catch {
+                        return [];
+                    }
+                }
+ 
+                function htmlDecode(input) {
+                    var e = document.createElement('textarea');
+                    e.innerHTML = input;
+                    return e.value;
+                }
+
+                function viewEditLastPay(payrollId) {
+                    
+                    fetch(`/api/last_payroll/${payrollId}`)  
+                        .then(res => res.json())
+                            .then(data => {
+                                // Fill static fields
+                                document.getElementById('payroll_id').value = data.id;
+                                document.getElementById('payroll_type').value = data.payroll_type;
+                                document.getElementById('payroll_period').value = data.payroll_period;
+                                document.getElementById('payroll_period_start').value = data.payroll_period_start;
+                                document.getElementById('payroll_period_end').value = data.payroll_period_end;
+
+                                document.getElementById('total_worked_minutes').value = data.total_worked_minutes;
+                                document.getElementById('total_late_minutes').value = data.total_late_minutes;
+                                document.getElementById('total_undertime_minutes').value = data.total_undertime_minutes;
+                                document.getElementById('total_overtime_minutes').value = data.total_overtime_minutes;
+                                document.getElementById('total_night_differential_minutes').value = data.total_night_differential_minutes;
+                                document.getElementById('total_overtime_night_differential_minutes').value = data.total_overtime_night_diff_minutes;
+
+                                document.getElementById('holiday_pay').value = data.holiday_pay;
+                                document.getElementById('leave_pay').value = data.leave_pay;
+                                document.getElementById('overtime_pay').value = data.overtime_pay;
+                                document.getElementById('night_differential_pay').value = data.night_differential_pay;
+                                document.getElementById('overtime_night_differential_pay').value = data.overtime_night_diff_pay;
+
+                                document.getElementById('late_deduction').value = data.late_deduction;
+                                document.getElementById('undertime_deduction').value = data.undertime_deduction;
+                                document.getElementById('absent_deduction').value = data.absent_deduction;
+
+                                document.getElementById('sss_contribution').value = data.sss_contribution;
+                                document.getElementById('philhealth_contribution').value = data.philhealth_contribution;
+                                document.getElementById('pagibig_contribution').value = data.pagibig_contribution;
+                                document.getElementById('withholding_tax').value = data.withholding_tax;
+
+                                document.getElementById('salary_bond').value = data.salary_bond;
+
+                                document.getElementById('total_earnings').value = data.total_earnings;
+                                document.getElementById('total_deduction').value = data.total_deductions;
+                                document.getElementById('basic_pay').value = data.basic_pay;
+                                document.getElementById('gross_pay').value = data.gross_pay;
+                                document.getElementById('net_salary').value = data.net_salary;
+
+                                document.getElementById('payment_date').value = data.payment_date;
+                                document.getElementById('processed_by').value = data.processed_by;
+ 
+                                let raw = data.deminis;
+                                let decodedRaw = htmlDecode(raw);
+                                let deminimisArr = parseJSONSafe(decodedRaw);
+                                if (!deminimisArr.length) {
+                                    deminimisArr = parseJSONSafe(raw);
+                                }
+
+                                let html = '';
+                                if (Array.isArray(deminimisArr) && deminimisArr.length) {
+                                    deminimisArr.forEach((item, idx) => {
+                                        const benefitName = deminimisBenefits[item.deminimis_benefit_id] ||
+                                            `Unknown (${item.deminimis_benefit_id})`;
+                                        html += `
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">${benefitName}</label>
+                                            <input type="number" step="0.01" class="form-control"
+                                                name="deminimis_amounts[${item.deminimis_benefit_id}]"
+                                                value="${item.amount}">
+                                        </div>
+                                    `;
+                                    });
+                                    $('#deminimis_heading').show();
+                                    $('#deminimis_fields').show().html(html);
+                                } else {
+                                    $('#deminimis_heading').hide();
+                                    $('#deminimis_fields').hide().html('');
+                                }
+ 
+                                let earningsRaw = data.earnings;
+                                let earningsDecoded = htmlDecode(earningsRaw);
+                                let earningsArr = parseJSONSafe(earningsDecoded);
+                                if (!earningsArr.length) {
+                                    earningsArr = parseJSONSafe(earningsRaw);
+                                }
+
+                                let earningsHtml = '';
+                                if (Array.isArray(earningsArr) && earningsArr.length) {
+                                    earningsArr.forEach(function (item, idx) {
+                                        earningsHtml += `
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">${item.earning_type_name}</label>
+                                        <input type="number" step="0.01" class="form-control"
+                                            name="earnings[${item.earning_type_id}][applied_amount]"
+                                            value="${item.applied_amount}">
+                                    </div>
+                                `;
+                                    });
+                                    $('#earnings_heading').show();
+                                    $('#earnings_fields').show().html(earningsHtml);
+                                } else {
+                                    $('#earnings_heading').hide();
+                                    $('#earnings_fields').hide().html('');
+                                }
+ 
+                                let allowanceRaw = data.allowance;
+                                let allowanceDecoded = htmlDecode(allowanceRaw);
+                                let allowanceArr = parseJSONSafe(allowanceDecoded);
+                                if (!allowanceArr.length) {
+                                    allowanceArr = parseJSONSafe(allowanceRaw);
+                                }
+
+                                let allowanceHtml = '';
+                                if (Array.isArray(allowanceArr) && allowanceArr.length) {
+                                    allowanceArr.forEach(function (item, idx) { 
+                                        allowanceHtml += `
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">${item.allowance_name}</label>
+                                        <input type="number" step="0.01" class="form-control"
+                                            name="allowances[${item.allowance_id}][applied_amount]"
+                                            value="${item.applied_amount}">
+                                    </div>
+                                `;
+                                    });
+                                    $('#allowance_heading').show();
+                                    $('#allowance_fields').show().html(allowanceHtml);
+                                } else {
+                                    $('#allowance_heading').hide();
+                                    $('#allowance_fields').hide().html('');
+                                }
+ 
+                                let deductionsRaw = data.deductions;
+                                let deductionsDecoded = htmlDecode(deductionsRaw);
+                                let deductionsArr = parseJSONSafe(deductionsDecoded);
+                                if (!deductionsArr.length) {
+                                    deductionsArr = parseJSONSafe(deductionsRaw);
+                                }
+
+                                let deductionsHtml = '';
+                                if (Array.isArray(deductionsArr) && deductionsArr.length) {
+                                    deductionsArr.forEach(function (item, idx) {
+                                        deductionsHtml += `
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">${item.deduction_type_name}</label>
+                                            <input type="number" step="0.01" class="form-control"
+                                                name="deductions[${item.deduction_type_id}][applied_amount]"
+                                                value="${item.applied_amount}">
+                                        </div>
+                                    `;
+                                    });
+                                    $('#deductions_heading').show();
+                                    $('#deductions_fields').show().html(deductionsHtml);
+                                } else {
+                                    $('#deductions_heading').hide();
+                                    $('#deductions_fields').hide().html('');
+                                }
+ 
+                                var modal = new bootstrap.Modal(document.getElementById('edit_payroll'));
+                                modal.show();
+                            })
+                        .catch(err => {
+                            console.error(err);
+                            alert('Failed to load payroll data from API.');
+                        });
+                }  
+
+                
+            </script>
+
+            <script>
+                $('#editPayrollForm').on('submit', function (e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+                    const payrollId = $('#payroll_id').val();
+                    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+                    const authToken = localStorage.getItem('token');
+
+                    $.ajax({
+                        url: '/api/payroll/update/' + payrollId,
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Authorization': 'Bearer ' + authToken
+                        },
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) { 
+                            toastr.success("Payroll has been updated successfully!");
+                            $('#edit_payroll').modal('hide');
+                            filter();
+                        },
+                        error: function (err) {
+                            console.error('Update error response:', err);
+                            if (err.responseJSON && err.responseJSON.message) {
+                                toastr.error(err.responseJSON.message);
+                            } else {
+                                toastr.error("An error occurred while updating payroll.");
+                            }
+                        }
+                    });
+                });
+            </script>
+            
             <script>
                 // Return to Work Modal
                 document.addEventListener('DOMContentLoaded', () => {

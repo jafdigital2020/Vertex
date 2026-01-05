@@ -20,6 +20,7 @@ use App\Http\Controllers\DataAccessController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Models\Payroll;
 use App\Models\UserEarning;
+use App\Models\DeminimisBenefits;
 
 class ViolationController extends Controller
 {
@@ -332,8 +333,13 @@ class ViolationController extends Controller
                 $query->where('status', 1); 
             }) 
             ->latest()->get();
- 
+
+      
         $violationTypes = ViolationTypes::all();
+        $deminimisBenefits = DeminimisBenefits::pluck('name', 'id')->map(function ($name) {
+            return ucwords(str_replace('_', ' ', $name));
+        });
+
  
         return view('tenant.violation.violation-admin', [
             'permission' => $permission,
@@ -343,6 +349,7 @@ class ViolationController extends Controller
             'designations' => $designations,
             'employeeOptions' => $employeeOptions,
             'violationTypes' => $violationTypes,
+            'deminimisBenefits' => $deminimisBenefits
         ]);
     }
 
@@ -1205,7 +1212,7 @@ class ViolationController extends Controller
         $permission = PermissionHelper::get(24);
         $tenantId = $authUser->tenant_id ?? null;
         $payrollController = new PayrollController();
-
+       
 
         if (!in_array('Create', $permission)) {
             return response()->json([
@@ -1218,18 +1225,19 @@ class ViolationController extends Controller
             'user_id'    => 'required', 
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
+            'violation_id' => 'required'
         ]);
- 
+        $violation_id = $request->input('violation_id');
         $pagibigOption = $request->input('pagibig_option');
         $sssOption = $request->input('sss_option');
         $philhealthOption = $request->input('philhealth_option');
         $cuttoffOption = $request->input('cutoff_period');
-        $payrollType = $request->input('payroll_type', 'normal_payroll');
+        $payrollType = $request->input('payroll_type', 'last_payroll');
         $payrollPeriod = $request->input('payroll_period', null);
         $paymentDate = $request->input('payment_date', now()->toDateString());
 
 
-        if ($payrollType === 'normal_payroll') {
+        if ($payrollType === 'last_payroll') {
             $attendances = $payrollController->getAttendances($tenantId, $data);
             $overtimes = $payrollController->getOvertime($tenantId, $data);
             $totals = $payrollController->sumMinutes($tenantId, $data);
@@ -1255,7 +1263,7 @@ class ViolationController extends Controller
             $netPay = $payrollController->calculateNetPay($data['user_id'], $basicPay, $totalEarnings, $totalDeductions);
             $thirteenthMonth = $payrollController->calculateThirteenthMonthPay($data['user_id'], $data, $salaryData);
             $salaryBond = $payrollController->calculateSalaryBondDeduction($data['user_id'], $data, $salaryData);
-
+            $lastPayrollId = null;
             foreach ($data['user_id'] as $userId) {
                 $payroll = Payroll::updateOrCreate(
                     [
@@ -1329,6 +1337,7 @@ class ViolationController extends Controller
                         'remarks' => null,
                     ]
                 );
+               $lastPayrollId = $payroll->id;
             }
 
             UserEarning::where('user_id', $data['user_id'][0])
@@ -1339,6 +1348,14 @@ class ViolationController extends Controller
                     Carbon::parse($data['end_date'])->endOfDay()
                 ])
                 ->update(['status' => 'completed']);   
+            
+            $violation = Violation::findOrFail($violation_id);
+
+            $violation->update([
+                'last_pay_date' => now(),
+                'last_pay_status' => true, 
+                'last_payroll_id' => $lastPayrollId
+            ]);  
 
             return response()->json([
                 'attendances'       => $attendances,
@@ -1359,6 +1376,13 @@ class ViolationController extends Controller
                 'message' => 'Payroll type not supported yet.',
             ], 422);
         }
+    }
+
+    public function showLastPay($id)
+    {
+        $payroll = Payroll::findOrFail($id);
+
+        return response()->json($payroll);
     }
 
 }

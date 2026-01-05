@@ -116,15 +116,18 @@
                                                                         @endif -->
                                                                         @break  
 
-                                                                        @case('implemented')
-                                                                            @if($sus->termination_date !== null)
-                                                                            <button class="btn btn-sm btn-primary"
-                                                                                onclick="processLastPay({{ $sus->id ?? $sus->employee->id }})"
-                                                                                title="Process Last Pay">
-                                                                                <i class="ti ti-receipt"></i>
-                                                                            </button> 
-                                                                            @endif
-                                                                        @break
+                                                                          @case('implemented')
+                                                                        @if($sus->termination_date !== null && $sus->last_pay_status !== 1 )
+                                                                        <button class="btn btn-sm btn-primary"
+                                                                            onclick="processLastPay({{ $sus->employee->id }} , {{$sus->id}})"
+                                                                            title="Process Last Pay">
+                                                                            <i class="ti ti-receipt"></i>
+                                                                        </button> 
+                                                                        @endif
+                                                                        @if($sus->termination_date !== null && $sus->last_pay_status === 1 )
+                                                                            <button class="btn btn-sm btn-primary" onclick="viewEditLastPay({{$sus->last_payroll_id}})" title="View/Edit Last Pay"><i class="ti ti-report-money"></i></button>
+                                                                        @endif
+                                                                    @break  
                                                                 @endswitch
 
                                                             </div>
