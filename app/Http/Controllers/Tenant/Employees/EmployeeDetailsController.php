@@ -32,16 +32,101 @@ use App\Models\EmployeeFamilyInformation;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\EmploymentPersonalInformation;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
 
 class EmployeeDetailsController extends Controller
 {
+    use ResponseTimingTrait;
+     private function logEmployeeDetailsError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
+
 
     public function employeeDetails($id)
     {
@@ -786,6 +871,8 @@ class EmployeeDetailsController extends Controller
 
     public function employeeDetailsPersonalUpdate(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
 
         $validator = Validator::make($request->all(), [
             // Personal Info
@@ -911,8 +998,20 @@ class EmployeeDetailsController extends Controller
             return response()->json(['message' => 'Employee updated successfully.'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating employee', ['exception' => $e]);
-            return response()->json(['message' => 'Error updating employee.', 'error' => $e->getMessage()], 500);
+
+            $cleanMessage = "Error updating employee details. Please try again later.";
+
+            $this->logEmployeeDetailsError(
+                '[ERROR_UPDATING_EMPLOYEE_DETAILS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
+            return response()->json([
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
+            ], 500);
         }
     }
 

@@ -19,17 +19,102 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
+
 
 class LeaveSettingsController extends Controller
 {
+    use ResponseTimingTrait;
+   private function logLeaveSettingsError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
 
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::guard('web')->user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
+
 
     public function LeaveSettingsIndex(Request $request)
     {
@@ -111,7 +196,8 @@ class LeaveSettingsController extends Controller
     public function leaveSettingsCreate(Request $request)
     {
         // Define validation rules for all possible fields
-
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(21);
 
         if (!in_array('Create', $permission)) {
@@ -177,9 +263,21 @@ class LeaveSettingsController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            DB::rollBack();
+
+            $cleanMessage = "Failed to save leave settings. Please try again later.";
+
+            $this->logLeaveSettingsError(
+                '[ERROR_SAVING_LEAVE_SETTINGS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to save leave settings.',
-                'error'   => $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }

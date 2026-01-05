@@ -12,18 +12,102 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\EmployeeFamilyInformation;
+use Illuminate\Support\Facades\DB;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
 
 class ProfileController extends Controller
 {
+    use ResponseTimingTrait;
     // Profile Index
+    private function logProfileError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
 
 
     public function profileIndex(Request $request)
@@ -151,6 +235,8 @@ class ProfileController extends Controller
     // Basic Information Update
     public function updateUserBasicInfo(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $messages = [
             'user_id.required' => 'Please provide the user ID.',
             'user_id.exists' => 'The selected user does not exist. Please choose a valid user.',
@@ -195,10 +281,19 @@ class ProfileController extends Controller
                 'data' => $personalInfo
             ]);
         } catch (Exception $e) {
+
+            $cleanMessage = "Error updating basic information. Please try again later.";
+
+            $this->logProfileError(
+                '[ERROR_UPDATING_BASIC_INFORMATION]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage(),
-                'data' => null
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -206,6 +301,9 @@ class ProfileController extends Controller
     // Personal Information Update
     public function updateUserPersonalInfo(Request $request)
     {
+        
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $messages = [
             'user_id.required' => 'The user ID is required.',
             'user_id.exists' => 'The selected user does not exist.',
@@ -251,10 +349,19 @@ class ProfileController extends Controller
                 'data' => $personalInfo
             ]);
         } catch (Exception $e) {
+
+            $cleanMessage = "Error updating personal information. Please try again later.";
+
+            $this->logProfileError(
+                '[ERROR_UPDATING_PERSONAL_INFORMATION]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage(),
-                'data' => null
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -262,6 +369,9 @@ class ProfileController extends Controller
     // Emergency Contact Update
     public function updateUserEmergencyContact(Request $request)
     {
+        
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'primary_name' => 'required|string',
@@ -308,10 +418,19 @@ class ProfileController extends Controller
                 'user_id' => $validated['user_id'] ?? null,
                 'error' => $e->getMessage()
             ]);
+
+            $cleanMessage = "Error updating emergency contact. Please try again later.";
+
+            $this->logProfileError(
+                '[ERROR_UPDATING_EMERGENCY_CONTACT]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage(),
-                'data' => null
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }

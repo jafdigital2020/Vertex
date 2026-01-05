@@ -19,16 +19,100 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
 
 class GeofenceController extends Controller
 {
+    use ResponseTimingTrait;
+    private function logGeofenceError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
 
     public function locationFilter(Request $request)
     {
@@ -103,6 +187,9 @@ class GeofenceController extends Controller
 
     public function geofenceStore(Request $request)
     {
+        
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Create', $permission)) {
@@ -161,15 +248,27 @@ class GeofenceController extends Controller
                 'data' => $geofence
             ], 201);
         } catch (\Exception $e) {
+            $cleanMessage = "Failed to create geofence. Please try again later.";
+
+            $this->logGeofenceError(
+                '[ERROR_CREATING_GEOFENCE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to create geofence.',
-                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
     public function geofenceUpdate(Request $request, $id)
     {
+        
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Update', $permission)) {
@@ -259,16 +358,26 @@ class GeofenceController extends Controller
                 'request' => $request->all(),
             ]);
 
-            // Handle unexpected errors
+            $cleanMessage = "Geofence Update Unexpected Error. Please try again later.";
+
+            $this->logGeofenceError(
+                '[ERROR_UPDATING_GEOFENCE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'An unexpected error occurred. Please try again later.',
-                'error'   => 'Internal server error.',
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
-    public function geofenceDelete($id)
+    public function geofenceDelete(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Delete', $permission)) {
@@ -305,9 +414,18 @@ class GeofenceController extends Controller
                 'message' => 'Geofence not found.',
             ], 404);
         } catch (Exception $e) {
+            $cleanMessage = "Failed to delete geofence. Please try again later.";
+
+            $this->logGeofenceError(
+                '[ERROR_DELETING_GEOFENCE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to delete geofence.',
-                'error'   => $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -360,6 +478,8 @@ class GeofenceController extends Controller
 
     public function geofenceUserAssign(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Create', $permission)) {
@@ -446,16 +566,27 @@ class GeofenceController extends Controller
             ], 404);
         } catch (Exception $e) {
             Log::error('Exception occurred: ', ['exception' => $e->getMessage()]);
+
+            $cleanMessage = "Failed to assign geofences. Please try again later.";
+
+            $this->logGeofenceError(
+                '[ERROR_ASSIGNING_GEOFENCES]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to assign geofences.',
-                'error'   => $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
     public function geofenceUserAssignEdit(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Update', $permission)) {
@@ -500,15 +631,28 @@ class GeofenceController extends Controller
                 'message' => 'Geofence user assignment not found.',
             ], 404);
         } catch (Exception $e) {
+
+            $cleanMessage = "Failed to update geofence user assignment. Please try again later.";
+
+            $this->logGeofenceError(
+                '[ERROR_UPDATING_GEOFENCE_USER_ASSIGNMENT]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to update geofence user assignment.',
-                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
-    public function geofenceUserDelete($id)
+    public function geofenceUserDelete(Request $request, $id)
     {
+                
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Delete', $permission)) {
@@ -545,9 +689,19 @@ class GeofenceController extends Controller
                 'message' => 'Geofence user assignment not found.',
             ], 404);
         } catch (Exception $e) {
+
+            $cleanMessage = "Failed to delete geofence user assignment. Please try again later.";
+
+            $this->logGeofenceError(
+                '[ERROR_DELETING_GEOFENCE_USER_ASSIGNMENT]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to delete geofence user assignment.',
-                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }

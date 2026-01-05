@@ -317,7 +317,7 @@ public function authUser()
         } catch (Exception $e) {
             DB::rollBack();           
 
-            $cleanMessage = "Unexpected error in Payroll Batch Bulk Assign";
+            $cleanMessage = "Failed to assign employees to payroll batches. ";
 
             $this->logPayrollError(
                 'PAYROLL_BULK_ASSIGN_ERROR',

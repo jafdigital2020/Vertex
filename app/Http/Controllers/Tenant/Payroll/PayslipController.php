@@ -12,16 +12,101 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DataAccessController;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
+use Illuminate\Support\Facades\DB;
 
 class PayslipController extends Controller
 {
+    
+    use ResponseTimingTrait;
     // Generated Payslip Index
+     private function logPayslipError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
 
     public function filter(Request $request)
@@ -203,8 +288,11 @@ class PayslipController extends Controller
     }
 
     // Revert Generated Payslip
-    public function revertGeneratedPayslip($id)
+    public function revertGeneratedPayslip(Request $request, $id)
     {
+        
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         try {
             $payslip = Payroll::findOrFail($id);
             $payslip->status = 'Pending';
@@ -234,16 +322,30 @@ class PayslipController extends Controller
             ]);
         } catch (Exception $e) {
             Log::error('Error reverting payslip: ' . $e->getMessage());
+
+            DB::rollBack();
+
+            $cleanMessage = "Error reverting payslip. Please try again later.";
+
+            $this->logPayslipError(
+                '[ERROR_REVERTING_PAYSLIP]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Error reverting payslip.'
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
     // Delete Generated Payslip
-    public function deleteGeneratedPayslip($id)
+    public function deleteGeneratedPayslip(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         try {
             $payslip = Payroll::findOrFail($id);
             $payslip->delete();
@@ -271,9 +373,20 @@ class PayslipController extends Controller
             ]);
         } catch (Exception $e) {
             Log::error('Error deleting payslip: ' . $e->getMessage());
+            DB::rollBack();
+
+            $cleanMessage = "Error deleting payslip. Please try again later.";
+
+            $this->logPayslipError(
+                '[ERROR_DELETING_PAYSLIP]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Error deleting payslip.'
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -451,6 +564,7 @@ class PayslipController extends Controller
      */
     public function uploadPayslips(Request $request)
     {
+        $startTime = microtime(true);
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(25);
 
@@ -537,10 +651,18 @@ class PayslipController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error uploading payslips: ' . $e->getMessage());
+            $cleanMessage = "Something went wrong while uploading your file. Please try again or contact support if the problem persists.";
 
+            $this->logPayslipError(
+                '[ERROR_UPLOADING_PAYSLIPS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
                 'status' => 'error',
-                'message' => 'Something went wrong while uploading your file. Please try again or contact support if the problem persists.'
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }

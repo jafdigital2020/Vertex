@@ -22,17 +22,101 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
 
 class ShiftManagementController extends Controller
 {
+    use ResponseTimingTrait; 
+
+   private function logShiftManagementError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
 
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
 
     public function shiftManagementFilter(Request $request)
     {
@@ -305,7 +389,8 @@ class ShiftManagementController extends Controller
     // Shift Assignment
     public function shiftAssignmentCreate(Request $request)
     {
-
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(16);
 
         if (!in_array('Create', $permission)) {
@@ -1170,11 +1255,19 @@ class ShiftManagementController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('ShiftAssignment store error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
+            $cleanMessage = "Failed to create shift assignments.";
+
+            $this->logShiftManagementError(
+                '[ERROR_CREATING_SHIFT_ASSIGNMENTS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to create shift assignments.',
-                'error'   => $e->getMessage()
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -1213,6 +1306,8 @@ class ShiftManagementController extends Controller
 
     public function shiftListCreate(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(16);
 
         if (!in_array('Create', $permission)) {
@@ -1293,10 +1388,20 @@ class ShiftManagementController extends Controller
                 'data' => $shift,
             ], 201);
         } catch (Exception $e) {
-            Log::error('Shift creation failed: ' . $e->getMessage());
+            DB::rollBack();
+
+            $cleanMessage = "An error occurred while saving the shift. Please try again later.";
+
+            $this->logShiftManagementError(
+                '[ERROR_CREATING_SHIFT]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'An error occurred while saving the shift.',
-                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -1304,6 +1409,8 @@ class ShiftManagementController extends Controller
     // Shift Update
     public function shiftListUpdate(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(16);
 
         if (!in_array('Update', $permission)) {
@@ -1383,18 +1490,29 @@ class ShiftManagementController extends Controller
                 'data' => $shift
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Shift update failed', ['error' => $e->getMessage()]);
+            DB::rollBack();
 
+            $cleanMessage = "Failed to update shift. Please try again later.";
+
+            $this->logShiftManagementError(
+                'Shift update error',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to update shift.',
-                'error' => $e->getMessage()
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
     // Delete Shift
-    public function shiftListDelete($id)
+    public function shiftListDelete(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(16);
 
         if (!in_array('Delete', $permission)) {
@@ -1443,11 +1561,20 @@ class ShiftManagementController extends Controller
                 'message' => 'Shift deleted successfully.'
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Shift deletion failed', ['error' => $e->getMessage()]);
+            DB::rollBack();
 
+            $cleanMessage = "Failed to delete shift. Please try again later.";
+
+            $this->logShiftManagementError(
+                '[ERROR_DELETING_SHIFT]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to delete shift.',
-                'error' => $e->getMessage()
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -1508,6 +1635,9 @@ class ShiftManagementController extends Controller
     // Bulk Delete Shift Assignments
     public function bulkDeleteShiftAssignments(Request $request)
     {
+        
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(16);
 
         if (!in_array('Delete', $permission)) {
@@ -1568,16 +1698,21 @@ class ShiftManagementController extends Controller
                 'user_count' => count($userIds)
             ], 200);
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Bulk delete shift assignments failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
 
+            DB::rollBack();
+
+            $cleanMessage = "Failed to delete shift assignments. Please try again later.";
+
+            $this->logShiftManagementError(
+                '[ERROR_BULK_DELETING_SHIFT_ASSIGNMENTS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to delete shift assignments.',
-                'error' => $e->getMessage()
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }

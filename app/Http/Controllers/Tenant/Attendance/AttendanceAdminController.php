@@ -25,16 +25,96 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
 
 class AttendanceAdminController extends Controller
 {
+    use ResponseTimingTrait;
+
+     private function logAttendanceError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to log payroll error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
 
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
 
     private function buildAttendanceQuery($query, $dateRange = null, $branch = null, $department = null, $designation = null, $status = null, $tenantId = null)
@@ -234,6 +314,8 @@ class AttendanceAdminController extends Controller
     // Add Attendance
     public function adminAttendanceCreate(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         try {
             $validated = $request->validate([
                 'user_ids'               => 'required|array',
@@ -345,15 +427,20 @@ class AttendanceAdminController extends Controller
                 'errors'  => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error creating attendance', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
+            DB::rollBack();           
 
+            $cleanMessage = "Something went wrong while creating the attendance record. Please try again later.";
+
+            $this->logAttendanceError(
+                '[ERROR_CREATING_ATTENDANCE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'status'  => false,
-                'message' => 'Something went wrong while creating the attendance record. Please try again later.',
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -362,6 +449,8 @@ class AttendanceAdminController extends Controller
     // Edit and Update Attendance
     public function adminAttendanceEdit(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Update', $permission)) {
@@ -424,19 +513,29 @@ class AttendanceAdminController extends Controller
                 'message' => 'The attendance record you are trying to update was not found.',
             ], 404);
         } catch (\Exception $e) {
-            Log::error('Error updating attendance: ' . $e->getMessage());
+            DB::rollBack();
 
+            $cleanMessage = "Something went wrong while updating the attendance. Please try again later.";
+
+            $this->logAttendanceError(
+                '[ERROR_UPDATING_ATTENDANCE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'status'  => false,
-                'message' => 'Something went wrong while updating the attendance. Please try again later.',
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
     //Delete Attendance
-    public function adminAttendanceDelete($id)
+    public function adminAttendanceDelete(Request $request, $id)
     {
-
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Delete', $permission)) {
@@ -477,10 +576,20 @@ class AttendanceAdminController extends Controller
                 'message' => 'Attendance record not found.',
             ], 404);
         } catch (\Exception $e) {
-            Log::error('Failed to delete attendance record: ' . $e->getMessage());
+            DB::rollBack();
 
+            $cleanMessage = "Failed to delete attendance record. Please try again later.";
+
+            $this->logAttendanceError(
+                '[ERROR_DELETING_ATTENDANCE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'message' => 'Failed to delete attendance record.',
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -1022,6 +1131,8 @@ class AttendanceAdminController extends Controller
     // Bulk Attendance Edit
     public function bulkAttendanceEdit(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Update', $permission)) {
@@ -1118,18 +1229,28 @@ class AttendanceAdminController extends Controller
             ], 404);
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("Error updating bulk attendance", ['error' => $e->getMessage()]);
+
+            $cleanMessage = "Error updating bulk attendance. Please try again later.";
+
+            $this->logAttendanceError(
+                '[ERROR_UPDATING_BULK_ATTENDANCE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong.',
-                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
     // Bulk Attendance Delete
-    public function bulkAttendanceDelete($id)
+    public function bulkAttendanceDelete(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Delete', $permission)) {
@@ -1169,15 +1290,30 @@ class AttendanceAdminController extends Controller
                 'message' => 'Bulk attendance record not found.',
             ], 404);
         } catch (Exception $e) {
+            DB::rollBack();
+
+            $cleanMessage = "Failed to delete bulk attendance record.";
+
+            $this->logAttendanceError(
+                'Error deleting bulk attendance',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'status' => false,
-                'message' => 'Failed to delete bulk attendance record.',
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
+
+
         }
     }
 
     public function bulkAction(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $request->validate([
             'attendance_ids' => 'required|array|min:1',
             'attendance_ids.*' => 'exists:attendances,id',
@@ -1240,13 +1376,21 @@ class AttendanceAdminController extends Controller
                 'deleted'   => $deletedCount,
                 'errors'    => $errors,
             ], 200);
-        } catch (\Exception $e) {
+        } catch (\Exception $e) {            
             DB::rollBack();
-            Log::error('Bulk attendance delete failed', ['error' => $e->getMessage()]);
 
+            $cleanMessage = "Bulk delete of attendance records failed. Please try again later.";
+
+            $this->logAttendanceError(
+                'Error deleting bulk attendance',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Bulk delete failed: ' . $e->getMessage(),
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }

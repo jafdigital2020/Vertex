@@ -20,16 +20,101 @@ use App\Models\UserPermissionAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
 
 class UserManagementController extends Controller
 {
+   use ResponseTimingTrait;
     
-   public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      } 
-      return Auth::guard('web')->user();
-   }
+   private function logUserManagementError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
+    public function authUser()
+    {
+        $user = null;
+        
+        if (Auth::guard('global')->check()) {
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
+        }
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
+    }
+
 
      public function userIndex()
     {
@@ -134,6 +219,7 @@ class UserManagementController extends Controller
 
    public function editUserDataAccessLevel(Request $request)
       {
+         $startTime = microtime(true);
          $data = $request->all();   
          $authUser = $this->authUser();  
          $permission = PermissionHelper::get(30);
@@ -187,10 +273,19 @@ class UserManagementController extends Controller
          } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create role: ' . $e->getMessage());
+             $cleanMessage = "An unexpected error occurred while updating user access. Please try again later.";
+
+            $this->logUserManagementError(
+                '[ERROR_UPDATING_USER_DATA_ACCESS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                  'status' => 'error',
-                  'message' => 'An unexpected error occurred while updating user access.'
-            ], 500); 
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
+            ], 500);
          }
       }
          
@@ -198,6 +293,8 @@ class UserManagementController extends Controller
   
    public function editUserPermission(Request $request)
    {
+      $startTime = microtime(true);
+      $authUser = $this->authUser();
       $data = $request->all();  
       $permission = PermissionHelper::get(30);
 
@@ -259,10 +356,20 @@ class UserManagementController extends Controller
                'error' => $e->getMessage(), 
                'data' => $data
          ]); 
-         return response()->json([
-               'status' => 'error',
-               'message' => 'An unexpected error occurred while updating permissions.'
-         ], 500);
+
+           $cleanMessage = "An unexpected error occurred while updating permissions. Please try again later.";
+
+            $this->logUserManagementError(
+                '[ERROR_UPDATING_USER_PERMISSION]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
+            return response()->json([
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
+            ], 500);
       }
    }
 
@@ -302,6 +409,7 @@ class UserManagementController extends Controller
 
    public function addRole(Request $request)
    {
+      $startTime = microtime(true);
       $data = $request->all();   
       $authUser = $this->authUser();  
       $permission = PermissionHelper::get(31);
@@ -354,15 +462,27 @@ class UserManagementController extends Controller
       } catch (\Exception $e) {
          DB::rollBack();
          Log::error('Failed to create role: ' . $e->getMessage());
-         return response()->json([
-               'status' => 'error',
-               'message' => 'An unexpected error occurred while creating role.'
-         ], 500); 
+
+         $cleanMessage = "An unexpected error occurred while creating role. Please try again later.";
+
+            $this->logUserManagementError(
+                '[ERROR_CREATING_ROLE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
+            return response()->json([
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
+            ], 500);
       }
    }
          
     public function editRole(Request $request)
    {
+      $startTime = microtime(true);
+      $authUser = $this->authUser();
       $data = $request->all();   
       $permission = PermissionHelper::get(31);
 
@@ -423,10 +543,20 @@ class UserManagementController extends Controller
       } catch (\Exception $e) {
          DB::rollBack();
          Log::error('Failed to update role: ' . $e->getMessage());
-         return response()->json([
-               'status' => 'error',
-               'message' => 'An unexpected error occurred while updating role.'
-         ], 500); 
+
+         $cleanMessage = "An unexpected error occurred while updating role. Please try again later.";
+
+            $this->logUserManagementError(
+                '[ERROR_UPDATING_ROLE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
+            return response()->json([
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
+            ], 500);
       }
    }
          
@@ -449,6 +579,8 @@ class UserManagementController extends Controller
   
     public function editRolePermission(Request $request)
    {
+      $startTime = microtime(true);
+      $authUser = $this->authUser();
     $data = $request->all();
     $permission = PermissionHelper::get(31);
 
@@ -515,10 +647,20 @@ class UserManagementController extends Controller
                'error' => $e->getMessage(), 
                'data' => $data
          ]); 
-         return response()->json([
-               'status' => 'error',
-               'message' => 'An unexpected error occurred while updating role permissions.'
-         ], 500);
+
+         $cleanMessage = "An unexpected error occurred while updating role permissions. Please try again later.";
+
+            $this->logUserManagementError(
+                '[ERROR_UPDATING_ROLE_PERMISSION]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
+            return response()->json([
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
+            ], 500);
     }
 }
 

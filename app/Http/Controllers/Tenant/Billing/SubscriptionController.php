@@ -11,16 +11,101 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
 
 class SubscriptionController extends Controller
 {
+    use ResponseTimingTrait;     
+    private function logSubscriptionError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
+
 
     /**
      * Display subscription and billing history
@@ -128,6 +213,8 @@ class SubscriptionController extends Controller
      */
     public function getAvailablePlans(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         try {
             $authUser = $this->authUser();
             $tenantId = $authUser->tenant_id;
@@ -244,10 +331,21 @@ class SubscriptionController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching available plans: ' . $e->getMessage());
+
+            DB::rollBack();
+
+            $cleanMessage = "Error fetching available plans. Please try again later.";
+
+            $this->logSubscriptionError(
+                '[ERROR_FETCHING_AVAILABLE_PLANS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch available plans'
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -257,6 +355,8 @@ class SubscriptionController extends Controller
      */
     public function upgradePlan(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         try {
             $request->validate([
                 'plan_id' => 'required|exists:plans,id'
@@ -349,11 +449,23 @@ class SubscriptionController extends Controller
                 throw $e;
             }
         } catch (\Exception $e) {
-            Log::error('Error upgrading plan: ' . $e->getMessage());
+
+            DB::rollBack();
+
+            $cleanMessage = "Failed to upgrade plan. Please try again later.";
+
+            $this->logSubscriptionError(
+                '[ERROR_UPGRADING_PLAN]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to upgrade plan: ' . $e->getMessage()
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
+
         }
     }
 }

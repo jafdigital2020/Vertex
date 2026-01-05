@@ -9,16 +9,102 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DataAccessController;
+use Illuminate\Support\Facades\DB;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
+
 
 class ThirteenthMonthPayslipController extends Controller
 {
+    use ResponseTimingTrait; 
+    private function logThirteenthMonthPayslipError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
 
     // Thirteenth Month Payslips Admin Index
     public function thirteenthMonthPayslipadminIndex(Request $request)
@@ -153,8 +239,10 @@ class ThirteenthMonthPayslipController extends Controller
     }
 
     // Revert 13th Month Payslip
-    public function revertThirteenthMonthPayslip($id)
+    public function revertThirteenthMonthPayslip(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         try {
             $payslip = ThirteenthMonthPay::findOrFail($id);
             $payslip->status = 'Pending';
@@ -166,16 +254,28 @@ class ThirteenthMonthPayslipController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error reverting 13th month payslip: ' . $e->getMessage());
+
+            $cleanMessage = "Error reverting 13th month payslip. Please try again later.";
+
+            $this->logThirteenthMonthPayslipError(
+                '[ERROR_REVERTING_13TH_MONTH_PAYSLIP]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Error reverting 13th month payslip.'
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
 
     // Delete 13th Month Payslip
-    public function deleteThirteenthMonthPayslip($id)
+    public function deleteThirteenthMonthPayslip(Request $request, $id)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         try {
             $payslip = ThirteenthMonthPay::findOrFail($id);
             $payslip->delete();
@@ -186,9 +286,19 @@ class ThirteenthMonthPayslipController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error deleting 13th month payslip: ' . $e->getMessage());
+
+            $cleanMessage = "Error deleting 13th month payslip. Please try again later.";
+
+            $this->logThirteenthMonthPayslipError(
+                '[ERROR_DELETING_13TH_MONTH_PAYSLIP]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Error deleting 13th month payslip.'
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -196,6 +306,8 @@ class ThirteenthMonthPayslipController extends Controller
     // Bulk Delete 13th Month Payslips
     public function bulkDeleteThirteenthMonthPayslip(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $payslipIds = $request->input('payslip_ids', []);
 
         if (empty($payslipIds)) {
@@ -211,9 +323,19 @@ class ThirteenthMonthPayslipController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error bulk deleting 13th month payslips: ' . $e->getMessage());
+
+            $cleanMessage = "Error bulk deleting 13th month payslips. Please try again later.";
+
+            $this->logThirteenthMonthPayslipError(
+                '[ERROR_BULK_DELETING_13TH_MONTH_PAYSLIPS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Error deleting 13th month payslips.'
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
@@ -221,6 +343,8 @@ class ThirteenthMonthPayslipController extends Controller
     // Bulk Revert 13th Month Payslips
     public function bulkRevertThirteenthMonthPayslip(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $payslipIds = $request->input('payslip_ids', []);
 
         if (empty($payslipIds)) {
@@ -240,9 +364,19 @@ class ThirteenthMonthPayslipController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error bulk reverting 13th month payslips: ' . $e->getMessage());
+
+            $cleanMessage = "Error bulk reverting 13th month payslips. Please try again later.";
+
+            $this->logThirteenthMonthPayslipError(
+                '[ERROR_BULK_REVERTING_13TH_MONTH_PAYSLIPS]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Error reverting 13th month payslips.'
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }

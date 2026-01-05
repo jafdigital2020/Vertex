@@ -15,18 +15,104 @@ use App\Notifications\UserNotification;
 use Illuminate\Database\QueryException;
 use App\Models\OfficialBusinessApproval;
 use App\Http\Controllers\DataAccessController;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
+use Illuminate\Support\Facades\DB;
 
 class OfficialBusinessController extends Controller
 {
+    use ResponseTimingTrait;     
+
     // ======= EMPLOYEE OFFICIAL BUSINESS CONTROLLER ======= //
+
+    private function logOBError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
 
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
 
     private function hasPermission(string $action, int $moduleId = 48): bool
     {
@@ -255,6 +341,7 @@ class OfficialBusinessController extends Controller
      */
     public function employeeRequestOB(Request $request)
     {
+        $startTime = microtime(true);
         // Validation
         $authUser = $this->authUser();
         $authUserTenantId = $authUser->tenant_id ?? null;
@@ -332,9 +419,21 @@ class OfficialBusinessController extends Controller
                     'message' => 'Sorry, we could not process your request. Please make sure your account is active and try again. If the problem persists, contact support.',
                 ], 422);
             }
+
+            DB::rollBack();
+
+            $cleanMessage = "Error updating bulk attendance. Please try again later.";
+
+            $this->logOBError(
+                '[ERROR_UPDATING_BULK_ATTENDANCE]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'An unexpected error occurred. Please try again later.',
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
 

@@ -16,16 +16,101 @@ use Illuminate\Support\Facades\Auth;
 use App\Notifications\UserNotification;
 use App\Models\OfficialBusinessApproval;
 use App\Http\Controllers\DataAccessController;
+use App\Helpers\ErrorLogger;
+use App\Traits\ResponseTimingTrait;
 
 class AdminOfficialBusinessController extends Controller
 {
+    
+    use ResponseTimingTrait; 
+    private function logAdminOBError(
+        string $errorType,
+        string $message,
+        Request $request,
+        ?float $startTime = null,
+        ?array $responseData = null
+    ): void {
+        try {
+            $processingTime = null;
+            $timingData = null;
+
+            if ($responseData && isset($responseData['timing'])) {
+                $timingData = $responseData['timing'];
+                $processingTime = $timingData['server_processing_time_ms'] ?? null;
+            } elseif ($startTime) {
+                $timingData = $this->getTimingData($startTime);
+                $processingTime = $timingData ? $timingData['server_processing_time_ms'] : null;
+            }
+
+            $errorMessage = sprintf("[%s] %s", $errorType, $message);
+
+            // Get authenticated user
+            $authUser = $this->authUser();
+
+            // ===== DEBUG LOG START =====
+            Log::debug('logPayrollError - Auth User & Tenant Info', [
+                'auth_user_id' => $authUser?->id,
+                'auth_user_tenant_id' => $authUser?->tenant_id,
+                'tenant_loaded' => isset($authUser->tenant),
+                'tenant_name_from_relation' => $authUser->tenant?->tenant_name ?? null,
+            ]);
+
+            $clientName = $authUser->tenant?->tenant_name ?? 'Unknown Tenant';
+            $clientId   = $authUser->tenant?->id ?? null;
+
+            Log::debug('logPayrollError - Sending to ErrorLogger', [
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'error_message' => $errorMessage,
+            ]);
+            // ===== DEBUG LOG END =====
+
+            // Log to remote system
+            ErrorLogger::logToRemoteSystem(
+                $errorMessage,
+                $clientName,
+                $clientId,
+                $timingData
+            );
+
+            // Local Laravel log
+            Log::error($errorType, [
+                'clean_message' => $message,
+                'full_error' => $responseData['full_error'] ?? null,
+                'user_id' => $authUser->id ?? null,
+                'client_name' => $clientName,
+                'client_id' => $clientId,
+                'processing_time_ms' => $processingTime,
+                'url' => $request->fullUrl(),
+                'request_data' => $request->except(['password', 'token', 'api_key'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log error', [
+                'original_error' => $message,
+                'logging_error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
     public function authUser()
     {
+        $user = null;
+        
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::guard('web')->user();
         }
-        return Auth::user();
+        
+        // Load tenant relationship if user exists
+        if ($user) {
+            $user->load('tenant');
+        }
+        
+        return $user;
     }
+
 
     public function filter(Request $request)
     {
@@ -324,6 +409,9 @@ class AdminOfficialBusinessController extends Controller
      */
     public function obApproval(Request $request, OfficialBusiness $ob)
     {
+        
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         // 1) Validate payload
         $data = $request->validate([
             'action'  => 'required|in:approved,rejected,pending',
@@ -414,10 +502,20 @@ class AdminOfficialBusinessController extends Controller
 
         // 4) If NO reporting_to, continue with the normal step workflow
         $cfg = $steps->firstWhere('level', $currStep);
-        if (! $cfg) {
+        if (! $cfg) {            
+            DB::rollBack();
+            $cleanMessage = "Approval step misconfigured. Please try again later.";
+
+            $this->logAdminOBError(
+                '[ERROR_APPROVAL_STEP_MISCONFIGURED]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Approval step misconfigured.',
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
 
@@ -785,6 +883,8 @@ class AdminOfficialBusinessController extends Controller
     // Bulk Action for OB (Admin)
     public function bulkAction(Request $request)
     {
+        $startTime = microtime(true);
+        $authUser = $this->authUser();
         $request->validate([
             'action' => 'required|in:approve,reject',
             'ob_ids' => 'required|array|min:1',
@@ -902,9 +1002,18 @@ class AdminOfficialBusinessController extends Controller
                 'error_trace' => $e->getTraceAsString()
             ]);
 
+            $cleanMessage = "Bulk action transaction failed. Please try again later.";
+
+            $this->logAdminOBError(
+                '[ERROR_BULK_ACTION_TRANSACTION]',
+                $cleanMessage,
+                $request,
+                $startTime
+            );
             return response()->json([
-                'success' => false,
-                'message' => 'Bulk action failed: ' . $e->getMessage()
+                'status' => 'error',
+                'message' => $cleanMessage,
+                'tenant' => $authUser->tenant?->tenant_name ?? null,
             ], 500);
         }
     }
