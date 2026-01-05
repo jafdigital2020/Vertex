@@ -441,6 +441,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
+          envs: PASSWORD,EMAIL,USERNAME,COMPANY_NAME,COMPANY_CODE,PLAN,BILLING_CYCLE,AMOUNT
           script: |
             SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
             DB_NAME=$(echo "${{ env.COMPANY_NAME }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
@@ -520,9 +521,12 @@ jobs:
             COMPANY_ADMIN="${{ env.USERNAME }}"
             EMAIL="${{ env.EMAIL }}"
             PLAIN_PASSWORD="$PASSWORD"
+            echo "Password length inside SSH: ${#PASSWORD}"
             sed -i "0,/'username' => '[^']*'/s//'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "0,/'email' => '[^']*'/s//'email' => '$EMAIL'/" "$SEEDER_PATH"
             sed -i "0,/Hash::make([^)]*)/s//Hash::make('$PLAIN_PASSWORD')/" "$SEEDER_PATH"
+
+
 
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
