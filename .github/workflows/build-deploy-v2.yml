@@ -95,6 +95,27 @@ jobs:
             echo "CALLBACK_URL=https://api-wizard.timora.ph/api/wizard/provisioning/github-callback" >> $GITHUB_ENV
           fi
 
+      - name: Decode wizard password
+        shell: bash
+        run: |
+          if [ -z "${PASSWORD}" ]; then
+            echo "❌ PASSWORD is missing"
+            exit 1
+          fi
+
+          # Decode Base64 password from wizard
+          DECODED_PASSWORD="$(echo "${PASSWORD}" | base64 --decode)"
+
+          if [ -z "$DECODED_PASSWORD" ]; then
+            echo "❌ Password decoding failed"
+            exit 1
+          fi
+
+          # Overwrite PASSWORD with decoded value
+          echo "PASSWORD<<EOF" >> $GITHUB_ENV
+          echo "$DECODED_PASSWORD" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       # ✅ UPDATED: Use dynamic callback URL and progress percentage
       - name: 🚀 Notify Provisioning Started
         run: |
@@ -240,6 +261,27 @@ jobs:
             echo "AMOUNT=${{ github.event.inputs.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=https://api-wizard.timora.ph/api/wizard/provisioning/github-callback" >> $GITHUB_ENV
           fi
+
+      - name: Decode wizard password
+        shell: bash
+        run: |
+          if [ -z "${PASSWORD}" ]; then
+            echo "❌ PASSWORD is missing"
+            exit 1
+          fi
+
+          # Decode Base64 password from wizard
+          DECODED_PASSWORD="$(echo "${PASSWORD}" | base64 --decode)"
+
+          if [ -z "$DECODED_PASSWORD" ]; then
+            echo "❌ Password decoding failed"
+            exit 1
+          fi
+
+          # Overwrite PASSWORD with decoded value
+          echo "PASSWORD<<EOF" >> $GITHUB_ENV
+          echo "$DECODED_PASSWORD" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Checkout code
         uses: actions/checkout@v3
