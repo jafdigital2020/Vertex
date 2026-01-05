@@ -108,6 +108,8 @@
                                                 <th class="text-center">Suspension Start Date</th>
                                                 <th class="text-center">Suspension End Date</th>
                                                 <th class="text-center">Termination Date</th>
+                                                <th class="text-center">Last Pay Status</th>
+                                                <th class="text-center">Last Pay Date</th>
                                                 <th class="text-center">Actions</th>
                                             </tr>
                                         </thead>
@@ -160,6 +162,14 @@
                                                         <td class="text-center">{{ $sus->suspension_start_date ?? '-' }}</td>
                                                         <td class="text-center">{{ $sus->suspension_end_date ?? '-' }}</td>  
                                                         <td class="text-center">{{ $sus->termination_date ?? '-' }}</td>
+                                                        <td class="text-center">
+                                                           @if($sus->termination_date !== null && $sus->last_pay_status !== 1 )
+                                                             Pending
+                                                           @elseif($sus->termination_date !== null && $sus->last_pay_status === 1)
+                                                              Done
+                                                           @endif
+                                                        </td>
+                                                        <td class="text-center">{{ $sus->last_pay_date ?? '-'}}</td>
                                                         <td class="text-center">
                                                             <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap"> 
                                                             <button class="btn btn-sm btn-secondary view-violation"

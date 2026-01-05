@@ -44,6 +44,14 @@
                                                         <td class="text-center">{{ $sus->suspension_end_date ?? '-' }}</td>  
                                                         <td class="text-center">{{ $sus->termination_date ?? '-' }}</td>
                                                         <td class="text-center">
+                                                           @if($sus->termination_date !== null && $sus->last_pay_status !== 1 )
+                                                             Pending
+                                                           @elseif($sus->termination_date !== null && $sus->last_pay_status === 1)
+                                                              Done
+                                                           @endif
+                                                        </td>
+                                                        <td class="text-center">{{ $sus->last_pay_date ?? '-'}}</td>
+                                                        <td class="text-center">
                                                             <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap"> 
                                                                 <button class="btn btn-sm btn-secondary view-violation"
                                                                     data-id="{{ $sus->id ?? $sus->employee->id }}"
