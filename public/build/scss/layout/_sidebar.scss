@@ -17,18 +17,32 @@
         @include transition(all 0.4s ease);
         z-index: 1041;
         background: $white;
-        top: 50px;
+        top: 60px;
     }
     .sidebar-logo {
         position: fixed;
-        height: 50px;
+        height: 60px;
         width: 252px;
-        padding: 16px 16px 0;
+        padding: 12px 16px;
+        overflow: hidden;
+        z-index: 1;
+        display: flex;
+        align-items: center;
         .logo {
             display: block;
+            line-height: 1;
+            img {
+                max-width: 85%;
+                height: auto;
+                object-fit: contain;
+            }
         }
         .logo-small {
             display: none;
+            img {
+                height: auto;
+                object-fit: contain;
+            }
         }
         
         @include respond-below(lg) {
@@ -36,7 +50,7 @@
         }
     }
     .slimScrollDiv {
-        top: 50px;
+        top: 60px;
         padding: 16px;
         @include respond-below(sm) {
             width: 100% !important;
@@ -53,7 +67,7 @@
         width: 100%;
     }
     .sidebar-menu{
-        margin-top: 66px;
+        margin-top: 76px;
         padding: 0 16px;
         > ul{
             > li{

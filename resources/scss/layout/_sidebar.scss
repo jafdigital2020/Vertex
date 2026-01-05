@@ -21,14 +21,27 @@
     }
     .sidebar-logo {
         position: fixed;
-        height: 50px;
+        top: 0;
+        left: 0;
+        z-index: 1002;
+        background-color: $white;
         width: 252px;
-        padding: 16px 16px 0;
+        height: 110px;
+        padding: 10px 22px 2px 12px;
         .logo {
             display: block;
         }
         .logo-small {
             display: none;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            max-height: 96px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
         
         @include respond-below(lg) {
@@ -36,8 +49,8 @@
         }
     }
     .slimScrollDiv {
-        top: 50px;
-        padding: 16px;
+        top: 110px;
+        padding: 8px 24px 16px 16px;
         @include respond-below(sm) {
             width: 100% !important;
         }
@@ -53,8 +66,8 @@
         width: 100%;
     }
     .sidebar-menu{
-        margin-top: 66px;
-        padding: 0 16px;
+        margin-top: 0;
+        padding: 0 24px 0 16px;
         > ul{
             > li{
                 > ul {

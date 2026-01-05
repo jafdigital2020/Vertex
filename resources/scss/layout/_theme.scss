@@ -55,7 +55,7 @@
                     }
                 }
             }
-        }        
+        }
         .header {
             margin: auto;
             max-width: 1320px;
@@ -171,7 +171,7 @@
                 max-width: 100%;
             }
         }
-        &::before {            
+        &::before {
             width: 1320px;
             margin: 0 auto;
             left: 0;
@@ -186,7 +186,7 @@
                 width: 100%;
             }
         }
-        &::after { 
+        &::after {
             left: 0;
             right: 0;
             margin: 0 auto;
@@ -222,7 +222,7 @@
         .header-left {
             display: block;
         }
-    }     
+    }
     .sidebar {
         &.sidebar-horizontal {
             max-width: 1320px;
@@ -273,7 +273,7 @@
                 }
             }
         }
-    }  
+    }
     .sidebar-horizontal.sidebar {
         .sidebar-menu {
             ul li.submenu > a {
@@ -282,7 +282,7 @@
                     padding: 8px 30px 8px 8px;
                 }
             }
-        } 
+        }
     }
 }
 [data-layout="detached"][data-width="box"] {
@@ -292,7 +292,7 @@
         @include respond-below(xxl) {
             max-width: 95%;
         }
-    } 
+    }
 }
 [data-layout="without-header"][data-width="box"] {
     .sidebar {
@@ -315,7 +315,7 @@
         @include respond-below(lg) {
             max-width: 100%;
         }
-    }  
+    }
 }
 [data-layout="horizontal-sidemenu"][data-width="box"] {
     .sidebar {
@@ -330,10 +330,9 @@
         @include respond-below(lg) {
             max-width: 100%;
         }
-    }  
+    }
     .main-wrapper {
-        
-        &::before {            
+        &::before {
             width: 1320px;
             margin: 0 auto;
             left: auto;
@@ -346,9 +345,9 @@
         }
     }
 }
-[data-layout=detached] {
+[data-layout="detached"] {
     .main-wrapper {
-            margin: 0 auto;
+        margin: 0 auto;
         @include respond-above(xxl) {
             max-width: 1320px;
         }
@@ -374,11 +373,11 @@
             }
         }
     }
-    .expand-menu{
+    .expand-menu {
         .header-left {
             width: auto;
         }
-        &.mini-sidebar{
+        &.mini-sidebar {
             .header {
                 left: 0;
                 .header-left {
@@ -417,19 +416,18 @@
         @include respond-above(lg) {
             padding: 74px 0 0;
         }
-        .head-icons{
+        .head-icons {
             display: none;
         }
     }
-
 }
-[data-layout=twocolumn] {
+[data-layout="twocolumn"] {
     .sidebar.navbar-menu {
         display: none;
         @include respond-below(lg) {
             display: block;
         }
-    }   
+    }
     .sidebar-twocol.sidebar {
         display: -webkit-box;
         display: -ms-flexbox;
@@ -440,9 +438,9 @@
         @include respond-below(lg) {
             display: none;
         }
-    }  
+    }
 }
-[data-layout=horizontal] {   
+[data-layout="horizontal"] {
     #horizontal-menu {
         display: block;
     }
@@ -467,7 +465,7 @@
         .header-left {
             display: block;
         }
-    }  
+    }
 }
 [data-layout="modern"] {
     .header {
@@ -497,7 +495,9 @@
             .user-menu {
                 .btn-menubar {
                     color: $gray-500;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $dark-transparent;
                         border-color: $dark-transparent;
                         color: $gray-900 !important;
@@ -513,7 +513,7 @@
         }
         .slimScrollDiv {
             top: 0;
-            height: calc(100% - 220px) !important;            
+            height: calc(100% - 220px) !important;
         }
         .sidebar-inner {
             height: 100% !important;
@@ -539,7 +539,7 @@
         &::after {
             content: none;
             height: 168px;
-            background: url('../img/bg/modern-bg.png');
+            background: url("../img/bg/modern-bg.png");
             background-repeat: no-repeat;
             width: 60%;
             position: absolute;
@@ -560,14 +560,16 @@
                     height: 40px;
                 }
             }
-            h6, p, .sidebar-nav {
+            h6,
+            p,
+            .sidebar-nav {
                 display: none;
             }
         }
         .slimScrollDiv {
             height: calc(100% - 70px) !important;
         }
-        &.expand-menu {            
+        &.expand-menu {
             .modern-profile {
                 .user-profile {
                     padding: 16px !important;
@@ -578,7 +580,9 @@
                         height: 40px;
                     }
                 }
-                h6, p, .sidebar-nav {
+                h6,
+                p,
+                .sidebar-nav {
                     display: block;
                 }
             }
@@ -588,7 +592,7 @@
         }
     }
 }
-[data-layout="horizontal-overlay"] {   
+[data-layout="horizontal-overlay"] {
     #horizontal-menu {
         display: block;
     }
@@ -632,7 +636,7 @@
                 display: block;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $gray-700;
     }
@@ -643,7 +647,7 @@
             &::before {
                 content: none;
                 height: 100%;
-                background: url('../img/bg/overlay-bg.png');
+                background: url("../img/bg/overlay-bg.png");
                 background-repeat: no-repeat;
                 width: 100%;
                 position: absolute;
@@ -653,11 +657,13 @@
             }
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $gray-900;
-                                &.active, &:hover,  &.subdrop {
+                                &.active,
+                                &:hover,
+                                &.subdrop {
                                     background-color: $dark-transparent;
                                     color: $gray-900;
                                     .menu-arrow {
@@ -668,7 +674,7 @@
                                 }
                                 .menu-arrow {
                                     &::before {
-                                        border-color: $gray-900;;
+                                        border-color: $gray-900;
                                     }
                                 }
                             }
@@ -780,7 +786,7 @@
                 display: block;
             }
         }
-    }     
+    }
     .sidebar {
         &.sidebar-horizontal {
             max-width: 1320px;
@@ -811,7 +817,7 @@
     }
 }
 
-[data-layout="horizontal-fullwidth"] {     
+[data-layout="horizontal-fullwidth"] {
     #horizontal-menu {
         display: block;
     }
@@ -842,7 +848,7 @@
         }
     }
 }
-[data-layout="without-header"] { 
+[data-layout="without-header"] {
     .header {
         @include respond-above(lg) {
             display: none;
@@ -850,7 +856,7 @@
     }
     .page-wrapper {
         padding: 0;
-        .head-icons{
+        .head-icons {
             display: none;
         }
     }
@@ -859,7 +865,8 @@
             display: none;
         }
     }
-    .modern-profile, .sidebar-header {
+    .modern-profile,
+    .sidebar-header {
         display: block;
     }
     .sidebar {
@@ -880,14 +887,15 @@
             display: none;
         }
         .sidebar-header {
-            .input-group, .menu-item  {
+            .input-group,
+            .menu-item {
                 display: none !important;
             }
         }
         .sidebar-profile {
             padding: 0 !important;
             background: transparent !important;
-            border-color: transparent !important;;
+            border-color: transparent !important;
             .sidebar-profile-info {
                 display: none;
             }
@@ -903,14 +911,15 @@
                 display: block;
             }
             .sidebar-header {
-                .input-group, .menu-item  {
+                .input-group,
+                .menu-item {
                     display: flex !important;
                 }
             }
             .sidebar-profile {
                 padding: 8px !important;
                 background: $light !important;
-                border-color: $light !important;;
+                border-color: $light !important;
                 .sidebar-profile-info {
                     display: block;
                 }
@@ -919,7 +928,7 @@
     }
 }
 
-[data-layout="horizontal-single"] { 
+[data-layout="horizontal-single"] {
     #horizontal-menu {
         display: none;
     }
@@ -948,12 +957,12 @@
             }
         }
         .page-wrapper {
-            padding-top: 50px;    
+            padding-top: 50px;
             max-width: 100%;
             margin: 0 24px;
         }
-        .header-collapse{
-            .header-user{
+        .header-collapse {
+            .header-user {
                 display: block;
             }
         }
@@ -963,7 +972,7 @@
     }
     .sidebar-horizontal.sidebar {
         .sidebar-menu {
-            padding:  0 !important;
+            padding: 0 !important;
             height: 46px;
             display: flex;
             align-items: center;
@@ -977,7 +986,7 @@
             }
             .nav-menu {
                 & > li {
-                    margin-right: 8px;     
+                    margin-right: 8px;
                     @include respond-below(xl) {
                         margin-right: 1px;
                     }
@@ -985,7 +994,7 @@
                         .menu-arrow {
                             @include respond-below(xl) {
                                 right: 2px;
-                            }                            
+                            }
                         }
                     }
                 }
@@ -995,7 +1004,7 @@
     .sidebar-menu {
         .nav-menu {
             & > li {
-                margin-right: 8px;  
+                margin-right: 8px;
                 &:last-child {
                     margin-right: 0;
                 }
@@ -1013,13 +1022,13 @@
         }
     }
 }
-[data-layout="stacked"] { 
+[data-layout="stacked"] {
     #sidebar {
         @include respond-above(lg) {
             display: none;
         }
-    }  
-    #stacked-sidebar { 
+    }
+    #stacked-sidebar {
         @include respond-above(lg) {
             display: block;
         }
@@ -1042,7 +1051,8 @@
         }
     }
 }
-[data-layout="transparent"],.data-layout-transparent { 
+[data-layout="transparent"],
+.data-layout-transparent {
     body {
         background-color: $primary-transparent;
     }
@@ -1076,8 +1086,8 @@
             }
         }
     }
-    .page-wrapper{
-        .head-icons{
+    .page-wrapper {
+        .head-icons {
             display: none;
         }
     }
@@ -1114,13 +1124,13 @@ body.data-layout-transparent {
             }
         }
     }
-    .page-wrapper{
-        .head-icons{
+    .page-wrapper {
+        .head-icons {
             display: none;
         }
     }
 }
-[data-layout="horizontal-sidemenu"] { 
+[data-layout="horizontal-sidemenu"] {
     .header {
         left: 0;
         background-color: $gray-900;
@@ -1160,7 +1170,7 @@ body.data-layout-transparent {
                 display: block;
             }
         }
-    }   
+    }
     .main-wrapper {
         margin: 0 auto;
         @include respond-above(xxl) {
@@ -1197,7 +1207,7 @@ body.data-layout-transparent {
                 height: 100px;
             }
         }
-    }  
+    }
     .sidebar {
         top: 74px;
         left: unset;
@@ -1228,7 +1238,7 @@ body.data-layout-transparent {
         @include respond-above(lg) {
             padding: 74px 0 0;
         }
-        .head-icons{
+        .head-icons {
             display: none;
         }
     }
@@ -1240,7 +1250,7 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebar="dark"]{
+[data-sidebar="dark"] {
     .sidebar {
         background: $gray-900;
         border-color: $gray-900;
@@ -1270,7 +1280,8 @@ body.data-layout-transparent {
                             &.subdrop {
                                 background: $gray-600;
                             }
-                            &:hover, &.active {
+                            &:hover,
+                            &.active {
                                 background: $gray-600;
                             }
                         }
@@ -1286,15 +1297,16 @@ body.data-layout-transparent {
                         li {
                             &.active {
                                 a {
-                                     i {
+                                    i {
                                         color: $primary;
                                     }
                                 }
                             }
                             a {
                                 color: $gray-300;
-                                &:hover, &.active{
-                                    color:$primary;
+                                &:hover,
+                                &.active {
+                                    color: $primary;
                                 }
                                 i {
                                     color: $gray-200;
@@ -1316,7 +1328,8 @@ body.data-layout-transparent {
                                     li {
                                         a {
                                             color: $gray-300;
-                                            &.active, &:hover {
+                                            &.active,
+                                            &:hover {
                                                 color: $primary;
                                             }
                                         }
@@ -1326,12 +1339,14 @@ body.data-layout-transparent {
                         }
                     }
                 }
-                li {                    
+                li {
                     .submenu.submenu-two {
                         a {
-                            &.subdrop, &.active, &:hover {
+                            &.subdrop,
+                            &.active,
+                            &:hover {
                                 background: transparent;
-                             }
+                            }
                         }
                     }
                 }
@@ -1345,9 +1360,10 @@ body.data-layout-transparent {
     }
     .sidebar-twocol {
         &.sidebar {
-            .nav-link { 
+            .nav-link {
                 color: $white;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $gray-600;
                 }
             }
@@ -1358,7 +1374,8 @@ body.data-layout-transparent {
                         display: block;
                     }
                 }
-                h6, p {
+                h6,
+                p {
                     color: $white;
                 }
                 .bg-light {
@@ -1379,12 +1396,12 @@ body.data-layout-transparent {
                                 color: $white !important;
                             }
                         }
-                        &.active{
+                        &.active {
                             a {
                                 background: $gray-600;
                             }
                         }
-                        &.submenu {                        
+                        &.submenu {
                             & > a {
                                 &:hover {
                                     background: $gray-600;
@@ -1395,18 +1412,17 @@ body.data-layout-transparent {
                     }
                 }
                 .tab-pane {
-                    & > ul {                
-                         & > li {
-                             > a {
-                                 &:hover {
-                                     background: $gray-600;
-                                     color: $white !important;
-                                 }
-                             }
-                         }
-                     }
-     
-                 }
+                    & > ul {
+                        & > li {
+                            > a {
+                                &:hover {
+                                    background: $gray-600;
+                                    color: $white !important;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         .twocol-mini {
@@ -1435,7 +1451,8 @@ body.data-layout-transparent {
         .btn-menubar {
             color: $white;
             border-color: $gray-900;
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 background: $gray-600;
             }
         }
@@ -1460,10 +1477,12 @@ body.data-layout-transparent {
             color: $white;
             background: $gray-800;
             border-color: $gray-800;
-            p, i {
+            p,
+            i {
                 color: $white;
             }
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 color: $white;
                 background: $gray-800;
                 border-color: $gray-800;
@@ -1474,7 +1493,7 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebar="darkgreen"]{
+[data-sidebar="darkgreen"] {
     .sidebar {
         background: $dark-green;
         border-color: $dark-green;
@@ -1504,7 +1523,8 @@ body.data-layout-transparent {
                             &.subdrop {
                                 background: $gray-600;
                             }
-                            &:hover, &.active {
+                            &:hover,
+                            &.active {
                                 background: $gray-600;
                             }
                         }
@@ -1520,15 +1540,16 @@ body.data-layout-transparent {
                         li {
                             &.active {
                                 a {
-                                     i {
+                                    i {
                                         color: $primary;
                                     }
                                 }
                             }
                             a {
                                 color: $gray-300;
-                                &:hover, &.active{
-                                    color:$primary;
+                                &:hover,
+                                &.active {
+                                    color: $primary;
                                 }
                                 i {
                                     color: $gray-200;
@@ -1550,7 +1571,8 @@ body.data-layout-transparent {
                                     li {
                                         a {
                                             color: $gray-300;
-                                            &.active, &:hover {
+                                            &.active,
+                                            &:hover {
                                                 color: $primary;
                                             }
                                         }
@@ -1560,12 +1582,14 @@ body.data-layout-transparent {
                         }
                     }
                 }
-                li {                    
+                li {
                     .submenu.submenu-two {
                         a {
-                            &.subdrop, &.active, &:hover {
+                            &.subdrop,
+                            &.active,
+                            &:hover {
                                 background: transparent;
-                             }
+                            }
                         }
                     }
                 }
@@ -1579,9 +1603,10 @@ body.data-layout-transparent {
     }
     .sidebar-twocol {
         &.sidebar {
-            .nav-link { 
+            .nav-link {
                 color: $white;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $gray-600;
                 }
             }
@@ -1592,7 +1617,8 @@ body.data-layout-transparent {
                         display: block;
                     }
                 }
-                h6, p {
+                h6,
+                p {
                     color: $white;
                 }
                 .bg-light {
@@ -1613,12 +1639,12 @@ body.data-layout-transparent {
                                 color: $white !important;
                             }
                         }
-                        &.active{
+                        &.active {
                             a {
                                 background: $gray-600;
                             }
                         }
-                        &.submenu {                        
+                        &.submenu {
                             & > a {
                                 &:hover {
                                     background: $gray-600;
@@ -1629,18 +1655,17 @@ body.data-layout-transparent {
                     }
                 }
                 .tab-pane {
-                    & > ul {                
-                         & > li {
-                             > a {
-                                 &:hover {
-                                     background: $gray-600;
-                                     color: $white !important;
-                                 }
-                             }
-                         }
-                     }
-     
-                 }
+                    & > ul {
+                        & > li {
+                            > a {
+                                &:hover {
+                                    background: $gray-600;
+                                    color: $white !important;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         .twocol-mini {
@@ -1669,7 +1694,8 @@ body.data-layout-transparent {
         .btn-menubar {
             color: $white;
             border-color: $dark-green;
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 background: $gray-600;
             }
         }
@@ -1694,10 +1720,12 @@ body.data-layout-transparent {
             color: $white;
             background: $gray-800;
             border-color: $gray-800;
-            p, i {
+            p,
+            i {
                 color: $white;
             }
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 color: $white;
                 background: $gray-800;
                 border-color: $gray-800;
@@ -1708,7 +1736,7 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebar="nightblue"]{
+[data-sidebar="nightblue"] {
     .sidebar {
         background: $night-blue;
         border-color: $night-blue;
@@ -1738,7 +1766,8 @@ body.data-layout-transparent {
                             &.subdrop {
                                 background: $gray-600;
                             }
-                            &:hover, &.active {
+                            &:hover,
+                            &.active {
                                 background: $gray-600;
                             }
                         }
@@ -1754,15 +1783,16 @@ body.data-layout-transparent {
                         li {
                             &.active {
                                 a {
-                                     i {
+                                    i {
                                         color: $primary;
                                     }
                                 }
                             }
                             a {
                                 color: $gray-300;
-                                &:hover, &.active{
-                                    color:$primary;
+                                &:hover,
+                                &.active {
+                                    color: $primary;
                                 }
                                 i {
                                     color: $gray-200;
@@ -1784,7 +1814,8 @@ body.data-layout-transparent {
                                     li {
                                         a {
                                             color: $gray-300;
-                                            &.active, &:hover {
+                                            &.active,
+                                            &:hover {
                                                 color: $primary;
                                             }
                                         }
@@ -1794,12 +1825,14 @@ body.data-layout-transparent {
                         }
                     }
                 }
-                li {                    
+                li {
                     .submenu.submenu-two {
                         a {
-                            &.subdrop, &.active, &:hover {
+                            &.subdrop,
+                            &.active,
+                            &:hover {
                                 background: transparent;
-                             }
+                            }
                         }
                     }
                 }
@@ -1813,9 +1846,10 @@ body.data-layout-transparent {
     }
     .sidebar-twocol {
         &.sidebar {
-            .nav-link { 
+            .nav-link {
                 color: $white;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $gray-600;
                 }
             }
@@ -1826,7 +1860,8 @@ body.data-layout-transparent {
                         display: block;
                     }
                 }
-                h6, p {
+                h6,
+                p {
                     color: $white;
                 }
                 .bg-light {
@@ -1847,12 +1882,12 @@ body.data-layout-transparent {
                                 color: $white !important;
                             }
                         }
-                        &.active{
+                        &.active {
                             a {
                                 background: $gray-600;
                             }
                         }
-                        &.submenu {                        
+                        &.submenu {
                             & > a {
                                 &:hover {
                                     background: $gray-600;
@@ -1863,18 +1898,17 @@ body.data-layout-transparent {
                     }
                 }
                 .tab-pane {
-                    & > ul {                
-                         & > li {
-                             > a {
-                                 &:hover {
-                                     background: $gray-600;
-                                     color: $white !important;
-                                 }
-                             }
-                         }
-                     }
-     
-                 }
+                    & > ul {
+                        & > li {
+                            > a {
+                                &:hover {
+                                    background: $gray-600;
+                                    color: $white !important;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         .twocol-mini {
@@ -1903,7 +1937,8 @@ body.data-layout-transparent {
         .btn-menubar {
             color: $white;
             border-color: $night-blue;
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 background: $gray-100;
                 color: $gray-700;
             }
@@ -1929,10 +1964,12 @@ body.data-layout-transparent {
             color: $white;
             background: lighten($night-blue, 6%);
             border-color: lighten($night-blue, 6%);
-            p, i {
+            p,
+            i {
                 color: $white;
             }
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 color: $white;
                 background: lighten($night-blue, 4%);
                 border-color: lighten($night-blue, 4%);
@@ -1943,7 +1980,7 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebar="royalblue"]{
+[data-sidebar="royalblue"] {
     .sidebar {
         background: $royal-blue;
         border-color: $royal-blue;
@@ -1961,7 +1998,8 @@ body.data-layout-transparent {
                             > a {
                                 &:hover {
                                     background: $gray-100;
-                                    span, i {
+                                    span,
+                                    i {
                                         color: $gray-700;
                                     }
                                 }
@@ -1975,7 +2013,8 @@ body.data-layout-transparent {
                             }
                             &.subdrop {
                                 background: $gray-100;
-                                span, i {
+                                span,
+                                i {
                                     color: $gray-700;
                                 }
                                 .menu-arrow {
@@ -1984,9 +2023,11 @@ body.data-layout-transparent {
                                     }
                                 }
                             }
-                            &:hover, &.active {
+                            &:hover,
+                            &.active {
                                 background: $gray-100;
-                                span, i {
+                                span,
+                                i {
                                     color: $gray-700;
                                 }
                                 .menu-arrow {
@@ -2008,15 +2049,16 @@ body.data-layout-transparent {
                         li {
                             &.active {
                                 a {
-                                     i {
+                                    i {
                                         color: $primary;
                                     }
                                 }
                             }
                             a {
                                 color: $gray-300;
-                                &:hover, &.active{
-                                    color:$primary;
+                                &:hover,
+                                &.active {
+                                    color: $primary;
                                 }
                                 i {
                                     color: $gray-200;
@@ -2038,7 +2080,8 @@ body.data-layout-transparent {
                                     li {
                                         a {
                                             color: $gray-300;
-                                            &.active, &:hover {
+                                            &.active,
+                                            &:hover {
                                                 color: $primary;
                                             }
                                         }
@@ -2048,12 +2091,14 @@ body.data-layout-transparent {
                         }
                     }
                 }
-                li {                    
+                li {
                     .submenu.submenu-two {
                         a {
-                            &.subdrop, &.active, &:hover {
+                            &.subdrop,
+                            &.active,
+                            &:hover {
                                 background: transparent;
-                             }
+                            }
                         }
                     }
                 }
@@ -2067,9 +2112,10 @@ body.data-layout-transparent {
     }
     .sidebar-twocol {
         &.sidebar {
-            .nav-link { 
+            .nav-link {
                 color: $white;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $gray-100;
                     color: $gray-700;
                 }
@@ -2101,13 +2147,13 @@ body.data-layout-transparent {
                                 color: $gray-700 !important;
                             }
                         }
-                        &.active{
+                        &.active {
                             a {
                                 background: $gray-100;
                                 color: $gray-700;
                             }
                         }
-                        &.submenu {                        
+                        &.submenu {
                             & > a {
                                 &:hover {
                                     background: $gray-100;
@@ -2118,18 +2164,17 @@ body.data-layout-transparent {
                     }
                 }
                 .tab-pane {
-                    & > ul {                
-                         & > li {
-                             > a {
-                                 &:hover {
-                                     background: $gray-100;
-                                     color: $gray-700 !important;
-                                 }
-                             }
-                         }
-                     }
-     
-                 }
+                    & > ul {
+                        & > li {
+                            > a {
+                                &:hover {
+                                    background: $gray-100;
+                                    color: $gray-700 !important;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         .twocol-mini {
@@ -2158,7 +2203,8 @@ body.data-layout-transparent {
         .btn-menubar {
             color: $white;
             border-color: $royal-blue;
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 background: $gray-100;
                 color: $gray-700;
             }
@@ -2184,10 +2230,12 @@ body.data-layout-transparent {
             color: $white;
             background: lighten($royal-blue, 6%);
             border-color: lighten($royal-blue, 6%);
-            p, i {
+            p,
+            i {
                 color: $white;
             }
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 color: $white;
                 background: lighten($royal-blue, 4%);
                 border-color: lighten($royal-blue, 4%);
@@ -2198,7 +2246,7 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebar="darkgray"]{
+[data-sidebar="darkgray"] {
     .sidebar {
         background: $dark-gray;
         border-color: $dark-gray;
@@ -2228,7 +2276,8 @@ body.data-layout-transparent {
                             &.subdrop {
                                 background: $gray-600;
                             }
-                            &:hover, &.active {
+                            &:hover,
+                            &.active {
                                 background: $gray-600;
                             }
                         }
@@ -2244,15 +2293,16 @@ body.data-layout-transparent {
                         li {
                             &.active {
                                 a {
-                                     i {
+                                    i {
                                         color: $primary;
                                     }
                                 }
                             }
                             a {
                                 color: $gray-300;
-                                &:hover, &.active{
-                                    color:$primary;
+                                &:hover,
+                                &.active {
+                                    color: $primary;
                                 }
                                 i {
                                     color: $gray-200;
@@ -2274,7 +2324,8 @@ body.data-layout-transparent {
                                     li {
                                         a {
                                             color: $gray-300;
-                                            &.active, &:hover {
+                                            &.active,
+                                            &:hover {
                                                 color: $primary;
                                             }
                                         }
@@ -2284,12 +2335,14 @@ body.data-layout-transparent {
                         }
                     }
                 }
-                li {                    
+                li {
                     .submenu.submenu-two {
                         a {
-                            &.subdrop, &.active, &:hover {
+                            &.subdrop,
+                            &.active,
+                            &:hover {
                                 background: transparent;
-                             }
+                            }
                         }
                     }
                 }
@@ -2303,9 +2356,10 @@ body.data-layout-transparent {
     }
     .sidebar-twocol {
         &.sidebar {
-            .nav-link { 
+            .nav-link {
                 color: $white;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $gray-600;
                 }
             }
@@ -2316,7 +2370,8 @@ body.data-layout-transparent {
                         display: block;
                     }
                 }
-                h6, p {
+                h6,
+                p {
                     color: $white;
                 }
                 .bg-light {
@@ -2337,12 +2392,12 @@ body.data-layout-transparent {
                                 color: $white !important;
                             }
                         }
-                        &.active{
+                        &.active {
                             a {
                                 background: $gray-600;
                             }
                         }
-                        &.submenu {                        
+                        &.submenu {
                             & > a {
                                 &:hover {
                                     background: $gray-600;
@@ -2353,18 +2408,17 @@ body.data-layout-transparent {
                     }
                 }
                 .tab-pane {
-                    & > ul {                
-                         & > li {
-                             > a {
-                                 &:hover {
-                                     background: $gray-600;
-                                     color: $white !important;
-                                 }
-                             }
-                         }
-                     }
-     
-                 }
+                    & > ul {
+                        & > li {
+                            > a {
+                                &:hover {
+                                    background: $gray-600;
+                                    color: $white !important;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         .twocol-mini {
@@ -2393,7 +2447,8 @@ body.data-layout-transparent {
         .btn-menubar {
             color: $white;
             border-color: $dark-gray;
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 background: $gray-600;
             }
         }
@@ -2418,10 +2473,12 @@ body.data-layout-transparent {
             color: $white;
             background: $gray-800;
             border-color: $gray-800;
-            p, i {
+            p,
+            i {
                 color: $white;
             }
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 color: $white;
                 background: $gray-800;
                 border-color: $gray-800;
@@ -2432,7 +2489,7 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebar="indigo"]{
+[data-sidebar="indigo"] {
     #sidebar {
         background: $indigo;
         border-color: $indigo;
@@ -2445,13 +2502,13 @@ body.data-layout-transparent {
         .sidebar-menu {
             > ul {
                 > li {
-                    
                     > ul {
                         > li {
                             > a {
                                 &:hover {
                                     background: $gray-100;
-                                    span, i {
+                                    span,
+                                    i {
                                         color: $gray-700;
                                     }
                                 }
@@ -2465,7 +2522,8 @@ body.data-layout-transparent {
                             }
                             &.subdrop {
                                 background: $gray-100;
-                                span, i {
+                                span,
+                                i {
                                     color: $gray-700;
                                 }
                                 .menu-arrow {
@@ -2474,9 +2532,11 @@ body.data-layout-transparent {
                                     }
                                 }
                             }
-                            &:hover, &.active {
+                            &:hover,
+                            &.active {
                                 background: $gray-100;
-                                span, i {
+                                span,
+                                i {
                                     color: $gray-700;
                                 }
                                 .menu-arrow {
@@ -2498,15 +2558,16 @@ body.data-layout-transparent {
                         li {
                             &.active {
                                 a {
-                                     i {
+                                    i {
                                         color: $primary;
                                     }
                                 }
                             }
                             a {
                                 color: $gray-300;
-                                &:hover, &.active{
-                                    color:$primary;
+                                &:hover,
+                                &.active {
+                                    color: $primary;
                                 }
                                 i {
                                     color: $gray-200;
@@ -2528,7 +2589,8 @@ body.data-layout-transparent {
                                     li {
                                         a {
                                             color: $gray-300;
-                                            &.active, &:hover {
+                                            &.active,
+                                            &:hover {
                                                 color: $primary;
                                             }
                                         }
@@ -2538,12 +2600,14 @@ body.data-layout-transparent {
                         }
                     }
                 }
-                li {                    
+                li {
                     .submenu.submenu-two {
                         a {
-                            &.subdrop, &.active, &:hover {
+                            &.subdrop,
+                            &.active,
+                            &:hover {
                                 background: transparent;
-                             }
+                            }
                         }
                     }
                 }
@@ -2557,9 +2621,10 @@ body.data-layout-transparent {
     }
     .sidebar-twocol {
         &.sidebar {
-            .nav-link { 
+            .nav-link {
                 color: $white;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $gray-100;
                     color: $gray-700;
                 }
@@ -2591,13 +2656,13 @@ body.data-layout-transparent {
                                 color: $gray-700 !important;
                             }
                         }
-                        &.active{
+                        &.active {
                             a {
                                 background: $gray-100;
                                 color: $gray-700;
                             }
                         }
-                        &.submenu {                        
+                        &.submenu {
                             & > a {
                                 &:hover {
                                     background: $gray-100;
@@ -2608,17 +2673,16 @@ body.data-layout-transparent {
                     }
                 }
                 .tab-pane {
-                    & > ul {                
-                         & > li {
-                             > a {
-                                 &:hover {
-                                     background: $gray-100;
-                                     color: $gray-700 !important;
-                                 }
-                             }
-                         }
-                     }
-     
+                    & > ul {
+                        & > li {
+                            > a {
+                                &:hover {
+                                    background: $gray-100;
+                                    color: $gray-700 !important;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -2648,7 +2712,8 @@ body.data-layout-transparent {
         .btn-menubar {
             color: $white;
             border-color: $indigo;
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 background: $gray-100;
                 color: $gray-700;
             }
@@ -2674,10 +2739,12 @@ body.data-layout-transparent {
             color: $white;
             background: lighten($indigo, 6%);
             border-color: lighten($indigo, 6%);
-            p, i {
+            p,
+            i {
                 color: $white;
             }
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 color: $white;
                 background: lighten($indigo, 4%);
                 border-color: lighten($indigo, 4%);
@@ -2688,7 +2755,7 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebar="all"]{
+[data-sidebar="all"] {
     $primarybg: rgb(var(--sidebar--rgb-picr));
     .sidebar {
         background: $primarybg;
@@ -2707,7 +2774,8 @@ body.data-layout-transparent {
                             > a {
                                 &:hover {
                                     background: $gray-100;
-                                    span, i {
+                                    span,
+                                    i {
                                         color: $gray-700;
                                     }
                                 }
@@ -2721,7 +2789,8 @@ body.data-layout-transparent {
                             }
                             &.subdrop {
                                 background: $gray-100;
-                                span, i {
+                                span,
+                                i {
                                     color: $gray-700;
                                 }
                                 .menu-arrow {
@@ -2730,9 +2799,11 @@ body.data-layout-transparent {
                                     }
                                 }
                             }
-                            &:hover, &.active {
+                            &:hover,
+                            &.active {
                                 background: $gray-100;
-                                span, i {
+                                span,
+                                i {
                                     color: $gray-700;
                                 }
                                 .menu-arrow {
@@ -2754,15 +2825,16 @@ body.data-layout-transparent {
                         li {
                             &.active {
                                 a {
-                                     i {
+                                    i {
                                         color: $primary;
                                     }
                                 }
                             }
                             a {
                                 color: $gray-300;
-                                &:hover, &.active{
-                                    color:$primary;
+                                &:hover,
+                                &.active {
+                                    color: $primary;
                                 }
                                 i {
                                     color: $gray-200;
@@ -2784,7 +2856,8 @@ body.data-layout-transparent {
                                     li {
                                         a {
                                             color: $gray-300;
-                                            &.active, &:hover {
+                                            &.active,
+                                            &:hover {
                                                 color: $primary;
                                             }
                                         }
@@ -2794,12 +2867,14 @@ body.data-layout-transparent {
                         }
                     }
                 }
-                li {                    
+                li {
                     .submenu.submenu-two {
                         a {
-                            &.subdrop, &.active, &:hover {
+                            &.subdrop,
+                            &.active,
+                            &:hover {
                                 background: transparent;
-                             }
+                            }
                         }
                     }
                 }
@@ -2813,9 +2888,10 @@ body.data-layout-transparent {
     }
     .sidebar-twocol {
         &.sidebar {
-            .nav-link { 
+            .nav-link {
                 color: $white;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $gray-100;
                     color: $gray-700;
                 }
@@ -2847,13 +2923,13 @@ body.data-layout-transparent {
                                 color: $gray-700 !important;
                             }
                         }
-                        &.active{
+                        &.active {
                             a {
                                 background: $gray-100;
                                 color: $gray-700;
                             }
                         }
-                        &.submenu {                        
+                        &.submenu {
                             & > a {
                                 &:hover {
                                     background: $gray-100;
@@ -2864,18 +2940,17 @@ body.data-layout-transparent {
                     }
                 }
                 .tab-pane {
-                    & > ul {                
-                         & > li {
-                             > a {
-                                 &:hover {
-                                     background: $gray-100;
-                                     color: $gray-700 !important;
-                                 }
-                             }
-                         }
-                     }
-     
-                 }
+                    & > ul {
+                        & > li {
+                            > a {
+                                &:hover {
+                                    background: $gray-100;
+                                    color: $gray-700 !important;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         .twocol-mini {
@@ -2904,7 +2979,8 @@ body.data-layout-transparent {
         .btn-menubar {
             color: $white;
             border-color: $primarybg;
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 background: $gray-100;
                 color: $gray-700;
             }
@@ -2930,10 +3006,12 @@ body.data-layout-transparent {
             color: $white;
             background: rgba(var(--sidebar--rgb-picr), 0.7);
             border-color: rgba(var(--sidebar--rgb-picr), 0.7);
-            p, i {
+            p,
+            i {
                 color: $white;
             }
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 color: $white;
                 background: rgba(var(--sidebar--rgb-picr), 0.4);
                 border-color: rgba(var(--sidebar--rgb-picr), 0.4);
@@ -2956,7 +3034,7 @@ body.data-layout-transparent {
         background: $darkaqua;
         border-bottom-color: $darkaqua;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $darkaqua;
@@ -2966,7 +3044,8 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $white;
-                    &:hover, &.active {
+                    &:hover,
+                    &.active {
                         color: $gray-700;
                     }
                 }
@@ -2984,7 +3063,9 @@ body.data-layout-transparent {
                                     border-color: $white;
                                 }
                             }
-                            &:hover, &.active, &.subdrop {
+                            &:hover,
+                            &.active,
+                            &.subdrop {
                                 color: $gray-700;
                                 .menu-arrow {
                                     &::before {
@@ -2994,7 +3075,7 @@ body.data-layout-transparent {
                             }
                         }
                     }
-                } 
+                }
             }
         }
     }
@@ -3023,7 +3104,7 @@ body.data-layout-transparent {
         background: $rockblue;
         border-bottom-color: $rockblue;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $rockblue;
@@ -3033,7 +3114,8 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $gray-900;
-                    &:hover, &.active {
+                    &:hover,
+                    &.active {
                         background: $white;
                     }
                 }
@@ -3058,7 +3140,7 @@ body.data-layout-transparent {
         background: $whiterock;
         border-bottom-color: $whiterock;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $whiterock;
@@ -3090,7 +3172,7 @@ body.data-layout-transparent {
         background: $bluehaze;
         border-bottom-color: $bluehaze;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $bluehaze;
@@ -3122,7 +3204,7 @@ body.data-layout-transparent {
         background: $orange-gradient;
         border-bottom-color: $orange-gradient;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $orange-gradient;
@@ -3154,7 +3236,7 @@ body.data-layout-transparent {
         background: $purple-gradient;
         border-bottom-color: $purple-gradient;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $purple-gradient;
@@ -3186,7 +3268,7 @@ body.data-layout-transparent {
         background: $blue-gradient;
         border-bottom-color: $blue-gradient;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $blue-gradient;
@@ -3218,7 +3300,7 @@ body.data-layout-transparent {
         background: $maroon-gradient;
         border-bottom-color: $maroon-gradient;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $maroon-gradient;
@@ -3251,7 +3333,7 @@ body.data-layout-transparent {
         background: $primary;
         border-bottom-color: $primary;
         .bg-white {
-            background: transparent  !important;
+            background: transparent !important;
         }
         .header-left {
             background: $primary;
@@ -3261,7 +3343,8 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $white;
-                    &:hover, &.active {
+                    &:hover,
+                    &.active {
                         color: $gray-700;
                     }
                 }
@@ -3279,7 +3362,9 @@ body.data-layout-transparent {
                                     border-color: $white;
                                 }
                             }
-                            &:hover, &.active, &.subdrop {
+                            &:hover,
+                            &.active,
+                            &.subdrop {
                                 color: $gray-700;
                                 .menu-arrow {
                                     &::before {
@@ -3289,7 +3374,7 @@ body.data-layout-transparent {
                             }
                         }
                     }
-                } 
+                }
             }
         }
     }
@@ -3307,7 +3392,7 @@ body.data-layout-transparent {
     }
 }
 [data-layout="horizontal-overlay"][data-topbarcolor="dark"],
-[data-layout="horizontal-sidemenu"][data-topbarcolor="dark"]  {   
+[data-layout="horizontal-sidemenu"][data-topbarcolor="dark"] {
     .header {
         left: 0;
         background-color: $gray-900;
@@ -3331,7 +3416,7 @@ body.data-layout-transparent {
                 display: block;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $white;
     }
@@ -3341,11 +3426,12 @@ body.data-layout-transparent {
             border-bottom: 1px solid $gray-800;
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $white;
-                                &.active, &:hover {
+                                &.active,
+                                &:hover {
                                     background: $gray-600;
                                 }
                                 .menu-arrow {
@@ -3392,7 +3478,7 @@ body.data-layout-transparent {
                 display: block;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $white;
     }
@@ -3402,11 +3488,12 @@ body.data-layout-transparent {
             border-bottom: 1px solid $primary-800;
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $white;
-                                &.active, &:hover {
+                                &.active,
+                                &:hover {
                                     background: $primary-600;
                                 }
                                 .menu-arrow {
@@ -3454,7 +3541,7 @@ body.data-layout-transparent {
                 display: block;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $white;
     }
@@ -3464,11 +3551,13 @@ body.data-layout-transparent {
             border-bottom: 1px solid $gray-800;
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $white;
-                                &.active, &:hover,  &.subdrop {
+                                &.active,
+                                &:hover,
+                                &.subdrop {
                                     background: $gray-600;
                                 }
                                 .menu-arrow {
@@ -3522,7 +3611,7 @@ body.data-layout-transparent {
                 display: block;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $white;
     }
@@ -3532,11 +3621,13 @@ body.data-layout-transparent {
             border-bottom: 1px solid lighten($maroon, 0.9);
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $white;
-                                &.active, &:hover,  &.subdrop {
+                                &.active,
+                                &:hover,
+                                &.subdrop {
                                     background-color: $dark-transparent;
                                     color: $gray-900;
                                     .menu-arrow {
@@ -3596,7 +3687,7 @@ body.data-layout-transparent {
                 display: none;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $gray-700;
     }
@@ -3606,11 +3697,13 @@ body.data-layout-transparent {
             border-bottom: 1px solid lighten($white, 0.9);
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $gray-900;
-                                &.active, &:hover,  &.subdrop {
+                                &.active,
+                                &:hover,
+                                &.subdrop {
                                     background-color: $dark-transparent;
                                     color: $gray-900;
                                     .menu-arrow {
@@ -3621,7 +3714,7 @@ body.data-layout-transparent {
                                 }
                                 .menu-arrow {
                                     &::before {
-                                        border-color: $gray-900;;
+                                        border-color: $gray-900;
                                     }
                                 }
                             }
@@ -3669,7 +3762,7 @@ body.data-layout-transparent {
                 display: block;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $white;
     }
@@ -3679,11 +3772,13 @@ body.data-layout-transparent {
             border-bottom: 1px solid lighten($bluegem, 0.9);
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $white;
-                                &.active, &:hover,  &.subdrop {
+                                &.active,
+                                &:hover,
+                                &.subdrop {
                                     background-color: $dark-transparent;
                                     color: $gray-900;
                                     .menu-arrow {
@@ -3718,8 +3813,8 @@ body.data-layout-transparent {
     }
 }
 [data-layout="horizontal-overlay"][data-topbarcolor="all"],
-[data-layout="horizontal-sidemenu"][data-topbarcolor="all"]  {
-    $primary: rgb(var(--topbarcolor--rgb-picr));   
+[data-layout="horizontal-sidemenu"][data-topbarcolor="all"] {
+    $primary: rgb(var(--topbarcolor--rgb-picr));
     .header {
         left: 0;
         background-color: $primary;
@@ -3744,7 +3839,7 @@ body.data-layout-transparent {
                 display: block;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $white;
     }
@@ -3754,11 +3849,13 @@ body.data-layout-transparent {
             border-bottom: 1px solid $primary;
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $white;
-                                &.active, &:hover,  &.subdrop {
+                                &.active,
+                                &:hover,
+                                &.subdrop {
                                     background-color: $dark-transparent;
                                     color: $gray-900;
                                     .menu-arrow {
@@ -3792,14 +3889,14 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebarbg="sidebarbg1"]{
+[data-sidebarbg="sidebarbg1"] {
     #sidebar {
         background-image: url(../img/theme/bg-01.jpg);
         background-repeat: no-repeat;
         background-size: cover;
         background-position: 50% 50%;
         background-color: transparent;
-        &::before  {
+        &::before {
             content: "";
             width: 100%;
             height: 100%;
@@ -3834,7 +3931,7 @@ body.data-layout-transparent {
                 display: block;
             }
         }
-    }      
+    }
     .mode-toggle {
         color: $white;
     }
@@ -3844,11 +3941,13 @@ body.data-layout-transparent {
             border-bottom: 1px solid $gray-800;
             .sidebar-menu {
                 .nav-menu {
-                    > li {     
+                    > li {
                         &.submenu {
                             & > a {
                                 color: $white;
-                                &.active, &:hover,  &.subdrop {
+                                &.active,
+                                &:hover,
+                                &.subdrop {
                                     background: $gray-600;
                                 }
                                 .menu-arrow {
@@ -3876,32 +3975,32 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebarbg="sidebarbg1"]{
+[data-sidebarbg="sidebarbg1"] {
     #sidebar {
         background-image: url(../img/theme/bg-01.jpg);
         background-repeat: no-repeat;
         background-size: cover;
         background-position: 50% 50%;
         background-color: transparent;
-        &::before  {
+        &::before {
             content: "";
             width: 100%;
             height: 100%;
             position: absolute;
             left: 0;
-            top: 0;    
+            top: 0;
             z-index: -1;
         }
     }
 }
-[data-sidebarbg="sidebarbg2"]{
+[data-sidebarbg="sidebarbg2"] {
     #sidebar {
         background-image: url(../img/theme/bg-02.jpg);
         background-repeat: no-repeat;
         background-size: cover;
         background-position: 50% 50%;
         background-color: transparent;
-        &::before  {
+        &::before {
             content: "";
             width: 100%;
             height: 100%;
@@ -3911,14 +4010,14 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebarbg="sidebarbg3"]{
+[data-sidebarbg="sidebarbg3"] {
     #sidebar {
         background-image: url(../img/theme/bg-03.jpg);
         background-repeat: no-repeat;
         background-size: cover;
         background-position: 50% 50%;
         background-color: transparent;
-        &::before  {
+        &::before {
             content: "";
             width: 100%;
             height: 100%;
@@ -3928,14 +4027,14 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebarbg="sidebarbg4"]{
+[data-sidebarbg="sidebarbg4"] {
     #sidebar {
         background-image: url(../img/theme/bg-04.jpg);
         background-repeat: no-repeat;
         background-size: cover;
         background-position: 50% 50%;
         background-color: transparent;
-        &::before  {
+        &::before {
             content: "";
             width: 100%;
             height: 100%;
@@ -3945,14 +4044,14 @@ body.data-layout-transparent {
         }
     }
 }
-[data-sidebarbg="sidebarbg5"]{
+[data-sidebarbg="sidebarbg5"] {
     #sidebar {
         background-image: url(../img/theme/bg-05.jpg);
         background-repeat: no-repeat;
         background-size: cover;
         background-position: 50% 50%;
         background-color: transparent;
-        &::before  {
+        &::before {
             content: "";
             width: 100%;
             height: 100%;
@@ -3969,7 +4068,7 @@ body.data-layout-transparent {
         background-size: cover;
         background-position: 50% 50%;
         background-color: transparent;
-        &::before  {
+        &::before {
             content: "";
             width: 100%;
             height: 100%;
@@ -3987,9 +4086,9 @@ body.data-layout-transparent {
 [data-sidebar="light"] [data-sidebarbg="sidebarbg5"],
 [data-sidebar="light"] [data-sidebarbg="sidebarbg6"] {
     #sidebar {
-       &::before  {
-        background: rgba($white, 0.85);
-       }
+        &::before {
+            background: rgba($white, 0.85);
+        }
     }
 }
 [data-sidebar="darkgreen"] [data-sidebarbg="sidebarbg1"],
@@ -3999,9 +4098,9 @@ body.data-layout-transparent {
 [data-sidebar="darkgreen"] [data-sidebarbg="sidebarbg5"],
 [data-sidebar="darkgreen"] [data-sidebarbg="sidebarbg6"] {
     #sidebar {
-       &::before  {
-        background: rgba($dark-green, 0.85);
-       }
+        &::before {
+            background: rgba($dark-green, 0.85);
+        }
     }
 }
 [data-sidebar="nightblue"] [data-sidebarbg="sidebarbg1"],
@@ -4011,9 +4110,9 @@ body.data-layout-transparent {
 [data-sidebar="nightblue"] [data-sidebarbg="sidebarbg5"],
 [data-sidebar="nightblue"] [data-sidebarbg="sidebarbg6"] {
     #sidebar {
-       &::before  {
-        background: rgba($night-blue, 0.85);
-       }
+        &::before {
+            background: rgba($night-blue, 0.85);
+        }
     }
 }
 [data-sidebar="darkgray"] [data-sidebarbg="sidebarbg1"],
@@ -4023,9 +4122,9 @@ body.data-layout-transparent {
 [data-sidebar="darkgray"] [data-sidebarbg="sidebarbg5"],
 [data-sidebar="darkgray"] [data-sidebarbg="sidebarbg6"] {
     #sidebar {
-       &::before  {
-        background: rgba($dark-gray, 0.85);
-       }
+        &::before {
+            background: rgba($dark-gray, 0.85);
+        }
     }
 }
 [data-sidebar="royalblue"] [data-sidebarbg="sidebarbg1"],
@@ -4035,9 +4134,9 @@ body.data-layout-transparent {
 [data-sidebar="royalblue"] [data-sidebarbg="sidebarbg5"],
 [data-sidebar="royalblue"] [data-sidebarbg="sidebarbg6"] {
     #sidebar {
-       &::before  {
-        background: rgba($royal-blue, 0.85);
-       }
+        &::before {
+            background: rgba($royal-blue, 0.85);
+        }
     }
 }
 [data-sidebar="indigo"] [data-sidebarbg="sidebarbg1"],
@@ -4047,9 +4146,9 @@ body.data-layout-transparent {
 [data-sidebar="indigo"] [data-sidebarbg="sidebarbg5"],
 [data-sidebar="indigo"] [data-sidebarbg="sidebarbg6"] {
     #sidebar {
-       &::before  {
-        background: rgba($indigo, 0.85);
-       }
+        &::before {
+            background: rgba($indigo, 0.85);
+        }
     }
 }
 [data-sidebar="all"] [data-sidebarbg="sidebarbg1"],
@@ -4059,16 +4158,16 @@ body.data-layout-transparent {
 [data-sidebar="all"] [data-sidebarbg="sidebarbg5"],
 [data-sidebar="all"] [data-sidebarbg="sidebarbg6"] {
     #sidebar {
-       &::before  {
-        background: rgba(var(--sidebar--rgb-picr), 0.85);
-       }
+        &::before {
+            background: rgba(var(--sidebar--rgb-picr), 0.85);
+        }
     }
 }
 [data-layout="horizontal-overlay"] [data-topbarbg="pattern1"],
 [data-layout="horizontal-sidemenu"] [data-topbarbg="pattern1"] {
     .main-wrapper {
         &::after {
-            background: url('../img/theme/pattern-01.png');
+            background: url("../img/theme/pattern-01.png");
         }
     }
 }
@@ -4076,7 +4175,7 @@ body.data-layout-transparent {
 [data-layout="horizontal-sidemenu"] [data-topbarbg="pattern2"] {
     .main-wrapper {
         &::after {
-            background: url('../img/theme/pattern-01.png');
+            background: url("../img/theme/pattern-01.png");
         }
     }
 }
@@ -4084,12 +4183,14 @@ body.data-layout-transparent {
 [data-layout="horizontal-sidemenu"] [data-topbarbg="pattern3"] {
     .main-wrapper {
         &::after {
-            background: url('../img/theme/pattern-03.png');
+            background: url("../img/theme/pattern-03.png");
         }
     }
 }
-[data-layout="horizontal-overlay"][data-topbarcolor="maroon"] [data-topbarbg="pattern3"],
-[data-layout="horizontal-sidemenu"][data-topbarcolor="maroon"] [data-topbarbg="pattern3"] {
+[data-layout="horizontal-overlay"][data-topbarcolor="maroon"]
+    [data-topbarbg="pattern3"],
+[data-layout="horizontal-sidemenu"][data-topbarcolor="maroon"]
+    [data-topbarbg="pattern3"] {
     .main-wrapper {
         &::before {
             background: rgba($maroon, 0.85);
@@ -4100,8 +4201,10 @@ body.data-layout-transparent {
         }
     }
 }
-[data-layout="horizontal-overlay"][data-topbarcolor="white"] [data-topbarbg="pattern3"],
-[data-layout="horizontal-sidemenu"][data-topbarcolor="white"] [data-topbarbg="pattern3"] {
+[data-layout="horizontal-overlay"][data-topbarcolor="white"]
+    [data-topbarbg="pattern3"],
+[data-layout="horizontal-sidemenu"][data-topbarcolor="white"]
+    [data-topbarbg="pattern3"] {
     .main-wrapper {
         &::before {
             background: rgba($white, 0.85);
@@ -4112,8 +4215,10 @@ body.data-layout-transparent {
         }
     }
 }
-[data-layout="horizontal-overlay"][data-topbarcolor="primary"] [data-topbarbg="pattern3"],
-[data-layout="horizontal-sidemenu"][data-topbarcolor="primary"] [data-topbarbg="pattern3"] {
+[data-layout="horizontal-overlay"][data-topbarcolor="primary"]
+    [data-topbarbg="pattern3"],
+[data-layout="horizontal-sidemenu"][data-topbarcolor="primary"]
+    [data-topbarbg="pattern3"] {
     .main-wrapper {
         &::before {
             background: rgba($primary, 0.85);
@@ -4124,8 +4229,10 @@ body.data-layout-transparent {
         }
     }
 }
-[data-layout="horizontal-overlay"][data-topbarcolor="blackpearl"] [data-topbarbg="pattern3"],
-[data-layout="horizontal-sidemenu"][data-topbarcolor="blackpearl"] [data-topbarbg="pattern3"] {
+[data-layout="horizontal-overlay"][data-topbarcolor="blackpearl"]
+    [data-topbarbg="pattern3"],
+[data-layout="horizontal-sidemenu"][data-topbarcolor="blackpearl"]
+    [data-topbarbg="pattern3"] {
     .main-wrapper {
         &::before {
             background: rgba($blackpearl, 0.85);
@@ -4136,8 +4243,10 @@ body.data-layout-transparent {
         }
     }
 }
-[data-layout="horizontal-overlay"][data-topbarcolor="bluegem"] [data-topbarbg="pattern3"],
-[data-layout="horizontal-sidemenu"][data-topbarcolor="bluegem"] [data-topbarbg="pattern3"] {
+[data-layout="horizontal-overlay"][data-topbarcolor="bluegem"]
+    [data-topbarbg="pattern3"],
+[data-layout="horizontal-sidemenu"][data-topbarcolor="bluegem"]
+    [data-topbarbg="pattern3"] {
     .main-wrapper {
         &::before {
             background: rgba($bluegem, 0.85);
@@ -4148,8 +4257,10 @@ body.data-layout-transparent {
         }
     }
 }
-[data-layout="horizontal-overlay"][data-topbarcolor="firefly"] [data-topbarbg="pattern3"],
-[data-layout="horizontal-sidemenu"][data-topbarcolor="firefly"] [data-topbarbg="pattern3"] {
+[data-layout="horizontal-overlay"][data-topbarcolor="firefly"]
+    [data-topbarbg="pattern3"],
+[data-layout="horizontal-sidemenu"][data-topbarcolor="firefly"]
+    [data-topbarbg="pattern3"] {
     .main-wrapper {
         &::before {
             background: rgba($firefly, 0.85);
@@ -4173,7 +4284,9 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $gray-500;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $dark-transparent;
                         border-color: $dark-transparent;
                         color: $gray-900 !important;
@@ -4194,10 +4307,10 @@ body.data-layout-transparent {
         &::before {
             background: $white;
         }
-        .head-icons{
+        .head-icons {
             display: none;
         }
-    }    
+    }
 }
 [data-layout="modern"][data-topbarcolor="blue"] {
     .header {
@@ -4212,7 +4325,9 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $gray-500;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $dark-transparent;
                         border-color: $dark-transparent;
                         color: $gray-900 !important;
@@ -4233,7 +4348,7 @@ body.data-layout-transparent {
         &::before {
             background: $white;
         }
-    }    
+    }
 }
 [data-layout="modern"][data-topbarcolor="primary"] {
     .header {
@@ -4248,7 +4363,9 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $white;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $white;
                         color: $gray-700 !important;
                     }
@@ -4268,7 +4385,7 @@ body.data-layout-transparent {
         &::before {
             background: $primary;
         }
-    }    
+    }
 }
 [data-layout="modern"][data-topbarcolor="blackpearl"] {
     .header {
@@ -4283,7 +4400,9 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $white;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $white;
                         color: $gray-700 !important;
                     }
@@ -4303,7 +4422,7 @@ body.data-layout-transparent {
         &::before {
             background: $blackpearl;
         }
-    }    
+    }
 }
 [data-layout="modern"][data-topbarcolor="maroon"] {
     .header {
@@ -4318,7 +4437,9 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $white;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $white;
                         color: $gray-700 !important;
                     }
@@ -4338,7 +4459,7 @@ body.data-layout-transparent {
         &::before {
             background: $maroon;
         }
-    }    
+    }
 }
 [data-layout="modern"][data-topbarcolor="bluegem"] {
     .header {
@@ -4353,7 +4474,9 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $white;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $white;
                         color: $gray-700 !important;
                     }
@@ -4373,7 +4496,7 @@ body.data-layout-transparent {
         &::before {
             background: $bluegem;
         }
-    }    
+    }
 }
 [data-layout="modern"][data-topbarcolor="firefly"] {
     .header {
@@ -4388,7 +4511,9 @@ body.data-layout-transparent {
             .user-menu {
                 .btn-menubar {
                     color: $white;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $white;
                         color: $gray-700 !important;
                     }
@@ -4408,11 +4533,11 @@ body.data-layout-transparent {
         &::before {
             background: $firefly;
         }
-    }    
+    }
 }
 [data-card="borderless"] {
     .card {
-        border: 0 !important;;
+        border: 0 !important;
         box-shadow: none;
     }
 }
@@ -4422,11 +4547,11 @@ body.data-layout-transparent {
         box-shadow: $box-shadow-sm;
     }
 }
-[data-color="primary"]{
-    $primary: #F26522;
+[data-color="primary"] {
+    $primary: #f26522;
     .sidebar {
         .sidebar-menu > ul {
-            &  > li {
+            & > li {
                 ul {
                     li {
                         a {
@@ -4436,18 +4561,17 @@ body.data-layout-transparent {
                         }
                     }
                     & > li {
-                        &.active a{
+                        &.active a {
                             .menu-arrow {
                                 &::before {
                                     border-right: 2px solid $primary;
                                     border-bottom: 2px solid $primary;
                                 }
                             }
-                            &.subdrop{
+                            &.subdrop {
                                 color: $primary;
                                 span {
                                     color: $primary;
-                                    
                                 }
                             }
                         }
@@ -4456,16 +4580,16 @@ body.data-layout-transparent {
             }
             li {
                 .submenu > {
-                    ul{
-                        li{
-                            a{
+                    ul {
+                        li {
+                            a {
                                 &:before {
                                     background: $primary;
                                 }
                                 &.active {
                                     color: $primary;
                                 }
-                                &:hover {                                    
+                                &:hover {
                                     color: $primary;
                                 }
                             }
@@ -4474,7 +4598,8 @@ body.data-layout-transparent {
                 }
                 .submenu.submenu-two {
                     a {
-                        &.subdrop, &.active {
+                        &.subdrop,
+                        &.active {
                             color: $primary;
                         }
                     }
@@ -4487,15 +4612,16 @@ body.data-layout-transparent {
             .sidebar-right {
                 ul {
                     li {
-                        &.submenu {    
+                        &.submenu {
                             ul {
                                 & > li {
-                                    & > a{
-                                         &:hover, &.active {
-                                             color: $primary;
-                                         }
-                                     }
-                                 }
+                                    & > a {
+                                        &:hover,
+                                        &.active {
+                                            color: $primary;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -4515,7 +4641,12 @@ body.data-layout-transparent {
             border: 1px solid darken($primary, 7%);
         }
     }
-    .btn-check:checked+.btn, .btn.active, .btn.show, .btn.show:hover, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    .btn-check:checked + .btn,
+    .btn.active,
+    .btn.show,
+    .btn.show:hover,
+    .btn:first-child:active,
+    :not(.btn-check) + .btn:active {
         background-color: $primary;
         border-color: $primary;
     }
@@ -4524,7 +4655,7 @@ body.data-layout-transparent {
         &:hover,
         &:focus,
         &:active {
-          color: darken($primary, 7%);
+            color: darken($primary, 7%);
         }
     }
     .text-primary {
@@ -4549,7 +4680,8 @@ body.data-layout-transparent {
     .border-primary {
         border-color: $primary !important;
     }
-    .nav-tabs.nav-tabs-bottom li a.active, .nav-tabs.nav-tabs-bottom li a:hover {
+    .nav-tabs.nav-tabs-bottom li a.active,
+    .nav-tabs.nav-tabs-bottom li a:hover {
         border-bottom-color: $primary;
         color: $primary;
     }
@@ -4557,14 +4689,13 @@ body.data-layout-transparent {
         &.badge-soft-primary {
             background: rgba($primary, 0.1);
             color: $primary;
-
         }
     }
     a {
         &:hover {
             color: $primary;
         }
-        &.video-expand { 
+        &.video-expand {
             &:hover {
                 color: $white;
             }
@@ -4579,12 +4710,13 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: $primary !important;
-            border:1px solid $primary !important;
+            border: 1px solid $primary !important;
             color: $white !important;
         }
     }
     .select2-container--default {
-        &.select2-container--open.select2-container--below .select2-selection--single {
+        &.select2-container--open.select2-container--below
+            .select2-selection--single {
             border-color: $primary;
         }
         .select2-results__option--highlighted[aria-selected] {
@@ -4604,8 +4736,8 @@ body.data-layout-transparent {
     }
     .form-check-input {
         &:checked {
-          background-color: $primary;
-          border-color: $primary;
+            background-color: $primary;
+            border-color: $primary;
         }
     }
     .sidebar-contact .toggle-theme {
@@ -4620,27 +4752,36 @@ body.data-layout-transparent {
                 color: $primary;
             }
         }
-    }  
-    #sales-income,  #revenue-income,  #leads_stage, #s-col, #s-col-stacked {
+    }
+    #sales-income,
+    #revenue-income,
+    #leads_stage,
+    #s-col,
+    #s-col-stacked {
         .apexcharts-bar-series {
             .apexcharts-series:nth-child(1) path {
                 fill: $primary;
             }
         }
     }
-    #deals_stage, #emp-department, #s-bar, #mixed-chart  {
+    #deals_stage,
+    #emp-department,
+    #s-bar,
+    #mixed-chart {
         .apexcharts-bar-series {
             .apexcharts-series path {
                 fill: $primary;
             }
         }
     }
-    #mixed-chart, #s-col-stacked, #s-col {
+    #mixed-chart,
+    #s-col-stacked,
+    #s-col {
         .apexcharts-legend-series:first-child .apexcharts-legend-marker {
-            fill: $primary; 
+            fill: $primary;
         }
     }
-    #s-line  {
+    #s-line {
         .apexcharts-line-series {
             .apexcharts-series path {
                 stroke: $primary;
@@ -4650,19 +4791,21 @@ body.data-layout-transparent {
             }
         }
     }
-    #chart-bar-stacked, #chart-bar, #chart-bar-rotated {
+    #chart-bar-stacked,
+    #chart-bar,
+    #chart-bar-rotated {
         .c3-target-data2 .c3-bar {
-            fill: $primary !important; 
+            fill: $primary !important;
         }
     }
     #chart-spline-rotated .c3-target-data2 {
         .c3-line {
             stroke: $primary !important;
-        } 
-        .c3-circle {
-            fill: $primary; 
         }
-    }  
+        .c3-circle {
+            fill: $primary;
+        }
+    }
     .nav.tab-style-1 .nav-link.active {
         background-color: $primary !important;
     }
@@ -4670,11 +4813,11 @@ body.data-layout-transparent {
         color: $primary;
     }
 }
-[data-color="brightblue"]{
-    $primary: #4680FF;
+[data-color="brightblue"] {
+    $primary: #4680ff;
     .sidebar {
         .sidebar-menu > ul {
-            &  > li {
+            & > li {
                 ul {
                     li {
                         a {
@@ -4682,27 +4825,27 @@ body.data-layout-transparent {
                                 color: $primary;
                             }
                         }
-                        &.active {                
+                        &.active {
                             a {
-                                span, i {
+                                span,
+                                i {
                                     color: $primary;
                                 }
                             }
                         }
                     }
                     & > li {
-                        &.active a{
+                        &.active a {
                             .menu-arrow {
                                 &::before {
                                     border-right: 2px solid $primary;
                                     border-bottom: 2px solid $primary;
                                 }
                             }
-                            &.subdrop{
+                            &.subdrop {
                                 color: $primary;
                                 span {
                                     color: $primary;
-                                    
                                 }
                             }
                         }
@@ -4711,16 +4854,16 @@ body.data-layout-transparent {
             }
             li {
                 .submenu > {
-                    ul{
-                        li{
-                            a{
+                    ul {
+                        li {
+                            a {
                                 &:before {
                                     background: $primary;
                                 }
                                 &.active {
                                     color: $primary;
                                 }
-                                &:hover {                                    
+                                &:hover {
                                     color: $primary;
                                 }
                             }
@@ -4729,7 +4872,8 @@ body.data-layout-transparent {
                 }
                 .submenu.submenu-two {
                     a {
-                        &.subdrop, &.active {
+                        &.subdrop,
+                        &.active {
                             color: $primary;
                         }
                     }
@@ -4747,15 +4891,16 @@ body.data-layout-transparent {
             .sidebar-right {
                 ul {
                     li {
-                        &.submenu {    
+                        &.submenu {
                             ul {
                                 & > li {
-                                    & > a{
-                                         &:hover, &.active {
-                                             color: $primary;
-                                         }
-                                     }
-                                 }
+                                    & > a {
+                                        &:hover,
+                                        &.active {
+                                            color: $primary;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -4775,7 +4920,12 @@ body.data-layout-transparent {
             border: 1px solid darken($primary, 7%);
         }
     }
-    .btn-check:checked+.btn, .btn.active, .btn.show, .btn.show:hover, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    .btn-check:checked + .btn,
+    .btn.active,
+    .btn.show,
+    .btn.show:hover,
+    .btn:first-child:active,
+    :not(.btn-check) + .btn:active {
         background-color: $primary;
         border-color: $primary;
     }
@@ -4784,7 +4934,7 @@ body.data-layout-transparent {
         &:hover,
         &:focus,
         &:active {
-          color: darken($primary, 7%);
+            color: darken($primary, 7%);
         }
     }
     .text-primary {
@@ -4809,7 +4959,8 @@ body.data-layout-transparent {
     .border-primary {
         border-color: $primary !important;
     }
-    .nav-tabs.nav-tabs-bottom li a.active, .nav-tabs.nav-tabs-bottom li a:hover {
+    .nav-tabs.nav-tabs-bottom li a.active,
+    .nav-tabs.nav-tabs-bottom li a:hover {
         border-bottom-color: $primary;
         color: $primary;
     }
@@ -4817,7 +4968,6 @@ body.data-layout-transparent {
         &.badge-soft-primary {
             background: rgba($primary, 0.1);
             color: $primary;
-
         }
     }
     a {
@@ -4834,11 +4984,12 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: $primary !important;
-            border:1px solid $primary !important;
+            border: 1px solid $primary !important;
         }
     }
     .select2-container--default {
-        &.select2-container--open.select2-container--below .select2-selection--single {
+        &.select2-container--open.select2-container--below
+            .select2-selection--single {
             border-color: $primary;
         }
         .select2-results__option--highlighted[aria-selected] {
@@ -4858,8 +5009,8 @@ body.data-layout-transparent {
     }
     .form-check-input {
         &:checked {
-          background-color: $primary;
-          border-color: $primary;
+            background-color: $primary;
+            border-color: $primary;
         }
     }
     .sidebar-contact .toggle-theme {
@@ -4872,26 +5023,35 @@ body.data-layout-transparent {
             }
         }
     }
-    #sales-income,  #revenue-income,  #leads_stage, #s-col, #s-col-stacked {
+    #sales-income,
+    #revenue-income,
+    #leads_stage,
+    #s-col,
+    #s-col-stacked {
         .apexcharts-bar-series {
             .apexcharts-series:nth-child(1) path {
                 fill: $primary;
             }
         }
     }
-    #deals_stage, #emp-department, #s-bar, #mixed-chart  {
+    #deals_stage,
+    #emp-department,
+    #s-bar,
+    #mixed-chart {
         .apexcharts-bar-series {
             .apexcharts-series path {
                 fill: $primary;
             }
         }
     }
-    #mixed-chart, #s-col-stacked, #s-col {
+    #mixed-chart,
+    #s-col-stacked,
+    #s-col {
         .apexcharts-legend-series:first-child .apexcharts-legend-marker {
-            fill: $primary; 
+            fill: $primary;
         }
     }
-    #s-line  {
+    #s-line {
         .apexcharts-line-series {
             .apexcharts-series path {
                 stroke: $primary;
@@ -4901,19 +5061,21 @@ body.data-layout-transparent {
             }
         }
     }
-    #chart-bar-stacked, #chart-bar, #chart-bar-rotated {
+    #chart-bar-stacked,
+    #chart-bar,
+    #chart-bar-rotated {
         .c3-target-data2 .c3-bar {
-            fill: $primary !important; 
+            fill: $primary !important;
         }
     }
     #chart-spline-rotated .c3-target-data2 {
         .c3-line {
             stroke: $primary !important;
-        } 
-        .c3-circle {
-            fill: $primary; 
         }
-    }  
+        .c3-circle {
+            fill: $primary;
+        }
+    }
     .nav.tab-style-1 .nav-link.active {
         background-color: $primary !important;
     }
@@ -4921,11 +5083,11 @@ body.data-layout-transparent {
         color: $primary;
     }
 }
-[data-color="lunargreen"]{
-    $primary: #365E32;
+[data-color="lunargreen"] {
+    $primary: #365e32;
     .sidebar {
         .sidebar-menu > ul {
-            &  > li {
+            & > li {
                 ul {
                     li {
                         a {
@@ -4933,27 +5095,27 @@ body.data-layout-transparent {
                                 color: $primary;
                             }
                         }
-                        &.active {                
+                        &.active {
                             a {
-                                span, i {
+                                span,
+                                i {
                                     color: $primary;
                                 }
                             }
                         }
                     }
                     & > li {
-                        &.active a{
+                        &.active a {
                             .menu-arrow {
                                 &::before {
                                     border-right: 2px solid $primary;
                                     border-bottom: 2px solid $primary;
                                 }
                             }
-                            &.subdrop{
+                            &.subdrop {
                                 color: $primary;
                                 span {
                                     color: $primary;
-                                    
                                 }
                             }
                         }
@@ -4962,16 +5124,16 @@ body.data-layout-transparent {
             }
             li {
                 .submenu > {
-                    ul{
-                        li{
-                            a{
+                    ul {
+                        li {
+                            a {
                                 &:before {
                                     background: $primary;
                                 }
                                 &.active {
                                     color: $primary;
                                 }
-                                &:hover {                                    
+                                &:hover {
                                     color: $primary;
                                 }
                             }
@@ -4980,7 +5142,8 @@ body.data-layout-transparent {
                 }
                 .submenu.submenu-two {
                     a {
-                        &.subdrop, &.active {
+                        &.subdrop,
+                        &.active {
                             color: $primary;
                         }
                     }
@@ -4998,15 +5161,16 @@ body.data-layout-transparent {
             .sidebar-right {
                 ul {
                     li {
-                        &.submenu {    
+                        &.submenu {
                             ul {
                                 & > li {
-                                    & > a{
-                                         &:hover, &.active {
-                                             color: $primary;
-                                         }
-                                     }
-                                 }
+                                    & > a {
+                                        &:hover,
+                                        &.active {
+                                            color: $primary;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -5026,7 +5190,12 @@ body.data-layout-transparent {
             border: 1px solid darken($primary, 7%);
         }
     }
-    .btn-check:checked+.btn, .btn.active, .btn.show, .btn.show:hover, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    .btn-check:checked + .btn,
+    .btn.active,
+    .btn.show,
+    .btn.show:hover,
+    .btn:first-child:active,
+    :not(.btn-check) + .btn:active {
         background-color: $primary;
         border-color: $primary;
     }
@@ -5035,7 +5204,7 @@ body.data-layout-transparent {
         &:hover,
         &:focus,
         &:active {
-          color: darken($primary, 7%);
+            color: darken($primary, 7%);
         }
     }
     .text-primary {
@@ -5060,7 +5229,8 @@ body.data-layout-transparent {
     .border-primary {
         border-color: $primary !important;
     }
-    .nav-tabs.nav-tabs-bottom li a.active, .nav-tabs.nav-tabs-bottom li a:hover {
+    .nav-tabs.nav-tabs-bottom li a.active,
+    .nav-tabs.nav-tabs-bottom li a:hover {
         border-bottom-color: $primary;
         color: $primary;
     }
@@ -5068,7 +5238,6 @@ body.data-layout-transparent {
         &.badge-soft-primary {
             background: rgba($primary, 0.1);
             color: $primary;
-
         }
     }
     a {
@@ -5085,11 +5254,12 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: $primary !important;
-            border:1px solid $primary !important;
+            border: 1px solid $primary !important;
         }
     }
     .select2-container--default {
-        &.select2-container--open.select2-container--below .select2-selection--single {
+        &.select2-container--open.select2-container--below
+            .select2-selection--single {
             border-color: $primary;
         }
         .select2-results__option--highlighted[aria-selected] {
@@ -5109,8 +5279,8 @@ body.data-layout-transparent {
     }
     .form-check-input {
         &:checked {
-          background-color: $primary;
-          border-color: $primary;
+            background-color: $primary;
+            border-color: $primary;
         }
     }
     .sidebar-contact .toggle-theme {
@@ -5123,26 +5293,35 @@ body.data-layout-transparent {
             }
         }
     }
-    #sales-income,  #revenue-income,  #leads_stage, #s-col, #s-col-stacked {
+    #sales-income,
+    #revenue-income,
+    #leads_stage,
+    #s-col,
+    #s-col-stacked {
         .apexcharts-bar-series {
             .apexcharts-series:nth-child(1) path {
                 fill: $primary;
             }
         }
     }
-    #deals_stage, #emp-department, #s-bar, #mixed-chart  {
+    #deals_stage,
+    #emp-department,
+    #s-bar,
+    #mixed-chart {
         .apexcharts-bar-series {
             .apexcharts-series path {
                 fill: $primary;
             }
         }
     }
-    #mixed-chart, #s-col-stacked, #s-col {
+    #mixed-chart,
+    #s-col-stacked,
+    #s-col {
         .apexcharts-legend-series:first-child .apexcharts-legend-marker {
-            fill: $primary; 
+            fill: $primary;
         }
     }
-    #s-line  {
+    #s-line {
         .apexcharts-line-series {
             .apexcharts-series path {
                 stroke: $primary;
@@ -5152,19 +5331,21 @@ body.data-layout-transparent {
             }
         }
     }
-    #chart-bar-stacked, #chart-bar, #chart-bar-rotated {
+    #chart-bar-stacked,
+    #chart-bar,
+    #chart-bar-rotated {
         .c3-target-data2 .c3-bar {
-            fill: $primary !important; 
+            fill: $primary !important;
         }
     }
     #chart-spline-rotated .c3-target-data2 {
         .c3-line {
             stroke: $primary !important;
-        } 
-        .c3-circle {
-            fill: $primary; 
         }
-    }  
+        .c3-circle {
+            fill: $primary;
+        }
+    }
     .nav.tab-style-1 .nav-link.active {
         background-color: $primary !important;
     }
@@ -5172,11 +5353,11 @@ body.data-layout-transparent {
         color: $primary;
     }
 }
-[data-color="lavendar"]{
-    $primary: #673AB7;
+[data-color="lavendar"] {
+    $primary: #673ab7;
     .sidebar {
         .sidebar-menu > ul {
-            &  > li {
+            & > li {
                 ul {
                     li {
                         a {
@@ -5184,27 +5365,27 @@ body.data-layout-transparent {
                                 color: $primary;
                             }
                         }
-                        &.active {                
+                        &.active {
                             a {
-                                span, i {
+                                span,
+                                i {
                                     color: $primary;
                                 }
                             }
                         }
                     }
                     & > li {
-                        &.active a{
+                        &.active a {
                             .menu-arrow {
                                 &::before {
                                     border-right: 2px solid $primary;
                                     border-bottom: 2px solid $primary;
                                 }
                             }
-                            &.subdrop{
+                            &.subdrop {
                                 color: $primary;
                                 span {
                                     color: $primary;
-                                    
                                 }
                             }
                         }
@@ -5213,16 +5394,16 @@ body.data-layout-transparent {
             }
             li {
                 .submenu > {
-                    ul{
-                        li{
-                            a{
+                    ul {
+                        li {
+                            a {
                                 &:before {
                                     background: $primary;
                                 }
                                 &.active {
                                     color: $primary;
                                 }
-                                &:hover {                                    
+                                &:hover {
                                     color: $primary;
                                 }
                             }
@@ -5231,7 +5412,8 @@ body.data-layout-transparent {
                 }
                 .submenu.submenu-two {
                     a {
-                        &.subdrop, &.active {
+                        &.subdrop,
+                        &.active {
                             color: $primary;
                         }
                     }
@@ -5249,15 +5431,16 @@ body.data-layout-transparent {
             .sidebar-right {
                 ul {
                     li {
-                        &.submenu {    
+                        &.submenu {
                             ul {
                                 & > li {
-                                    & > a{
-                                         &:hover, &.active {
-                                             color: $primary;
-                                         }
-                                     }
-                                 }
+                                    & > a {
+                                        &:hover,
+                                        &.active {
+                                            color: $primary;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -5277,7 +5460,12 @@ body.data-layout-transparent {
             border: 1px solid darken($primary, 7%);
         }
     }
-    .btn-check:checked+.btn, .btn.active, .btn.show, .btn.show:hover, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    .btn-check:checked + .btn,
+    .btn.active,
+    .btn.show,
+    .btn.show:hover,
+    .btn:first-child:active,
+    :not(.btn-check) + .btn:active {
         background-color: $primary;
         border-color: $primary;
     }
@@ -5286,7 +5474,7 @@ body.data-layout-transparent {
         &:hover,
         &:focus,
         &:active {
-          color: darken($primary, 7%);
+            color: darken($primary, 7%);
         }
     }
     .text-primary {
@@ -5311,7 +5499,8 @@ body.data-layout-transparent {
     .border-primary {
         border-color: $primary !important;
     }
-    .nav-tabs.nav-tabs-bottom li a.active, .nav-tabs.nav-tabs-bottom li a:hover {
+    .nav-tabs.nav-tabs-bottom li a.active,
+    .nav-tabs.nav-tabs-bottom li a:hover {
         border-bottom-color: $primary;
         color: $primary;
     }
@@ -5319,7 +5508,6 @@ body.data-layout-transparent {
         &.badge-soft-primary {
             background: rgba($primary, 0.1);
             color: $primary;
-
         }
     }
     a {
@@ -5336,11 +5524,12 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: $primary !important;
-            border:1px solid $primary !important;
+            border: 1px solid $primary !important;
         }
     }
     .select2-container--default {
-        &.select2-container--open.select2-container--below .select2-selection--single {
+        &.select2-container--open.select2-container--below
+            .select2-selection--single {
             border-color: $primary;
         }
         .select2-results__option--highlighted[aria-selected] {
@@ -5360,8 +5549,8 @@ body.data-layout-transparent {
     }
     .form-check-input {
         &:checked {
-          background-color: $primary;
-          border-color: $primary;
+            background-color: $primary;
+            border-color: $primary;
         }
     }
     .sidebar-contact .toggle-theme {
@@ -5374,26 +5563,35 @@ body.data-layout-transparent {
             }
         }
     }
-    #sales-income,  #revenue-income,  #leads_stage, #s-col, #s-col-stacked {
+    #sales-income,
+    #revenue-income,
+    #leads_stage,
+    #s-col,
+    #s-col-stacked {
         .apexcharts-bar-series {
             .apexcharts-series:nth-child(1) path {
                 fill: $primary;
             }
         }
     }
-    #deals_stage, #emp-department, #s-bar, #mixed-chart  {
+    #deals_stage,
+    #emp-department,
+    #s-bar,
+    #mixed-chart {
         .apexcharts-bar-series {
             .apexcharts-series path {
                 fill: $primary;
             }
         }
     }
-    #mixed-chart, #s-col-stacked, #s-col {
+    #mixed-chart,
+    #s-col-stacked,
+    #s-col {
         .apexcharts-legend-series:first-child .apexcharts-legend-marker {
-            fill: $primary; 
+            fill: $primary;
         }
     }
-    #s-line  {
+    #s-line {
         .apexcharts-line-series {
             .apexcharts-series path {
                 stroke: $primary;
@@ -5403,19 +5601,21 @@ body.data-layout-transparent {
             }
         }
     }
-    #chart-bar-stacked, #chart-bar, #chart-bar-rotated {
+    #chart-bar-stacked,
+    #chart-bar,
+    #chart-bar-rotated {
         .c3-target-data2 .c3-bar {
-            fill: $primary !important; 
+            fill: $primary !important;
         }
     }
     #chart-spline-rotated .c3-target-data2 {
         .c3-line {
             stroke: $primary !important;
-        } 
-        .c3-circle {
-            fill: $primary; 
         }
-    }  
+        .c3-circle {
+            fill: $primary;
+        }
+    }
     .nav.tab-style-1 .nav-link.active {
         background-color: $primary !important;
     }
@@ -5423,11 +5623,11 @@ body.data-layout-transparent {
         color: $primary;
     }
 }
-[data-color="magenta"]{
-    $primary: #E83E8C;
+[data-color="magenta"] {
+    $primary: #e83e8c;
     .sidebar {
         .sidebar-menu > ul {
-            &  > li {
+            & > li {
                 ul {
                     li {
                         a {
@@ -5435,27 +5635,27 @@ body.data-layout-transparent {
                                 color: $primary;
                             }
                         }
-                        &.active {                
+                        &.active {
                             a {
-                                span, i {
+                                span,
+                                i {
                                     color: $primary;
                                 }
                             }
                         }
                     }
                     & > li {
-                        &.active a{
+                        &.active a {
                             .menu-arrow {
                                 &::before {
                                     border-right: 2px solid $primary;
                                     border-bottom: 2px solid $primary;
                                 }
                             }
-                            &.subdrop{
+                            &.subdrop {
                                 color: $primary;
                                 span {
                                     color: $primary;
-                                    
                                 }
                             }
                         }
@@ -5464,16 +5664,16 @@ body.data-layout-transparent {
             }
             li {
                 .submenu > {
-                    ul{
-                        li{
-                            a{
+                    ul {
+                        li {
+                            a {
                                 &:before {
                                     background: $primary;
                                 }
                                 &.active {
                                     color: $primary;
                                 }
-                                &:hover {                                    
+                                &:hover {
                                     color: $primary;
                                 }
                             }
@@ -5482,7 +5682,8 @@ body.data-layout-transparent {
                 }
                 .submenu.submenu-two {
                     a {
-                        &.subdrop, &.active {
+                        &.subdrop,
+                        &.active {
                             color: $primary;
                         }
                     }
@@ -5500,15 +5701,16 @@ body.data-layout-transparent {
             .sidebar-right {
                 ul {
                     li {
-                        &.submenu {    
+                        &.submenu {
                             ul {
                                 & > li {
-                                    & > a{
-                                         &:hover, &.active {
-                                             color: $primary;
-                                         }
-                                     }
-                                 }
+                                    & > a {
+                                        &:hover,
+                                        &.active {
+                                            color: $primary;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -5528,7 +5730,12 @@ body.data-layout-transparent {
             border: 1px solid darken($primary, 7%);
         }
     }
-    .btn-check:checked+.btn, .btn.active, .btn.show, .btn.show:hover, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    .btn-check:checked + .btn,
+    .btn.active,
+    .btn.show,
+    .btn.show:hover,
+    .btn:first-child:active,
+    :not(.btn-check) + .btn:active {
         background-color: $primary;
         border-color: $primary;
     }
@@ -5537,7 +5744,7 @@ body.data-layout-transparent {
         &:hover,
         &:focus,
         &:active {
-          color: darken($primary, 7%);
+            color: darken($primary, 7%);
         }
     }
     .text-primary {
@@ -5562,7 +5769,8 @@ body.data-layout-transparent {
     .border-primary {
         border-color: $primary !important;
     }
-    .nav-tabs.nav-tabs-bottom li a.active, .nav-tabs.nav-tabs-bottom li a:hover {
+    .nav-tabs.nav-tabs-bottom li a.active,
+    .nav-tabs.nav-tabs-bottom li a:hover {
         border-bottom-color: $primary;
         color: $primary;
     }
@@ -5570,7 +5778,6 @@ body.data-layout-transparent {
         &.badge-soft-primary {
             background: rgba($primary, 0.1);
             color: $primary;
-
         }
     }
     a {
@@ -5587,11 +5794,12 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: $primary !important;
-            border:1px solid $primary !important;
+            border: 1px solid $primary !important;
         }
     }
     .select2-container--default {
-        &.select2-container--open.select2-container--below .select2-selection--single {
+        &.select2-container--open.select2-container--below
+            .select2-selection--single {
             border-color: $primary;
         }
         .select2-results__option--highlighted[aria-selected] {
@@ -5611,8 +5819,8 @@ body.data-layout-transparent {
     }
     .form-check-input {
         &:checked {
-          background-color: $primary;
-          border-color: $primary;
+            background-color: $primary;
+            border-color: $primary;
         }
     }
     .sidebar-contact .toggle-theme {
@@ -5625,26 +5833,35 @@ body.data-layout-transparent {
             }
         }
     }
-    #sales-income,  #revenue-income,  #leads_stage, #s-col, #s-col-stacked {
+    #sales-income,
+    #revenue-income,
+    #leads_stage,
+    #s-col,
+    #s-col-stacked {
         .apexcharts-bar-series {
             .apexcharts-series:nth-child(1) path {
                 fill: $primary;
             }
         }
     }
-    #deals_stage, #emp-department, #s-bar, #mixed-chart  {
+    #deals_stage,
+    #emp-department,
+    #s-bar,
+    #mixed-chart {
         .apexcharts-bar-series {
             .apexcharts-series path {
                 fill: $primary;
             }
         }
     }
-    #mixed-chart, #s-col-stacked, #s-col {
+    #mixed-chart,
+    #s-col-stacked,
+    #s-col {
         .apexcharts-legend-series:first-child .apexcharts-legend-marker {
-            fill: $primary; 
+            fill: $primary;
         }
     }
-    #s-line  {
+    #s-line {
         .apexcharts-line-series {
             .apexcharts-series path {
                 stroke: $primary;
@@ -5654,19 +5871,21 @@ body.data-layout-transparent {
             }
         }
     }
-    #chart-bar-stacked, #chart-bar, #chart-bar-rotated {
+    #chart-bar-stacked,
+    #chart-bar,
+    #chart-bar-rotated {
         .c3-target-data2 .c3-bar {
-            fill: $primary !important; 
+            fill: $primary !important;
         }
     }
     #chart-spline-rotated .c3-target-data2 {
         .c3-line {
             stroke: $primary !important;
-        } 
-        .c3-circle {
-            fill: $primary; 
         }
-    }  
+        .c3-circle {
+            fill: $primary;
+        }
+    }
     .nav.tab-style-1 .nav-link.active {
         background-color: $primary !important;
     }
@@ -5674,11 +5893,11 @@ body.data-layout-transparent {
         color: $primary;
     }
 }
-[data-color="chromeyellow"]{
-    $primary: #FF9B04;
+[data-color="chromeyellow"] {
+    $primary: #ff9b04;
     .sidebar {
         .sidebar-menu > ul {
-            &  > li {
+            & > li {
                 ul {
                     li {
                         a {
@@ -5686,27 +5905,27 @@ body.data-layout-transparent {
                                 color: $primary;
                             }
                         }
-                        &.active {                
+                        &.active {
                             a {
-                                span, i {
+                                span,
+                                i {
                                     color: $primary;
                                 }
                             }
                         }
                     }
                     & > li {
-                        &.active a{
+                        &.active a {
                             .menu-arrow {
                                 &::before {
                                     border-right: 2px solid $primary;
                                     border-bottom: 2px solid $primary;
                                 }
                             }
-                            &.subdrop{
+                            &.subdrop {
                                 color: $primary;
                                 span {
                                     color: $primary;
-                                    
                                 }
                             }
                         }
@@ -5715,16 +5934,16 @@ body.data-layout-transparent {
             }
             li {
                 .submenu > {
-                    ul{
-                        li{
-                            a{
+                    ul {
+                        li {
+                            a {
                                 &:before {
                                     background: $primary;
                                 }
                                 &.active {
                                     color: $primary;
                                 }
-                                &:hover {                                    
+                                &:hover {
                                     color: $primary;
                                 }
                             }
@@ -5733,7 +5952,8 @@ body.data-layout-transparent {
                 }
                 .submenu.submenu-two {
                     a {
-                        &.subdrop, &.active {
+                        &.subdrop,
+                        &.active {
                             color: $primary;
                         }
                     }
@@ -5751,15 +5971,16 @@ body.data-layout-transparent {
             .sidebar-right {
                 ul {
                     li {
-                        &.submenu {    
+                        &.submenu {
                             ul {
                                 & > li {
-                                    & > a{
-                                         &:hover, &.active {
-                                             color: $primary;
-                                         }
-                                     }
-                                 }
+                                    & > a {
+                                        &:hover,
+                                        &.active {
+                                            color: $primary;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -5779,7 +6000,12 @@ body.data-layout-transparent {
             border: 1px solid darken($primary, 7%);
         }
     }
-    .btn-check:checked+.btn, .btn.active, .btn.show, .btn.show:hover, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    .btn-check:checked + .btn,
+    .btn.active,
+    .btn.show,
+    .btn.show:hover,
+    .btn:first-child:active,
+    :not(.btn-check) + .btn:active {
         background-color: $primary;
         border-color: $primary;
     }
@@ -5788,7 +6014,7 @@ body.data-layout-transparent {
         &:hover,
         &:focus,
         &:active {
-          color: darken($primary, 7%);
+            color: darken($primary, 7%);
         }
     }
     .text-primary {
@@ -5813,7 +6039,8 @@ body.data-layout-transparent {
     .border-primary {
         border-color: $primary !important;
     }
-    .nav-tabs.nav-tabs-bottom li a.active, .nav-tabs.nav-tabs-bottom li a:hover {
+    .nav-tabs.nav-tabs-bottom li a.active,
+    .nav-tabs.nav-tabs-bottom li a:hover {
         border-bottom-color: $primary;
         color: $primary;
     }
@@ -5821,7 +6048,6 @@ body.data-layout-transparent {
         &.badge-soft-primary {
             background: rgba($primary, 0.1);
             color: $primary;
-
         }
     }
     a {
@@ -5838,11 +6064,12 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: $primary !important;
-            border:1px solid $primary !important;
+            border: 1px solid $primary !important;
         }
     }
     .select2-container--default {
-        &.select2-container--open.select2-container--below .select2-selection--single {
+        &.select2-container--open.select2-container--below
+            .select2-selection--single {
             border-color: $primary;
         }
         .select2-results__option--highlighted[aria-selected] {
@@ -5862,8 +6089,8 @@ body.data-layout-transparent {
     }
     .form-check-input {
         &:checked {
-          background-color: $primary;
-          border-color: $primary;
+            background-color: $primary;
+            border-color: $primary;
         }
     }
     .sidebar-contact .toggle-theme {
@@ -5876,26 +6103,35 @@ body.data-layout-transparent {
             }
         }
     }
-    #sales-income,  #revenue-income,  #leads_stage, #s-col, #s-col-stacked {
+    #sales-income,
+    #revenue-income,
+    #leads_stage,
+    #s-col,
+    #s-col-stacked {
         .apexcharts-bar-series {
             .apexcharts-series:nth-child(1) path {
                 fill: $primary;
             }
         }
     }
-    #deals_stage, #emp-department, #s-bar, #mixed-chart  {
+    #deals_stage,
+    #emp-department,
+    #s-bar,
+    #mixed-chart {
         .apexcharts-bar-series {
             .apexcharts-series path {
                 fill: $primary;
             }
         }
     }
-    #mixed-chart, #s-col-stacked, #s-col {
+    #mixed-chart,
+    #s-col-stacked,
+    #s-col {
         .apexcharts-legend-series:first-child .apexcharts-legend-marker {
-            fill: $primary; 
+            fill: $primary;
         }
     }
-    #s-line  {
+    #s-line {
         .apexcharts-line-series {
             .apexcharts-series path {
                 stroke: $primary;
@@ -5905,19 +6141,21 @@ body.data-layout-transparent {
             }
         }
     }
-    #chart-bar-stacked, #chart-bar, #chart-bar-rotated {
+    #chart-bar-stacked,
+    #chart-bar,
+    #chart-bar-rotated {
         .c3-target-data2 .c3-bar {
-            fill: $primary !important; 
+            fill: $primary !important;
         }
     }
     #chart-spline-rotated .c3-target-data2 {
         .c3-line {
             stroke: $primary !important;
-        } 
-        .c3-circle {
-            fill: $primary; 
         }
-    }  
+        .c3-circle {
+            fill: $primary;
+        }
+    }
     .nav.tab-style-1 .nav-link.active {
         background-color: $primary !important;
     }
@@ -5925,11 +6163,11 @@ body.data-layout-transparent {
         color: $primary;
     }
 }
-[data-color="lavared"]{
-    $primary: #DC2626;
+[data-color="lavared"] {
+    $primary: #dc2626;
     .sidebar {
         .sidebar-menu > ul {
-            &  > li {
+            & > li {
                 ul {
                     li {
                         a {
@@ -5937,27 +6175,27 @@ body.data-layout-transparent {
                                 color: $primary;
                             }
                         }
-                        &.active {                
+                        &.active {
                             a {
-                                span, i {
+                                span,
+                                i {
                                     color: $primary;
                                 }
                             }
                         }
                     }
                     & > li {
-                        &.active a{
+                        &.active a {
                             .menu-arrow {
                                 &::before {
                                     border-right: 2px solid $primary;
                                     border-bottom: 2px solid $primary;
                                 }
                             }
-                            &.subdrop{
+                            &.subdrop {
                                 color: $primary;
                                 span {
                                     color: $primary;
-                                    
                                 }
                             }
                         }
@@ -5966,16 +6204,16 @@ body.data-layout-transparent {
             }
             li {
                 .submenu > {
-                    ul{
-                        li{
-                            a{
+                    ul {
+                        li {
+                            a {
                                 &:before {
                                     background: $primary;
                                 }
                                 &.active {
                                     color: $primary;
                                 }
-                                &:hover {                                    
+                                &:hover {
                                     color: $primary;
                                 }
                             }
@@ -5984,7 +6222,8 @@ body.data-layout-transparent {
                 }
                 .submenu.submenu-two {
                     a {
-                        &.subdrop, &.active {
+                        &.subdrop,
+                        &.active {
                             color: $primary;
                         }
                     }
@@ -6002,15 +6241,16 @@ body.data-layout-transparent {
             .sidebar-right {
                 ul {
                     li {
-                        &.submenu {    
+                        &.submenu {
                             ul {
                                 & > li {
-                                    & > a{
-                                         &:hover, &.active {
-                                             color: $primary;
-                                         }
-                                     }
-                                 }
+                                    & > a {
+                                        &:hover,
+                                        &.active {
+                                            color: $primary;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -6030,7 +6270,12 @@ body.data-layout-transparent {
             border: 1px solid darken($primary, 7%);
         }
     }
-    .btn-check:checked+.btn, .btn.active, .btn.show, .btn.show:hover, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    .btn-check:checked + .btn,
+    .btn.active,
+    .btn.show,
+    .btn.show:hover,
+    .btn:first-child:active,
+    :not(.btn-check) + .btn:active {
         background-color: $primary;
         border-color: $primary;
     }
@@ -6039,7 +6284,7 @@ body.data-layout-transparent {
         &:hover,
         &:focus,
         &:active {
-          color: darken($primary, 7%);
+            color: darken($primary, 7%);
         }
     }
     .text-primary {
@@ -6064,7 +6309,8 @@ body.data-layout-transparent {
     .border-primary {
         border-color: $primary !important;
     }
-    .nav-tabs.nav-tabs-bottom li a.active, .nav-tabs.nav-tabs-bottom li a:hover {
+    .nav-tabs.nav-tabs-bottom li a.active,
+    .nav-tabs.nav-tabs-bottom li a:hover {
         border-bottom-color: $primary;
         color: $primary;
     }
@@ -6072,7 +6318,6 @@ body.data-layout-transparent {
         &.badge-soft-primary {
             background: rgba($primary, 0.1);
             color: $primary;
-
         }
     }
     a {
@@ -6089,11 +6334,12 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: $primary !important;
-            border:1px solid $primary !important;
+            border: 1px solid $primary !important;
         }
     }
     .select2-container--default {
-        &.select2-container--open.select2-container--below .select2-selection--single {
+        &.select2-container--open.select2-container--below
+            .select2-selection--single {
             border-color: $primary;
         }
         .select2-results__option--highlighted[aria-selected] {
@@ -6113,8 +6359,8 @@ body.data-layout-transparent {
     }
     .form-check-input {
         &:checked {
-          background-color: $primary;
-          border-color: $primary;
+            background-color: $primary;
+            border-color: $primary;
         }
     }
     .sidebar-contact .toggle-theme {
@@ -6127,26 +6373,35 @@ body.data-layout-transparent {
             }
         }
     }
-    #sales-income,  #revenue-income,  #leads_stage, #s-col, #s-col-stacked {
+    #sales-income,
+    #revenue-income,
+    #leads_stage,
+    #s-col,
+    #s-col-stacked {
         .apexcharts-bar-series {
             .apexcharts-series:nth-child(1) path {
                 fill: $primary;
             }
         }
     }
-    #deals_stage, #emp-department, #s-bar, #mixed-chart  {
+    #deals_stage,
+    #emp-department,
+    #s-bar,
+    #mixed-chart {
         .apexcharts-bar-series {
             .apexcharts-series path {
                 fill: $primary;
             }
         }
     }
-    #mixed-chart, #s-col-stacked, #s-col {
+    #mixed-chart,
+    #s-col-stacked,
+    #s-col {
         .apexcharts-legend-series:first-child .apexcharts-legend-marker {
-            fill: $primary; 
+            fill: $primary;
         }
     }
-    #s-line  {
+    #s-line {
         .apexcharts-line-series {
             .apexcharts-series path {
                 stroke: $primary;
@@ -6156,19 +6411,21 @@ body.data-layout-transparent {
             }
         }
     }
-    #chart-bar-stacked, #chart-bar, #chart-bar-rotated {
+    #chart-bar-stacked,
+    #chart-bar,
+    #chart-bar-rotated {
         .c3-target-data2 .c3-bar {
-            fill: $primary !important; 
+            fill: $primary !important;
         }
     }
     #chart-spline-rotated .c3-target-data2 {
         .c3-line {
             stroke: $primary !important;
-        } 
-        .c3-circle {
-            fill: $primary; 
         }
-    }  
+        .c3-circle {
+            fill: $primary;
+        }
+    }
     .nav.tab-style-1 .nav-link.active {
         background-color: $primary !important;
     }
@@ -6176,11 +6433,11 @@ body.data-layout-transparent {
         color: $primary;
     }
 }
-[data-color="all"]{
+[data-color="all"] {
     $primary: var(--primary-rgb-picr);
     .sidebar {
         .sidebar-menu > ul {
-            &  > li {
+            & > li {
                 ul {
                     li {
                         a {
@@ -6188,27 +6445,27 @@ body.data-layout-transparent {
                                 color: rgba($primary, 1);
                             }
                         }
-                        &.active {                
+                        &.active {
                             a {
-                                span, i {
+                                span,
+                                i {
                                     color: rgba($primary, 1);
                                 }
                             }
                         }
                     }
                     & > li {
-                        &.active a{
+                        &.active a {
                             .menu-arrow {
                                 &::before {
                                     border-right: 2px solid rgba($primary, 1);
                                     border-bottom: 2px solid rgba($primary, 1);
                                 }
                             }
-                            &.subdrop{
+                            &.subdrop {
                                 color: rgba($primary, 1);
                                 span {
                                     color: rgba($primary, 1);
-                                    
                                 }
                             }
                         }
@@ -6217,16 +6474,16 @@ body.data-layout-transparent {
             }
             li {
                 .submenu > {
-                    ul{
-                        li{
-                            a{
+                    ul {
+                        li {
+                            a {
                                 &:before {
                                     background: rgba($primary, 1);
                                 }
                                 &.active {
                                     color: rgba($primary, 1);
                                 }
-                                &:hover {                                    
+                                &:hover {
                                     color: rgba($primary, 1);
                                 }
                             }
@@ -6235,7 +6492,8 @@ body.data-layout-transparent {
                 }
                 .submenu.submenu-two {
                     a {
-                        &.subdrop, &.active {
+                        &.subdrop,
+                        &.active {
                             color: rgba($primary, 1);
                         }
                     }
@@ -6253,15 +6511,16 @@ body.data-layout-transparent {
             .sidebar-right {
                 ul {
                     li {
-                        &.submenu {    
+                        &.submenu {
                             ul {
                                 & > li {
-                                    & > a{
-                                         &:hover, &.active {
-                                             color: rgba($primary, 1);
-                                         }
-                                     }
-                                 }
+                                    & > a {
+                                        &:hover,
+                                        &.active {
+                                            color: rgba($primary, 1);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -6278,10 +6537,15 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: rgba($primary, 2);
-           border: 1px solid rgba($primary, 2);
+            border: 1px solid rgba($primary, 2);
         }
     }
-    .btn-check:checked+.btn, .btn.active, .btn.show, .btn.show:hover, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    .btn-check:checked + .btn,
+    .btn.active,
+    .btn.show,
+    .btn.show:hover,
+    .btn:first-child:active,
+    :not(.btn-check) + .btn:active {
         background-color: rgba($primary, 1);
         border-color: rgba($primary, 1);
     }
@@ -6290,7 +6554,7 @@ body.data-layout-transparent {
         &:hover,
         &:focus,
         &:active {
-          color: rgba($primary, 1);
+            color: rgba($primary, 1);
         }
     }
     .text-primary {
@@ -6315,7 +6579,8 @@ body.data-layout-transparent {
     .border-primary {
         border-color: rgba($primary, 1) !important;
     }
-    .nav-tabs.nav-tabs-bottom li a.active, .nav-tabs.nav-tabs-bottom li a:hover {
+    .nav-tabs.nav-tabs-bottom li a.active,
+    .nav-tabs.nav-tabs-bottom li a:hover {
         border-bottom-color: rgba($primary, 1);
         color: rgba($primary, 1);
     }
@@ -6323,7 +6588,6 @@ body.data-layout-transparent {
         &.badge-soft-primary {
             background: rgba($primary, 0.1);
             color: rgba($primary, 1);
-
         }
     }
     a {
@@ -6340,11 +6604,12 @@ body.data-layout-transparent {
         &:active,
         &.active {
             background-color: rgba($primary, 1) !important;
-            border:1px solid rgba($primary, 1) !important;
+            border: 1px solid rgba($primary, 1) !important;
         }
     }
     .select2-container--default {
-        &.select2-container--open.select2-container--below .select2-selection--single {
+        &.select2-container--open.select2-container--below
+            .select2-selection--single {
             border-color: rgba($primary, 1);
         }
         .select2-results__option--highlighted[aria-selected] {
@@ -6364,8 +6629,8 @@ body.data-layout-transparent {
     }
     .form-check-input {
         &:checked {
-          background-color: rgba($primary, 1);
-          border-color: rgba($primary, 1);
+            background-color: rgba($primary, 1);
+            border-color: rgba($primary, 1);
         }
     }
     .sidebar-contact .toggle-theme {
@@ -6378,26 +6643,35 @@ body.data-layout-transparent {
             }
         }
     }
-    #sales-income,  #revenue-income,  #leads_stage, #s-col, #s-col-stacked {
+    #sales-income,
+    #revenue-income,
+    #leads_stage,
+    #s-col,
+    #s-col-stacked {
         .apexcharts-bar-series {
             .apexcharts-series:nth-child(1) path {
                 fill: rgba($primary, 1);
             }
         }
     }
-    #deals_stage, #emp-department, #s-bar, #mixed-chart  {
+    #deals_stage,
+    #emp-department,
+    #s-bar,
+    #mixed-chart {
         .apexcharts-bar-series {
             .apexcharts-series path {
                 fill: rgba($primary, 1);
             }
         }
     }
-    #mixed-chart, #s-col-stacked, #s-col {
+    #mixed-chart,
+    #s-col-stacked,
+    #s-col {
         .apexcharts-legend-series:first-child .apexcharts-legend-marker {
             fill: rgba($primary, 1);
         }
     }
-    #s-line  {
+    #s-line {
         .apexcharts-line-series {
             .apexcharts-series path {
                 stroke: rgba($primary, 1);
@@ -6407,19 +6681,21 @@ body.data-layout-transparent {
             }
         }
     }
-    #chart-bar-stacked, #chart-bar, #chart-bar-rotated {
+    #chart-bar-stacked,
+    #chart-bar,
+    #chart-bar-rotated {
         .c3-target-data2 .c3-bar {
-            fill: rgba($primary, 1) !important; 
+            fill: rgba($primary, 1) !important;
         }
     }
     #chart-spline-rotated .c3-target-data2 {
         .c3-line {
             stroke: rgba($primary, 1) !important;
-        } 
+        }
         .c3-circle {
             fill: rgba($primary, 1);
         }
-    }  
+    }
     .nav.tab-style-1 .nav-link.active {
         background-color: rgba($primary, 1);
     }
@@ -6445,7 +6721,7 @@ body {
                             &::before {
                                 right: 14px;
                                 left: unset;
-                            }                            
+                            }
                         }
                         > ul {
                             li {
@@ -6454,12 +6730,12 @@ body {
                                     &::before {
                                         right: 13px;
                                         left: unset;
-                                    }   
+                                    }
                                 }
                             }
                         }
                     }
-                    ul li a span  {
+                    ul li a span {
                         margin-right: 10px;
                         margin-left: 0;
                     }
@@ -6552,21 +6828,21 @@ body {
         }
     }
 }
-[data-loader="enable"]{
+[data-loader="enable"] {
     #global-loader {
         opacity: 1;
     }
 }
-[data-loader="disable"]{
+[data-loader="disable"] {
     #global-loader {
-       opacity: 0;
-       display: none !important;
+        opacity: 0;
+        display: none !important;
     }
 }
 [data-theme="dark"] {
-    $text-color: $darkmode-gray-500;    
-    $border-color: #1F2228;
-    $default-border: #1F2228;
+    $text-color: $darkmode-gray-500;
+    $border-color: #1f2228;
+    $default-border: #1f2228;
     .bg-white {
         background-color: $darkmode-white;
     }
@@ -6575,7 +6851,7 @@ body {
     }
     .header {
         background: $darkmode-white;
-        border-color: $darkmode-gray-200;        
+        border-color: $darkmode-gray-200;
         .header-left {
             .logo {
                 display: none;
@@ -6588,7 +6864,9 @@ body {
             .user-menu {
                 .btn-menubar {
                     color: $darkmode-gray-500;
-                    &:hover, &:active, &.active {
+                    &:hover,
+                    &:active,
+                    &.active {
                         background-color: $darkmode-dark-transparent;
                         border-color: $darkmode-dark-transparent;
                         color: $darkmode-gray-900;
@@ -6606,12 +6884,11 @@ body {
                 border-color: $darkmode-gray-200 !important;
             }
         }
-        
     }
-    .head-icons a{
+    .head-icons a {
         background: $darkmode-white;
         border-color: $darkmode-gray-200;
-        &:hover{
+        &:hover {
             background: $primary;
         }
     }
@@ -6619,6 +6896,7 @@ body {
         background: $darkmode-white;
         border-color: $darkmode-gray-200;
         .sidebar-logo {
+            background-color: $darkmode-white;
             .logo {
                 display: none;
             }
@@ -6626,12 +6904,13 @@ body {
                 display: block;
             }
         }
-        .sidebar-menu{
-            > ul{
-                > li{
+        .sidebar-menu {
+            > ul {
+                > li {
                     & > a {
                         &:hover {
-                            span, i {
+                            span,
+                            i {
                                 color: $darkmode-gray-900;
                             }
                         }
@@ -6641,16 +6920,20 @@ body {
                             > a {
                                 &:hover {
                                     background: $darkmode-dark-transparent;
-                                    i, span {
+                                    i,
+                                    span {
                                         color: $darkmode-gray-900;
                                     }
                                 }
                             }
                             &.submenu {
                                 > a {
-                                    &:hover, &.active, &.subdrop {
+                                    &:hover,
+                                    &.active,
+                                    &.subdrop {
                                         background: $darkmode-dark-transparent;
-                                        span, i {
+                                        span,
+                                        i {
                                             color: $darkmode-gray-900;
                                         }
                                         .menu-arrow {
@@ -6663,33 +6946,33 @@ body {
                             }
                         }
                     }
-                    &.active{
-                        a{
+                    &.active {
+                        a {
                             color: $white;
                         }
                     }
-                    > a{
-                        span{
+                    > a {
+                        span {
                             color: $darkmode-gray-600;
                         }
                     }
-                    ul{
-                        li{
+                    ul {
+                        li {
                             a {
                                 color: $darkmode-gray-900;
-                                i{
+                                i {
                                     color: $darkmode-gray-500;
                                 }
                                 span {
                                     color: $darkmode-gray-900;
                                 }
-                                &.active{
+                                &.active {
                                     color: $primary;
                                 }
-                            }  
+                            }
                         }
                         & > li {
-                            &.active a{
+                            &.active a {
                                 background: $darkmode-dark-transparent;
                                 color: $white;
                                 .menu-arrow {
@@ -6698,16 +6981,15 @@ body {
                                         border-bottom: 2px solid $primary;
                                     }
                                 }
-                                &.subdrop{
+                                &.subdrop {
                                     background: $darkmode-primary-transparent;
                                     color: $primary;
-                                    i{
-                                        color:$darkmode-white;
-                                        background:$darkmode-white;
+                                    i {
+                                        color: $darkmode-white;
+                                        background: $darkmode-white;
                                     }
                                     span {
                                         color: $primary;
-                                        
                                     }
                                 }
                             }
@@ -6721,14 +7003,14 @@ body {
                         }
                     }
                 }
-                li {              
+                li {
                     &.menu-title {
                         color: $darkmode-gray-400;
                     }
                     .submenu > {
-                        ul{
-                            li{
-                                a{
+                        ul {
+                            li {
+                                a {
                                     color: $darkmode-gray-500;
                                     &:before {
                                         background: $primary;
@@ -6736,13 +7018,13 @@ body {
                                     &.active {
                                         color: $primary;
                                     }
-                                    &:hover {                                    
+                                    &:hover {
                                         color: $primary;
                                     }
                                 }
                             }
                         }
-                        
+
                         a {
                             &.subdrop {
                                 background: $darkmode-dark-transparent;
@@ -6760,15 +7042,15 @@ body {
                     }
                     .submenu.submenu-two {
                         a {
-                            &.subdrop, &.active {
+                            &.subdrop,
+                            &.active {
                                 background: transparent;
                                 color: $primary;
                             }
                         }
                     }
                 }
-    
-            }            
+            }
             .menu-arrow {
                 &::before {
                     border-right: 2px solid $darkmode-gray-900;
@@ -6779,10 +7061,12 @@ body {
         .nav-link {
             color: $darkmode-gray-700;
         }
-        .btn-menubar { 
-            border: 1px solid $darkmode-gray-100;   
+        .btn-menubar {
+            border: 1px solid $darkmode-gray-100;
             color: $darkmode-gray-500;
-            &:hover, &:active, &.active {
+            &:hover,
+            &:active,
+            &.active {
                 background-color: $darkmode-dark-transparent;
                 border-color: $darkmode-dark-transparent;
                 color: $darkmode-gray-900;
@@ -6797,7 +7081,7 @@ body {
     .mini-sidebar {
         .sidebar {
             .sidebar-logo {
-                .dark-logo  {
+                .dark-logo {
                     display: none;
                 }
             }
@@ -6805,10 +7089,11 @@ body {
         &.expand-menu {
             .sidebar {
                 .sidebar-logo {
-                    .dark-logo  {
+                    .dark-logo {
                         display: block;
                     }
-                    .logo-small, .logo {
+                    .logo-small,
+                    .logo {
                         display: none;
                     }
                 }
@@ -6834,7 +7119,8 @@ body {
             .nav-link {
                 border: 1px solid $darkmode-gray-100;
                 color: $darkmode-gray-900;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $darkmode-light;
                     color: $darkmode-gray-900;
                 }
@@ -6867,8 +7153,8 @@ body {
                                     color: $darkmode-gray-700;
                                 }
                             }
-                        }                    
-                        &.active{
+                        }
+                        &.active {
                             a {
                                 background: $darkmode-dark-transparent;
                             }
@@ -6882,8 +7168,9 @@ body {
                             }
                             ul {
                                 & > li {
-                                   & > a{
-                                        &:hover, &.active {
+                                    & > a {
+                                        &:hover,
+                                        &.active {
                                             color: $primary;
                                         }
                                     }
@@ -6893,7 +7180,7 @@ body {
                     }
                 }
                 .tab-pane {
-                   & > ul {                
+                    & > ul {
                         & > li {
                             > a {
                                 &:hover {
@@ -6902,17 +7189,16 @@ body {
                             }
                         }
                     }
-    
                 }
             }
         }
-    }   
+    }
     .sidebar-horizontal {
         &.sidebar {
             .sidebar-menu {
                 ul {
                     li {
-                        &.submenu  {
+                        &.submenu {
                             & > a {
                                 color: $darkmode-gray-900;
                                 &:hover {
@@ -6923,7 +7209,8 @@ body {
                                 li {
                                     a {
                                         color: $darkmode-gray-500;
-                                        &:hover, &.active {
+                                        &:hover,
+                                        &.active {
                                             background-color: $darkmode-dark-transparent;
                                         }
                                         .menu-arrow {
@@ -6934,19 +7221,20 @@ body {
                                     }
                                 }
                             }
-                        }                    
+                        }
                     }
                     ul {
                         background-color: $darkmode-white;
                     }
                 }
-            }     
+            }
             .sidebar-menu {
-                    ul {
-                        li {
-                            &.submenu  {
+                ul {
+                    li {
+                        &.submenu {
                             & > a {
-                                &.active, &.subdrop {
+                                &.active,
+                                &.subdrop {
                                     background-color: $darkmode-dark-transparent;
                                 }
                             }
@@ -6968,7 +7256,7 @@ body {
             }
         }
     }
-    .sidebar-twocol{
+    .sidebar-twocol {
         .twocol-mini {
             border-right: 1px solid $darkmode-gray-200;
             background-color: $darkmode-white;
@@ -6977,7 +7265,8 @@ body {
             background-color: transparent;
             .nav-link {
                 color: $darkmode-gray-700;
-                &.active, &:hover {
+                &.active,
+                &:hover {
                     background: $darkmode-light;
                     color: $darkmode-gray-700;
                 }
@@ -7018,13 +7307,13 @@ body {
                                     color: $darkmode-gray-700;
                                 }
                             }
-                        }                    
-                        &.active{
+                        }
+                        &.active {
                             a {
                                 background: $darkmode-dark-transparent;
                             }
                         }
-                        &.submenu {                        
+                        &.submenu {
                             & > a {
                                 &:hover {
                                     background: $darkmode-dark-transparent;
@@ -7033,8 +7322,9 @@ body {
                             }
                             ul {
                                 & > li {
-                                   & > a{
-                                        &:hover, &.active {
+                                    & > a {
+                                        &:hover,
+                                        &.active {
                                             color: $primary;
                                         }
                                     }
@@ -7044,7 +7334,7 @@ body {
                     }
                 }
                 .tab-pane {
-                   & > ul {                
+                    & > ul {
                         & > li {
                             > a {
                                 &:hover {
@@ -7053,7 +7343,6 @@ body {
                             }
                         }
                     }
-    
                 }
                 .menu-arrow {
                     &:before {
@@ -7062,11 +7351,16 @@ body {
                 }
             }
         }
-    }   
+    }
     .sidebar-nav {
         background: $darkmode-light;
     }
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         color: $darkmode-gray-900;
     }
     .bg-light {
@@ -7081,7 +7375,7 @@ body {
         color: $darkmode-gray-500;
     }
     .input-group-flat {
-        &:focus-within {      
+        &:focus-within {
             .form-control,
             .input-group-text {
                 border-color: $darkmode-gray-200 !important;
@@ -7090,42 +7384,45 @@ body {
     }
     .card {
         background-color: $darkmode-white;
-        border:1px solid $darkmode-gray-200;    
-        .card-title {  
-            color: $darkmode-gray-900;   
+        border: 1px solid $darkmode-gray-200;
+        .card-title {
+            color: $darkmode-gray-900;
         }
         .card-header {
             border-color: $darkmode-gray-200;
         }
         .card-footer {
             border-color: $darkmode-gray-200;
-        }    
+        }
     }
     .alert-light {
         background-color: $darkmode-light;
         color: $text-color;
         border-color: $darkmode-light;
         .alert-link {
-          color: $text-color;
+            color: $text-color;
         }
         .btn-close {
-          color: $text-color;
-          &.custom-close {
-            @include custom-close($darkmode-light);
-          }
+            color: $text-color;
+            &.custom-close {
+                @include custom-close($darkmode-light);
+            }
         }
     }
     .custom-alert1 {
         background-color: $darkmode-white;
     }
-    .alert-primary, .alert-secondary, .alert-warning, .alert-danger  {
+    .alert-primary,
+    .alert-secondary,
+    .alert-warning,
+    .alert-danger {
         &.custom-alert-icon {
             background-color: $darkmode-white;
             border-color: $darkmode-gray-200;
         }
     }
     &[data-layout="horizontal-overlay"][data-topbarcolor="white"],
-    &[data-layout="horizontal-sidemenu"][data-topbarcolor="white"]  {   
+    &[data-layout="horizontal-sidemenu"][data-topbarcolor="white"] {
         .header {
             left: 0;
             background-color: $darkmode-white;
@@ -7150,7 +7447,7 @@ body {
                     display: block;
                 }
             }
-        }      
+        }
         .mode-toggle {
             color: $darkmode-gray-500;
         }
@@ -7160,11 +7457,13 @@ body {
                 border-bottom: 1px solid lighten($darkmode-white, 0.9);
                 .sidebar-menu {
                     .nav-menu {
-                        > li {     
+                        > li {
                             &.submenu {
                                 & > a {
                                     color: $darkmode-gray-900;
-                                    &.active, &:hover,  &.subdrop {
+                                    &.active,
+                                    &:hover,
+                                    &.subdrop {
                                         background-color: $darkmode-dark-transparent;
                                         color: $darkmode-gray-900;
                                         .menu-arrow {
@@ -7175,7 +7474,7 @@ body {
                                     }
                                     .menu-arrow {
                                         &::before {
-                                            border-color: $darkmode-gray-900;;
+                                            border-color: $darkmode-gray-900;
                                         }
                                     }
                                 }
@@ -7212,7 +7511,7 @@ body {
             background-color: $darkmode-white;
             color: $text-color;
         }
-    }  
+    }
     .accordion-body {
         color: $text-muted;
     }
@@ -7222,7 +7521,8 @@ body {
         border-color: $darkmode-light-900;
     }
     .accordion {
-        &.accordion-primary, &.accordion-secondary {
+        &.accordion-primary,
+        &.accordion-secondary {
             .accordion-button.collapsed {
                 background-color: $darkmode-white;
                 color: $text-color;
@@ -7232,10 +7532,14 @@ body {
                 }
             }
         }
-        &.accordion-solid-primary, &.accordion-solid-secondary,
-        &.accordion-solid-warning, &.accordion-solid-info, &.accordion-solid-success, &.accordion-solid-danger {
+        &.accordion-solid-primary,
+        &.accordion-solid-secondary,
+        &.accordion-solid-warning,
+        &.accordion-solid-info,
+        &.accordion-solid-success,
+        &.accordion-solid-danger {
             .accordion-button {
-                color: $darkmode-white;;
+                color: $darkmode-white;
                 &.collapsed {
                     background-color: $darkmode-white;
                     color: $text-color;
@@ -7244,10 +7548,14 @@ body {
                         color: $text-color;
                     }
                 }
-            }   
+            }
         }
-        &.accordion-border-primary, &.accordion-border-secondary,
-        &.accordion-border-warning, &.accordion-border-info, &.accordion-border-success, &.accordion-border-danger {
+        &.accordion-border-primary,
+        &.accordion-border-secondary,
+        &.accordion-border-warning,
+        &.accordion-border-info,
+        &.accordion-border-success,
+        &.accordion-border-danger {
             .accordion-button {
                 background-color: $darkmode-white;
                 &::after {
@@ -7256,10 +7564,16 @@ body {
             }
         }
     }
-    .bg-outline-primary, .bg-outline-secondary, .bg-outline-success,
-    .bg-outline-danger, .bg-outline-warning, .bg-outline-info, .bg-outline-light, .bg-outline-light {
+    .bg-outline-primary,
+    .bg-outline-secondary,
+    .bg-outline-success,
+    .bg-outline-danger,
+    .bg-outline-warning,
+    .bg-outline-info,
+    .bg-outline-light,
+    .bg-outline-light {
         background-color: $darkmode-white;
-    }    
+    }
     .bg-outline-light {
         border: 1px solid $darkmode-light !important;
         color: $darkmode-gray-900 !important;
@@ -7297,7 +7611,7 @@ body {
     .border-top {
         border-top: 1px solid $border-color !important;
     }
-    .border-end {   
+    .border-end {
         border-inline-end: 1px solid $border-color !important;
     }
     .border-bottom {
@@ -7313,13 +7627,15 @@ body {
     .toast {
         background-color: $darkmode-white;
     }
-    .avatar.online:before, .avatar.offline:before {
+    .avatar.online:before,
+    .avatar.offline:before {
         border-color: $darkmode-white !important;
     }
     .swal2-popup {
         background-color: $darkmode-white;
     }
-    .progress, .progress-stacked {
+    .progress,
+    .progress-stacked {
         background-color: $darkmode-light-900;
     }
     .popover {
@@ -7327,37 +7643,37 @@ body {
         border: 1px solid $default-border;
         box-shadow: none;
         .popover-header {
-          background-color: $darkmode-white;
-          border-block-end: 1px solid $default-border;
+            background-color: $darkmode-white;
+            border-block-end: 1px solid $default-border;
         }
         .popover-body {
-          color: $text-color;
+            color: $text-color;
         }
-      }
-      .bs-popover-auto[data-popper-placement^="top"] > .popover-arrow::after,
-      .bs-popover-top > .popover-arrow::after,
-      .bs-popover-auto[data-popper-placement^="top"] > .popover-arrow::before,
-      .bs-popover-top > .popover-arrow::before {
+    }
+    .bs-popover-auto[data-popper-placement^="top"] > .popover-arrow::after,
+    .bs-popover-top > .popover-arrow::after,
+    .bs-popover-auto[data-popper-placement^="top"] > .popover-arrow::before,
+    .bs-popover-top > .popover-arrow::before {
         border-top-color: $darkmode-light;
-      }
-      .bs-popover-auto[data-popper-placement^="right"] > .popover-arrow::after,
-      .bs-popover-end > .popover-arrow::after,
-      .bs-popover-auto[data-popper-placement^="right"] > .popover-arrow::before,
-      .bs-popover-end > .popover-arrow::before {
+    }
+    .bs-popover-auto[data-popper-placement^="right"] > .popover-arrow::after,
+    .bs-popover-end > .popover-arrow::after,
+    .bs-popover-auto[data-popper-placement^="right"] > .popover-arrow::before,
+    .bs-popover-end > .popover-arrow::before {
         border-right-color: $darkmode-light;
-      }
-      .bs-popover-auto[data-popper-placement^="left"] > .popover-arrow::after,
-      .bs-popover-start > .popover-arrow::after,
-      .bs-popover-auto[data-popper-placement^="left"] > .popover-arrow::before,
-      .bs-popover-start > .popover-arrow::before {
+    }
+    .bs-popover-auto[data-popper-placement^="left"] > .popover-arrow::after,
+    .bs-popover-start > .popover-arrow::after,
+    .bs-popover-auto[data-popper-placement^="left"] > .popover-arrow::before,
+    .bs-popover-start > .popover-arrow::before {
         border-left-color: $darkmode-light;
-      }
-      .bs-popover-auto[data-popper-placement^="bottom"] > .popover-arrow::after,
-      .bs-popover-bottom > .popover-arrow::after,
-      .bs-popover-auto[data-popper-placement^="bottom"] > .popover-arrow::before,
-      .bs-popover-bottom > .popover-arrow::before,
-      .bs-popover-auto[data-popper-placement^="bottom"] .popover-header::before,
-      .bs-popover-bottom .popover-header::before {
+    }
+    .bs-popover-auto[data-popper-placement^="bottom"] > .popover-arrow::after,
+    .bs-popover-bottom > .popover-arrow::after,
+    .bs-popover-auto[data-popper-placement^="bottom"] > .popover-arrow::before,
+    .bs-popover-bottom > .popover-arrow::before,
+    .bs-popover-auto[data-popper-placement^="bottom"] .popover-header::before,
+    .bs-popover-bottom .popover-header::before {
         border-bottom-color: $darkmode-light;
     }
     .page-link {
@@ -7404,9 +7720,10 @@ body {
     .nav-tabs li a {
         color: $darkmode-gray-900;
     }
-    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+    .nav-tabs .nav-item.show .nav-link,
+    .nav-tabs .nav-link.active {
         background-color: $darkmode-white;
-        color:  $darkmode-gray-900;
+        color: $darkmode-gray-900;
     }
     .nav-tabs .nav-link.active {
         border-color: $darkmode-gray-200;
@@ -7425,7 +7742,7 @@ body {
         }
     }
     .tab-style-2 {
-        .nav-item .nav-link {            
+        .nav-item .nav-link {
             i {
                 background-color: $darkmode-light;
                 color: $darkmode-gray-500;
@@ -7433,10 +7750,10 @@ body {
         }
     }
     .nav-tabs.nav-tabs-top {
-        li{
-            a{
-                &.active{
-                    border-top-color: $primary;      
+        li {
+            a {
+                &.active {
+                    border-top-color: $primary;
                 }
             }
         }
@@ -7448,17 +7765,17 @@ body {
                     background-color: $darkmode-white;
                     border-color: $darkmode-gray-200;
                 }
-                &:before { 
+                &:before {
                     background-color: $darkmode-light;
                 }
-                &.active{
+                &.active {
                     &:before {
                         background-color: $primary;
-                      }
-                      &:after {
+                    }
+                    &:after {
                         border-color: $primary;
                         color: $primary;
-                      }
+                    }
                 }
             }
         }
@@ -7469,7 +7786,8 @@ body {
     .bg-white {
         background-color: $darkmode-white !important;
     }
-    .card.card-bg-primary .card-body, .text-fixed-white {
+    .card.card-bg-primary .card-body,
+    .text-fixed-white {
         color: $darkmode-white;
     }
     .btn {
@@ -7491,14 +7809,15 @@ body {
     .scroll-demo {
         border-color: $darkmode-gray-200;
     }
-    .timeline  {
+    .timeline {
         &::before {
             background-color: $darkmode-gray-200;
         }
         & > li {
             & > .timeline-panel {
                 border-color: $darkmode-gray-200;
-                &::after, &::before { 
+                &::after,
+                &::before {
                     border-color: $darkmode-gray-200;
                 }
             }
@@ -7540,8 +7859,14 @@ body {
         background-color: $darkmode-white;
         border-color: $darkmode-gray-200;
     }
-    .alert-outline-primary, .alert-outline-secondary, .alert-outline-warning, .alert-outline-danger,
-    .alert-outline-info, .alert-outline-dark, .alert-outline-success, .alert-outline-light {
+    .alert-outline-primary,
+    .alert-outline-secondary,
+    .alert-outline-warning,
+    .alert-outline-danger,
+    .alert-outline-info,
+    .alert-outline-dark,
+    .alert-outline-success,
+    .alert-outline-light {
         background-color: $darkmode-white;
     }
     .text-white {
@@ -7549,16 +7874,16 @@ body {
     }
     .text-light {
         color: $darkmode-light !important;
-      }
+    }
     .table {
         thead {
             tr {
                 border-color: $darkmode-gray-200;
-                    th {
-                        border-color: $darkmode-gray-200;
-                        background-color: $darkmode-gray-200;
-                        color: $darkmode-gray-900;
-                    }
+                th {
+                    border-color: $darkmode-gray-200;
+                    background-color: $darkmode-gray-200;
+                    color: $darkmode-gray-900;
+                }
             }
         }
         tbody {
@@ -7566,8 +7891,8 @@ body {
                 border-color: $darkmode-gray-200;
                 th {
                     border-color: $darkmode-gray-200;
-                        background-color: $darkmode-gray-200;
-                        color: $darkmode-gray-900;
+                    background-color: $darkmode-gray-200;
+                    color: $darkmode-gray-900;
                 }
                 td {
                     background-color: $darkmode-white;
@@ -7606,21 +7931,21 @@ body {
             > tr {
                 border-color: $darkmode-gray-200;
                 td {
-                    color: $darkmode-gray-500;                
+                    color: $darkmode-gray-500;
                     border-color: $darkmode-gray-200;
                 }
-            } 
+            }
         }
         & > thead > tr {
             border-color: $darkmode-gray-200;
-                th {
-                    color: $darkmode-gray-900;
-                }
+            th {
+                color: $darkmode-gray-900;
+            }
         }
     }
     .dataTables_length {
         label {
-            color: $darkmode-gray-700;    
+            color: $darkmode-gray-700;
             .form-select {
                 border: 1px solid $darkmode-gray-200;
                 color: $darkmode-gray-900;
@@ -7658,19 +7983,27 @@ body {
             color: $darkmode-white;
         }
     }
-    .select2-container--focus  {
-        .select2-selection--single{
+    .select2-container--focus {
+        .select2-selection--single {
             background: $darkmode-white !important;
             border-color: $darkmode-gray-200;
         }
     }
     .select2-container--classic .select2-selection--single,
     .select2-container--default .select2-selection--single,
-    .select2-container--default .select2-selection--single .select2-selection__rendered,
-    .select2-container--default .select2-selection--single .select2-selection__arrow,
+    .select2-container--default
+        .select2-selection--single
+        .select2-selection__rendered,
+    .select2-container--default
+        .select2-selection--single
+        .select2-selection__arrow,
     .select2-container--default .select2-selection--multiple,
-    .select2-container--classic .select2-selection--single .select2-selection__arrow,
-    .select2-container--classic .select2-selection--single .select2-selection__rendered {
+    .select2-container--classic
+        .select2-selection--single
+        .select2-selection__arrow,
+    .select2-container--classic
+        .select2-selection--single
+        .select2-selection__rendered {
         border-color: $darkmode-gray-200;
         color: $darkmode-gray-500;
     }
@@ -7678,14 +8011,20 @@ body {
         border-color: $darkmode-gray-200;
         background: $darkmode-white;
     }
-    .select2-container--classic .select2-selection--multiple .select2-selection__choice,
-    .select2-container--default .select2-selection--multiple .select2-selection__choice,
-    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    .select2-container--classic
+        .select2-selection--multiple
+        .select2-selection__choice,
+    .select2-container--default
+        .select2-selection--multiple
+        .select2-selection__choice,
+    .select2-container--default
+        .select2-selection--multiple
+        .select2-selection__choice__remove {
         color: $darkmode-white;
     }
-    .form-floating > .form-control-plaintext ~ label::after, 
-    .form-floating > .form-control:focus ~ label::after, 
-    .form-floating > .form-control:not(:placeholder-shown) ~ label::after, 
+    .form-floating > .form-control-plaintext ~ label::after,
+    .form-floating > .form-control:focus ~ label::after,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label::after,
     .form-floating > .form-select ~ label::after {
         background-color: $darkmode-white;
     }
@@ -7708,13 +8047,13 @@ body {
                 &:hover,
                 &:focus,
                 &:active {
-                  color: $darkmode-gray-900;
-                  background-color: $darkmode-light-500;
+                    color: $darkmode-gray-900;
+                    background-color: $darkmode-light-500;
                 }
-              }
-              &.active {
+            }
+            &.active {
                 background-color: $darkmode-light-500;
-              }
+            }
         }
     }
     .dropdown-divider {
@@ -7727,15 +8066,15 @@ body {
     &[data-sidebar="light"] [data-sidebarbg="sidebarbg5"],
     &[data-sidebar="light"] [data-sidebarbg="sidebarbg6"] {
         #sidebar {
-            &::before  {
+            &::before {
                 background: rgba($darkmode-white, 0.85);
             }
         }
     }
     .theme-width {
-        input[type="radio"]{
-            &:checked{
-                ~ label{
+        input[type="radio"] {
+            &:checked {
+                ~ label {
                     border-color: $primary;
                     &::before {
                         border-color: $primary;
@@ -7756,55 +8095,56 @@ body {
         }
     }
     .theme-sidebarcolor {
-        input[type="radio"]{
-            &:checked{
-                ~ label{                
+        input[type="radio"] {
+            &:checked {
+                ~ label {
                     border-color: $primary !important;
-                    &:after{
+                    &:after {
                         color: $primary;
                     }
                     &.bg-dark {
-                        &:after{
+                        &:after {
                             color: $darkmode-white;
                         }
                     }
                 }
             }
         }
-        label {        
+        label {
             border-color: $darkmode-gray-200;
         }
     }
     .theme-sidebarbg {
-        input[type="radio"]{
-            &:checked{
-                ~ label{
-                    &:after{
+        input[type="radio"] {
+            &:checked {
+                ~ label {
+                    &:after {
                         color: $primary;
                         background: $white;
                         border-color: $darkmode-gray-200;
-                    }      
+                    }
                 }
             }
         }
-        label { 
-            img { 
+        label {
+            img {
                 border-color: $darkmode-gray-200;
             }
         }
     }
     .theme-colorselect {
-        input[type="radio"]{
-            &:checked{
-                ~ label{
+        input[type="radio"] {
+            &:checked {
+                ~ label {
                     outline-color: $primary;
-                    &:after{
+                    &:after {
                         color: $primary;
                         background: $white;
                         border-color: $darkmode-gray-200;
                     }
-                    &.primary-topbar,   &.dark-topbar {
-                        &:after{
+                    &.primary-topbar,
+                    &.dark-topbar {
+                        &:after {
                             color: $darkmode-white;
                         }
                     }
@@ -7818,63 +8158,65 @@ body {
                 border-color: $darkmode-gray-200;
             }
         }
-        .pickr-container-background, .pickr-topbar, .pickr-topbarcolor { 
+        .pickr-container-background,
+        .pickr-topbar,
+        .pickr-topbarcolor {
             outline-color: $darkmode-gray-200;
         }
     }
-    .theme-colorsset{
-        label{
+    .theme-colorsset {
+        label {
             border-color: $darkmode-gray-200;
-            &.primary-clr{
+            &.primary-clr {
                 &::before {
                     background: $primary;
                 }
             }
-            &.brightblue-clr{
+            &.brightblue-clr {
                 &::before {
                     background: $brightblue;
                 }
             }
-            &.lunargreen-clr{
+            &.lunargreen-clr {
                 &::before {
                     background: $lunargreen;
                 }
             }
-            &.lavendar-clr{
+            &.lavendar-clr {
                 &::before {
                     background: $lavendar;
                 }
             }
-            &.magenta-clr{
+            &.magenta-clr {
                 &::before {
                     background: $magenta;
                 }
             }
-            &.chromeyellow-clr{
+            &.chromeyellow-clr {
                 &::before {
                     background: $chromeyellow;
                 }
             }
-            &.lavared-clr{
+            &.lavared-clr {
                 &::before {
                     background: $lavared;
                 }
             }
         }
-        input[type="radio"]{
-            &:checked{
-                ~ label{
-                    &:after{
+        input[type="radio"] {
+            &:checked {
+                ~ label {
+                    &:after {
                         color: $darkmode-white;
                     }
                 }
             }
         }
-    }    
+    }
     .theme-mode {
-        input[type="radio"]{
-            &:checked{
-                ~ label{
+        input[type="radio"] {
+            &:checked {
+                ~ label {
                     border-color: $primary;
                     .avatar {
                         color: $warning;
@@ -7890,7 +8232,7 @@ body {
                 background-color: $darkmode-dark-transparent;
                 color: $darkmode-dark;
             }
-        }        
+        }
         .pickr-container-primary {
             border-color: $darkmode-gray-200;
         }
@@ -7901,9 +8243,9 @@ body {
                 border: 1px solid $primary;
             }
         }
-        input[type="radio"]{
-            &:checked{
-                ~ label{
+        input[type="radio"] {
+            &:checked {
+                ~ label {
                     .layout-img {
                         img {
                             border-color: $primary;
@@ -7917,13 +8259,13 @@ body {
                 img {
                     border-color: $darkmode-gray-200;
                 }
-            }            
-            .layout-type { 
+            }
+            .layout-type {
                 color: $darkmode-gray-900;
             }
         }
     }
-    &[data-layout=modern][data-topbarcolor=white] {
+    &[data-layout="modern"][data-topbarcolor="white"] {
         .header {
             background-color: $darkmode-white;
             border-color: rgba($darkmode-white, 0.8);
@@ -7936,7 +8278,9 @@ body {
                 .user-menu {
                     .btn-menubar {
                         color: $darkmode-gray-500;
-                        &:hover, &:active, &.active {
+                        &:hover,
+                        &:active,
+                        &.active {
                             background-color: $darkmode-white;
                             color: $darkmode-gray-500 !important;
                         }
@@ -7956,13 +8300,13 @@ body {
             &::before {
                 background: $darkmode-white;
             }
-        }   
+        }
     }
     &[data-layout="modern"][data-topbarcolor="firefly"],
     &[data-layout="modern"][data-topbarcolor="bluegem"],
     &[data-layout="modern"][data-topbarcolor="blackpearl"],
     &[data-layout="modern"][data-topbarcolor="maroon"],
-    &[data-layout="modern"][data-topbarcolor="primary"]     {
+    &[data-layout="modern"][data-topbarcolor="primary"] {
         .header {
             .bar-icon {
                 span {
@@ -7973,7 +8317,9 @@ body {
                 .user-menu {
                     .btn-menubar {
                         color: $darkmode-gray-500;
-                        &:hover, &:active, &.active {
+                        &:hover,
+                        &:active,
+                        &.active {
                             background-color: $darkmode-white;
                             color: $darkmode-gray-500 !important;
                         }
@@ -7989,7 +8335,10 @@ body {
         background-color: $darkmode-white;
         border-color: $border-color;
     }
-    .note-toolbar, .note-dropdown-menu, .note-modal-content, .note-input {
+    .note-toolbar,
+    .note-dropdown-menu,
+    .note-modal-content,
+    .note-input {
         background-color: $darkmode-light;
         border-color: $border-color;
         color: $darkmode-gray-900;
@@ -7999,7 +8348,8 @@ body {
         border-color: $border-color;
         color: $darkmode-gray-900;
     }
-    .note-modal-header, .file-drop {
+    .note-modal-header,
+    .file-drop {
         border-color: $border-color;
     }
     .close {
@@ -8021,7 +8371,8 @@ body {
     .contact-grids-tab .nav-underline {
         border-color: $border-color;
         .nav-item .nav-link {
-            &.active, &:hover {
+            &.active,
+            &:hover {
                 background-color: $darkmode-white;
             }
         }
@@ -8055,7 +8406,6 @@ body {
         color: $darkmode-gray-900;
         background: $darkmode-light;
         border: $border-color;
-
     }
 }
 
@@ -8081,10 +8431,13 @@ body {
     .todo-item .form-check-label {
         color: $darkmode-gray-800;
     }
-    .bg-transparent-secondary,.bg-transparent-dark,.bg-light-500 {
+    .bg-transparent-secondary,
+    .bg-transparent-dark,
+    .bg-light-500 {
         background: $darkmode-gray-700 !important;
     }
-    .text-gray-9, .text-title {
+    .text-gray-9,
+    .text-title {
         color: $darkmode-gray-800 !important;
     }
     .attendance-bg {
@@ -8094,16 +8447,18 @@ body {
     .chat-wrapper .sidebar-group {
         background: $darkmode-gray-200;
     }
-    .chat-wrapper .chat-users-wrap .chat-user-list,.chat-wrapper .chat .chat-header,.chat-wrapper .chat {
+    .chat-wrapper .chat-users-wrap .chat-user-list,
+    .chat-wrapper .chat .chat-header,
+    .chat-wrapper .chat {
         background: $darkmode-white;
         border-color: $darkmode-gray-200;
     }
     .chat-wrapper .search-wrap .input-group-text {
         background: $darkmode-white;
-        border-color: $darkmode-gray-200
+        border-color: $darkmode-gray-200;
     }
     .chat-wrapper .search-wrap .form-control {
-        border-color: $darkmode-gray-200
+        border-color: $darkmode-gray-200;
     }
     .chat-wrapper .chat .chat-footer .footer-form {
         background: $darkmode-white;
@@ -8112,7 +8467,13 @@ body {
     .chat-wrapper .chat .chat-footer .footer-form .chat-footer-wrap {
         background: $darkmode-gray-200;
     }
-    .chat-wrapper .chat .chat-body .messages .chats .chat-content .message-content {
+    .chat-wrapper
+        .chat
+        .chat-body
+        .messages
+        .chats
+        .chat-content
+        .message-content {
         background: $darkmode-gray-200;
     }
     .chat-wrapper .chat .chat-header .chat-options > ul > li > a {
@@ -8123,7 +8484,8 @@ body {
             background: $darkmode-white;
             border-color: $darkmode-gray-200;
         }
-        .fc-col-header-cell-cushion,.fc-daygrid-day-number {
+        .fc-col-header-cell-cushion,
+        .fc-daygrid-day-number {
             color: $darkmode-gray-800;
         }
         .fc-daygrid-body tbody td {
