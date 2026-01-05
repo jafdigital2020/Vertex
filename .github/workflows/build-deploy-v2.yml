@@ -519,7 +519,7 @@ jobs:
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             COMPANY_ADMIN="${{ env.USERNAME }}"
             EMAIL="${{ env.EMAIL }}"
-            PLAIN_PASSWORD="${{ env.PASSWORD }}"
+            PLAIN_PASSWORD="$PASSWORD"
             sed -i "0,/'username' => '[^']*'/s//'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "0,/'email' => '[^']*'/s//'email' => '$EMAIL'/" "$SEEDER_PATH"
             sed -i "0,/Hash::make([^)]*)/s//Hash::make('$PLAIN_PASSWORD')/" "$SEEDER_PATH"
