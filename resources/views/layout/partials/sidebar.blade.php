@@ -3,15 +3,13 @@
     <!-- Logo -->
     <div class="sidebar-logo">
         <a href="#" class="logo">
-            <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo"
-                style="height:auto; object-fit: contain;">
+            <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo" style="max-width:65%; height:auto;">
         </a>
         <a href="#" class="logo-small">
-            <img src="{{ URL::asset('build/img/timorafav.png') }}" alt="Logo" style="object-fit: contain;">
+            <img src="{{ URL::asset('build/img/timorafav.png') }}" alt="Logo">
         </a>
         <a href="#" class="dark-logo">
-            <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo"
-                style="height:auto; object-fit: contain;">
+            <img src="{{ URL::asset('build/img/timora-black.png') }}" alt="Logo">
         </a>
     </div>
     <!-- /Logo -->
@@ -426,28 +424,23 @@
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][62]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.loan-requests') }}"
-                                                    class="{{ Request::is('admin/loan-requests') ? 'active' : '' }}"><i
-                                                        class="ti ti-currency-dollar"></i>&nbsp;Loan Requests</a></li>
+                                                    class="{{ Request::is('admin/loan-requests') ? 'active' : '' }}"><i class="ti ti-currency-dollar"></i>&nbsp;Loan Requests</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][63]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.budget-requests') }}"
-                                                    class="{{ Request::is('admin/budget-requests') ? 'active' : '' }}"><i
-                                                        class="ti ti-chart-pie"></i>&nbsp;Budget Requests</a></li>
+                                                    class="{{ Request::is('admin/budget-requests') ? 'active' : '' }}"><i class="ti ti-chart-pie"></i>&nbsp;Budget Requests</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][64]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.asset-requests') }}"
-                                                    class="{{ Request::is('admin/asset-requests') ? 'active' : '' }}"><i
-                                                        class="ti ti-building"></i>&nbsp;Asset Requests</a></li>
+                                                    class="{{ Request::is('admin/asset-requests') ? 'active' : '' }}"><i class="ti ti-building"></i>&nbsp;Asset Requests</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][65]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.hmo-requests') }}"
-                                                    class="{{ Request::is('admin/hmo-requests') ? 'active' : '' }}"><i
-                                                        class="ti ti-heart-plus"></i>&nbsp;HMO Requests</a></li>
+                                                    class="{{ Request::is('admin/hmo-requests') ? 'active' : '' }}"><i class="ti ti-heart-plus"></i>&nbsp;HMO Requests</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][66]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('admin.coe-requests') }}"
-                                                    class="{{ Request::is('admin/coe-requests') ? 'active' : '' }}"><i
-                                                        class="ti ti-certificate"></i>&nbsp;COE Requests</a></li>
+                                                    class="{{ Request::is('admin/coe-requests') ? 'active' : '' }}"><i class="ti ti-certificate"></i>&nbsp;COE Requests</a></li>
                                         @endif
                                     </ul>
                                 </li>
@@ -937,8 +930,7 @@
                                     style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255, 255, 255, 0.7);">
                                     Current Plan</p>
                                 <h6 class="mb-0 fw-bold text-white" style="font-size: 16px;">
-                                    {{ $subscriptionPlan ?? 'Free Plan' }}
-                                </h6>
+                                    {{ $subscriptionPlan ?? 'Free Plan' }}</h6>
                             </div>
                         </div>
 
@@ -3940,7 +3932,8 @@
     'invoices',
 )
     ? ' show active '
-    : '' }} " title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application" aria-selected="false">
+    : '' }} " title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application"
+                                    aria-selected="false">
                                     <span><i class="ti ti-layout-grid-add"></i></span>
                                     <p>Applications</p>
                                 </a>
@@ -3972,7 +3965,8 @@
     'layout-dark',
 )
     ? 'show active'
-    : '' }}" title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout" aria-selected="false">
+    : '' }}" title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout"
+                                    aria-selected="false">
                                     <span><i class="ti ti-layout-board-split"></i></span>
                                     <p>Layouts</p>
                                 </a>
@@ -4015,7 +4009,8 @@
     'termination',
 )
     ? ' show active '
-    : '' }}" title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project" aria-selected="false">
+    : '' }}" title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project"
+                                    aria-selected="false">
                                     <span><i class="ti ti-folder"></i></span>
                                     <p>Projects</p>
                                 </a>
@@ -4039,7 +4034,8 @@
     'activity',
 )
     ? 'show active'
-    : '' }}" title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm" aria-selected="false">
+    : '' }}" title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm"
+                                    aria-selected="false">
                                     <span><i class="ti ti-user-shield"></i></span>
                                     <p>Crm</p>
                                 </a>
@@ -4077,7 +4073,8 @@
     'termination',
 )
     ? ' show active '
-    : '' }}" title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm" aria-selected="false">
+    : '' }}" title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm"
+                                    aria-selected="false">
                                     <span><i class="ti ti-users"></i></span>
                                     <p>Hrm</p>
                                 </a>
@@ -4147,7 +4144,8 @@
     'clear-cache',
 )
     ? 'show active '
-    : '' }}" title="Administration" data-bs-toggle="tab" data-bs-target="#menu-administration" aria-selected="false">
+    : '' }}" title="Administration" data-bs-toggle="tab"
+                                    data-bs-target="#menu-administration" aria-selected="false">
                                     <span><i class="ti ti-cash"></i></span>
                                     <p>Administration</p>
                                 </a>
@@ -4195,7 +4193,8 @@
     'error-500',
 )
     ? ' show active'
-    : '' }} " title="Authentication" data-bs-toggle="tab" data-bs-target="#menu-authentication" aria-selected="false">
+    : '' }} " title="Authentication" data-bs-toggle="tab"
+                                    data-bs-target="#menu-authentication" aria-selected="false">
                                     <span><i class="ti ti-lock-check"></i></span>
                                     <p>Authentication</p>
                                 </a>
@@ -4285,7 +4284,8 @@
     'icon-flag',
 )
     ? ' show active '
-    : '' }}" title="UI Elements" data-bs-toggle="tab" data-bs-target="#menu-ui-elements" aria-selected="false">
+    : '' }}" title="UI Elements" data-bs-toggle="tab"
+                                    data-bs-target="#menu-ui-elements" aria-selected="false">
                                     <span><i class="ti ti-ux-circle"></i></span>
                                     <p>Basic UI</p>
                                 </a>

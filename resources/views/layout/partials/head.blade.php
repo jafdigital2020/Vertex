@@ -5,52 +5,51 @@
 <link rel="shortcut icon" type="image/x-icon" href="{{ url('build/img/timorafav.png') }}">
 
 @if (
-        !Route::is([
-            'login',
-            'layout-horizontal',
-            'layout-detached',
-            'layout-modern',
-            'layout-horizontal-overlay',
-            'layout-two-column',
-            'layout-hovered',
-            'layout-box',
-            'layout-horizontal-single',
-            'layout-horizontal-box',
-            'layout-horizontal-sidemenu',
-            'layout-vertical-transparent',
-            'layout-without-header',
-            'login',
-            'login-2',
-            'login-3',
-            'register',
-            'register-2',
-            'register-3',
-            'forgot-password',
-            'forgot-password-2',
-            'forgot-password-3',
-            'reset-password',
-            'reset-password-2',
-            'reset-password-3',
-            'email-verification',
-            'email-verification-2',
-            'email-verification-3',
-            'lock-screen',
-            'error-404',
-            'error-500',
-            'coming-soon',
-            'under-maintenance',
-            'under-construction',
-            'success',
-            'success-2',
-            'success-3',
-            'two-step-verification',
-            'two-step-verification-2',
-            'two-step-verification-3',
-            'layout-without-header',
-            'layout-rtl',
-            'layout-dark',
-        ])
-    )
+    !Route::is([
+        'login',
+        'layout-horizontal',
+        'layout-detached',
+        'layout-modern',
+        'layout-horizontal-overlay',
+        'layout-two-column',
+        'layout-hovered',
+        'layout-box',
+        'layout-horizontal-single',
+        'layout-horizontal-box',
+        'layout-horizontal-sidemenu',
+        'layout-vertical-transparent',
+        'layout-without-header',
+        'login',
+        'login-2',
+        'login-3',
+        'register',
+        'register-2',
+        'register-3',
+        'forgot-password',
+        'forgot-password-2',
+        'forgot-password-3',
+        'reset-password',
+        'reset-password-2',
+        'reset-password-3',
+        'email-verification',
+        'email-verification-2',
+        'email-verification-3',
+        'lock-screen',
+        'error-404',
+        'error-500',
+        'coming-soon',
+        'under-maintenance',
+        'under-construction',
+        'success',
+        'success-2',
+        'success-3',
+        'two-step-verification',
+        'two-step-verification-2',
+        'two-step-verification-3',
+        'layout-without-header',
+        'layout-rtl',
+        'layout-dark',
+    ]))
     <!-- Theme Script js -->
     <script src="{{ URL::asset('build/js/theme-script.js') }}"></script>
 @endif
@@ -194,7 +193,7 @@
 <link rel="stylesheet" href="{{ url('build/plugins/icons/weather/weathericons.css') }}">
 
 <!-- Main CSS -->
-<link rel="stylesheet" href="{{ url('build/css/style.css') }}?v={{ @filemtime(public_path('build/css/style.css')) }}">
+<link rel="stylesheet" href="{{ url('build/css/style.css') }}">
 
 <!-- Toastr CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
