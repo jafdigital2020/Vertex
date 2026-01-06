@@ -44,7 +44,7 @@ return [
     ],
 
     'central_admin' => [
-        'api_url' => env('CENTRAL_ADMIN_API_URL', 'https://api-staging-admin.timora.ph'),
+        'api_url' => env('CENTRAL_ADMIN_API_URL', 'https://api-admin.timora.ph'),
         'type' => 'public', // No authentication required
     ],
 
