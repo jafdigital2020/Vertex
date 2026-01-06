@@ -2397,7 +2397,7 @@
         try {
             const token = localStorage.getItem('token');
             const currentPath = window.location.pathname;
-            const publicPaths = ['/login', '/register', '/forgot-password'];
+            const publicPaths = ['/login', '/register', '/forgot-password', '/otp-form', '/reset-password'];
 
             // Skip token check for public pages
             if (publicPaths.includes(currentPath)) {
