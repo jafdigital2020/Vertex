@@ -13,6 +13,7 @@ use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\Tenant\DesignationController;
+use App\Http\Controllers\Tenant\OrganizationalStructureController;
 use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
@@ -123,6 +124,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/designations/create', [DesignationController::class, 'designationStore'])->name('api.designationStore');
     Route::put('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('api.designationUpdate');
     Route::delete('/designations/delete/{id}', [DesignationController::class, 'designationDelete'])->name('api.designationDelete');
+
+    // ============ Organizational Structure API ================= //
+    Route::get('/organizational-structure', [OrganizationalStructureController::class, 'getOrganizationalStructure'])->name('api.organizationalStructure');
 
     // ===========  Employee API ================ //
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('api.employees');

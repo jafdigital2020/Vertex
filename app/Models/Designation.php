@@ -27,4 +27,17 @@ class Designation extends Model
     {
         return $this->hasMany(EmploymentDetail::class, 'designation_id');
     }
+
+    // Users/Employees relationship (through employment details)
+    public function employees()
+    {
+        return $this->hasManyThrough(
+            User::class,
+            EmploymentDetail::class,
+            'designation_id', // Foreign key on employment_details table
+            'id',             // Foreign key on users table
+            'id',             // Local key on designations table
+            'user_id'         // Local key on employment_details table
+        );
+    }
 }
