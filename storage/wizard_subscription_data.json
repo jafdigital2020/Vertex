@@ -1,0 +1,60 @@
+{
+    "subscription_details": {
+        "plan_slug": "pro",
+        "system_slug": "timora",
+        "billing_period": "monthly",
+        "total_employees": 150,
+        "mobile_access": true,
+        "mobile_app_users": 50,
+        "biometric_device_count": 2,
+        "selected_addons": [
+            "geofencing",
+            "custom_logo"
+        ],
+        "is_trial": false,
+        "referral_code": null
+    },
+    "pricing_breakdown": {
+        "base_price": 9999,
+        "extra_cost": 2450,
+        "mobile_cost": 2450,
+        "addon_cost": 10000,
+        "one_time_addon_cost": 3999,
+        "biometric_device_cost": 15000,
+        "biometric_services_cost": 9999,
+        "total_biometric_cost": 24999,
+        "implementation_fee": 39999,
+        "monthly_subtotal": 24899,
+        "recurring_total": 24899,
+        "vat": 10788,
+        "total_amount": 109686
+    },
+    "selected_devices": [
+        {
+            "name": "ZKTeco K40 Pro",
+            "price": 7500,
+            "quantity": 2,
+            "total_cost": 15000
+        }
+    ],
+    "selected_biometric_services": {
+        "installation": true,
+        "integration": true
+    },
+    "company_details": {
+        "company_name": "Test Company Ltd",
+        "company_code": "TESTCO",
+        "industry": "Technology",
+        "country": "Philippines",
+        "state": "Metro Manila",
+        "city": "Makati",
+        "subdomain": "testco"
+    },
+    "user_details": {
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@testcompany.com",
+        "phone": "+63912345678",
+        "username": "johndoe"
+    }
+}

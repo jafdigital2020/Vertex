@@ -87,6 +87,12 @@ jobs:
             echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
             echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
             echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
           else
             echo "COMPANY_CODE=${{ github.event.inputs.company_code }}" >> $GITHUB_ENV
             echo "COMPANY_NAME=${{ github.event.inputs.company_name }}" >> $GITHUB_ENV
@@ -254,6 +260,12 @@ jobs:
             echo "BILLING_CYCLE=${{ github.event.client_payload.billing_cycle }}" >> $GITHUB_ENV
             echo "AMOUNT=${{ github.event.client_payload.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=${{ github.event.client_payload.callback_url }}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
             echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
             echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
             echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
@@ -555,7 +567,7 @@ jobs:
             # Get the plan ID by querying the database after seeding
             SUBS_SEEDER_PATH="database/seeders/SubscriptionsTableSeeder.php"
 
-            # For now, we'll calculate the plan ID based on the pattern:
+            # Calculate the plan ID based on the pattern:
             # Free=1, Starter monthly=2, Core monthly=3, Pro monthly=4, Elite monthly=5
             # Starter yearly=6, Core yearly=7, Pro yearly=8, Elite yearly=9
             if [ "$SELECTED_PLAN" = "free" ]; then
@@ -622,23 +634,15 @@ jobs:
             sed -i "s/'status' => '[^']*'/'status' => 'active'/'" "$SUBS_SEEDER_PATH"
 
             # ✨ INJECT WIZARD SUBSCRIPTION DATA FOR ACCURATE INVOICING ✨
-            # Create comprehensive wizard data JSON for invoice generation
-            WIZARD_DATA_JSON=$(cat <<'WIZARD_EOF'
-            {
-              "subscription_details": $SUBSCRIPTION_DETAILS,
-              "pricing_breakdown": $PRICING_BREAKDOWN,
-              "selected_devices": $SELECTED_DEVICES,
-              "selected_biometric_services": $SELECTED_BIOMETRIC_SERVICES,
-              "company_details": $COMPANY_DETAILS,
-              "user_details": $USER_DETAILS
-            }
-            WIZARD_EOF
-            )
+            echo "🚀 Injecting wizard subscription data for accurate invoicing..."
+
+            # Create minimal wizard data structure with available information
+            WIZARD_JSON="{\"subscription_details\":{\"plan_slug\":\"${PLAN:-unknown}\",\"billing_period\":\"${BILLING_CYCLE:-monthly}\",\"system_slug\":\"${SYSTEM:-timora}\",\"total_employees\":1},\"pricing_breakdown\":{\"total_amount\":${AMOUNT:-0},\"base_price\":${AMOUNT:-0},\"implementation_fee\":0,\"vat\":0,\"recurring_total\":${AMOUNT:-0}},\"company_details\":{\"company_name\":\"${COMPANY_NAME:-}\",\"company_code\":\"${COMPANY_CODE:-}\"},\"user_details\":{\"email\":\"${EMAIL:-}\",\"username\":\"${USERNAME:-}\"},\"selected_devices\":[],\"selected_biometric_services\":{}}"
 
             # Inject wizard data using the script if available
             if [ -f "scripts/inject-wizard-data.php" ]; then
-              echo "🚀 Injecting wizard subscription data for accurate invoicing..."
-              php scripts/inject-wizard-data.php "$WIZARD_DATA_JSON" || echo "Wizard data injection failed - will use legacy seeding"
+              echo "Calling wizard data injection script..."
+              php scripts/inject-wizard-data.php "$WIZARD_JSON" || echo "⚠️ Wizard data injection failed - will use legacy seeding"
             else
               echo "⚠️ Wizard data injection script not found - using legacy invoice seeding"
             fi

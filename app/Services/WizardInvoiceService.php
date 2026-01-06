@@ -30,7 +30,18 @@ class WizardInvoiceService
             $billingCycle = $subscriptionDetails['billing_period'] ?? 'monthly';
             $periodDates = $this->calculatePeriodDates($billingCycle);
             
+<<<<<<< HEAD
             // Prepare invoice data
+=======
+            // Calculate subtotal (excluding VAT)
+            $recurringTotal = $pricingBreakdown['recurring_total'] ?? 0;
+            $implementationFee = $pricingBreakdown['implementation_fee'] ?? 0;
+            $oneTimeAddonCost = $pricingBreakdown['one_time_addon_cost'] ?? 0;
+            $biometricCosts = ($pricingBreakdown['biometric_device_cost'] ?? 0) + ($pricingBreakdown['biometric_services_cost'] ?? 0);
+            $subtotal = $recurringTotal + $implementationFee + $oneTimeAddonCost + $biometricCosts;
+            
+            // Prepare invoice data with enhanced mapping
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
             $invoiceData = [
                 'tenant_id' => $tenantId,
                 'subscription_id' => $subscription->id,
@@ -39,7 +50,11 @@ class WizardInvoiceService
                 'invoice_number' => $invoiceNumber,
                 'amount_due' => $pricingBreakdown['total_amount'] ?? 0,
                 'amount_paid' => $pricingBreakdown['total_amount'] ?? 0, // Paid in full
+<<<<<<< HEAD
                 'subscription_amount' => $pricingBreakdown['recurring_total'] ?? 0,
+=======
+                'subscription_amount' => $pricingBreakdown['recurring_total'] ?? $pricingBreakdown['monthly_subtotal'] ?? 0,
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
                 'currency' => 'PHP',
                 'due_date' => Carbon::now()->toDateString(),
                 'status' => 'paid',
@@ -54,10 +69,17 @@ class WizardInvoiceService
                 'unused_overage_amount' => 0.00,
                 'gross_overage_count' => 0,
                 'gross_overage_amount' => 0.00,
+<<<<<<< HEAD
                 'implementation_fee' => $pricingBreakdown['implementation_fee'] ?? 0,
                 'vat_amount' => $pricingBreakdown['vat'] ?? 0,
                 'vat_percentage' => 12.00,
                 'subtotal' => $pricingBreakdown['recurring_total'] + $pricingBreakdown['implementation_fee'] + ($pricingBreakdown['one_time_addon_cost'] ?? 0),
+=======
+                'implementation_fee' => $implementationFee,
+                'vat_amount' => $pricingBreakdown['vat'] ?? 0,
+                'vat_percentage' => 12.00,
+                'subtotal' => $subtotal,
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ];
@@ -120,6 +142,7 @@ class WizardInvoiceService
         if (($pricingBreakdown['extra_cost'] ?? 0) > 0) {
             $totalEmployees = $subscriptionDetails['total_employees'] ?? 0;
             $planDefaults = $this->getPlanDefaults();
+<<<<<<< HEAD
             $includedEmployees = $planDefaults[$subscriptionDetails['plan_slug']]['included_employees'] ?? 0;
             $extraEmployees = max(0, $totalEmployees - $includedEmployees);
             
@@ -132,6 +155,34 @@ class WizardInvoiceService
                     'amount' => $pricingBreakdown['extra_cost'],
                     'period' => $billingPeriod,
                     'metadata' => json_encode(['type' => 'additional_employees', 'employee_count' => $extraEmployees]),
+=======
+            $planSlug = $subscriptionDetails['plan_slug'] ?? 'unknown';
+            $includedEmployees = $planDefaults[$planSlug]['included_employees'] ?? 0;
+            
+            // For starter plan, check if it's free up to 10 employees
+            if ($planSlug === 'starter') {
+                $freeEmployeeLimit = 10;
+                $extraEmployees = max(0, $totalEmployees - $freeEmployeeLimit);
+            } else {
+                $extraEmployees = max(0, $totalEmployees - $includedEmployees);
+            }
+            
+            if ($extraEmployees > 0) {
+                $employeeRate = ($pricingBreakdown['extra_cost'] / $extraEmployees);
+                $lineItems[] = [
+                    'invoice_id' => $invoiceId,
+                    'description' => "Additional Employees ({$extraEmployees} employees beyond plan limit)",
+                    'quantity' => $extraEmployees,
+                    'rate' => $employeeRate,
+                    'amount' => $pricingBreakdown['extra_cost'],
+                    'period' => $billingPeriod,
+                    'metadata' => json_encode([
+                        'type' => 'additional_employees', 
+                        'employee_count' => $extraEmployees,
+                        'total_employees' => $totalEmployees,
+                        'included_employees' => $includedEmployees
+                    ]),
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ];
@@ -201,6 +252,7 @@ class WizardInvoiceService
         }
 
         // 6. Biometric Devices
+<<<<<<< HEAD
         if (!empty($selectedDevices)) {
             foreach ($selectedDevices as $device) {
                 $deviceName = $device['name'] ?? 'Unknown Device';
@@ -209,6 +261,17 @@ class WizardInvoiceService
                 $deviceTotal = $devicePrice * $deviceQuantity;
                 
                 if ($deviceQuantity > 0 && $devicePrice > 0) {
+=======
+        $deviceBreakdown = $pricingBreakdown['device_breakdown'] ?? [];
+        if (!empty($deviceBreakdown)) {
+            foreach ($deviceBreakdown as $device) {
+                $deviceName = $device['name'] ?? 'Unknown Device';
+                $devicePrice = (float) ($device['unit_price'] ?? $device['price'] ?? 0);
+                $deviceQuantity = (int) ($device['quantity'] ?? 1);
+                $deviceTotal = (float) ($device['total_cost'] ?? ($devicePrice * $deviceQuantity));
+                
+                if ($deviceQuantity > 0 && $deviceTotal > 0) {
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
                     $lineItems[] = [
                         'invoice_id' => $invoiceId,
                         'description' => $deviceName . " - Biometric Device",
@@ -222,11 +285,54 @@ class WizardInvoiceService
                     ];
                 }
             }
+<<<<<<< HEAD
+=======
+        } elseif (!empty($selectedDevices)) {
+            // Fallback: use selectedDevices if device_breakdown not available
+            $biometricDevices = config('wizard.biometric_devices', []);
+            
+            foreach ($selectedDevices as $device) {
+                $deviceId = $device['id'] ?? 0;
+                $deviceName = $device['name'] ?? 'Unknown Device';
+                
+                // Use price from config if device ID matches, otherwise use provided price
+                if (isset($biometricDevices[$deviceId])) {
+                    $devicePrice = $biometricDevices[$deviceId]['price'];
+                    $deviceName = $biometricDevices[$deviceId]['name'];
+                } else {
+                    $devicePrice = (float) ($device['price'] ?? 0);
+                }
+                
+                $deviceQuantity = (int) ($device['quantity'] ?? 0);
+                $deviceTotal = $devicePrice * $deviceQuantity;
+                
+                if ($deviceQuantity > 0 && $devicePrice > 0) {
+                    $lineItems[] = [
+                        'invoice_id' => $invoiceId,
+                        'description' => $deviceName . " - Biometric Device",
+                        'quantity' => $deviceQuantity,
+                        'rate' => $devicePrice,
+                        'amount' => $deviceTotal,
+                        'period' => 'one-time',
+                        'metadata' => json_encode([
+                            'type' => 'biometric_device', 
+                            'device' => $device,
+                            'device_id' => $deviceId,
+                            'capacity' => $biometricDevices[$deviceId]['capacity'] ?? null,
+                            'features' => $biometricDevices[$deviceId]['features'] ?? []
+                        ]),
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
+            }
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
         }
 
         // 7. Biometric Services
         if (!empty($biometricServices)) {
             $servicesBreakdown = $pricingBreakdown['services_breakdown'] ?? [];
+<<<<<<< HEAD
             
             foreach ($servicesBreakdown as $service) {
                 if (($service['cost'] ?? 0) > 0) {
@@ -241,6 +347,61 @@ class WizardInvoiceService
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
                     ];
+=======
+            $addonPrices = $this->getAddonPrices();
+            
+            if (!empty($servicesBreakdown)) {
+                // Use detailed services breakdown if available
+                foreach ($servicesBreakdown as $service) {
+                    if (($service['cost'] ?? 0) > 0) {
+                        $lineItems[] = [
+                            'invoice_id' => $invoiceId,
+                            'description' => $service['service'] ?? 'Biometric Service',
+                            'quantity' => 1,
+                            'rate' => $service['cost'],
+                            'amount' => $service['cost'],
+                            'period' => 'one-time',
+                            'metadata' => json_encode(['type' => 'biometric_service', 'service_data' => $service]),
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+                }
+            } else {
+                // Fallback: Check for common biometric service patterns
+                if (isset($biometricServices['installation']) && $biometricServices['installation']) {
+                    $serviceKey = 'wall_mounted'; // Default installation type
+                    if (isset($addonPrices[$serviceKey])) {
+                        $lineItems[] = [
+                            'invoice_id' => $invoiceId,
+                            'description' => $addonPrices[$serviceKey]['name'],
+                            'quantity' => 1,
+                            'rate' => $addonPrices[$serviceKey]['price'],
+                            'amount' => $addonPrices[$serviceKey]['price'],
+                            'period' => 'one-time',
+                            'metadata' => json_encode(['type' => 'biometric_installation', 'service_key' => $serviceKey]),
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+                }
+                
+                if (isset($biometricServices['integration']) && $biometricServices['integration']) {
+                    $serviceKey = 'biometric_integration'; // Legacy integration service
+                    if (isset($addonPrices[$serviceKey])) {
+                        $lineItems[] = [
+                            'invoice_id' => $invoiceId,
+                            'description' => $addonPrices[$serviceKey]['name'],
+                            'quantity' => 1,
+                            'rate' => $addonPrices[$serviceKey]['price'],
+                            'amount' => $addonPrices[$serviceKey]['price'],
+                            'period' => 'one-time',
+                            'metadata' => json_encode(['type' => 'biometric_integration', 'service_key' => $serviceKey]),
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
                 }
             }
         }
@@ -303,7 +464,11 @@ class WizardInvoiceService
     {
         return [
             'free' => ['included_employees' => 2],
+<<<<<<< HEAD
             'starter' => ['included_employees' => 1],
+=======
+            'starter' => ['included_employees' => 10],  // Fixed: 10 employees included
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
             'core' => ['included_employees' => 21],
             'pro' => ['included_employees' => 101],
             'elite' => ['included_employees' => 201],
@@ -315,6 +480,7 @@ class WizardInvoiceService
      */
     protected function getAddonPrices()
     {
+<<<<<<< HEAD
         return [
             'custom_logo' => ['price' => 3999, 'type' => 'one-time'],
             'geofencing' => ['price' => 10000, 'type' => 'monthly'],
@@ -322,6 +488,21 @@ class WizardInvoiceService
             'biometric_installation' => ['price' => 9999, 'type' => 'one-time'],
             'biometric_integration' => ['price' => 10000, 'type' => 'one-time'],
         ];
+=======
+        // Get addon prices from config to ensure alignment
+        $configAddons = config('wizard.addons', []);
+        
+        $addonPrices = [];
+        foreach ($configAddons as $key => $addon) {
+            $addonPrices[$key] = [
+                'price' => $addon['price'],
+                'type' => $addon['type'],
+                'name' => $addon['name']
+            ];
+        }
+        
+        return $addonPrices;
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
     }
 
     /**

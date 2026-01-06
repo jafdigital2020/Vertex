@@ -69,6 +69,7 @@ class InvoicesTableSeeder extends Seeder
      */
     protected function getWizardDataFromEnvironment()
     {
+<<<<<<< HEAD
         // Method 1: Check for wizard data in environment variables
         $wizardDataJson = env('WIZARD_SUBSCRIPTION_DATA');
         if ($wizardDataJson) {
@@ -76,19 +77,58 @@ class InvoicesTableSeeder extends Seeder
             if (json_last_error() === JSON_ERROR_NONE) {
                 Log::info('Wizard data loaded from environment variable');
                 return $wizardData;
+=======
+        $this->command->info('🔍 Searching for wizard data from multiple sources...');
+        
+        // Method 1: Check for wizard data in environment variables
+        $wizardDataJson = env('WIZARD_SUBSCRIPTION_DATA');
+        if ($wizardDataJson) {
+            $this->command->info('📦 Found wizard data in environment variable');
+            
+            // Handle base64 encoded data
+            $decodedData = base64_decode($wizardDataJson, true);
+            if ($decodedData !== false) {
+                $wizardDataJson = $decodedData;
+                $this->command->info('🔓 Decoded base64 wizard data');
+            }
+            
+            $wizardData = json_decode($wizardDataJson, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                Log::info('Wizard data loaded from environment variable', [
+                    'data_size' => strlen($wizardDataJson),
+                    'plan' => $wizardData['subscription_details']['plan_slug'] ?? 'unknown',
+                    'total_amount' => $wizardData['pricing_breakdown']['total_amount'] ?? 0
+                ]);
+                $this->command->info('✅ Environment wizard data is valid JSON');
+                return $wizardData;
+            } else {
+                $this->command->error('❌ Environment wizard data is invalid JSON: ' . json_last_error_msg());
+                Log::error('Invalid JSON in environment wizard data', [
+                    'json_error' => json_last_error_msg(),
+                    'data_preview' => substr($wizardDataJson, 0, 200)
+                ]);
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
             }
         }
 
         // Method 2: Check for wizard data in config file
         $wizardData = config('wizard.subscription_data');
         if ($wizardData && is_array($wizardData)) {
+<<<<<<< HEAD
             Log::info('Wizard data loaded from config file');
+=======
+            $this->command->info('📋 Found wizard data in config file');
+            Log::info('Wizard data loaded from config file', [
+                'plan' => $wizardData['subscription_details']['plan_slug'] ?? 'unknown'
+            ]);
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
             return $wizardData;
         }
 
         // Method 3: Check for wizard data in storage file (written by GitHub Actions)
         $wizardDataPath = storage_path('wizard_subscription_data.json');
         if (file_exists($wizardDataPath)) {
+<<<<<<< HEAD
             $wizardDataContent = file_get_contents($wizardDataPath);
             $wizardData = json_decode($wizardDataContent, true);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -98,6 +138,65 @@ class InvoicesTableSeeder extends Seeder
         }
 
         Log::warning('No wizard data found in environment variables, config, or storage files');
+=======
+            $this->command->info("📄 Found wizard data storage file: $wizardDataPath");
+            $wizardDataContent = file_get_contents($wizardDataPath);
+            $wizardData = json_decode($wizardDataContent, true);
+            
+            if (json_last_error() === JSON_ERROR_NONE) {
+                Log::info('Wizard data loaded from storage file', [
+                    'path' => $wizardDataPath,
+                    'file_size' => filesize($wizardDataPath),
+                    'plan' => $wizardData['subscription_details']['plan_slug'] ?? 'unknown',
+                    'total_amount' => $wizardData['pricing_breakdown']['total_amount'] ?? 0
+                ]);
+                $this->command->info('✅ Storage wizard data is valid JSON');
+                return $wizardData;
+            } else {
+                $this->command->error('❌ Storage wizard data is invalid JSON: ' . json_last_error_msg());
+                Log::error('Invalid JSON in storage wizard data', [
+                    'path' => $wizardDataPath,
+                    'json_error' => json_last_error_msg(),
+                    'data_preview' => substr($wizardDataContent, 0, 200)
+                ]);
+            }
+        } else {
+            $this->command->info('📂 No wizard data storage file found at: ' . $wizardDataPath);
+        }
+
+        // Method 4: Check for wizard data in temporary config cache
+        $tempConfigPath = base_path('bootstrap/cache/wizard_data.php');
+        if (file_exists($tempConfigPath)) {
+            $this->command->info("⚡ Found wizard data cache file: $tempConfigPath");
+            try {
+                $wizardData = include $tempConfigPath;
+                if (is_array($wizardData) && isset($wizardData['subscription_details'])) {
+                    Log::info('Wizard data loaded from cache file', [
+                        'path' => $tempConfigPath,
+                        'plan' => $wizardData['subscription_details']['plan_slug'] ?? 'unknown'
+                    ]);
+                    $this->command->info('✅ Cache wizard data is valid');
+                    return $wizardData;
+                }
+            } catch (\Exception $e) {
+                $this->command->error('❌ Failed to load wizard data from cache: ' . $e->getMessage());
+                Log::error('Failed to load wizard data from cache', [
+                    'path' => $tempConfigPath,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        $this->command->warn('⚠️ No valid wizard data found in any source');
+        Log::warning('No wizard data found in environment variables, config, storage files, or cache', [
+            'checked_paths' => [
+                'env_var' => 'WIZARD_SUBSCRIPTION_DATA',
+                'config' => 'wizard.subscription_data',
+                'storage' => $wizardDataPath,
+                'cache' => $tempConfigPath
+            ]
+        ]);
+>>>>>>> 7aac2cc3 (invoice testing for alignment)
         return null;
     }
 
