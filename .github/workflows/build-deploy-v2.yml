@@ -81,12 +81,7 @@ jobs:
             echo "BILLING_CYCLE=${{ github.event.client_payload.billing_cycle }}" >> $GITHUB_ENV
             echo "AMOUNT=${{ github.event.client_payload.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=${{ github.event.client_payload.callback_url }}" >> $GITHUB_ENV
-            echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
-            echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
-            echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
-            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
-            echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
-            echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
+            echo "REFERENCE_NUMBER=${{ github.event.client_payload.reference_number }}" >> $GITHUB_ENV
             echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
             echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
             echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
@@ -260,12 +255,7 @@ jobs:
             echo "BILLING_CYCLE=${{ github.event.client_payload.billing_cycle }}" >> $GITHUB_ENV
             echo "AMOUNT=${{ github.event.client_payload.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=${{ github.event.client_payload.callback_url }}" >> $GITHUB_ENV
-            echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
-            echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
-            echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
-            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
-            echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
-            echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
+            echo "REFERENCE_NUMBER=${{ github.event.client_payload.reference_number }}" >> $GITHUB_ENV
             echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
             echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
             echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
@@ -648,10 +638,20 @@ jobs:
             # ✨ INJECT WIZARD SUBSCRIPTION DATA FOR ACCURATE INVOICING ✨
             echo "🚀 Injecting wizard subscription data for accurate invoicing..."
 
-            # Create minimal wizard data structure with available information
-            WIZARD_JSON="{\"subscription_details\":{\"plan_slug\":\"${PLAN:-unknown}\",\"billing_period\":\"${BILLING_CYCLE:-monthly}\",\"system_slug\":\"${SYSTEM:-timora}\",\"total_employees\":1},\"pricing_breakdown\":{\"total_amount\":${AMOUNT:-0},\"base_price\":${AMOUNT:-0},\"implementation_fee\":0,\"vat\":0,\"recurring_total\":${AMOUNT:-0}},\"company_details\":{\"company_name\":\"${COMPANY_NAME:-}\",\"company_code\":\"${COMPANY_CODE:-}\"},\"user_details\":{\"email\":\"${EMAIL:-}\",\"username\":\"${USERNAME:-}\"},\"selected_devices\":[],\"selected_biometric_services\":{}}"
+            # Debug: Verify environment variables exist
+            echo "🔍 Checking wizard payload environment variables..."
+            echo "SUBSCRIPTION_DETAILS length: ${#SUBSCRIPTION_DETAILS}"
+            echo "PRICING_BREAKDOWN length: ${#PRICING_BREAKDOWN}"  
+            echo "SELECTED_DEVICES length: ${#SELECTED_DEVICES}"
 
-            # Set wizard data environment variable directly
+            # Use the complete wizard data from the payload instead of minimal data
+            # Reconstruct the JSON using the environment variables that contain the actual payload data
+            WIZARD_JSON="{\"reference_number\":\"${REFERENCE_NUMBER:-}\",\"subscription_details\":${SUBSCRIPTION_DETAILS:-{}},\"pricing_breakdown\":${PRICING_BREAKDOWN:-{}},\"selected_devices\":${SELECTED_DEVICES:-[]},\"selected_biometric_services\":${SELECTED_BIOMETRIC_SERVICES:-{}},\"company_details\":${COMPANY_DETAILS:-{}},\"user_details\":${USER_DETAILS:-{}}}"
+
+            # Debug: Show preview of reconstructed JSON  
+            echo "📋 Wizard JSON preview (first 300 chars): ${WIZARD_JSON:0:300}"
+
+            # Set wizard data environment variable directly  
             echo "WIZARD_SUBSCRIPTION_DATA='$WIZARD_JSON'" >> .env
             echo "📝 Wizard data environment variable set"
 
