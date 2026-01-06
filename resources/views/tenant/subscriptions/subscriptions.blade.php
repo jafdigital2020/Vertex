@@ -225,7 +225,8 @@
                                                 data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
                                                 data-plan="{{ $inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan ? $inv->upgradePlan->name : $inv->subscription->plan->name ?? 'N/A' }}"
                                                 data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
-                                                data-billing-cycle="{{ $inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle ? $inv->billing_cycle : $inv->subscription->billing_cycle ?? 'N/A' }}">
+                                                data-billing-cycle="{{ $inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle ? $inv->billing_cycle : $inv->subscription->billing_cycle ?? 'N/A' }}"
+                                                data-has-wizard-items="{{ ($inv->is_wizard_generated ?? false) ? 'true' : 'false' }}">
                                                 {{ $inv->invoice_number }}
 
                                                 @if (($inv->invoice_type ?? 'subscription') === 'plan_upgrade')
@@ -341,12 +342,12 @@
                     <!-- Invoice Items Table -->
                     <div class="mb-4">
                         <table class="table">
-                            <thead>
+                            <thead class="thead-light" id="inv-table-header">
                                 <tr>
                                     <th>Description</th>
-                                    <th>Period</th>
-                                    <th class="qty-rate-column">Quantity</th>
-                                    <th class="qty-rate-column">Rate</th>
+                                    <th class="text-center">Type</th>
+                                    <th class="text-center qty-rate-column">Quantity</th>
+                                    <th class="text-end qty-rate-column">Rate</th>
                                     <th class="text-end">Amount</th>
                                 </tr>
                             </thead>
@@ -1030,7 +1031,108 @@
                         col.style.display = showQtyRate ? '' : 'none';
                     });
 
-                    // Generate rows based on invoice type
+                    // Handle wizard-generated invoices with detailed line items
+                    if (d.hasWizardItems === 'true') {
+                        // Make AJAX call to fetch detailed invoice items
+                        fetch(`/billing/invoices/${d.invoiceId}/items`)
+                            .then(response => response.json())
+                            .then(data => {
+                                tbody.innerHTML = '';
+                                if (data.success && data.items && data.items.length > 0) {
+                                    data.items.forEach(item => {
+                                        const tr = document.createElement('tr');
+                                        
+                                        // Create type badge
+                                        let typeBadge = '';
+                                        switch(item.type) {
+                                            case 'base_subscription':
+                                                typeBadge = '<span class="badge bg-primary bg-opacity-10 text-primary ms-1">Base Plan</span>';
+                                                break;
+                                            case 'additional_employees':
+                                                typeBadge = '<span class="badge bg-info bg-opacity-10 text-info ms-1">Extra Users</span>';
+                                                break;
+                                            case 'mobile_access':
+                                                typeBadge = '<span class="badge bg-success bg-opacity-10 text-success ms-1">Mobile</span>';
+                                                break;
+                                            case 'addon_monthly':
+                                                typeBadge = '<span class="badge bg-secondary bg-opacity-10 text-secondary ms-1">Add-on</span>';
+                                                break;
+                                            case 'addon_onetime':
+                                                typeBadge = '<span class="badge bg-warning bg-opacity-10 text-warning ms-1">Setup</span>';
+                                                break;
+                                            case 'biometric_device':
+                                                typeBadge = '<span class="badge bg-dark bg-opacity-10 text-dark ms-1">Hardware</span>';
+                                                break;
+                                            case 'biometric_service':
+                                                typeBadge = '<span class="badge bg-danger bg-opacity-10 text-danger ms-1">Service</span>';
+                                                break;
+                                            case 'implementation_fee':
+                                                typeBadge = '<span class="badge ms-1" style="background: rgba(255, 108, 55, 0.1); color: #ff6c37;">Implementation</span>';
+                                                break;
+                                            default:
+                                                typeBadge = '<span class="badge bg-light text-dark ms-1">Standard</span>';
+                                        }
+                                        
+                                        // Create period badge
+                                        let periodBadge = '';
+                                        if (item.period === 'one-time') {
+                                            periodBadge = '<span class="badge bg-warning bg-opacity-10 text-warning">One-time</span>';
+                                        } else if (item.period) {
+                                            periodBadge = `<span class="badge bg-info bg-opacity-10 text-info">${item.period.charAt(0).toUpperCase() + item.period.slice(1)}</span>`;
+                                        } else {
+                                            periodBadge = '<span class="text-muted">-</span>';
+                                        }
+
+                                        tr.innerHTML = `
+                                            <td>
+                                                <div class="fw-medium">${item.description}</div>
+                                                ${typeBadge}
+                                            </td>
+                                            <td class="text-center">${periodBadge}</td>
+                                            <td class="text-center">${item.quantity}</td>
+                                            <td class="text-end">${item.formatted_rate}</td>
+                                            <td class="text-end fw-medium">${item.formatted_amount}</td>
+                                        `;
+                                        tbody.appendChild(tr);
+                                    });
+                                    
+                                    // Always show quantity and rate columns for detailed invoices
+                                    document.querySelectorAll('.qty-rate-column').forEach(col => {
+                                        col.style.display = '';
+                                    });
+                                } else {
+                                    // Fallback if no items found
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                    <td colspan="5" class="text-center">No detailed items available</td>
+                                `;
+                                    tbody.appendChild(tr);
+                                }
+                                
+                                // Update totals with API response data if available
+                                if (data.success && data.summary) {
+                                    document.getElementById('inv-subtotal').textContent = data.summary.formatted_subtotal;
+                                    document.getElementById('inv-vat-percentage').textContent = data.summary.vat_percentage;
+                                    document.getElementById('inv-vat-amount').textContent = data.summary.formatted_vat_amount;
+                                    document.getElementById('inv-total-amount').textContent = data.summary.formatted_total;
+                                    
+                                    const amountPaid = Number(d.amountPaid || 0);
+                                    document.getElementById('inv-amount-paid').textContent = fmtMoney(amountPaid, d.currency);
+                                    document.getElementById('inv-balance').textContent = fmtMoney(Math.max(data.summary.total - amountPaid, 0), d.currency);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching invoice items:', error);
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                <td colspan="5" class="text-center text-danger">Error loading items</td>
+                            `;
+                                tbody.appendChild(tr);
+                            });
+                        return; // Exit early for AJAX-loaded invoices
+                    }
+
+                    // Generate rows based on invoice type (legacy logic for non-detailed invoices)
                     if (invoiceType === 'plan_upgrade') {
                         const planUpgradeAmount = Number(d.subscriptionAmount || 0);
 

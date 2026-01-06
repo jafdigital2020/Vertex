@@ -276,10 +276,44 @@ class InvoiceController extends Controller
     {
         $invoice = Invoice::with('items')->findOrFail($invoiceId);
 
-        if ($invoice->invoice_type === 'custom_order' || $invoice->invoice_type === 'implementation_fee') {
-            return response()->json($invoice->items);
+        // Return detailed items for any invoice that has line items
+        if ($invoice->items && $invoice->items->count() > 0) {
+            $items = $invoice->items->map(function($item) {
+                $metadata = is_string($item->metadata) ? json_decode($item->metadata, true) : ($item->metadata ?? []);
+                
+                return [
+                    'id' => $item->id,
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'rate' => $item->rate,
+                    'amount' => $item->amount,
+                    'period' => $item->period,
+                    'type' => $metadata['type'] ?? 'standard',
+                    'metadata' => $metadata,
+                    'formatted_rate' => '₱' . number_format($item->rate, 2),
+                    'formatted_amount' => '₱' . number_format($item->amount, 2),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'items' => $items,
+                'summary' => [
+                    'subtotal' => $invoice->items->sum('amount'),
+                    'vat_amount' => $invoice->vat_amount ?? 0,
+                    'vat_percentage' => $invoice->vat_percentage ?? 12,
+                    'total' => $invoice->amount_due,
+                    'formatted_subtotal' => '₱' . number_format($invoice->items->sum('amount'), 2),
+                    'formatted_vat_amount' => '₱' . number_format($invoice->vat_amount ?? 0, 2),
+                    'formatted_total' => '₱' . number_format($invoice->amount_due, 2),
+                ]
+            ]);
         }
 
-        return response()->json([]);
+        return response()->json([
+            'success' => false,
+            'items' => [],
+            'message' => 'No detailed items available for this invoice'
+        ]);
     }
 }

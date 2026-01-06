@@ -414,36 +414,6 @@ $page = 'bills-payment'; ?>
                                             </td>
                                         </tr>
 
-                                        {{-- ✅ NEW: Enhanced invoice items display for wizard invoices --}}
-                                        @if($inv->is_wizard_generated ?? false)
-                                            <tr class="invoice-details-row">
-                                                <td colspan="6" class="p-0">
-                                                    <div class="collapse" id="invoiceDetails{{ $inv->id }}">
-                                                        <div class="p-3 bg-light border-top">
-                                                            @include('tenant.billing.components.invoice-items', ['invoice' => $inv])
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {{-- Toggle button for detailed view --}}
-                                                    <div class="text-center py-2 bg-light bg-opacity-50 border-top">
-                                                        <button class="btn btn-sm btn-outline-primary" type="button" 
-                                                            data-bs-toggle="collapse" 
-                                                            data-bs-target="#invoiceDetails{{ $inv->id }}" 
-                                                            aria-expanded="false" 
-                                                            aria-controls="invoiceDetails{{ $inv->id }}">
-                                                            <i class="ti ti-eye me-1"></i>View Details ({{ $inv->item_counts['total'] ?? 0 }} items)
-                                                        </button>
-                                                        
-                                                        @if(($inv->item_counts['one_time'] ?? 0) > 0)
-                                                            <span class="badge bg-warning ms-2">{{ $inv->item_counts['one_time'] }} One-time</span>
-                                                        @endif
-                                                        @if(($inv->item_counts['recurring'] ?? 0) > 0)
-                                                            <span class="badge bg-info ms-1">{{ $inv->item_counts['recurring'] }} Recurring</span>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endif
                                     @endforeach
                                 </tbody>
                             </table>
@@ -569,9 +539,9 @@ $page = 'bills-payment'; ?>
                                     <thead class="thead-light" id="inv-table-header">
                                         <tr>
                                             <th>Description</th>
-                                            <th>Period</th>
-                                            <th class="qty-rate-column">Quantity</th>
-                                            <th class="qty-rate-column">Rate</th>
+                                            <th class="text-center">Type</th>
+                                            <th class="text-center qty-rate-column">Quantity</th>
+                                            <th class="text-end qty-rate-column">Rate</th>
                                             <th class="text-end">Amount</th>
                                         </tr>
                                     </thead>
@@ -1255,42 +1225,115 @@ $page = 'bills-payment'; ?>
                             col.style.display = showQtyRate ? '' : 'none';
                         });
 
-                        // Handle custom_order type - use AJAX to fetch items
-                        if (invoiceType === 'custom_order') {
+                        // Handle custom_order type and wizard-generated invoices - use AJAX to fetch items
+                        if (invoiceType === 'custom_order' || d.hasWizardItems === 'true') {
                             // Make AJAX call to fetch invoice items
                             fetch(`/billing/invoices/${d.invoiceId}/items`)
                                 .then(response => response.json())
-                                .then(items => {
+                                .then(data => {
                                     tbody.innerHTML = '';
-                                    if (items && items.length > 0) {
-                                        items.forEach(item => {
+                                    if (data.success && data.items && data.items.length > 0) {
+                                        data.items.forEach(item => {
                                             const tr = document.createElement('tr');
+                                            
+                                            // Create type badge
+                                            let typeBadge = '';
+                                            switch(item.type) {
+                                                case 'base_subscription':
+                                                    typeBadge = '<span class="badge bg-primary bg-opacity-10 text-primary ms-1">Base Plan</span>';
+                                                    break;
+                                                case 'additional_employees':
+                                                    typeBadge = '<span class="badge bg-info bg-opacity-10 text-info ms-1">Extra Users</span>';
+                                                    break;
+                                                case 'mobile_access':
+                                                    typeBadge = '<span class="badge bg-success bg-opacity-10 text-success ms-1">Mobile</span>';
+                                                    break;
+                                                case 'addon_monthly':
+                                                    typeBadge = '<span class="badge bg-secondary bg-opacity-10 text-secondary ms-1">Add-on</span>';
+                                                    break;
+                                                case 'addon_onetime':
+                                                    typeBadge = '<span class="badge bg-warning bg-opacity-10 text-warning ms-1">Setup</span>';
+                                                    break;
+                                                case 'biometric_device':
+                                                    typeBadge = '<span class="badge bg-dark bg-opacity-10 text-dark ms-1">Hardware</span>';
+                                                    break;
+                                                case 'biometric_service':
+                                                    typeBadge = '<span class="badge bg-danger bg-opacity-10 text-danger ms-1">Service</span>';
+                                                    break;
+                                                case 'implementation_fee':
+                                                    typeBadge = '<span class="badge ms-1" style="background: rgba(255, 108, 55, 0.1); color: #ff6c37;">Implementation</span>';
+                                                    break;
+                                                default:
+                                                    typeBadge = '<span class="badge bg-light text-dark ms-1">Standard</span>';
+                                            }
+                                            
+                                            // Create period badge
+                                            let periodBadge = '';
+                                            if (item.period === 'one-time') {
+                                                periodBadge = '<span class="badge bg-warning bg-opacity-10 text-warning">One-time</span>';
+                                            } else if (item.period) {
+                                                periodBadge = `<span class="badge bg-info bg-opacity-10 text-info">${item.period.charAt(0).toUpperCase() + item.period.slice(1)}</span>`;
+                                            } else {
+                                                periodBadge = '<span class="text-muted">-</span>';
+                                            }
+
                                             tr.innerHTML = `
-                                            <td>${item.description}</td>
-                                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
-                                            <td>${item.quantity}</td>
-                                            <td>${fmtMoney(item.rate, d.currency)}</td>
-                                            <td class="text-end">${fmtMoney(item.amount, d.currency)}</td>
-                                        `;
+                                                <td>
+                                                    <div class="fw-medium">${item.description}</div>
+                                                    ${typeBadge}
+                                                </td>
+                                                <td class="text-center">${periodBadge}</td>
+                                                <td class="text-center">${item.quantity}</td>
+                                                <td class="text-end">${item.formatted_rate}</td>
+                                                <td class="text-end fw-medium">${item.formatted_amount}</td>
+                                            `;
                                             tbody.appendChild(tr);
+                                        });
+                                        
+                                        // Always show quantity and rate columns for detailed invoices
+                                        document.querySelectorAll('.qty-rate-column').forEach(col => {
+                                            col.style.display = '';
                                         });
                                     } else {
                                         // Fallback if no items found
                                         const tr = document.createElement('tr');
                                         tr.innerHTML = `
-                                        <td colspan="${showQtyRate ? 5 : 3}" class="text-center">No items found</td>
+                                        <td colspan="5" class="text-center">No detailed items available</td>
                                     `;
                                         tbody.appendChild(tr);
+                                    }
+                                    
+                                    // Update totals with API response data if available
+                                    if (data.success && data.summary) {
+                                        const subtotalEl = document.getElementById('inv-subtotal');
+                                        if (subtotalEl) subtotalEl.textContent = data.summary.formatted_subtotal;
+
+                                        const vatPercentageEl = document.getElementById('inv-vat-percentage');
+                                        if (vatPercentageEl) vatPercentageEl.textContent = data.summary.vat_percentage;
+
+                                        const vatAmountEl = document.getElementById('inv-vat-amount');
+                                        if (vatAmountEl) vatAmountEl.textContent = data.summary.formatted_vat_amount;
+
+                                        const totalAmountEl = document.getElementById('inv-total-amount');
+                                        if (totalAmountEl) totalAmountEl.textContent = data.summary.formatted_total;
+                                        
+                                        const amountPaid = Number(d.amountPaid || 0);
+                                        const amountPaidEl = document.getElementById('inv-amount-paid');
+                                        if (amountPaidEl) amountPaidEl.textContent = fmtMoney(amountPaid, d.currency);
+
+                                        const balanceEl = document.getElementById('inv-balance');
+                                        if (balanceEl) balanceEl.textContent = fmtMoney(Math.max(data.summary.total - amountPaid, 0), d.currency);
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Error fetching invoice items:', error);
                                     const tr = document.createElement('tr');
                                     tr.innerHTML = `
-                                    <td colspan="${showQtyRate ? 5 : 3}" class="text-center text-danger">Error loading items</td>
+                                    <td colspan="5" class="text-center text-danger">Error loading items</td>
                                 `;
                                     tbody.appendChild(tr);
                                 });
+                            return; // Exit early for AJAX-loaded invoices
                         } else if (invoiceType === 'subscription') {
                             if (implementationFee > 0) {
                                 const trImpl = document.createElement('tr');
