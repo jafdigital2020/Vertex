@@ -3,13 +3,22 @@
 namespace Database\Seeders;
 
 use App\Services\WizardInvoiceService;
+use App\Services\WizardInvoiceService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log;
 
 class InvoicesTableSeeder extends Seeder
 {
+    protected $wizardInvoiceService;
+
+    public function __construct(WizardInvoiceService $wizardInvoiceService)
+    {
+        $this->wizardInvoiceService = $wizardInvoiceService;
+    }
+
     protected $wizardInvoiceService;
 
     public function __construct(WizardInvoiceService $wizardInvoiceService)
@@ -69,15 +78,6 @@ class InvoicesTableSeeder extends Seeder
      */
     protected function getWizardDataFromEnvironment()
     {
-<<<<<<< HEAD
-        // Method 1: Check for wizard data in environment variables
-        $wizardDataJson = env('WIZARD_SUBSCRIPTION_DATA');
-        if ($wizardDataJson) {
-            $wizardData = json_decode($wizardDataJson, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                Log::info('Wizard data loaded from environment variable');
-                return $wizardData;
-=======
         $this->command->info('🔍 Searching for wizard data from multiple sources...');
         
         // Method 1: Check for wizard data in environment variables
@@ -107,38 +107,22 @@ class InvoicesTableSeeder extends Seeder
                     'json_error' => json_last_error_msg(),
                     'data_preview' => substr($wizardDataJson, 0, 200)
                 ]);
->>>>>>> 7aac2cc3 (invoice testing for alignment)
             }
         }
 
         // Method 2: Check for wizard data in config file
         $wizardData = config('wizard.subscription_data');
         if ($wizardData && is_array($wizardData)) {
-<<<<<<< HEAD
-            Log::info('Wizard data loaded from config file');
-=======
             $this->command->info('📋 Found wizard data in config file');
             Log::info('Wizard data loaded from config file', [
                 'plan' => $wizardData['subscription_details']['plan_slug'] ?? 'unknown'
             ]);
->>>>>>> 7aac2cc3 (invoice testing for alignment)
             return $wizardData;
         }
 
         // Method 3: Check for wizard data in storage file (written by GitHub Actions)
         $wizardDataPath = storage_path('wizard_subscription_data.json');
         if (file_exists($wizardDataPath)) {
-<<<<<<< HEAD
-            $wizardDataContent = file_get_contents($wizardDataPath);
-            $wizardData = json_decode($wizardDataContent, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                Log::info('Wizard data loaded from storage file', ['path' => $wizardDataPath]);
-                return $wizardData;
-            }
-        }
-
-        Log::warning('No wizard data found in environment variables, config, or storage files');
-=======
             $this->command->info("📄 Found wizard data storage file: $wizardDataPath");
             $wizardDataContent = file_get_contents($wizardDataPath);
             $wizardData = json_decode($wizardDataContent, true);
@@ -196,7 +180,6 @@ class InvoicesTableSeeder extends Seeder
                 'cache' => $tempConfigPath
             ]
         ]);
->>>>>>> 7aac2cc3 (invoice testing for alignment)
         return null;
     }
 
@@ -265,6 +248,7 @@ class InvoicesTableSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ]);
 
+        $this->command->info('Legacy invoice created successfully: ' . $invoiceNumber);
         $this->command->info('Legacy invoice created successfully: ' . $invoiceNumber);
     }
 }

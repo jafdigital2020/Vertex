@@ -13,22 +13,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 function injectWizardData($wizardDataJson)
 {
     try {
-<<<<<<< HEAD
-        // Validate JSON input
-        $wizardData = json_decode($wizardDataJson, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception('Invalid JSON data: ' . json_last_error_msg());
-        }
-        
-        // Validate required data structure
-        if (!isset($wizardData['subscription_details']) || !isset($wizardData['pricing_breakdown'])) {
-            throw new Exception('Missing required subscription_details or pricing_breakdown');
-        }
-        
-        echo "✅ Wizard data validation passed\n";
-        echo "📊 Subscription Plan: " . ($wizardData['subscription_details']['plan_slug'] ?? 'Unknown') . "\n";
-        echo "💰 Total Amount: ₱" . number_format($wizardData['pricing_breakdown']['total_amount'] ?? 0, 2) . "\n";
-=======
         echo "🚀 Starting wizard data injection...\n";
         echo "📝 Input data length: " . strlen($wizardDataJson) . " characters\n";
         
@@ -99,7 +83,6 @@ function injectWizardData($wizardDataJson)
         echo "🔄 Billing Period: " . ($subscriptionDetails['billing_period'] ?? 'Unknown') . "\n";
         echo "💰 Total Amount: ₱" . number_format($pricingBreakdown['total_amount'] ?? 0, 2) . "\n";
         echo "🏢 System: " . ($subscriptionDetails['system_slug'] ?? 'Unknown') . "\n";
->>>>>>> 7aac2cc3 (invoice testing for alignment)
         
         // Method 1: Write to storage file
         $storagePath = __DIR__ . '/../storage/wizard_subscription_data.json';
@@ -107,14 +90,6 @@ function injectWizardData($wizardDataJson)
         
         if (!is_dir($storageDir)) {
             mkdir($storageDir, 0755, true);
-<<<<<<< HEAD
-        }
-        
-        file_put_contents($storagePath, json_encode($wizardData, JSON_PRETTY_PRINT));
-        echo "✅ Wizard data written to storage file: $storagePath\n";
-        
-        // Method 2: Append to .env file (will be read by config)
-=======
             echo "📁 Created storage directory: $storageDir\n";
         }
         
@@ -125,7 +100,6 @@ function injectWizardData($wizardDataJson)
         echo "✅ Wizard data written to storage file: $storagePath (" . $writeResult . " bytes)\n";
         
         // Method 2: Append to .env file (base64 encoded to avoid shell issues)
->>>>>>> 7aac2cc3 (invoice testing for alignment)
         $envPath = __DIR__ . '/../.env';
         if (file_exists($envPath)) {
             $envContent = file_get_contents($envPath);
@@ -135,13 +109,6 @@ function injectWizardData($wizardDataJson)
             $envContent = trim($envContent) . "\n";
             
             // Add new wizard data (base64 encoded to avoid shell issues)
-<<<<<<< HEAD
-            $encodedData = base64_encode($wizardDataJson);
-            $envContent .= "WIZARD_SUBSCRIPTION_DATA=" . $encodedData . "\n";
-            
-            file_put_contents($envPath, $envContent);
-            echo "✅ Wizard data added to .env file\n";
-=======
             $encodedData = base64_encode(json_encode($wizardData));
             $envContent .= "WIZARD_SUBSCRIPTION_DATA=" . $encodedData . "\n";
             
@@ -153,16 +120,10 @@ function injectWizardData($wizardDataJson)
             }
         } else {
             echo "⚠️ Warning: .env file not found at $envPath\n";
->>>>>>> 7aac2cc3 (invoice testing for alignment)
         }
         
         // Method 3: Create temporary config file for immediate use
         $tempConfigPath = __DIR__ . '/../bootstrap/cache/wizard_data.php';
-<<<<<<< HEAD
-        $configContent = "<?php\n\nreturn " . var_export($wizardData, true) . ";\n";
-        file_put_contents($tempConfigPath, $configContent);
-        echo "✅ Wizard data written to temporary config file: $tempConfigPath\n";
-=======
         $tempConfigDir = dirname($tempConfigPath);
         
         if (!is_dir($tempConfigDir)) {
@@ -188,7 +149,6 @@ function injectWizardData($wizardDataJson)
                 echo "⚠️ Warning: Storage file validation failed\n";
             }
         }
->>>>>>> 7aac2cc3 (invoice testing for alignment)
         
         echo "🎉 Wizard data injection completed successfully!\n";
         return true;
@@ -196,12 +156,9 @@ function injectWizardData($wizardDataJson)
     } catch (Exception $e) {
         echo "❌ Error injecting wizard data: " . $e->getMessage() . "\n";
         echo "📋 Stack trace: " . $e->getTraceAsString() . "\n";
-<<<<<<< HEAD
-=======
         echo "🔍 Debug info:\n";
         echo "  - Input data first 500 chars: " . substr($wizardDataJson, 0, 500) . "\n";
         echo "  - JSON error: " . json_last_error_msg() . "\n";
->>>>>>> 7aac2cc3 (invoice testing for alignment)
         return false;
     }
 }

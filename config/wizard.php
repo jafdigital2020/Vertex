@@ -31,45 +31,27 @@ return [
             'implementation_fee' => 0,
         ],
         'starter' => [
-<<<<<<< HEAD
-            'included_employees' => 1,
-            'max_employees' => 20,
-            'base_price' => 999,
-=======
             'included_employees' => 10,  // Fixed: 10 employees included
             'max_employees' => 20,
             'base_price' => 5000,        // Fixed: ₱5,000 base price
->>>>>>> 7aac2cc3 (invoice testing for alignment)
             'implementation_fee' => 4999,
         ],
         'core' => [
             'included_employees' => 21,
             'max_employees' => 100,
-<<<<<<< HEAD
-            'base_price' => 3999,
-=======
             'base_price' => 5549,        // Fixed: ₱5,549 base price
->>>>>>> 7aac2cc3 (invoice testing for alignment)
             'implementation_fee' => 14999,
         ],
         'pro' => [
             'included_employees' => 101,
             'max_employees' => 200,
-<<<<<<< HEAD
-            'base_price' => 9999,
-=======
             'base_price' => 9549,        // Fixed: ₱9,549 base price
->>>>>>> 7aac2cc3 (invoice testing for alignment)
             'implementation_fee' => 39999,
         ],
         'elite' => [
             'included_employees' => 201,
             'max_employees' => 500,
-<<<<<<< HEAD
-            'base_price' => 19999,
-=======
             'base_price' => 14549,       // Fixed: ₱14,549 base price
->>>>>>> 7aac2cc3 (invoice testing for alignment)
             'implementation_fee' => 79999,
         ],
     ],
@@ -102,8 +84,6 @@ return [
             'type' => 'monthly',
             'description' => 'Send automated emails and notifications',
         ],
-<<<<<<< HEAD
-=======
         'wall_mounted' => [
             'name' => 'Wall Mounted Installation',
             'price' => 9999,
@@ -117,7 +97,6 @@ return [
             'description' => 'Complete door access control system installation',
         ],
         // Legacy addon keys for backward compatibility
->>>>>>> 7aac2cc3 (invoice testing for alignment)
         'biometric_installation' => [
             'name' => 'Biometric Installation Service',
             'price' => 9999,
@@ -134,8 +113,6 @@ return [
     
     /*
     |--------------------------------------------------------------------------
-<<<<<<< HEAD
-=======
     | Biometric Device Configuration
     |--------------------------------------------------------------------------
     |
@@ -203,7 +180,6 @@ return [
     
     /*
     |--------------------------------------------------------------------------
->>>>>>> 7aac2cc3 (invoice testing for alignment)
     | Rate Configuration
     |--------------------------------------------------------------------------
     |
