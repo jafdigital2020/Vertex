@@ -100,6 +100,37 @@ class BillingController extends Controller
             if ($inv->invoice_type === 'plan_upgrade' && $inv->subscription) {
                 $inv->current_plan_name = $inv->subscription->plan->name ?? 'Current Plan';
             }
+
+            // ✅ Enhanced wizard invoice support
+            if ($inv->items && $inv->items->count() > 0) {
+                // Mark as wizard-generated invoice
+                $inv->is_wizard_generated = true;
+                
+                // Calculate breakdown from items for better display
+                $inv->items_subtotal = $inv->items->sum('amount');
+                
+                // Categorize items for better UI display
+                $inv->categorized_items = [
+                    'base_subscription' => $inv->items->where('metadata->type', 'base_subscription'),
+                    'additional_employees' => $inv->items->where('metadata->type', 'additional_employees'),
+                    'mobile_access' => $inv->items->where('metadata->type', 'mobile_access'),
+                    'addons' => $inv->items->whereIn('metadata->type', ['addon_monthly', 'addon_onetime']),
+                    'biometric' => $inv->items->whereIn('metadata->type', ['biometric_device', 'biometric_service']),
+                    'implementation' => $inv->items->where('metadata->type', 'implementation_fee'),
+                ];
+                
+                // Count different item types
+                $inv->item_counts = [
+                    'total' => $inv->items->count(),
+                    'subscription' => $inv->categorized_items['base_subscription']->count(),
+                    'addons' => $inv->categorized_items['addons']->count(),
+                    'biometric' => $inv->categorized_items['biometric']->count(),
+                    'one_time' => $inv->items->where('period', 'one-time')->count(),
+                    'recurring' => $inv->items->where('period', '!=', 'one-time')->count(),
+                ];
+            } else {
+                $inv->is_wizard_generated = false;
+            }
         }
 
         return view('tenant.billing.billing', compact(

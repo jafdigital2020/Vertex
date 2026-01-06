@@ -230,6 +230,13 @@ $page = 'bills-payment'; ?>
                                                     @elseif(($inv->invoice_type ?? 'subscription') === 'consolidated')
                                                         <span class="badge bg-secondary ms-1">Consolidated</span>
                                                     @endif
+
+                                                    {{-- ✅ NEW: Wizard invoice indicator --}}
+                                                    @if($inv->is_wizard_generated ?? false)
+                                                        <span class="badge bg-success bg-opacity-10 text-success ms-1">
+                                                            <i class="ti ti-wand me-1"></i>Detailed
+                                                        </span>
+                                                    @endif
                                                 </a>
                                             </td>
                                             <td>{{ \Carbon\Carbon::parse($inv->issued_at)->format('Y-m-d') }}</td>
@@ -400,11 +407,43 @@ $page = 'bills-payment'; ?>
                                                     data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
                                                     data-plan="{{ $inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan ? $inv->upgradePlan->name : $inv->subscription->plan->name ?? 'N/A' }}"
                                                     data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
-                                                    data-billing-cycle="{{ $inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle ? $inv->billing_cycle : $inv->subscription->billing_cycle ?? 'N/A' }}">
+                                                    data-billing-cycle="{{ $inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle ? $inv->billing_cycle : $inv->subscription->billing_cycle ?? 'N/A' }}"
+                                                    data-has-wizard-items="{{ ($inv->is_wizard_generated ?? false) ? 'true' : 'false' }}">
                                                     <i class="ti ti-download me-1"></i>Download
                                                 </a>
                                             </td>
                                         </tr>
+
+                                        {{-- ✅ NEW: Enhanced invoice items display for wizard invoices --}}
+                                        @if($inv->is_wizard_generated ?? false)
+                                            <tr class="invoice-details-row">
+                                                <td colspan="6" class="p-0">
+                                                    <div class="collapse" id="invoiceDetails{{ $inv->id }}">
+                                                        <div class="p-3 bg-light border-top">
+                                                            @include('tenant.billing.components.invoice-items', ['invoice' => $inv])
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {{-- Toggle button for detailed view --}}
+                                                    <div class="text-center py-2 bg-light bg-opacity-50 border-top">
+                                                        <button class="btn btn-sm btn-outline-primary" type="button" 
+                                                            data-bs-toggle="collapse" 
+                                                            data-bs-target="#invoiceDetails{{ $inv->id }}" 
+                                                            aria-expanded="false" 
+                                                            aria-controls="invoiceDetails{{ $inv->id }}">
+                                                            <i class="ti ti-eye me-1"></i>View Details ({{ $inv->item_counts['total'] ?? 0 }} items)
+                                                        </button>
+                                                        
+                                                        @if(($inv->item_counts['one_time'] ?? 0) > 0)
+                                                            <span class="badge bg-warning ms-2">{{ $inv->item_counts['one_time'] }} One-time</span>
+                                                        @endif
+                                                        @if(($inv->item_counts['recurring'] ?? 0) > 0)
+                                                            <span class="badge bg-info ms-1">{{ $inv->item_counts['recurring'] }} Recurring</span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endif
                                     @endforeach
                                 </tbody>
                             </table>
@@ -701,8 +740,13 @@ $page = 'bills-payment'; ?>
                         billingCycle: this.dataset.billingCycle
                     };
 
-                    // If custom_order or implementation_fee, fetch items first before generating PDF
-                    if (invoiceData.invoiceType === 'custom_order' || invoiceData.invoiceType === 'implementation_fee') {
+                    // ✅ ENHANCED: Check if invoice has detailed items (wizard invoices, custom_order, implementation_fee)
+                    const hasDetailedItems = this.dataset.hasWizardItems === 'true' || 
+                                           invoiceData.invoiceType === 'custom_order' || 
+                                           invoiceData.invoiceType === 'implementation_fee';
+                    
+                    // If invoice has detailed items, fetch them first before generating PDF
+                    if (hasDetailedItems) {
                         fetch(`/billing/invoices/${invoiceData.invoiceId}/items`)
                             .then(response => response.json())
                             .then(items => {
@@ -777,15 +821,38 @@ $page = 'bills-payment'; ?>
 
             const balance = Math.max(amountDue - amountPaid, 0);
 
-            // ✅ Determine if we should show Quantity and Rate columns in PDF
+            // ✅ ENHANCED: Determine if we should show Quantity and Rate columns in PDF
             const hasOverage = (data.invoiceType === 'subscription' && licenseOverageCount > 0) ||
                 data.invoiceType === 'license_overage' ||
                 data.invoiceType === 'combo' ||
                 data.invoiceType === 'custom_order';
-            const showQtyRateInPDF = hasOverage;
+            const hasWizardItems = data.items && Array.isArray(data.items) && data.items.length > 0;
+            const showQtyRateInPDF = hasOverage || hasWizardItems;
 
             // Generate invoice items based on type
             let invoiceItemsHTML = '';
+
+            // ✅ NEW: Handle wizard invoice items first
+            if (hasWizardItems) {
+                data.items.forEach(item => {
+                    const itemType = item.metadata?.type || 'standard';
+                    const period = item.period === 'one-time' ? 'One-time' : (item.period || '—');
+                    
+                    invoiceItemsHTML += `
+                        <tr>
+                            <td>
+                                ${item.description}
+                                ${itemType === 'biometric_device' && item.metadata?.device?.model ? 
+                                    `<br><small style="color: #666;">Model: ${item.metadata.device.model}</small>` : ''}
+                            </td>
+                            <td>${period}</td>
+                            <td class="text-center">${item.quantity || 1}</td>
+                            <td class="text-end">${fmtMoney(item.rate, data.currency)}</td>
+                            <td class="text-end"><strong>${fmtMoney(item.amount, data.currency)}</strong></td>
+                        </tr>
+                    `;
+                });
+            } else {
 
             if (data.invoiceType === 'combo' || data.invoiceType === 'subscription') {
                 // Implementation Fee
@@ -932,6 +999,8 @@ $page = 'bills-payment'; ?>
                         </tr>
                     `;
             }
+            // ✅ End of legacy invoice generation logic
+            }
 
             invoiceContainer.innerHTML = `
                     <div style="margin-bottom: 30px;">
@@ -942,6 +1011,7 @@ $page = 'bills-payment'; ?>
                             <div style="text-align: right;">
                                 <h2 style="margin: 0 0 10px 0; color: #333;">Invoice</h2>
                                 <p style="margin: 5px 0; font-size: 14px;">${getInvoiceIcon(data.invoiceType)} ${data.invoiceNumber || '—'}</p>
+                                ${hasWizardItems ? '<p style="margin: 5px 0; font-size: 12px; color: #28a745;">🪄 Detailed Breakdown Included</p>' : ''}
                                 <p style="margin: 5px 0; font-size: 14px;">📅 Issue date: ${fmtDate(data.issuedAt)}</p>
                                 <p style="margin: 5px 0; font-size: 14px;">📅 Due date: ${fmtDate(data.dueDate)}</p>
                             </div>
