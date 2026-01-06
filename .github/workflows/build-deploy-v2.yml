@@ -633,11 +633,27 @@ jobs:
             sed -i "s/'next_renewal_date' => '[^']*'/'next_renewal_date' => '$NEXT_RENEWAL_DATE'/'" "$SUBS_SEEDER_PATH"
             sed -i "s/'status' => '[^']*'/'status' => 'active'/'" "$SUBS_SEEDER_PATH"
 
+            # Update InvoicesTableSeeder.php to align with subscription seeder
+            # The invoice seeder will automatically read from the subscription, but we ensure
+            # the billing cycle variable matches what will be seeded
+            INVOICE_SEEDER_PATH="database/seeders/InvoicesTableSeeder.php"
+            sed -i "s/\$billingCycle = 'monthly';/\$billingCycle = '$BILLING_CYCLE';/" "$INVOICE_SEEDER_PATH"
+
+            # Configure Laravel environment first
+            php artisan key:generate
+            php artisan config:clear
+            php artisan config:cache
+            php artisan route:cache
+
             # ✨ INJECT WIZARD SUBSCRIPTION DATA FOR ACCURATE INVOICING ✨
             echo "🚀 Injecting wizard subscription data for accurate invoicing..."
 
             # Create minimal wizard data structure with available information
             WIZARD_JSON="{\"subscription_details\":{\"plan_slug\":\"${PLAN:-unknown}\",\"billing_period\":\"${BILLING_CYCLE:-monthly}\",\"system_slug\":\"${SYSTEM:-timora}\",\"total_employees\":1},\"pricing_breakdown\":{\"total_amount\":${AMOUNT:-0},\"base_price\":${AMOUNT:-0},\"implementation_fee\":0,\"vat\":0,\"recurring_total\":${AMOUNT:-0}},\"company_details\":{\"company_name\":\"${COMPANY_NAME:-}\",\"company_code\":\"${COMPANY_CODE:-}\"},\"user_details\":{\"email\":\"${EMAIL:-}\",\"username\":\"${USERNAME:-}\"},\"selected_devices\":[],\"selected_biometric_services\":{}}"
+
+            # Set wizard data environment variable directly
+            echo "WIZARD_SUBSCRIPTION_DATA='$WIZARD_JSON'" >> .env
+            echo "📝 Wizard data environment variable set"
 
             # Inject wizard data using the script if available
             if [ -f "scripts/inject-wizard-data.php" ]; then
@@ -647,17 +663,7 @@ jobs:
               echo "⚠️ Wizard data injection script not found - using legacy invoice seeding"
             fi
 
-            # Update InvoicesTableSeeder.php to align with subscription seeder
-            # The invoice seeder will automatically read from the subscription, but we ensure
-            # the billing cycle variable matches what will be seeded
-            INVOICE_SEEDER_PATH="database/seeders/InvoicesTableSeeder.php"
-            sed -i "s/\$billingCycle = 'monthly';/\$billingCycle = '$BILLING_CYCLE';/" "$INVOICE_SEEDER_PATH"
-
             # Fresh migrate and seed the database
-            php artisan key:generate
-            php artisan config:clear
-            php artisan config:cache
-            php artisan route:cache
             php artisan migrate:fresh --seed --force
             php artisan storage:link
             chmod -R guo+w storage

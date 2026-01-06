@@ -3,22 +3,13 @@
 namespace Database\Seeders;
 
 use App\Services\WizardInvoiceService;
-use App\Services\WizardInvoiceService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Log;
 
 class InvoicesTableSeeder extends Seeder
 {
-    protected $wizardInvoiceService;
-
-    public function __construct(WizardInvoiceService $wizardInvoiceService)
-    {
-        $this->wizardInvoiceService = $wizardInvoiceService;
-    }
-
     protected $wizardInvoiceService;
 
     public function __construct(WizardInvoiceService $wizardInvoiceService)
@@ -31,13 +22,24 @@ class InvoicesTableSeeder extends Seeder
      */
     public function run(): void
     {
+        // Debug: Check tenant and subscription existence
+        $tenantsCount = DB::table('tenants')->count();
+        $subscriptionsCount = DB::table('subscriptions')->count();
+        $this->command->info("🔍 Debug: Found {$tenantsCount} tenants, {$subscriptionsCount} subscriptions");
+        
         // Get the subscription to link the invoice to
         $subscription = DB::table('subscriptions')->where('tenant_id', 1)->first();
 
         if (!$subscription) {
-            $this->command->warn('No subscription found. Skipping invoice seeder.');
+            $this->command->warn("❌ No subscription found with tenant_id=1. Skipping invoice seeder.");
+            
+            // Debug: List available subscriptions
+            $allSubscriptions = DB::table('subscriptions')->select('id', 'tenant_id', 'plan_id', 'amount_paid')->get();
+            $this->command->warn("📊 Available subscriptions: " . json_encode($allSubscriptions->toArray()));
             return;
         }
+        
+        $this->command->info("✅ Found subscription: ID={$subscription->id}, tenant_id={$subscription->tenant_id}");
 
         Log::info('Starting invoice seeding process', [
             'subscription_id' => $subscription->id,
@@ -248,7 +250,6 @@ class InvoicesTableSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ]);
 
-        $this->command->info('Legacy invoice created successfully: ' . $invoiceNumber);
         $this->command->info('Legacy invoice created successfully: ' . $invoiceNumber);
     }
 }
