@@ -125,9 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('api.designationUpdate');
     Route::delete('/designations/delete/{id}', [DesignationController::class, 'designationDelete'])->name('api.designationDelete');
 
-    // ============ Organizational Structure API ================= //
-    Route::get('/organizational-structure', [OrganizationalStructureController::class, 'getOrganizationalStructure'])->name('api.organizationalStructure');
-
+   
     // ===========  Employee API ================ //
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('api.employees');
     Route::post('employees', [EmployeeListController::class, 'employeeAdd'])->name('api.employeeStore');

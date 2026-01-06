@@ -1454,36 +1454,111 @@ class ShiftManagementController extends Controller
 
     public function getDesignationsByDepartments(Request $request)
     {
-
         $authUser = $this->authUser();
+        
+        // Handle different ways department_ids might be sent
         $departmentIds = $request->query('department_ids', []);
-
-        // if no departments selected, return empty list
+        
+        // If department_ids is empty, try to get from individual parameters
         if (empty($departmentIds)) {
-            return response()->json([], 200);
+            // Check if parameters are sent as individual numbered keys
+            $allParams = $request->all();
+            foreach ($allParams as $key => $value) {
+                if (is_numeric($key)) {
+                    $departmentIds[] = intval($key);
+                }
+            }
         }
+        
+        // If department_ids is a string (single value), convert to array
+        if (is_string($departmentIds)) {
+            $departmentIds = [$departmentIds];
+        }
+        
+        // Filter out empty values and ensure integers
+        $departmentIds = array_filter(array_map('intval', $departmentIds));
+        
+        Log::info('Department IDs received:', [
+            'raw_input' => $request->query('department_ids'),
+            'processed' => $departmentIds,
+            'request_all' => $request->all(),
+            'final_department_ids' => $departmentIds
+        ]);
+
+        // if no departments selected, return empty list with debug info
+        if (empty($departmentIds)) {
+            Log::info('No valid department IDs provided — returning empty array.');
+            return response()->json([
+                'designations' => [],
+                'debug' => [
+                    'message' => 'No department IDs provided',
+                    'expected_format' => 'department_ids[]=123 or department_ids[]=123&department_ids[]=456',
+                    'received' => $request->all()
+                ]
+            ], 200);
+        }
+        
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $designations = $accessData['designations']->whereIn('department_id', $departmentIds)
             ->get();
+
+        Log::info('Designations retrieved:', [
+            'designations_count' => $designations->count(),
+            'department_ids_used' => $departmentIds,
+            'sample_designation' => $designations->first() ? $designations->first()->toArray() : null
+        ]);
 
         return response()->json($designations);
     }
 
     public function getDepartmentsAndEmployeesByBranches(Request $request)
     {
-
         $authUser = $this->authUser();
+        
+        // Handle different ways branch_ids might be sent
         $branchIds = $request->query('branch_ids', []);
+        
+        // If branch_ids is empty, try to get from individual parameters
+        if (empty($branchIds)) {
+            // Check if parameters are sent as individual numbered keys (87=null format)
+            $allParams = $request->all();
+            foreach ($allParams as $key => $value) {
+                if (is_numeric($key)) {
+                    $branchIds[] = intval($key);
+                }
+            }
+        }
+        
+        // If branch_ids is a string (single value), convert to array
+        if (is_string($branchIds)) {
+            $branchIds = [$branchIds];
+        }
+        
+        // Filter out empty values and ensure integers
+        $branchIds = array_filter(array_map('intval', $branchIds));
+        
+        Log::info('Branch IDs received:', [
+            'raw_input' => $request->query('branch_ids'),
+            'processed' => $branchIds,
+            'request_all' => $request->all(),
+            'final_branch_ids' => $branchIds
+        ]);
+        
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
+        
         // if no branches selected, return empty collections
         if (empty($branchIds)) {
-            Log::info('No branch IDs provided — returning empty arrays.');
+            Log::info('No valid branch IDs provided — returning empty arrays.');
             return response()->json([
                 'departments' => [],
                 'employees'   => [],
-                'shifts'      => [],
+                'debug' => [
+                    'message' => 'No branch IDs provided',
+                    'expected_format' => 'branch_ids[]=87 or branch_ids[]=87&branch_ids[]=92',
+                    'received' => $request->all()
+                ]
             ], 200);
         }
 
@@ -1498,10 +1573,17 @@ class ShiftManagementController extends Controller
             ->orWhereNull('branch_id')
             ->get();
 
+        Log::info('Data retrieved:', [
+            'departments_count' => $departments->count(),
+            'employees_count' => $employees->count(),
+            'shifts_count' => $shifts->count(),
+            'sample_department' => $departments->first() ? $departments->first()->toArray() : null,
+            'sample_employee' => $employees->first() ? $employees->first()->toArray() : null
+        ]);
+
         return response()->json([
             'departments' => $departments,
             'employees'   => $employees,
-            'shifts'      => $shifts,
         ]);
     }
 
