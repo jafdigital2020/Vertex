@@ -143,6 +143,14 @@
             } catch (e) {
                 console.error('Unable to refresh CSRF cookie', e);
             }
+
+            // Auto-uppercase company code input
+            const companyCodeInput = document.getElementById('companyCode');
+            if (companyCodeInput) {
+                companyCodeInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.toUpperCase();
+                });
+            }
         });
     </script>
 @endpush

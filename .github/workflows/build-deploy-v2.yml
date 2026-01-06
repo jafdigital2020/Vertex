@@ -81,6 +81,12 @@ jobs:
             echo "BILLING_CYCLE=${{ github.event.client_payload.billing_cycle }}" >> $GITHUB_ENV
             echo "AMOUNT=${{ github.event.client_payload.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=${{ github.event.client_payload.callback_url }}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
           else
             echo "COMPANY_CODE=${{ github.event.inputs.company_code }}" >> $GITHUB_ENV
             echo "COMPANY_NAME=${{ github.event.inputs.company_name }}" >> $GITHUB_ENV
@@ -94,6 +100,27 @@ jobs:
             echo "AMOUNT=${{ github.event.inputs.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=https://api-wizard.timora.ph/api/wizard/provisioning/github-callback" >> $GITHUB_ENV
           fi
+
+      - name: Decode wizard password
+        shell: bash
+        run: |
+          if [ -z "${PASSWORD}" ]; then
+            echo "❌ PASSWORD is missing"
+            exit 1
+          fi
+
+          # Decode Base64 password from wizard
+          DECODED_PASSWORD="$(echo "${PASSWORD}" | base64 --decode)"
+
+          if [ -z "$DECODED_PASSWORD" ]; then
+            echo "❌ Password decoding failed"
+            exit 1
+          fi
+
+          # Overwrite PASSWORD with decoded value
+          echo "PASSWORD<<EOF" >> $GITHUB_ENV
+          echo "$DECODED_PASSWORD" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       # ✅ UPDATED: Use dynamic callback URL and progress percentage
       - name: 🚀 Notify Provisioning Started
@@ -227,6 +254,12 @@ jobs:
             echo "BILLING_CYCLE=${{ github.event.client_payload.billing_cycle }}" >> $GITHUB_ENV
             echo "AMOUNT=${{ github.event.client_payload.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=${{ github.event.client_payload.callback_url }}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
           else
             echo "COMPANY_CODE=${{ github.event.inputs.company_code }}" >> $GITHUB_ENV
             echo "COMPANY_NAME=${{ github.event.inputs.company_name }}" >> $GITHUB_ENV
@@ -240,6 +273,27 @@ jobs:
             echo "AMOUNT=${{ github.event.inputs.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=https://api-wizard.timora.ph/api/wizard/provisioning/github-callback" >> $GITHUB_ENV
           fi
+
+      - name: Decode wizard password
+        shell: bash
+        run: |
+          if [ -z "${PASSWORD}" ]; then
+            echo "❌ PASSWORD is missing"
+            exit 1
+          fi
+
+          # Decode Base64 password from wizard
+          DECODED_PASSWORD="$(echo "${PASSWORD}" | base64 --decode)"
+
+          if [ -z "$DECODED_PASSWORD" ]; then
+            echo "❌ Password decoding failed"
+            exit 1
+          fi
+
+          # Overwrite PASSWORD with decoded value
+          echo "PASSWORD<<EOF" >> $GITHUB_ENV
+          echo "$DECODED_PASSWORD" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -399,6 +453,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
+          envs: PASSWORD,EMAIL,USERNAME,COMPANY_NAME,COMPANY_CODE,PLAN,BILLING_CYCLE,AMOUNT
           script: |
             SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
             DB_NAME=$(echo "${{ env.COMPANY_NAME }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
@@ -477,10 +532,13 @@ jobs:
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             COMPANY_ADMIN="${{ env.USERNAME }}"
             EMAIL="${{ env.EMAIL }}"
-            PLAIN_PASSWORD="${{ env.PASSWORD }}"
+            PLAIN_PASSWORD="$PASSWORD"
+            echo "Password length inside SSH: ${#PASSWORD}"
             sed -i "0,/'username' => '[^']*'/s//'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "0,/'email' => '[^']*'/s//'email' => '$EMAIL'/" "$SEEDER_PATH"
             sed -i "0,/Hash::make([^)]*)/s//Hash::make('$PLAIN_PASSWORD')/" "$SEEDER_PATH"
+
+
 
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
@@ -562,6 +620,28 @@ jobs:
             sed -i "s/'subscription_end' => '[^']*'/'subscription_end' => '$SUBS_END'/'" "$SUBS_SEEDER_PATH"
             sed -i "s/'next_renewal_date' => '[^']*'/'next_renewal_date' => '$NEXT_RENEWAL_DATE'/'" "$SUBS_SEEDER_PATH"
             sed -i "s/'status' => '[^']*'/'status' => 'active'/'" "$SUBS_SEEDER_PATH"
+
+            # ✨ INJECT WIZARD SUBSCRIPTION DATA FOR ACCURATE INVOICING ✨
+            # Create comprehensive wizard data JSON for invoice generation
+            WIZARD_DATA_JSON=$(cat <<'WIZARD_EOF'
+            {
+              "subscription_details": $SUBSCRIPTION_DETAILS,
+              "pricing_breakdown": $PRICING_BREAKDOWN,
+              "selected_devices": $SELECTED_DEVICES,
+              "selected_biometric_services": $SELECTED_BIOMETRIC_SERVICES,
+              "company_details": $COMPANY_DETAILS,
+              "user_details": $USER_DETAILS
+            }
+            WIZARD_EOF
+            )
+
+            # Inject wizard data using the script if available
+            if [ -f "scripts/inject-wizard-data.php" ]; then
+              echo "🚀 Injecting wizard subscription data for accurate invoicing..."
+              php scripts/inject-wizard-data.php "$WIZARD_DATA_JSON" || echo "Wizard data injection failed - will use legacy seeding"
+            else
+              echo "⚠️ Wizard data injection script not found - using legacy invoice seeding"
+            fi
 
             # Update InvoicesTableSeeder.php to align with subscription seeder
             # The invoice seeder will automatically read from the subscription, but we ensure
