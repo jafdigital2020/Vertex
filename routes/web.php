@@ -70,10 +70,21 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\Tenant\Billing\PaymentController as TenantPaymentController;
 use App\Http\Controllers\Tenant\Billing\SubscriptionController as TenantSubscriptionController;
+use App\Http\Controllers\Tenant\Requests\RequestController;
+use App\Http\Controllers\Tenant\Requests\LoanAdminController;
+use App\Http\Controllers\Tenant\Requests\BudgetAdminController;
+use App\Http\Controllers\Tenant\Requests\AssetAdminController;
+use App\Http\Controllers\Tenant\Requests\HmoAdminController;
+use App\Http\Controllers\Tenant\Requests\CoeAdminController;
+use Illuminate\Support\Facades\Password;
+use App\Models\GlobalUser;
+use App\Http\Controllers\ForgotPasswordController;
 
 Route::get('/', function () {
     return redirect('login');
 });
+
+
 
 Route::match(['get', 'post'], '/iclock/cdata',      [BiometricsController::class, 'cdata']);
 Route::get('/iclock/getrequest',                    [BiometricsController::class, 'getRequest']);
@@ -99,6 +110,44 @@ Route::get('/no-permission', function () {
     return view('errors.permission');
 })->name('no-permission');
 
+
+// Forgot Password Routes
+// Forgot Password Routes
+Route::middleware('guest')->group(function () {
+
+    // Show email form - GET only
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showEmailForm'])
+        ->name('forgot-password');
+
+    // Send OTP - POST only
+    Route::post('/forgot-password-otp', [ForgotPasswordController::class, 'sendOtp'])
+        ->middleware('throttle:5,10')
+        ->name('forgot-password-otp');
+
+    // Show OTP verification form - GET only
+    Route::get('/otp-form', [ForgotPasswordController::class, 'showOtpForm'])
+        ->name('otp-form');
+
+    // Verify OTP submission - POST only
+    Route::post('/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])
+        ->middleware('throttle:5,10')
+        ->name('forgot.password.verify');  // Changed from 'otp.verify'
+
+    // Resend OTP - POST only
+    Route::post('/resend-otp', [ForgotPasswordController::class, 'resendOtp'])
+        ->middleware('throttle:3,10')
+        ->name('otp.resend');
+
+    // Show reset password form - GET only
+    Route::get('/reset-password', [ForgotPasswordController::class, 'showResetForm'])
+        ->name('reset-password-form');
+
+    // Reset password submission - POST only
+    Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])
+        ->middleware('throttle:3,10')
+        ->name('password.reset');
+});
+
 Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     Route::middleware(['isSuperAdmin'])->group(function () {
@@ -113,6 +162,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
         Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
         Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
     });
+
 
     // Dashboard
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('admin-dashboard')->middleware(CheckPermission::class . ':1');
