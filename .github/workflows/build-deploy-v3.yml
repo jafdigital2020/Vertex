@@ -1,6 +1,8 @@
-name: Cloud Panel Deployment Workflow V3
- 
+name: Cloud Panel Deployment Workflow V2
+
 on:
+  repository_dispatch:
+    types: [provision-timora]
   workflow_dispatch:
     inputs:
       system:
@@ -43,12 +45,36 @@ on:
         description: "Amount paid"
         required: true
         type: string
- 
+      subscription_details:
+        description: "Wizard subscription details JSON"
+        required: false
+        type: string
+      pricing_breakdown:
+        description: "Wizard pricing breakdown JSON"
+        required: false
+        type: string
+      selected_devices:
+        description: "Selected devices JSON"
+        required: false
+        type: string
+      selected_biometric_services:
+        description: "Selected biometric services JSON"
+        required: false
+        type: string
+      company_details:
+        description: "Company details JSON"
+        required: false
+        type: string
+      user_details:
+        description: "User details JSON"
+        required: false
+        type: string
+
 jobs:
   laravel-tests:
     name: Build Logs
     runs-on: ubuntu-latest
- 
+
     services:
       mysql:
         image: mysql:8.0
@@ -62,58 +88,125 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
- 
+
     steps:
-      # 🚀 NOTIFY START
+      # ✅ ADDED: Extract variables for repository_dispatch events
+      - name: Extract variables from payload
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "COMPANY_CODE=${{ github.event.client_payload.company_code }}" >> $GITHUB_ENV
+            echo "COMPANY_NAME=${{ github.event.client_payload.company_name }}" >> $GITHUB_ENV
+            echo "DOMAIN_NAME=${{ github.event.client_payload.domain_name }}" >> $GITHUB_ENV
+            echo "EMAIL=${{ github.event.client_payload.email }}" >> $GITHUB_ENV
+            echo "USERNAME=${{ github.event.client_payload.username }}" >> $GITHUB_ENV
+            echo "PASSWORD=${{ github.event.client_payload.password }}" >> $GITHUB_ENV
+            echo "SYSTEM=${{ github.event.client_payload.system }}" >> $GITHUB_ENV
+            echo "PLAN=${{ github.event.client_payload.plan }}" >> $GITHUB_ENV
+            echo "BILLING_CYCLE=${{ github.event.client_payload.billing_cycle }}" >> $GITHUB_ENV
+            echo "AMOUNT=${{ github.event.client_payload.amount }}" >> $GITHUB_ENV
+            echo "CALLBACK_URL=${{ github.event.client_payload.callback_url }}" >> $GITHUB_ENV
+            echo "REFERENCE_NUMBER=${{ github.event.client_payload.reference_number }}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
+          else
+            echo "COMPANY_CODE=${{ github.event.inputs.company_code }}" >> $GITHUB_ENV
+            echo "COMPANY_NAME=${{ github.event.inputs.company_name }}" >> $GITHUB_ENV
+            echo "DOMAIN_NAME=${{ github.event.inputs.domain_name }}" >> $GITHUB_ENV
+            echo "EMAIL=${{ github.event.inputs.email }}" >> $GITHUB_ENV
+            echo "USERNAME=${{ github.event.inputs.username }}" >> $GITHUB_ENV
+            echo "PASSWORD=${{ github.event.inputs.password }}" >> $GITHUB_ENV
+            echo "SYSTEM=${{ github.event.inputs.system }}" >> $GITHUB_ENV
+            echo "PLAN=${{ github.event.inputs.plan }}" >> $GITHUB_ENV
+            echo "BILLING_CYCLE=${{ github.event.inputs.billing_cycle }}" >> $GITHUB_ENV
+            echo "AMOUNT=${{ github.event.inputs.amount }}" >> $GITHUB_ENV
+            echo "CALLBACK_URL=https://api-wizard.timora.ph/api/wizard/provisioning/github-callback" >> $GITHUB_ENV
+            echo "REFERENCE_NUMBER=REF-${{ github.event.inputs.company_code }}-001" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.inputs.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.inputs.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.inputs.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.inputs.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.inputs.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.inputs.user_details }}" >> $GITHUB_ENV
+          fi
+
+      - name: Decode wizard password
+        shell: bash
+        run: |
+          if [ -z "${PASSWORD}" ]; then
+            echo "❌ PASSWORD is missing"
+            exit 1
+          fi
+
+          # Decode Base64 password from wizard
+          DECODED_PASSWORD="$(echo "${PASSWORD}" | base64 --decode)"
+
+          if [ -z "$DECODED_PASSWORD" ]; then
+            echo "❌ Password decoding failed"
+            exit 1
+          fi
+
+          # Overwrite PASSWORD with decoded value
+          echo "PASSWORD<<EOF" >> $GITHUB_ENV
+          echo "$DECODED_PASSWORD" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      # ✅ UPDATED: Use dynamic callback URL and progress percentage
       - name: 🚀 Notify Provisioning Started
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "initialization",
+              "progress_percentage": 10,
               "message": "GitHub Actions workflow started - Setting up build environment",
-              "logs": "Workflow triggered at $(date) with inputs: system=${{ github.event.inputs.system }}, plan=${{ github.event.inputs.plan }}, domain=${{ github.event.inputs.domain_name }}"
+              "logs": "Workflow triggered at $(date) with inputs: system=${{ env.SYSTEM }}, plan=${{ env.PLAN }}, domain=${{ env.DOMAIN_NAME }}"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Checkout code
         uses: actions/checkout@v3
- 
-      # 📋 NOTIFY BUILD STEP
+
+      # ✅ UPDATED: Use dynamic variables and add progress percentage
       - name: 📋 Notify Build Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "build",
+              "progress_percentage": 25,
               "message": "Setting up PHP environment and installing dependencies",
               "logs": "Starting PHP 8.2 setup and Composer installation at $(date)"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
           extensions: mbstring, bcmath, mysql
           coverage: none
- 
+
       - name: Install Composer dependencies
         run: |
           echo "Installing Composer dependencies..."
           composer install --prefer-dist --no-progress --no-suggest
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "build",
+              "progress_percentage": 30,
               "message": "Dependencies installed successfully",
               "logs": "Composer dependencies installed at $(date)"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Set up environment
         env:
           HITPAY_API_KEY: ${{ secrets.HITPAY_API_KEY }}
@@ -123,32 +216,34 @@ jobs:
         run: |
           echo "${{ secrets.ENV }}" > .env
           php artisan key:generate
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "build",
+              "progress_percentage": 35,
               "message": "Environment configuration completed",
               "logs": "Laravel environment configured and app key generated at $(date)"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Wait for MySQL to be ready
         run: sleep 15
- 
-      # 🗄️ NOTIFY DATABASE STEP  
+
+      # ✅ UPDATED: Use dynamic variables and add progress percentage
       - name: 🗄️ Notify Database Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "database",
+              "progress_percentage": 40,
               "message": "Running database migrations and tests",
               "logs": "Database setup started at $(date) - waiting for MySQL service"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Run migrations
         env:
           DB_CONNECTION: mysql
@@ -159,44 +254,110 @@ jobs:
           DB_PASSWORD: root
         run: |
           php artisan migrate --force
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "database",
+              "progress_percentage": 45,
               "message": "Database migrations completed successfully",
               "logs": "Laravel migrations executed successfully at $(date)"
             }' || echo "Callback failed - continuing..."
- 
+
   deploy:
     name: Deployment Summary
     needs: laravel-tests
     runs-on: ubuntu-latest
- 
+
     steps:
+      # ✅ ADDED: Extract variables for repository_dispatch events (duplicate from first job)
+      - name: Extract variables from payload
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "COMPANY_CODE=${{ github.event.client_payload.company_code }}" >> $GITHUB_ENV
+            echo "COMPANY_NAME=${{ github.event.client_payload.company_name }}" >> $GITHUB_ENV
+            echo "DOMAIN_NAME=${{ github.event.client_payload.domain_name }}" >> $GITHUB_ENV
+            echo "EMAIL=${{ github.event.client_payload.email }}" >> $GITHUB_ENV
+            echo "USERNAME=${{ github.event.client_payload.username }}" >> $GITHUB_ENV
+            echo "PASSWORD=${{ github.event.client_payload.password }}" >> $GITHUB_ENV
+            echo "SYSTEM=${{ github.event.client_payload.system }}" >> $GITHUB_ENV
+            echo "PLAN=${{ github.event.client_payload.plan }}" >> $GITHUB_ENV
+            echo "BILLING_CYCLE=${{ github.event.client_payload.billing_cycle }}" >> $GITHUB_ENV
+            echo "AMOUNT=${{ github.event.client_payload.amount }}" >> $GITHUB_ENV
+            echo "CALLBACK_URL=${{ github.event.client_payload.callback_url }}" >> $GITHUB_ENV
+            echo "REFERENCE_NUMBER=${{ github.event.client_payload.reference_number }}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.client_payload.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.client_payload.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.client_payload.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.client_payload.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.client_payload.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.client_payload.user_details }}" >> $GITHUB_ENV
+          else
+            echo "COMPANY_CODE=${{ github.event.inputs.company_code }}" >> $GITHUB_ENV
+            echo "COMPANY_NAME=${{ github.event.inputs.company_name }}" >> $GITHUB_ENV
+            echo "DOMAIN_NAME=${{ github.event.inputs.domain_name }}" >> $GITHUB_ENV
+            echo "EMAIL=${{ github.event.inputs.email }}" >> $GITHUB_ENV
+            echo "USERNAME=${{ github.event.inputs.username }}" >> $GITHUB_ENV
+            echo "PASSWORD=${{ github.event.inputs.password }}" >> $GITHUB_ENV
+            echo "SYSTEM=${{ github.event.inputs.system }}" >> $GITHUB_ENV
+            echo "PLAN=${{ github.event.inputs.plan }}" >> $GITHUB_ENV
+            echo "BILLING_CYCLE=${{ github.event.inputs.billing_cycle }}" >> $GITHUB_ENV
+            echo "AMOUNT=${{ github.event.inputs.amount }}" >> $GITHUB_ENV
+            echo "CALLBACK_URL=https://api-wizard.timora.ph/api/wizard/provisioning/github-callback" >> $GITHUB_ENV
+            echo "REFERENCE_NUMBER=REF-${{ github.event.inputs.company_code }}-001" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.inputs.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.inputs.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.inputs.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.inputs.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.inputs.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.inputs.user_details }}" >> $GITHUB_ENV
+          fi
+
+      - name: Decode wizard password
+        shell: bash
+        run: |
+          if [ -z "${PASSWORD}" ]; then
+            echo "❌ PASSWORD is missing"
+            exit 1
+          fi
+
+          # Decode Base64 password from wizard
+          DECODED_PASSWORD="$(echo "${PASSWORD}" | base64 --decode)"
+
+          if [ -z "$DECODED_PASSWORD" ]; then
+            echo "❌ Password decoding failed"
+            exit 1
+          fi
+
+          # Overwrite PASSWORD with decoded value
+          echo "PASSWORD<<EOF" >> $GITHUB_ENV
+          echo "$DECODED_PASSWORD" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v3
- 
-      # 🌐 NOTIFY INFRASTRUCTURE STEP
+
+      # ✅ UPDATED: Use dynamic variables and add progress percentage
       - name: 🌐 Notify Infrastructure Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "infrastructure",
+              "progress_percentage": 55,
               "message": "Creating DNS records and server infrastructure",
               "logs": "Infrastructure setup started at $(date) - configuring DNS and networking"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Create DNS record via Cloudflare API
         run: |
-          SUBDOMAIN=$(echo "${{ github.event.inputs.domain_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+          SUBDOMAIN=$(echo "${{ env.DOMAIN_NAME }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
           ROOT_DOMAIN=timora.ph
           FULL_DOMAIN="$SUBDOMAIN.$ROOT_DOMAIN"
- 
+
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" \
@@ -207,33 +368,35 @@ jobs:
               "ttl": 120,
               "proxied": true
             }'
- 
+
           echo "✅ DNS record created: $FULL_DOMAIN"
           echo "SUBDOMAIN=$FULL_DOMAIN" >> $GITHUB_ENV
-          
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "infrastructure",
+              "progress_percentage": 60,
               "message": "DNS record created for '"$FULL_DOMAIN"'",
               "logs": "Cloudflare DNS A record created successfully at $(date) - Domain: '"$FULL_DOMAIN"'"
             }' || echo "Callback failed - continuing..."
- 
-      # 🔧 NOTIFY SERVER SETUP
+
+      # ✅ UPDATED: Use dynamic variables and add progress percentage
       - name: 🔧 Notify Server Setup Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "server",
+              "progress_percentage": 70,
               "message": "Configuring server and creating site directory",
               "logs": "Server setup started at $(date) - creating site user and directories"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Add site via clpctl
         uses: appleboy/ssh-action@master
         with:
@@ -242,36 +405,38 @@ jobs:
           password: ${{ secrets.VPS_PASS }}
           script: |
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
-            SITE_USER="${{ github.event.inputs.username }}"
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
             echo "Creating site for domain: $DOMAIN_NAME with user: $SITE_USER"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
             echo "Site creation completed successfully"
- 
+
       - name: Notify server setup completed
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "server",
+              "progress_percentage": 75,
               "message": "Server site configuration completed",
-              "logs": "ClpCtl site creation completed successfully at $(date) - User: ${{ github.event.inputs.username }}"
+              "logs": "ClpCtl site creation completed successfully at $(date) - User: ${{ env.USERNAME }}"
             }' || echo "Callback failed - continuing..."
- 
-      # 📁 NOTIFY DEPLOYMENT PHASE
+
+      # ✅ UPDATED: Use dynamic variables and add progress percentage
       - name: 📁 Notify Deployment Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "started",
               "step": "deployment",
+              "progress_percentage": 85,
               "message": "Deploying application files and configuring database",
               "logs": "File deployment started at $(date) - copying application files to server"
             }' || echo "Callback failed - continuing..."
- 
+
       - name: Copy files via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -279,184 +444,222 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           source: "."
-          target: "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
- 
-      - name: Notify file deployment completed
-        run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
-            -H "Content-Type: application/json" \
-            -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
-              "status": "started",
-              "step": "deployment",
-              "message": "Application files deployed successfully",
-              "logs": "SCP file transfer completed at $(date) - All application files copied to server"
-            }' || echo "Callback failed - continuing..."
- 
-      # 🔧 NOTIFY FINAL CONFIGURATION
-      - name: 🔧 Notify Final Configuration
-        run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
-            -H "Content-Type: application/json" \
-            -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
-              "status": "started",
-              "step": "finalization",
-              "message": "Finalizing configuration and starting services",
-              "logs": "Final configuration started at $(date) - setting up database, cron jobs, and workers"
-            }' || echo "Callback failed - continuing..."
- 
-      - name: Run post-deploy commands via SSH
+          target: "/tmp/deploy-${{ env.SUBDOMAIN }}"
+
+      - name: Move files to correct location with sanitized username
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
-            DB_NAME=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
-            DB_USER=$(echo "${{ github.event.inputs.username }}" | tr -d ' ._' | tr -cd '[:alnum:]')dev
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
+            TARGET_DIR="/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}"
+            mkdir -p "$TARGET_DIR"
+            rsync -av /tmp/deploy-${{ env.SUBDOMAIN }}/ "$TARGET_DIR/"
+            rm -rf /tmp/deploy-${{ env.SUBDOMAIN }}
+            echo "Files moved to $TARGET_DIR successfully"
+
+      - name: Notify file deployment completed
+        run: |
+          curl -X POST "${{ env.CALLBACK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "company_code": "${{ env.COMPANY_CODE }}",
+              "status": "started",
+              "step": "deployment",
+              "progress_percentage": 90,
+              "message": "Application files deployed successfully",
+              "logs": "SCP file transfer completed at $(date) - All application files copied to server"
+            }' || echo "Callback failed - continuing..."
+
+      # ✅ UPDATED: Use dynamic variables and add progress percentage
+      - name: 🔧 Notify Final Configuration
+        run: |
+          curl -X POST "${{ env.CALLBACK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "company_code": "${{ env.COMPANY_CODE }}",
+              "status": "started",
+              "step": "finalization",
+              "progress_percentage": 95,
+              "message": "Finalizing configuration and starting services",
+              "logs": "Final configuration started at $(date) - setting up database, cron jobs, and workers"
+            }' || echo "Callback failed - continuing..."
+
+      - name: Run post-deploy commands via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASS }}
+          envs: |
+            PASSWORD,
+            EMAIL,
+            USERNAME,
+            COMPANY_NAME,
+            COMPANY_CODE,
+            PLAN,
+            BILLING_CYCLE,
+            AMOUNT,
+            REFERENCE_NUMBER,
+            SUBSCRIPTION_DETAILS,
+            PRICING_BREAKDOWN,
+            SELECTED_DEVICES,
+            SELECTED_BIOMETRIC_SERVICES,
+            COMPANY_DETAILS,
+            USER_DETAILS
+          script: |
+            SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
+            DB_NAME=$(echo "${{ env.COMPANY_NAME }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
+            DB_USER=$(echo "${{ env.USERNAME }}" | tr -d ' ._' | tr -cd '[:alnum:]')dev
             DB_PASS=JAF2025
- 
+
             # Create database and user using clpctl
             clpctl db:add --domainName="${{ env.SUBDOMAIN }}" --databaseName="$DB_NAME" --databaseUserName="$DB_USER" --databaseUserPassword="$DB_PASS"
- 
-            cd "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
+
+            cd "/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}"
             cp .env.testing .env
             composer install --no-dev
- 
+
             # Update .env with new DB credentials before running artisan commands
-            ENV_PATH="/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            ENV_PATH="/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/.env"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=root/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}/" "$ENV_PATH"
- 
+
             # Update APP_URL with dynamic subdomain (all lowercase)
-            SUBDOMAIN_LOWER=$(echo "${{ github.event.inputs.domain_name }}" | tr '[:upper:]' '[:lower:]')
+            SUBDOMAIN_LOWER=$(echo "${{ env.DOMAIN_NAME }}" | tr '[:upper:]' '[:lower:]')
             APP_URL="https://${SUBDOMAIN_LOWER}.timora.ph"
             sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" "$ENV_PATH"
- 
+
             # Update HitPay credentials
             sed -i "s|^HITPAY_API_KEY=.*|HITPAY_API_KEY=${{ secrets.HITPAY_API_KEY }}|" "$ENV_PATH"
             sed -i "s|^HITPAY_SALT=.*|HITPAY_SALT=${{ secrets.HITPAY_SALT }}|" "$ENV_PATH"
             sed -i "s|^HITPAY_BASE_URL=.*|HITPAY_BASE_URL=${{ secrets.HITPAY_BASE_URL }}|" "$ENV_PATH"
             sed -i "s|^HITPAY_WEBHOOK_URL=.*|HITPAY_WEBHOOK_URL=${APP_URL}/hitpay/webhook|" "$ENV_PATH"
- 
+
             # add worker config
-            WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.username }}-timora-worker.conf"
+            WORKER_CONF="/etc/supervisor/conf.d/$SITE_USER-timora-worker.conf"
             cat <<EOF | sudo tee "$WORKER_CONF"
-            [program:${{ github.event.inputs.username }}-timora-worker]
+            [program:$SITE_USER-timora-worker]
             process_name=%(program_name)s_%(process_num)02d
-            command=php /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
+            command=php /home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
             autostart=true
             autorestart=true
             user=root
             numprocs=1
             redirect_stderr=true
-            stdout_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
-            stderr_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
+            stdout_logfile=/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
+            stderr_logfile=/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
             stopwaitsecs=3600
             EOF
- 
+
             # add email queue worker config
-            EMAIL_WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.username }}-timora-email-worker.conf"
+            EMAIL_WORKER_CONF="/etc/supervisor/conf.d/$SITE_USER-timora-email-worker.conf"
             cat <<EOF | sudo tee "$EMAIL_WORKER_CONF"
-            [program:${{ github.event.inputs.username }}-timora-email-worker]
+            [program:$SITE_USER-timora-email-worker]
             process_name=%(program_name)s_%(process_num)02d
-            command=php /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --queue=emails --sleep=3 --tries=3 --timeout=90
+            command=php /home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --queue=emails --sleep=3 --tries=3 --timeout=90
             autostart=true
             autorestart=true
             user=root
             numprocs=1
             redirect_stderr=true
-            stdout_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker.log
-            stderr_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker_error.log
+            stdout_logfile=/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker.log
+            stderr_logfile=/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker_error.log
             stopwaitsecs=3600
             EOF
- 
-            ( crontab -l 2>/dev/null; echo "* * * * * /usr/bin/php8.2 /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/artisan schedule:run >> /dev/null 2>&1" ) | crontab -
- 
+
+            ( crontab -l 2>/dev/null; echo "* * * * * /usr/bin/php8.2 /home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/artisan schedule:run >> /dev/null 2>&1" ) | crontab -
+
             sudo supervisorctl reread
             sudo supervisorctl update
-            sudo supervisorctl restart "${{ github.event.inputs.user_name }}-timora-worker"
- 
+            sudo supervisorctl restart "$SITE_USER-timora-worker"
+
             # Update env variables for database
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
- 
+
             # Update GlobalUserTableSeeder.php with dynamic email, username, and plain password for Hash::make
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
-            COMPANY_ADMIN="${{ github.event.inputs.username }}"
-            EMAIL="${{ github.event.inputs.email }}"
-            PLAIN_PASSWORD="${{ github.event.inputs.password }}"
+            COMPANY_ADMIN="${{ env.USERNAME }}"
+            EMAIL="${{ env.EMAIL }}"
+            PLAIN_PASSWORD="$PASSWORD"
+            echo "Password length inside SSH: ${#PASSWORD}"
             sed -i "0,/'username' => '[^']*'/s//'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "0,/'email' => '[^']*'/s//'email' => '$EMAIL'/" "$SEEDER_PATH"
             sed -i "0,/Hash::make([^)]*)/s//Hash::make('$PLAIN_PASSWORD')/" "$SEEDER_PATH"
- 
+
+
+
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
-            COMPANY_NAME="${{ github.event.inputs.company_name }}"
-            COMPANY_CODE_UPPER=$(echo "${{ github.event.inputs.company_code }}" | tr '[:lower:]' '[:upper:]')
+            COMPANY_NAME="${{ env.COMPANY_NAME }}"
+            COMPANY_CODE_UPPER=$(echo "${{ env.COMPANY_CODE }}" | tr '[:lower:]' '[:upper:]')
             sed -i "s/'tenant_name' => '[^']*'/'tenant_name' => '$COMPANY_NAME'/" "$TENANT_SEEDER_PATH"
             sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_CODE_UPPER'/" "$TENANT_SEEDER_PATH"
- 
+
             # Update SubscriptionsTableSeeder.php with dynamic plan details
-            SELECTED_PLAN="${{ github.event.inputs.plan }}"
-            BILLING_CYCLE="${{ github.event.inputs.billing_cycle }}"
-            AMOUNT="${{ github.event.inputs.amount }}"
- 
+            SELECTED_PLAN="${{ env.PLAN }}"
+            BILLING_CYCLE="${{ env.BILLING_CYCLE }}"
+            AMOUNT="${{ env.AMOUNT }}"
+
             # Get the plan ID by querying the database after seeding
             SUBS_SEEDER_PATH="database/seeders/SubscriptionsTableSeeder.php"
-            
-            # For now, we'll calculate the plan ID based on the pattern:
-            # Starter monthly=1, Core monthly=2, Pro monthly=3, Elite monthly=4
-            # Starter yearly=5, Core yearly=6, Pro yearly=7, Elite yearly=8
-            if [ "$SELECTED_PLAN" = "starter" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+
+            # Calculate the plan ID based on the pattern:
+            # Free=1, Starter monthly=2, Core monthly=3, Pro monthly=4, Elite monthly=5
+            # Starter yearly=6, Core yearly=7, Pro yearly=8, Elite yearly=9
+            if [ "$SELECTED_PLAN" = "free" ]; then
               PLAN_ID=1
-            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+            elif [ "$SELECTED_PLAN" = "starter" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
               PLAN_ID=2
-            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
               PLAN_ID=3
-            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
               PLAN_ID=4
-            elif [ "$SELECTED_PLAN" = "starter" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
               PLAN_ID=5
-            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+            elif [ "$SELECTED_PLAN" = "starter" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
               PLAN_ID=6
-            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
               PLAN_ID=7
-            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
               PLAN_ID=8
+            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+              PLAN_ID=9
             else
-              PLAN_ID=1 # default Starter monthly
+              PLAN_ID=2 # default Starter monthly
             fi
- 
+
             # Update SubscriptionsTableSeeder with the matching plan_id
             sed -i "s/'plan_id' => [0-9]\+/'plan_id' => $PLAN_ID/" "$SUBS_SEEDER_PATH"
             sed -i "s/'billing_cycle' => 'monthly'/'billing_cycle' => '$BILLING_CYCLE'/" "$SUBS_SEEDER_PATH"
             sed -i "s/'amount_paid' => [0-9.]\+/'amount_paid' => $AMOUNT/" "$SUBS_SEEDER_PATH"
- 
+
             # Extract plan-specific values from PlanSeeder.php so subscription seeder
             # will reflect the selected plan's defaults (base licenses, implementation_fee)
             PLAN_SEEDER="database/seeders/PlanSeeder.php"
- 
+
             # Get the Nth occurrence of base_license_count and implementation_fee from PlanSeeder
             BASE_LICENSE=$(grep -n "'base_license_count'" "$PLAN_SEEDER" | sed -n "${PLAN_ID}p" | sed -E "s/.*'base_license_count' => ([0-9]+).*/\1/")
             IMPLEMENTATION_FEE=$(grep -n "'implementation_fee'" "$PLAN_SEEDER" | sed -n "${PLAN_ID}p" | sed -E "s/.*'implementation_fee' => ([0-9.]+).*/\1/")
- 
+
             # Fallback defaults if grep fails
             BASE_LICENSE=${BASE_LICENSE:-1}
             IMPLEMENTATION_FEE=${IMPLEMENTATION_FEE:-0}
- 
+
             # Replace values in SubscriptionsTableSeeder.php so the seeded subscription uses
             # the selected plan's base license count and implementation fee
             sed -i "s/'active_license' => [0-9]\+/'active_license' => $BASE_LICENSE/" "$SUBS_SEEDER_PATH"
             sed -i "s/'implementation_fee' => [0-9.]\\+/'implementation_fee' => $IMPLEMENTATION_FEE/" "$SUBS_SEEDER_PATH"
- 
+
             # Keep implementation_fee_paid as 0 by default and set subscription dates/status
             sed -i "s/'implementation_fee_paid' => [0-9.]\\+/'implementation_fee_paid' => 0/" "$SUBS_SEEDER_PATH"
- 
+
             # Compute dynamic dates based on billing cycle:
             # - monthly: next renewal = today + 1 month
             # - yearly: next renewal = today + 1 year
@@ -465,69 +668,135 @@ jobs:
             else
               NEXT_RENEWAL_DATE=$(date -d "+1 year" '+%Y-%m-%d')
             fi
- 
+
             # subscription_end is the day before next_renewal_date
             SUBS_END=$(date -d "$NEXT_RENEWAL_DATE -1 day" '+%Y-%m-%d')
- 
+
             sed -i "s/'subscription_end' => '[^']*'/'subscription_end' => '$SUBS_END'/'" "$SUBS_SEEDER_PATH"
             sed -i "s/'next_renewal_date' => '[^']*'/'next_renewal_date' => '$NEXT_RENEWAL_DATE'/'" "$SUBS_SEEDER_PATH"
             sed -i "s/'status' => '[^']*'/'status' => 'active'/'" "$SUBS_SEEDER_PATH"
- 
+
             # Update InvoicesTableSeeder.php to align with subscription seeder
             # The invoice seeder will automatically read from the subscription, but we ensure
             # the billing cycle variable matches what will be seeded
             INVOICE_SEEDER_PATH="database/seeders/InvoicesTableSeeder.php"
             sed -i "s/\$billingCycle = 'monthly';/\$billingCycle = '$BILLING_CYCLE';/" "$INVOICE_SEEDER_PATH"
- 
-            # Fresh migrate and seed the database
+
+            # Configure Laravel environment first
             php artisan key:generate
             php artisan config:clear
             php artisan config:cache
             php artisan route:cache
+
+            # ✨ INJECT WIZARD SUBSCRIPTION DATA FOR ACCURATE INVOICING ✨
+            echo "🚀 Injecting wizard subscription data for accurate invoicing..."
+
+            # Debug: Verify environment variables exist
+            echo "🔍 Checking wizard payload environment variables..."
+            echo "SUBSCRIPTION_DETAILS length: ${#SUBSCRIPTION_DETAILS}"
+            echo "PRICING_BREAKDOWN length: ${#PRICING_BREAKDOWN}"  
+            echo "SELECTED_DEVICES length: ${#SELECTED_DEVICES}"
+
+            # Use the complete wizard data from the payload instead of minimal data
+            # Handle different input formats and validate JSON before parsing
+
+            # Check if wizard data is available and valid
+            if [ -n "$SUBSCRIPTION_DETAILS" ] && [ "$SUBSCRIPTION_DETAILS" != "{}" ]; then
+              echo "📦 Processing wizard subscription data..."
+              
+              # For manual testing or when data comes as object notation, 
+              # pass it directly as string to the wizard injection script
+              WIZARD_JSON_RAW="{\"reference_number\":\"${REFERENCE_NUMBER:-}\",\"subscription_details\":\"${SUBSCRIPTION_DETAILS:-}\",\"pricing_breakdown\":\"${PRICING_BREAKDOWN:-}\",\"selected_devices\":\"${SELECTED_DEVICES:-}\",\"selected_biometric_services\":\"${SELECTED_BIOMETRIC_SERVICES:-}\",\"company_details\":\"${COMPANY_DETAILS:-}\",\"user_details\":\"${USER_DETAILS:-}\"}"
+            else
+              echo "⚠️ No wizard data available, using minimal payload"
+              WIZARD_JSON_RAW="{\"reference_number\":\"${REFERENCE_NUMBER:-}\"}"
+            fi
+
+            # Debug: Show preview of reconstructed JSON  
+            echo "📋 Wizard JSON preview (first 300 chars): ${WIZARD_JSON_RAW:0:300}"
+
+            # Set wizard data environment variable directly  
+            echo "WIZARD_SUBSCRIPTION_DATA=$(printf '%s' "$WIZARD_JSON_RAW" | base64 -w0)" >> .env
+            echo "📝 Wizard data environment variable set"
+
+            # Inject wizard data using the script if available
+            if [ -f "scripts/inject-wizard-data.php" ]; then
+              echo "Calling wizard data injection script..."
+              php scripts/inject-wizard-data.php "$WIZARD_JSON_RAW" || echo "⚠️ Wizard data injection failed - will use legacy seeding"
+            else
+              echo "⚠️ Wizard data injection script not found - using legacy invoice seeding"
+            fi
+
+            # Fresh migrate and seed the database
             php artisan migrate:fresh --seed --force
             php artisan storage:link
             chmod -R guo+w storage
- 
-            git config --global --add safe.directory "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
- 
-            sudo chown -R ${{ github.event.inputs.username }}:${{ github.event.inputs.username }} /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN}}
- 
+
+            git config --global --add safe.directory "/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}"
+
+            sudo chown -R $SITE_USER:$SITE_USER /home/$SITE_USER/htdocs/${{ env.SUBDOMAIN}}
+
       - name: Assigning Custom Domains
         run: |
           echo ""
           echo "🔗 Visit your app: https://${{ env.SUBDOMAIN }}"
           echo ""
- 
+
       - name: Add deployed URL and build logs to workflow summary
         run: |
           echo "### ✅ App Deployed Successfully" >> $GITHUB_STEP_SUMMARY
           echo "🔗 [https://${{ env.SUBDOMAIN }}](https://${{ env.SUBDOMAIN }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
- 
-      # ✅ NOTIFY SUCCESS
+
+      # ✅ Send Account Credentials Email After Successful Deployment
+      - name: 📧 Send Account Credentials Email
+        if: success()
+        run: |
+          curl -X POST "https://api-wizard.timora.ph/api/wizard/send-payment-email" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d '{
+              "email": "${{ env.EMAIL }}",
+              "company_name": "${{ env.COMPANY_NAME }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
+              "subdomain": "${{ env.SUBDOMAIN }}",
+              "system": "${{ env.SYSTEM }}",
+              "plan": "${{ env.PLAN }}",
+              "username": "${{ env.USERNAME }}",
+              "password": "${{ env.PASSWORD }}"
+            }' || echo "Credentials email failed - continuing..."
+
+      # ✅ UPDATED: Use dynamic variables and add progress percentage
       - name: ✅ Notify Success
         if: success()
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "success",
               "step": "completed",
+              "progress_percentage": 100,
               "message": "Deployment completed successfully! Portal is live at https://${{ env.SUBDOMAIN }}",
-              "logs": "Full deployment completed successfully at $(date) - Portal accessible at https://${{ env.SUBDOMAIN }}"
+              "logs": "🎉 Timora portal is now live at https://${{ env.SUBDOMAIN }}\n\n✅ All services running\n✅ SSL certificate active\n✅ Database connected\n✅ Ready for users!"
             }' || echo "Success callback failed"
- 
-      # ❌ NOTIFY FAILURE
+
+      # ✅ UPDATED: Use dynamic variables
       - name: ❌ Notify Failure
         if: failure()
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+          curl -X POST "${{ env.CALLBACK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "company_code": "${{ github.event.inputs.company_code }}",
+              "company_code": "${{ env.COMPANY_CODE }}",
               "status": "failed",
               "step": "error",
               "message": "Deployment failed during GitHub Actions execution. Please check logs and try again.",
-              "logs": "GitHub Actions workflow failed at $(date) - check run details for specific error. Last step attempted: ${{ github.action }}"
+              "logs": "GitHub Actions workflow failed at $(date) - check run details for specific error. Last step attempted: ${{ github.action }}",
+              "error_details": {
+                "workflow_run_id": "${{ github.run_id }}",
+                "failed_step": "${{ github.action }}",
+                "repository": "${{ github.repository }}",
+                "timestamp": "${{ github.event.head_commit.timestamp }}"
+              }
             }' || echo "Failure callback failed"

@@ -103,27 +103,55 @@ class WizardInvoiceService
         $selectedDevices = $wizardData['selected_devices'] ?? [];
         $biometricServices = $wizardData['selected_biometric_services'] ?? [];
         
+        // If pricing breakdown doesn't have detailed fields, calculate them
+        if (empty($pricingBreakdown['base_price']) && isset($subscriptionDetails['plan_slug'])) {
+            $pricingBreakdown = $this->calculateDetailedPricing($subscriptionDetails, $selectedDevices, $biometricServices);
+        }
+        
         $lineItems = [];
         $billingPeriod = $subscriptionDetails['billing_period'] ?? 'monthly';
         $planName = ucfirst($subscriptionDetails['plan_slug'] ?? 'Unknown');
         $systemName = ucfirst($subscriptionDetails['system_slug'] ?? 'Timora');
+        
+        // Calculate period dates
+        $periodStart = date('n/j/Y');
+        if ($billingPeriod === 'yearly') {
+            $periodEnd = date('n/j/Y', strtotime('+1 year'));
+        } else {
+            $periodEnd = date('n/j/Y', strtotime('+1 month'));
+        }
 
-        // 1. Base Subscription Fee
+        // 1. Implementation Fee (show first)
+        if (($pricingBreakdown['implementation_fee'] ?? 0) > 0) {
+            $lineItems[] = [
+                'invoice_id' => $invoiceId,
+                'description' => "Implementation Fee",
+                'quantity' => 1,
+                'rate' => $pricingBreakdown['implementation_fee'],
+                'amount' => $pricingBreakdown['implementation_fee'],
+                'period' => "$periodStart - $periodEnd",
+                'metadata' => json_encode(['type' => 'implementation_fee']),
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ];
+        }
+
+        // 2. Base Subscription Fee
         if (($pricingBreakdown['base_price'] ?? 0) > 0) {
             $lineItems[] = [
                 'invoice_id' => $invoiceId,
-                'description' => "{$systemName} {$planName} Plan - " . ucfirst($billingPeriod) . " Subscription",
+                'description' => "{$planName} Monthly Plan Subscription",
                 'quantity' => 1,
                 'rate' => $pricingBreakdown['base_price'],
                 'amount' => $pricingBreakdown['base_price'],
-                'period' => $billingPeriod,
+                'period' => "$periodStart - $periodEnd",
                 'metadata' => json_encode(['type' => 'base_subscription', 'plan' => $subscriptionDetails['plan_slug']]),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ];
         }
 
-        // 2. Additional Employees
+        // 3. Additional Employees
         if (($pricingBreakdown['extra_cost'] ?? 0) > 0) {
             $totalEmployees = $subscriptionDetails['total_employees'] ?? 0;
             $planDefaults = $this->getPlanDefaults();
@@ -146,7 +174,7 @@ class WizardInvoiceService
                     'quantity' => $extraEmployees,
                     'rate' => $employeeRate,
                     'amount' => $pricingBreakdown['extra_cost'],
-                    'period' => $billingPeriod,
+                    'period' => "$periodStart - $periodEnd",
                     'metadata' => json_encode([
                         'type' => 'additional_employees', 
                         'employee_count' => $extraEmployees,
@@ -159,7 +187,7 @@ class WizardInvoiceService
             }
         }
 
-        // 3. Mobile App Access
+        // 4. Mobile App Access
         if (($pricingBreakdown['mobile_cost'] ?? 0) > 0) {
             $mobileUsers = $subscriptionDetails['mobile_app_users'] ?? 0;
             $lineItems[] = [
@@ -441,8 +469,135 @@ class WizardInvoiceService
             'email' => 'Email Integration Service',
             'biometric_installation' => 'Biometric Installation Service',
             'biometric_integration' => 'Biometric Integration Service',
+            'biometric_device' => 'Biometric Device',
         ];
         
         return $descriptions[$addonKey] ?? ucfirst(str_replace('_', ' ', $addonKey));
+    }
+
+    /**
+     * Calculate detailed pricing breakdown from subscription details
+     * This is used when the pricing_breakdown doesn't contain detailed fields
+     */
+    protected function calculateDetailedPricing(array $subscriptionDetails, array $selectedDevices, array $biometricServices)
+    {
+        $planSlug = $subscriptionDetails['plan_slug'] ?? 'starter';
+        $billingPeriod = $subscriptionDetails['billing_period'] ?? 'monthly';
+        $totalEmployees = (int) ($subscriptionDetails['total_employees'] ?? 0);
+        $mobileAppUsers = (int) ($subscriptionDetails['mobile_app_users'] ?? 0);
+        $mobileAccess = $subscriptionDetails['mobile_access'] ?? false;
+        $selectedAddons = $subscriptionDetails['selected_addons'] ?? [];
+        
+        // Get plan pricing from config
+        $planPricing = config('wizard.plans', []);
+        $planData = collect($planPricing)->firstWhere('slug', $planSlug);
+        
+        if (!$planData) {
+            // Fallback pricing
+            $basePrice = 0;
+            $includedEmployees = 10;
+            $perEmployeeRate = 99;
+            $implementationFee = 14999;
+        } else {
+            $priceKey = $billingPeriod === 'yearly' ? 'annual_price' : 'monthly_price';
+            $basePrice = $planData[$priceKey] ?? 0;
+            $includedEmployees = $planData['included_employees'] ?? 10;
+            $perEmployeeRate = $planData['per_employee_rate'] ?? 99;
+            $implementationFee = $planData['implementation_fee'] ?? 14999;
+        }
+        
+        // Calculate extra employee cost
+        $extraEmployees = max(0, $totalEmployees - $includedEmployees);
+        $extraCost = $extraEmployees * $perEmployeeRate;
+        
+        // Calculate mobile cost
+        $mobileCost = 0;
+        if ($mobileAccess && $mobileAppUsers > 0) {
+            $mobileCost = $mobileAppUsers * 49; // ₱49 per mobile user
+        }
+        
+        // Calculate addon costs
+        $addonCost = 0;
+        $oneTimeAddonCost = 0;
+        $addonPrices = $this->getAddonPrices();
+        
+        foreach ($selectedAddons as $addonKey) {
+            if (isset($addonPrices[$addonKey])) {
+                if ($addonPrices[$addonKey]['type'] === 'monthly') {
+                    $addonCost += $addonPrices[$addonKey]['price'];
+                } else {
+                    $oneTimeAddonCost += $addonPrices[$addonKey]['price'];
+                }
+            }
+        }
+        
+        // Calculate biometric device costs
+        $biometricDeviceCost = 0;
+        $deviceBreakdown = [];
+        
+        if (!empty($selectedDevices)) {
+            $biometricDevices = config('wizard.biometric_devices', []);
+            
+            foreach ($selectedDevices as $device) {
+                $deviceId = $device['id'] ?? 0;
+                $deviceQuantity = (int) ($device['quantity'] ?? 0);
+                
+                if (isset($biometricDevices[$deviceId]) && $deviceQuantity > 0) {
+                    $devicePrice = $biometricDevices[$deviceId]['price'];
+                    $deviceTotal = $devicePrice * $deviceQuantity;
+                    $biometricDeviceCost += $deviceTotal;
+                    
+                    $deviceBreakdown[] = [
+                        'name' => $biometricDevices[$deviceId]['name'],
+                        'quantity' => $deviceQuantity,
+                        'unit_price' => $devicePrice,
+                        'total_cost' => $deviceTotal
+                    ];
+                }
+            }
+        }
+        
+        // Calculate biometric services cost
+        $biometricServicesCost = 0;
+        $servicesBreakdown = [];
+        
+        if (!empty($biometricServices)) {
+            foreach ($biometricServices as $serviceKey => $selected) {
+                if ($selected && isset($addonPrices[$serviceKey])) {
+                    $serviceCost = $addonPrices[$serviceKey]['price'];
+                    $biometricServicesCost += $serviceCost;
+                    
+                    $servicesBreakdown[] = [
+                        'service' => $addonPrices[$serviceKey]['name'],
+                        'cost' => $serviceCost
+                    ];
+                }
+            }
+        }
+        
+        // Calculate totals
+        $recurringTotal = $basePrice + $extraCost + $mobileCost + $addonCost;
+        $monthlySubtotal = $recurringTotal;
+        $subtotal = $recurringTotal + $implementationFee + $oneTimeAddonCost + $biometricDeviceCost + $biometricServicesCost;
+        $vat = $subtotal * 0.12;
+        $totalAmount = $subtotal + $vat;
+        
+        return [
+            'base_price' => $basePrice,
+            'extra_cost' => $extraCost,
+            'mobile_cost' => $mobileCost,
+            'addon_cost' => $addonCost,
+            'one_time_addon_cost' => $oneTimeAddonCost,
+            'biometric_device_cost' => $biometricDeviceCost,
+            'biometric_services_cost' => $biometricServicesCost,
+            'implementation_fee' => $implementationFee,
+            'recurring_total' => $recurringTotal,
+            'monthly_subtotal' => $monthlySubtotal,
+            'subtotal' => $subtotal,
+            'vat' => $vat,
+            'total_amount' => $totalAmount,
+            'device_breakdown' => $deviceBreakdown,
+            'services_breakdown' => $servicesBreakdown,
+        ];
     }
 }
