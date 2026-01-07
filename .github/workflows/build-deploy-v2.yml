@@ -645,8 +645,24 @@ jobs:
             echo "SELECTED_DEVICES length: ${#SELECTED_DEVICES}"
 
             # Use the complete wizard data from the payload instead of minimal data
-            # Reconstruct the JSON using the environment variables that contain the actual payload data
-            WIZARD_JSON="{\"reference_number\":\"${REFERENCE_NUMBER:-}\",\"subscription_details\":${SUBSCRIPTION_DETAILS:-{}},\"pricing_breakdown\":${PRICING_BREAKDOWN:-{}},\"selected_devices\":${SELECTED_DEVICES:-[]},\"selected_biometric_services\":${SELECTED_BIOMETRIC_SERVICES:-{}},\"company_details\":${COMPANY_DETAILS:-{}},\"user_details\":${USER_DETAILS:-{}}}"
+            # Use jq to properly construct JSON with actual payload data
+            WIZARD_JSON=$(jq -n \
+              --arg ref_num "${REFERENCE_NUMBER:-}" \
+              --argjson sub_details "${SUBSCRIPTION_DETAILS:-{}}" \
+              --argjson pricing "${PRICING_BREAKDOWN:-{}}" \
+              --argjson devices "${SELECTED_DEVICES:-[]}" \
+              --argjson services "${SELECTED_BIOMETRIC_SERVICES:-{}}" \
+              --argjson company "${COMPANY_DETAILS:-{}}" \
+              --argjson user "${USER_DETAILS:-{}}" \
+              '{
+                reference_number: $ref_num,
+                subscription_details: $sub_details,
+                pricing_breakdown: $pricing,
+                selected_devices: $devices,
+                selected_biometric_services: $services,
+                company_details: $company,
+                user_details: $user
+              }')
 
             # Debug: Show preview of reconstructed JSON  
             echo "📋 Wizard JSON preview (first 300 chars): ${WIZARD_JSON:0:300}"
