@@ -47,7 +47,7 @@
                         <div class="mb-2 me-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#add_budget_request"
                                 class="btn btn-primary d-flex align-items-center"><i
-                                    class="ti ti-circle-plus me-2"></i>Complete Request</a>
+                                    class="ti ti-circle-plus me-2"></i>Request Budget</a>
                         </div>
                     @endif
                     <div class="head-icons ms-2">
