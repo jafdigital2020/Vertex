@@ -700,87 +700,29 @@ jobs:
             # Use the complete wizard data from the payload instead of minimal data
             # Handle different input formats and validate JSON before parsing
             
-            # Function to validate and fix JSON format
-            fix_json() {
-              local input="$1"
-              # Check if it's already valid JSON
-              if echo "$input" | jq empty 2>/dev/null; then
-                echo "$input"
-                return 0
-              fi
+            # Check if wizard data is available and valid
+            if [ -n "$SUBSCRIPTION_DETAILS" ] && [ "$SUBSCRIPTION_DETAILS" != "{}" ]; then
+              echo "📦 Processing wizard subscription data..."
               
-              # If not valid, try to fix common issues
-              # Add quotes around unquoted keys and string values
-              echo "$input" | sed -E \
-                -e 's/([{,])([a-zA-Z_][a-zA-Z0-9_]*):([^",\[\]{}\s]+)/\1"\2":"\3"/g' \
-                -e 's/([{,])([a-zA-Z_][a-zA-Z0-9_]*):(\[)/\1"\2":\3/g' \
-                -e 's/([{,])([a-zA-Z_][a-zA-Z0-9_]*):(\{)/\1"\2":\3/g' \
-                -e 's/([{,])([a-zA-Z_][a-zA-Z0-9_]*):(".*")/\1"\2":\3/g'
-            }
-            
-            # Safely parse JSON data with error handling
-            parse_json_safely() {
-              local data="$1"
-              local fallback="$2"
-              
-              if [ -z "$data" ] || [ "$data" = "{}" ] || [ "$data" = "[]" ]; then
-                echo "$fallback"
-                return 0
-              fi
-              
-              # Try to parse as-is first
-              if echo "$data" | jq empty 2>/dev/null; then
-                echo "$data"
-              else
-                # Try to fix and parse
-                fixed_json=$(fix_json "$data")
-                if echo "$fixed_json" | jq empty 2>/dev/null; then
-                  echo "$fixed_json"
-                else
-                  echo "$fallback"
-                fi
-              fi
-            }
-            
-            # Parse each component safely
-            SAFE_SUBSCRIPTION_DETAILS=$(parse_json_safely "${SUBSCRIPTION_DETAILS:-}" "{}")
-            SAFE_PRICING_BREAKDOWN=$(parse_json_safely "${PRICING_BREAKDOWN:-}" "{}")
-            SAFE_SELECTED_DEVICES=$(parse_json_safely "${SELECTED_DEVICES:-}" "[]")
-            SAFE_SELECTED_BIOMETRIC_SERVICES=$(parse_json_safely "${SELECTED_BIOMETRIC_SERVICES:-}" "{}")
-            SAFE_COMPANY_DETAILS=$(parse_json_safely "${COMPANY_DETAILS:-}" "{}")
-            SAFE_USER_DETAILS=$(parse_json_safely "${USER_DETAILS:-}" "{}")
-            
-            # Build final wizard JSON
-            WIZARD_JSON=$(jq -n \
-              --arg ref_num "${REFERENCE_NUMBER:-}" \
-              --argjson sub_details "$SAFE_SUBSCRIPTION_DETAILS" \
-              --argjson pricing "$SAFE_PRICING_BREAKDOWN" \
-              --argjson devices "$SAFE_SELECTED_DEVICES" \
-              --argjson services "$SAFE_SELECTED_BIOMETRIC_SERVICES" \
-              --argjson company "$SAFE_COMPANY_DETAILS" \
-              --argjson user "$SAFE_USER_DETAILS" \
-              '{
-                reference_number: $ref_num,
-                subscription_details: $sub_details,
-                pricing_breakdown: $pricing,
-                selected_devices: $devices,
-                selected_biometric_services: $services,
-                company_details: $company,
-                user_details: $user
-              }'
-            )
+              # For manual testing or when data comes as object notation, 
+              # pass it directly as string to the wizard injection script
+              WIZARD_JSON_RAW="{\"reference_number\":\"${REFERENCE_NUMBER:-}\",\"subscription_details\":\"${SUBSCRIPTION_DETAILS:-}\",\"pricing_breakdown\":\"${PRICING_BREAKDOWN:-}\",\"selected_devices\":\"${SELECTED_DEVICES:-}\",\"selected_biometric_services\":\"${SELECTED_BIOMETRIC_SERVICES:-}\",\"company_details\":\"${COMPANY_DETAILS:-}\",\"user_details\":\"${USER_DETAILS:-}\"}"
+            else
+              echo "⚠️ No wizard data available, using minimal payload"
+              WIZARD_JSON_RAW="{\"reference_number\":\"${REFERENCE_NUMBER:-}\"}"
+            fi
 
             # Debug: Show preview of reconstructed JSON  
-            echo "📋 Wizard JSON preview (first 300 chars): ${WIZARD_JSON:0:300}"
+            echo "📋 Wizard JSON preview (first 300 chars): ${WIZARD_JSON_RAW:0:300}"
 
             # Set wizard data environment variable directly  
-            echo "WIZARD_SUBSCRIPTION_DATA=$(printf '%s' "$WIZARD_JSON" | base64 -w0)" >> .env
+            echo "WIZARD_SUBSCRIPTION_DATA=$(printf '%s' "$WIZARD_JSON_RAW" | base64 -w0)" >> .env
             echo "📝 Wizard data environment variable set"
 
             # Inject wizard data using the script if available
             if [ -f "scripts/inject-wizard-data.php" ]; then
               echo "Calling wizard data injection script..."
-              php scripts/inject-wizard-data.php "$WIZARD_JSON" || echo "⚠️ Wizard data injection failed - will use legacy seeding"
+              php scripts/inject-wizard-data.php "$WIZARD_JSON_RAW" || echo "⚠️ Wizard data injection failed - will use legacy seeding"
             else
               echo "⚠️ Wizard data injection script not found - using legacy invoice seeding"
             fi
