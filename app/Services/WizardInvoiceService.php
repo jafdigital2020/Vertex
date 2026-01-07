@@ -98,14 +98,54 @@ class WizardInvoiceService
      */
     protected function createInvoiceLineItems($invoiceId, array $wizardData)
     {
+        Log::info('Creating invoice line items', [
+            'invoice_id' => $invoiceId,
+            'wizard_data_keys' => array_keys($wizardData)
+        ]);
+        
         $pricingBreakdown = $wizardData['pricing_breakdown'] ?? [];
         $subscriptionDetails = $wizardData['subscription_details'] ?? [];
         $selectedDevices = $wizardData['selected_devices'] ?? [];
         $biometricServices = $wizardData['selected_biometric_services'] ?? [];
         
-        // If pricing breakdown doesn't have detailed fields, calculate them
-        if (empty($pricingBreakdown['base_price']) && isset($subscriptionDetails['plan_slug'])) {
-            $pricingBreakdown = $this->calculateDetailedPricing($subscriptionDetails, $selectedDevices, $biometricServices);
+        Log::info('Parsed wizard data components', [
+            'subscription_details' => $subscriptionDetails,
+            'pricing_breakdown' => $pricingBreakdown,
+            'selected_devices' => $selectedDevices,
+            'biometric_services' => $biometricServices
+        ]);
+        
+        // If pricing breakdown doesn't have detailed fields OR has bundled costs, calculate them
+        $planSlug = $subscriptionDetails['plan_slug'] ?? 'unknown';
+        $planDefaults = config('wizard.plan_defaults', []);
+        $expectedBasePrice = $planDefaults[$planSlug]['base_price'] ?? 0;
+        $actualBasePrice = $pricingBreakdown['base_price'] ?? 0;
+        $hasDetailedBreakdown = ($pricingBreakdown['extra_cost'] ?? 0) > 0 || 
+                               ($pricingBreakdown['mobile_cost'] ?? 0) > 0 || 
+                               ($pricingBreakdown['addon_cost'] ?? 0) > 0;
+        
+        // Calculate detailed pricing if:
+        // 1. No base price provided, OR
+        // 2. Base price is much higher than expected (bundled costs), OR  
+        // 3. No detailed breakdown is provided
+        if (empty($actualBasePrice) || 
+            ($expectedBasePrice > 0 && $actualBasePrice > ($expectedBasePrice * 2)) || 
+            !$hasDetailedBreakdown) {
+            
+            Log::info('Calculating detailed pricing from subscription details', [
+                'reason' => empty($actualBasePrice) ? 'no_base_price' : 
+                           ($actualBasePrice > ($expectedBasePrice * 2) ? 'bundled_costs' : 'no_breakdown'),
+                'expected_base_price' => $expectedBasePrice,
+                'actual_base_price' => $actualBasePrice,
+                'has_detailed_breakdown' => $hasDetailedBreakdown
+            ]);
+            
+            $calculatedPricing = $this->calculateDetailedPricing($subscriptionDetails, $selectedDevices, $biometricServices);
+            
+            // Merge calculated pricing with existing data, prioritizing calculated values for breakdowns
+            $pricingBreakdown = array_merge($pricingBreakdown, $calculatedPricing);
+            
+            Log::info('Calculated detailed pricing', $pricingBreakdown);
         }
         
         $lineItems = [];
@@ -370,6 +410,57 @@ class WizardInvoiceService
                     ];
                 }
             }
+        } else {
+            // Final fallback: Check if biometric_device_count exists without detailed device info
+            $biometricDeviceCount = $subscriptionDetails['biometric_device_count'] ?? 0;
+            if ($biometricDeviceCount > 0) {
+                Log::info('Creating generic biometric device line item', [
+                    'device_count' => $biometricDeviceCount
+                ]);
+                
+                // Use a default device (most popular one from config)
+                $biometricDevices = config('wizard.biometric_devices', []);
+                $defaultDevice = null;
+                
+                // Find the most popular device (has 'badges' with 'Most Popular')
+                foreach ($biometricDevices as $deviceId => $device) {
+                    if (isset($device['badges']) && in_array('Most Popular', $device['badges'])) {
+                        $defaultDevice = ['id' => $deviceId] + $device;
+                        break;
+                    }
+                }
+                
+                // If no popular device found, use the first device
+                if (!$defaultDevice && !empty($biometricDevices)) {
+                    $deviceId = array_key_first($biometricDevices);
+                    $defaultDevice = ['id' => $deviceId] + $biometricDevices[$deviceId];
+                }
+                
+                if ($defaultDevice) {
+                    $devicePrice = $defaultDevice['price'];
+                    $deviceTotal = $devicePrice * $biometricDeviceCount;
+                    
+                    $lineItems[] = [
+                        'invoice_id' => $invoiceId,
+                        'description' => $defaultDevice['name'] . " - Biometric Device",
+                        'quantity' => $biometricDeviceCount,
+                        'rate' => $devicePrice,
+                        'amount' => $deviceTotal,
+                        'period' => 'one-time',
+                        'metadata' => json_encode([
+                            'type' => 'biometric_device', 
+                            'device_id' => $defaultDevice['id'],
+                            'device_name' => $defaultDevice['name'],
+                            'capacity' => $defaultDevice['capacity'] ?? null,
+                            'features' => $defaultDevice['features'] ?? [],
+                            'auto_selected' => true,
+                            'reason' => 'biometric_device_count_fallback'
+                        ]),
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
+            }
         }
 
         // 7. Biometric Services
@@ -449,10 +540,28 @@ class WizardInvoiceService
 
         // Insert all line items
         if (!empty($lineItems)) {
+            Log::info('About to insert line items', [
+                'invoice_id' => $invoiceId,
+                'line_items_count' => count($lineItems),
+                'line_items' => array_map(function($item) {
+                    return [
+                        'description' => $item['description'],
+                        'amount' => $item['amount'],
+                        'type' => json_decode($item['metadata'], true)['type'] ?? 'unknown'
+                    ];
+                }, $lineItems)
+            ]);
+            
             DB::table('invoice_items')->insert($lineItems);
-            Log::info('Invoice line items created', [
+            Log::info('Invoice line items created successfully', [
                 'invoice_id' => $invoiceId,
                 'line_items_count' => count($lineItems)
+            ]);
+        } else {
+            Log::warning('No line items to insert', [
+                'invoice_id' => $invoiceId,
+                'pricing_breakdown' => $pricingBreakdown,
+                'subscription_details' => $subscriptionDetails
             ]);
         }
     }
