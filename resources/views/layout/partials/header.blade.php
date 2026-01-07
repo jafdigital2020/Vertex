@@ -162,24 +162,24 @@
                                 <li class="submenu">
                                     <a href="#"
                                         class="{{ Request::is(
-                                            'chat',
-                                            'voice-call',
-                                            'video-call',
-                                            'outgoing-call',
-                                            'incoming-call',
-                                            'call-history',
-                                            'calendar',
-                                            'email',
-                                            'todo',
-                                            'notes',
-                                            'social-feed',
-                                            'file-manager',
-                                            'kanban-view',
-                                            'invoices',
-                                            'invoice-details',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+    'invoice-details',
+)
+    ? 'active subdrop'
+    : '' }}">
                                         <i class="ti ti-layout-grid-add"></i><span>Applications</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -234,23 +234,23 @@
                                 <li class="submenu">
                                     <a href="#"
                                         class="{{ Request::is(
-                                            'layout-horizontal',
-                                            'layout-detached',
-                                            'layout-modern',
-                                            'layout-two-column',
-                                            'layout-hovered',
-                                            'layout-box',
-                                            'layout-horizontal-single',
-                                            'layout-horizontal-overlay',
-                                            'layout-horizontal-box',
-                                            'layout-horizontal-sidemenu',
-                                            'layout-vertical-transparent',
-                                            'layout-without-header',
-                                            'layout-rtl',
-                                            'layout-dark',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'active subdrop'
+    : '' }}">
                                         <i class="ti ti-layout-board-split"></i><span>Layouts</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -344,61 +344,61 @@
                                 <li class="submenu">
                                     <a href="#"
                                         class="{{ Request::is(
-                                            'clients-grid',
-                                            'projects-grid',
-                                            'tasks',
-                                            'task-board',
-                                            'project-details',
-                                            'contacts-grid',
-                                            'contacts',
-                                            'contact-details',
-                                            'companies-grid',
-                                            'companies-crm',
-                                            'company-details',
-                                            'deals-grid',
-                                            'deals-details',
-                                            'deals',
-                                            'leads-grid',
-                                            'leads-details',
-                                            'leads',
-                                            'pipeline',
-                                            'analytics',
-                                            'activity',
-                                            'employees',
-                                            'employees-grid',
-                                            'employee-details',
-                                            'departments',
-                                            'designations',
-                                            'policy',
-                                            'tickets',
-                                            'tickets-grid',
-                                            'ticket-details',
-                                            'holidays',
-                                            'leaves',
-                                            'leaves-employee',
-                                            'leave-settings',
-                                            'attendance-admin',
-                                            'attendance-employee',
-                                            'timesheets',
-                                            'schedule-timing',
-                                            'overtime',
-                                            'leaves',
-                                            'leaves-employee',
-                                            'leave-settings',
-                                            'performance-indicator',
-                                            'performance-review',
-                                            'performance-appraisal',
-                                            'goal-tracking',
-                                            'goal-type',
-                                            'training',
-                                            'trainers',
-                                            'training-type',
-                                            'promotion',
-                                            'resignation',
-                                            'termination',
-                                        )
-                                            ? 'active '
-                                            : '' }}">
+    'clients-grid',
+    'projects-grid',
+    'tasks',
+    'task-board',
+    'project-details',
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? 'active '
+    : '' }}">
                                         <i class="ti ti-user-star"></i><span>Projects</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -428,24 +428,24 @@
                                         <li class="submenu">
                                             <a href="{{ url('call') }}"
                                                 class="{{ Request::is(
-                                                    'contacts-grid',
-                                                    'contacts',
-                                                    'contact-details',
-                                                    'companies-grid',
-                                                    'companies-crm',
-                                                    'company-details',
-                                                    'deals-grid',
-                                                    'deals-details',
-                                                    'deals',
-                                                    'leads-grid',
-                                                    'leads-details',
-                                                    'leads',
-                                                    'pipeline',
-                                                    'analytics',
-                                                    'activity',
-                                                )
-                                                    ? 'active subdrop'
-                                                    : '' }}">Crm<span
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'active subdrop'
+    : '' }}">Crm<span
                                                     class="menu-arrow"></span></a>
                                             <ul>
                                                 <li><a href="{{ url('contacts-grid') }}"
@@ -517,17 +517,17 @@
                                         <li class="submenu">
                                             <a href="javascript:void(0);"
                                                 class="{{ Request::is(
-                                                    'leaves',
-                                                    'leaves-employee',
-                                                    'leave-settings',
-                                                    'attendance-admin',
-                                                    'attendance-employee',
-                                                    'timesheets',
-                                                    'schedule-timing',
-                                                    'overtime',
-                                                )
-                                                    ? 'active subdrop'
-                                                    : '' }}"><span>Attendance</span>
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Attendance</span>
                                                 <span class="menu-arrow"></span>
                                             </a>
                                             <ul>
@@ -620,74 +620,74 @@
                                 <li class="submenu">
                                     <a href="#"
                                         class="{{ Request::is(
-                                            'estimates',
-                                            'invoices',
-                                            'payments',
-                                            'expenses',
-                                            'provident-fund',
-                                            'taxes',
-                                            'categories',
-                                            'budgets',
-                                            'budget-expenses',
-                                            'budget-revenues',
-                                            'employee-salary',
-                                            'payslip',
-                                            'payroll',
-                                            'assets',
-                                            'asset-categories',
-                                            'knowledgebase',
-                                            'activity',
-                                            'users',
-                                            'roles-permissions',
-                                            'expenses-report',
-                                            'invoice-report',
-                                            'payment-report',
-                                            'project-report',
-                                            'task-report',
-                                            'user-report',
-                                            'employee-report',
-                                            'payslip-report',
-                                            'attendance-report',
-                                            'leave-report',
-                                            'daily-report',
-                                            'profile-settings',
-                                            'security-settings',
-                                            'notification-settings',
-                                            'connected-apps',
-                                            'bussiness-settings',
-                                            'seo-settings',
-                                            'localization-settings',
-                                            'prefixes',
-                                            'preferences',
-                                            'performance-appraisal',
-                                            'language',
-                                            'authentication-settings',
-                                            'ai-settings',
-                                            'salary-settings',
-                                            'approval-settings',
-                                            'invoice-settings',
-                                            'leave-type',
-                                            'custom-fields',
-                                            'email-settings',
-                                            'email-template',
-                                            'sms-settings',
-                                            'sms-template',
-                                            'otp-settings',
-                                            'gdpr',
-                                            'maintenance-mode',
-                                            'payment-gateways',
-                                            'tax-rates',
-                                            'currencies',
-                                            'custom-css',
-                                            'custom-js',
-                                            'cronjob',
-                                            'storage-settings',
-                                            'ban-ip-address',
-                                            'backup',
-                                            'clear-cache',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
+    'estimates',
+    'invoices',
+    'payments',
+    'expenses',
+    'provident-fund',
+    'taxes',
+    'categories',
+    'budgets',
+    'budget-expenses',
+    'budget-revenues',
+    'employee-salary',
+    'payslip',
+    'payroll',
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'active subdrop'
+    : '' }}">
                                         <i class="ti ti-user-star"></i><span>Administration</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -844,44 +844,44 @@
                                         <li class="submenu">
                                             <a href="javascript:void(0);"
                                                 class="{{ Request::is(
-                                                    'profile-settings',
-                                                    'security-settings',
-                                                    'notification-settings',
-                                                    'connected-apps',
-                                                    'bussiness-settings',
-                                                    'seo-settings',
-                                                    'localization-settings',
-                                                    'prefixes',
-                                                    'preferences',
-                                                    'performance-appraisal',
-                                                    'language',
-                                                    'authentication-settings',
-                                                    'ai-settings',
-                                                    'salary-settings',
-                                                    'approval-settings',
-                                                    'invoice-settings',
-                                                    'leave-type',
-                                                    'custom-fields',
-                                                    'email-settings',
-                                                    'email-template',
-                                                    'sms-settings',
-                                                    'sms-template',
-                                                    'otp-settings',
-                                                    'gdpr',
-                                                    'maintenance-mode',
-                                                    'payment-gateways',
-                                                    'tax-rates',
-                                                    'currencies',
-                                                    'custom-css',
-                                                    'custom-js',
-                                                    'cronjob',
-                                                    'storage-settings',
-                                                    'ban-ip-address',
-                                                    'backup',
-                                                    'clear-cache',
-                                                )
-                                                    ? 'active subdrop'
-                                                    : '' }}"><span>Settings</span>
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Settings</span>
                                                 <span class="menu-arrow"></span>
                                             </a>
                                             <ul>
@@ -1041,31 +1041,31 @@
                                 <li class="submenu">
                                     <a href="#"
                                         class="{{ Request::is(
-                                            'starter',
-                                            'profile',
-                                            'gallery',
-                                            'search-result',
-                                            'timeline',
-                                            'pricing',
-                                            'coming-soon',
-                                            'under-maintenance',
-                                            'under-construction',
-                                            'api-keys',
-                                            'privacy-policy',
-                                            'terms-condition',
-                                            'pages',
-                                            'blogs',
-                                            'blog-categories',
-                                            'blog-comments',
-                                            'blog-tags',
-                                            'countries',
-                                            'states',
-                                            'cities',
-                                            'testimonials',
-                                            'faq',
-                                        )
-                                            ? 'active'
-                                            : '' }}">
+    'starter',
+    'profile',
+    'gallery',
+    'search-result',
+    'timeline',
+    'pricing',
+    'coming-soon',
+    'under-maintenance',
+    'under-construction',
+    'api-keys',
+    'privacy-policy',
+    'terms-condition',
+    'pages',
+    'blogs',
+    'blog-categories',
+    'blog-comments',
+    'blog-tags',
+    'countries',
+    'states',
+    'cities',
+    'testimonials',
+    'faq',
+)
+    ? 'active'
+    : '' }}">
                                         <i class="ti ti-page-break"></i><span>Pages</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -1161,30 +1161,30 @@
                                         <li class="submenu">
                                             <a href="#"
                                                 class="{{ Request::is(
-                                                    'login',
-                                                    'login-2',
-                                                    'login-3',
-                                                    'register',
-                                                    'register-2',
-                                                    'register-3',
-                                                    'forgot-password',
-                                                    'forgot-password-2',
-                                                    'forgot-password-3',
-                                                    'reset-password',
-                                                    'reset-password-2',
-                                                    'reset-password-3',
-                                                    'email-verification',
-                                                    'email-verification-2',
-                                                    'email-verification-3',
-                                                    'two-step-verification',
-                                                    'two-step-verification-2',
-                                                    'two-step-verification-3',
-                                                    'lock-screen',
-                                                    'error-404',
-                                                    'error-500',
-                                                )
-                                                    ? 'active'
-                                                    : '' }}">
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? 'active'
+    : '' }}">
                                                 <span>Authentication</span>
                                                 <span class="menu-arrow"></span>
                                             </a>
@@ -1300,103 +1300,103 @@
                                         <li class="submenu">
                                             <a href="#"
                                                 class="{{ Request::is(
-                                                    'ui-alerts',
-                                                    'ui-accordion',
-                                                    'ui-avatar',
-                                                    'ui-badges',
-                                                    'ui-borders',
-                                                    'ui-buttons',
-                                                    'ui-buttons-group',
-                                                    'ui-breadcrumb',
-                                                    'ui-cards',
-                                                    'ui-carousel',
-                                                    'ui-colors',
-                                                    'ui-dropdowns',
-                                                    'ui-grid',
-                                                    'ui-images',
-                                                    'ui-lightbox',
-                                                    'ui-media',
-                                                    'ui-modals',
-                                                    'ui-offcanvas',
-                                                    'ui-pagination',
-                                                    'ui-popovers',
-                                                    'ui-progress',
-                                                    'ui-placeholders',
-                                                    'ui-spinner',
-                                                    'ui-sweetalerts',
-                                                    'ui-nav-tabs',
-                                                    'ui-toasts',
-                                                    'ui-tooltips',
-                                                    'ui-typography',
-                                                    'ui-video',
-                                                    'ui-sortable',
-                                                    'ui-swiperjs',
-                                                    'ui-ribbon',
-                                                    'ui-clipboard',
-                                                    'ui-drag-drop',
-                                                    'ui-rangeslider',
-                                                    'ui-rating',
-                                                    'ui-text-editor',
-                                                    'ui-counter',
-                                                    'ui-scrollbar',
-                                                    'ui-stickynote',
-                                                    'ui-timeline',
-                                                    'form-basic-inputs',
-                                                    'form-checkbox-radios',
-                                                    'form-input-groups',
-                                                    'form-grid-gutters',
-                                                    'form-select',
-                                                    'form-mask',
-                                                    'form-fileupload',
-                                                    'form-horizontal',
-                                                    'form-vertical',
-                                                    'form-floating-labels',
-                                                    'form-validation',
-                                                    'form-select2',
-                                                    'form-wizard',
-                                                    'form-pickers',
-                                                    'form-basic-inputs',
-                                                    'form-checkbox-radios',
-                                                    'form-input-groups',
-                                                    'form-grid-gutters',
-                                                    'form-select',
-                                                    'form-mask',
-                                                    'form-fileupload',
-                                                    'form-validation',
-                                                    'form-select2',
-                                                    'form-wizard',
-                                                    'form-pickers',
-                                                    'tables-basic',
-                                                    'data-tables',
-                                                    'chart-apex',
-                                                    'chart-c3',
-                                                    'chart-js',
-                                                    'chart-morris',
-                                                    'chart-flot',
-                                                    'chart-peity',
-                                                    'icon-fontawesome',
-                                                    'icon-tabler',
-                                                    'icon-bootstrap',
-                                                    'icon-remix',
-                                                    'icon-feather',
-                                                    'icon-ionic',
-                                                    'icon-material',
-                                                    'icon-pe7',
-                                                    'icon-simpleline',
-                                                    'icon-themify',
-                                                    'icon-ionic',
-                                                    'icon-material',
-                                                    'icon-pe7',
-                                                    'icon-simpleline',
-                                                    'icon-themify',
-                                                    'icon-weather',
-                                                    'icon-typicon',
-                                                    'icon-flag',
-                                                    'maps-vector',
-                                                    'maps-leaflet',
-                                                )
-                                                    ? 'active subdrop'
-                                                    : '' }}">
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+    'maps-vector',
+    'maps-leaflet',
+)
+    ? 'active subdrop'
+    : '' }}">
                                                 <span>UI Interface</span>
                                                 <span class="menu-arrow"></span>
                                             </a>
@@ -1404,40 +1404,40 @@
                                                 <li class="submenu">
                                                     <a href="javascript:void(0);"
                                                         class="{{ Request::is(
-                                                            'ui-alerts',
-                                                            'ui-accordion',
-                                                            'ui-avatar',
-                                                            'ui-badges',
-                                                            'ui-borders',
-                                                            'ui-buttons',
-                                                            'ui-buttons-group',
-                                                            'ui-breadcrumb',
-                                                            'ui-cards',
-                                                            'ui-carousel',
-                                                            'ui-colors',
-                                                            'ui-dropdowns',
-                                                            'ui-grid',
-                                                            'ui-images',
-                                                            'ui-lightbox',
-                                                            'ui-media',
-                                                            'ui-modals',
-                                                            'ui-offcanvas',
-                                                            'ui-pagination',
-                                                            'ui-popovers',
-                                                            'ui-progress',
-                                                            'ui-placeholders',
-                                                            'ui-spinner',
-                                                            'ui-sweetalerts',
-                                                            'ui-nav-tabs',
-                                                            'ui-toasts',
-                                                            'ui-tooltips',
-                                                            'ui-typography',
-                                                            'ui-video',
-                                                            'ui-sortable',
-                                                            'ui-swiperjs',
-                                                        )
-                                                            ? 'active subdrop'
-                                                            : '' }}">
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+)
+    ? 'active subdrop'
+    : '' }}">
                                                         <i class="ti ti-hierarchy-2"></i>
                                                         <span>Base UI</span>
                                                         <span class="menu-arrow"></span>
@@ -1574,19 +1574,19 @@
                                                 <li class="submenu">
                                                     <a href="javascript:void(0);"
                                                         class="{{ Request::is(
-                                                            'ui-ribbon',
-                                                            'ui-clipboard',
-                                                            'ui-drag-drop',
-                                                            'ui-rangeslider',
-                                                            'ui-rating',
-                                                            'ui-text-editor',
-                                                            'ui-counter',
-                                                            'ui-scrollbar',
-                                                            'ui-stickynote',
-                                                            'ui-timeline',
-                                                        )
-                                                            ? 'active subdrop'
-                                                            : '' }}">
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+)
+    ? 'active subdrop'
+    : '' }}">
                                                         <i class="ti ti-hierarchy-3"></i>
                                                         <span>Advanced UI</span>
                                                         <span class="menu-arrow"></span>
@@ -1641,23 +1641,23 @@
                                                 <li class="submenu">
                                                     <a href="javascript:void(0);"
                                                         class="{{ Request::is(
-                                                            'form-basic-inputs',
-                                                            'form-checkbox-radios',
-                                                            'form-input-groups',
-                                                            'form-grid-gutters',
-                                                            'form-select',
-                                                            'form-mask',
-                                                            'form-fileupload',
-                                                            'form-horizontal',
-                                                            'form-vertical',
-                                                            'form-floating-labels',
-                                                            'form-validation',
-                                                            'form-select2',
-                                                            'form-wizard',
-                                                            'form-pickers',
-                                                        )
-                                                            ? 'active subdrop'
-                                                            : '' }}">
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">
                                                         <i class="ti ti-input-search"></i>
                                                         <span>Forms</span>
                                                         <span class="menu-arrow"></span>
@@ -1666,20 +1666,20 @@
                                                         <li class="submenu submenu-two">
                                                             <a href="javascript:void(0);"
                                                                 class="{{ Request::is(
-                                                                    'form-basic-inputs',
-                                                                    'form-checkbox-radios',
-                                                                    'form-input-groups',
-                                                                    'form-grid-gutters',
-                                                                    'form-select',
-                                                                    'form-mask',
-                                                                    'form-fileupload',
-                                                                    'form-validation',
-                                                                    'form-select2',
-                                                                    'form-wizard',
-                                                                    'form-pickers',
-                                                                )
-                                                                    ? 'active subdrop'
-                                                                    : '' }}">Form
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">Form
                                                                 Elements <span
                                                                     class="menu-arrow inside-submenu"></span>
                                                             </a>
@@ -1829,27 +1829,27 @@
                                                 <li class="submenu">
                                                     <a href="javascript:void(0);"
                                                         class="{{ Request::is(
-                                                            'icon-fontawesome',
-                                                            'icon-tabler',
-                                                            'icon-bootstrap',
-                                                            'icon-remix',
-                                                            'icon-feather',
-                                                            'icon-ionic',
-                                                            'icon-material',
-                                                            'icon-pe7',
-                                                            'icon-simpleline',
-                                                            'icon-themify',
-                                                            'icon-ionic',
-                                                            'icon-material',
-                                                            'icon-pe7',
-                                                            'icon-simpleline',
-                                                            'icon-themify',
-                                                            'icon-weather',
-                                                            'icon-typicon',
-                                                            'icon-flag',
-                                                        )
-                                                            ? 'active subdrop'
-                                                            : '' }}">
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? 'active subdrop'
+    : '' }}">
                                                         <i class="ti ti-icons"></i>
                                                         <span>Icons</span>
                                                         <span class="menu-arrow"></span>
@@ -2032,31 +2032,31 @@
                     </div> --}}
                      {{-- Plan Expiry Notification --}}
                         @php
-                            $authUser = Auth::user() ?? Auth::guard('global')->user();
-                            $tenantId = $authUser->tenant_id ?? null;
-                            $subscription = null;
-                            $package = null;
-                            
-                            if ($tenantId) {
-                                $subscription = \App\Models\Subscription::where('tenant_id', $tenantId)
-                                    ->with('plan')
-                                    ->where('status', 'active')
-                                    ->orderBy('subscription_end', 'desc')
-                                    ->first();
-                                $package = $subscription?->plan;
-                            }
-                            
-                            $isExpiring = $subscription && \Carbon\Carbon::parse($subscription->subscription_end)->lte(now()->addDays(7));
-                            $isExpired = !$subscription || \Carbon\Carbon::parse($subscription->subscription_end)->lt(now());
-                            $showPlanAlert = $tenantId && $package && ($isExpiring || $isExpired);
+$authUser = Auth::user() ?? Auth::guard('global')->user();
+$tenantId = $authUser->tenant_id ?? null;
+$subscription = null;
+$package = null;
+
+if ($tenantId) {
+    $subscription = \App\Models\Subscription::where('tenant_id', $tenantId)
+        ->with('plan')
+        ->where('status', 'active')
+        ->orderBy('subscription_end', 'desc')
+        ->first();
+    $package = $subscription?->plan;
+}
+
+$isExpiring = $subscription && \Carbon\Carbon::parse($subscription->subscription_end)->lte(now()->addDays(7));
+$isExpired = !$subscription || \Carbon\Carbon::parse($subscription->subscription_end)->lt(now());
+$showPlanAlert = $tenantId && $package && ($isExpiring || $isExpired);
                         @endphp
 
 
                      <div class="me-1 notification_item">
                         @php 
                             $authUser = Auth::user() ?? Auth::guard('global')->user();
-                            $allNotifications = $authUser?->notifications ?? collect(); 
-                            $unreadCount = $authUser?->unreadNotifications->count() ?? 0;
+$allNotifications = $authUser?->notifications ?? collect();
+$unreadCount = $authUser?->unreadNotifications->count() ?? 0;
                         @endphp
 
                         <a href="#" class="btn btn-menubar position-relative me-1" id="notification_popup"
@@ -2126,29 +2126,29 @@
                 
                 {{-- Plan Display --}}
                 @php
-                    $authUser = Auth::user() ?? Auth::guard('global')->user();
-                    $tenantId = $authUser->tenant_id ?? null;
-                    $subscription = null;
-                    $package = null;
-                    
-                    if ($tenantId) {
-                        $subscription = \App\Models\Subscription::where('tenant_id', $tenantId)
-                            ->with('plan')
-                            ->where('status', 'active')
-                            ->orderBy('subscription_end', 'desc')
-                            ->first();
-                        $package = $subscription?->plan;
-                    }
-                    
-                    $isExpiring = $subscription && \Carbon\Carbon::parse($subscription->subscription_end)->lte(now()->addDays(7));
-                    $isExpired = !$subscription || \Carbon\Carbon::parse($subscription->subscription_end)->lt(now());
-                    $isElitePlan = $package && (stripos($package->name, 'elite') !== false || strtolower($package->name) === 'elite');
-                    
-                    // Calculate remaining days
-                    $remainingDays = 0;
-                    if ($subscription && $subscription->subscription_end) {
-                        $remainingDays = max(0, (int) \Carbon\Carbon::parse($subscription->subscription_end)->diffInDays(now(), false));
-                    }
+$authUser = Auth::user() ?? Auth::guard('global')->user();
+$tenantId = $authUser->tenant_id ?? null;
+$subscription = null;
+$package = null;
+
+if ($tenantId) {
+    $subscription = \App\Models\Subscription::where('tenant_id', $tenantId)
+        ->with('plan')
+        ->where('status', 'active')
+        ->orderBy('subscription_end', 'desc')
+        ->first();
+    $package = $subscription?->plan;
+}
+
+$isExpiring = $subscription && \Carbon\Carbon::parse($subscription->subscription_end)->lte(now()->addDays(7));
+$isExpired = !$subscription || \Carbon\Carbon::parse($subscription->subscription_end)->lt(now());
+$isElitePlan = $package && (stripos($package->name, 'elite') !== false || strtolower($package->name) === 'elite');
+
+// Calculate remaining days
+$remainingDays = 0;
+if ($subscription && $subscription->subscription_end) {
+    $remainingDays = max(0, (int) \Carbon\Carbon::parse($subscription->subscription_end)->diffInDays(now(), false));
+}
                 @endphp
 
                 @if($tenantId && $package)
@@ -2202,7 +2202,7 @@
                                                 {{ Auth::user()->personalInformation->first_name }}</h5>
                                         @else
                                             @php
-                                                $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+    $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
                                             @endphp
 
                                             @if ($user)
@@ -2213,7 +2213,7 @@
                                         @endif
 
                                         @php
-                                            $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+$user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
                                         @endphp
 
                                         @if ($user)
@@ -2400,43 +2400,76 @@
             const publicPaths = ['/login', '/register', '/forgot-password', '/otp-form', '/reset-password'];
 
             // Skip token check for public pages
-            if (publicPaths.includes(currentPath)) {
-                return;
-            }
+        //     if (publicPaths.includes(currentPath)) {
+        //         return;
+        //     }
 
-            if (!token) {
-                console.log('No token found, redirecting to login...');
-                window.location.href = '/login';
-                return;
-            }
+        //     if (!token) {
+        //         console.log('No token found, redirecting to login...');
+        //         window.location.href = '/login';
+        //         return;
+        //     }
 
-            const response = await fetch('/api/verify-token', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
+        //     const response = await fetch('/api/verify-token', {
+        //         method: 'GET',
+        //         headers: {
+        //             'Authorization': `Bearer ${token}`,
+        //             'Accept': 'application/json'
+        //         }
+        //     });
+
+        //     console.log('Token verification status:', response.status);
+
+        //     if (!response.ok) {
+        //         console.log('Token invalid, clearing and redirecting...');
+        //         // Token is invalid
+        //         localStorage.removeItem('token');
+        //         localStorage.clear();
+        //         sessionStorage.clear();
+        //         window.location.href = '/login';
+        //     } else {
+        //         console.log('Token is valid');
+        //     }
+        // } catch (error) {
+        //     console.error('Token verification error:', error);
+        //     localStorage.removeItem('token');
+        //     localStorage.clear();
+        //     sessionStorage.clear();
+        //     window.location.href = '/login';
+        // }
+
+          if (publicPaths.some(path => currentPath.includes(path))) {
+                return;
+    }
+        
+            cons        t token = localStorage.getItem('token');
+    if (        !token) {
+                if (!currentPath.includes('/login')) {
+            window.location.replace('/login');
                 }
-            });
-
-            console.log('Token verification status:', response.status);
-
-            if (!response.ok) {
-                console.log('Token invalid, clearing and redirecting...');
-                // Token is invalid
-                localStorage.removeItem('token');
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/login';
-            } else {
-                console.log('Token is valid');
-            }
+                return;
+    }
+        
+            try {
+                const re        sponse = await fetch('/api/verify-token', {
+                    method: 'GET',
+                    headers: {
+                'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+        });
+        
+                if (!res        ponse.ok) {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    if (!currentPath.includes('/login')) {
+                        window.location.replace('/login');
+                    }
+                }
         } catch (error) {
-            console.error('Token verification error:', error);
-            localStorage.removeItem('token');
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = '/login';
-        }
+        console.error('Token verification failed:', error);
+            // Don't clear and redirect on network errors, just log
+    }
     }
 
     // ✅ Initialize Functions

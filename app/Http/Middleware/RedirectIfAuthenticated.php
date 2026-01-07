@@ -17,19 +17,27 @@ class RedirectIfAuthenticated
 
         // For web requests, check authentication
         if (Auth::guard('web')->check()) {
-            return redirect()->route('employee-dashboard');
+            // Only redirect if not already on dashboard
+            if (!$request->is('employee-dashboard*')) {
+                return redirect()->route('employee-dashboard');
+            }
+            return $next($request); // ← Add this
         }
 
         if (Auth::guard('global')->check()) {
             $globalUser = Auth::guard('global')->user();
 
-            // Add null safety
             if ($globalUser && $globalUser->global_role) {
                 if ($globalUser->global_role->global_role_name == 'super_admin') {
-                    return redirect()->route('superadmin-dashboard');
+                    if (!$request->is('superadmin-dashboard*')) {
+                        return redirect()->route('superadmin-dashboard');
+                    }
                 } else {
-                    return redirect()->route('admin-dashboard');
+                    if (!$request->is('admin-dashboard*')) {
+                        return redirect()->route('admin-dashboard');
+                    }
                 }
+                return $next($request); // ← Add this
             }
         }
 
