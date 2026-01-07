@@ -702,22 +702,23 @@ jobs:
             if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
               # For repository_dispatch: data is already parsed objects
               WIZARD_JSON=$(jq -n \
-                --arg ref_num "${REFERENCE_NUMBER:-}" \
-                --argjson sub_details "${SUBSCRIPTION_DETAILS:-{}}" \
-                --argjson pricing "${PRICING_BREAKDOWN:-{}}" \
-                --argjson devices "${SELECTED_DEVICES:-[]}" \
-                --argjson services "${SELECTED_BIOMETRIC_SERVICES:-{}}" \
-                --argjson company "${COMPANY_DETAILS:-{}}" \
-                --argjson user "${USER_DETAILS:-{}}" \
-                '{
-                  reference_number: $ref_num,
-                  subscription_details: $sub_details,
-                  pricing_breakdown: $pricing,
-                  selected_devices: $devices,
-                  selected_biometric_services: $services,
-                  company_details: $company,
-                  user_details: $user
-                }')
+              --arg ref_num "${REFERENCE_NUMBER:-}" \
+              --arg sub_details "${SUBSCRIPTION_DETAILS:-{}}" \
+              --arg pricing "${PRICING_BREAKDOWN:-{}}" \
+              --arg devices "${SELECTED_DEVICES:-[]}" \
+              --arg services "${SELECTED_BIOMETRIC_SERVICES:-{}}" \
+              --arg company "${COMPANY_DETAILS:-{}}" \
+              --arg user "${USER_DETAILS:-{}}" \
+              '{
+                reference_number: $ref_num,
+                subscription_details: ($sub_details | fromjson),
+                pricing_breakdown: ($pricing | fromjson),
+                selected_devices: ($devices | fromjson),
+                selected_biometric_services: ($services | fromjson),
+                company_details: ($company | fromjson),
+                user_details: ($user | fromjson)
+              }'
+            )
             else
               # For workflow_dispatch: data comes as JSON strings that need parsing
               WIZARD_JSON=$(jq -n \
