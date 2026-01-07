@@ -151,6 +151,7 @@ class WizardInvoiceService
         }
         
         $lineItems = [];
+        $hasBiometricDeviceItem = false;
         $billingPeriod = $subscriptionDetails['billing_period'] ?? 'monthly';
         $planName = ucfirst($subscriptionDetails['plan_slug'] ?? 'Unknown');
         $systemName = ucfirst($subscriptionDetails['system_slug'] ?? 'Timora');
@@ -371,6 +372,7 @@ class WizardInvoiceService
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
                     ];
+                    $hasBiometricDeviceItem = true;
                 }
             }
         } elseif (!empty($selectedDevices)) {
@@ -410,6 +412,7 @@ class WizardInvoiceService
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
                     ];
+                    $hasBiometricDeviceItem = true;
                 }
             }
         } else {
@@ -461,8 +464,29 @@ class WizardInvoiceService
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
                     ];
+                    $hasBiometricDeviceItem = true;
                 }
             }
+        }
+
+        if (
+            !$hasBiometricDeviceItem &&
+            ($pricingBreakdown['biometric_device_cost'] ?? 0) > 0
+        ) {
+            $lineItems[] = [
+                'invoice_id' => $invoiceId,
+                'description' => "Biometric Device",
+                'quantity' => 1,
+                'rate' => $pricingBreakdown['biometric_device_cost'],
+                'amount' => $pricingBreakdown['biometric_device_cost'],
+                'period' => 'one-time',
+                'metadata' => json_encode([
+                    'type' => 'biometric_device',
+                    'reason' => 'biometric_device_cost_fallback'
+                ]),
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ];
         }
 
         // 7. Biometric Services
@@ -558,6 +582,25 @@ class WizardInvoiceService
      */
     protected function normalizeWizardData(array $wizardData)
     {
+        $decodeMaybeJson = function ($value) {
+            if (!is_string($value)) {
+                return $value;
+            }
+
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+
+            $unescaped = stripcslashes($value);
+            $decoded = json_decode($unescaped, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+
+            return $value;
+        };
+
         $jsonKeys = [
             'subscription_details',
             'pricing_breakdown',
@@ -568,11 +611,19 @@ class WizardInvoiceService
         ];
 
         foreach ($jsonKeys as $key) {
-            if (isset($wizardData[$key]) && is_string($wizardData[$key])) {
-                $decoded = json_decode($wizardData[$key], true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    $wizardData[$key] = $decoded;
-                }
+            if (isset($wizardData[$key])) {
+                $wizardData[$key] = $decodeMaybeJson($wizardData[$key]);
+            }
+        }
+
+        if (isset($wizardData['pricing_breakdown']) && is_array($wizardData['pricing_breakdown'])) {
+            if (isset($wizardData['pricing_breakdown']['device_breakdown'])) {
+                $wizardData['pricing_breakdown']['device_breakdown'] =
+                    $decodeMaybeJson($wizardData['pricing_breakdown']['device_breakdown']);
+            }
+            if (isset($wizardData['pricing_breakdown']['services_breakdown'])) {
+                $wizardData['pricing_breakdown']['services_breakdown'] =
+                    $decodeMaybeJson($wizardData['pricing_breakdown']['services_breakdown']);
             }
         }
 
