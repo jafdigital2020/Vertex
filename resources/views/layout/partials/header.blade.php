@@ -2235,9 +2235,13 @@ $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
                                 </a>
                             </div>
                             <div class="card-footer">
-                                <a href="#" class="dropdown-item" data-logout>
-                                    <i class="ti ti-logout me-2"></i>Logout
-                                </a>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="dropdown-item d-inline-flex align-items-center p-0 py-2">
+                                        <i class="ti ti-login me-2"></i>Logout
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

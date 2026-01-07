@@ -68,8 +68,7 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="form-check form-check-md mb-0">
                                                     <input class="form-check-input" id="remember_me" name="remember"
-                                                        type="checkbox" value="1"
-                                                        {{ old('remember') ? 'checked' : '' }}>
+                                                        type="checkbox" value="1" {{ old('remember') ? 'checked' : '' }}>
                                                     <label for="remember_me" class="form-check-label mt-0">Remember
                                                         Me</label>
                                                 </div>
@@ -110,8 +109,8 @@
                                         </div>
                                     </div>
                                     <div class="mt-5 pb-4 text-center">
-                                        <img class="img-fluid" src="{{ URL::asset('build/img/gdpr-image.png') }}"
-                                            alt="GDPR" style="max-height:100px;">
+                                        <img class="img-fluid" src="{{ URL::asset('build/img/gdpr-image.png') }}" alt="GDPR"
+                                            style="max-height:100px;">
                                         <p class="mb-0 text-gray-9">Copyright &copy; 2025 - JAF Digital Group Inc.</p>
                                     </div>
                                 </div>
@@ -128,7 +127,7 @@
 @push('scripts')
     <script src="{{ asset('build/js/login.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             localStorage.clear();
             sessionStorage.clear();
 
@@ -147,7 +146,7 @@
             // Auto-uppercase company code input
             const companyCodeInput = document.getElementById('companyCode');
             if (companyCodeInput) {
-                companyCodeInput.addEventListener('input', function(e) {
+                companyCodeInput.addEventListener('input', function (e) {
                     e.target.value = e.target.value.toUpperCase();
                 });
             }
