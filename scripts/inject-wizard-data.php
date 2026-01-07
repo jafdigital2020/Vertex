@@ -71,23 +71,69 @@ function injectWizardData(?string $wizardDataJson)
         if (isset($wizardData['subscription_details']) && is_string($wizardData['subscription_details'])) {
             echo "📦 Detected stringified JSON fields – decoding...\n";
 
-            $wizardData['subscription_details'] =
-                json_decode($wizardData['subscription_details'], true) ?? [];
+            // Function to parse object notation like {key:value} to proper array
+            $parseObjectNotation = function($str) {
+                // Try JSON first
+                $decoded = json_decode($str, true);
+                if ($decoded !== null) {
+                    return $decoded;
+                }
+                
+                // Parse object notation manually
+                $result = [];
+                
+                // Remove outer braces and split by commas
+                $str = trim($str, '{}');
+                $pairs = explode(',', $str);
+                
+                foreach ($pairs as $pair) {
+                    if (strpos($pair, ':') !== false) {
+                        [$key, $value] = explode(':', $pair, 2);
+                        $key = trim($key);
+                        $value = trim($value);
+                        
+                        // Handle arrays like [item1,item2]
+                        if (str_starts_with($value, '[') && str_ends_with($value, ']')) {
+                            $arrayContent = trim($value, '[]');
+                            $result[$key] = $arrayContent ? explode(',', $arrayContent) : [];
+                        } 
+                        // Handle boolean values
+                        elseif ($value === 'true') {
+                            $result[$key] = true;
+                        } elseif ($value === 'false') {
+                            $result[$key] = false;
+                        } 
+                        // Handle numeric values
+                        elseif (is_numeric($value)) {
+                            $result[$key] = (int)$value;
+                        } 
+                        // Handle string values
+                        else {
+                            $result[$key] = $value;
+                        }
+                    }
+                }
+                
+                return $result;
+            };
+
+            $wizardData['subscription_details'] = 
+                $parseObjectNotation($wizardData['subscription_details']);
 
             $wizardData['pricing_breakdown'] =
-                json_decode($wizardData['pricing_breakdown'] ?? '{}', true) ?? [];
+                $parseObjectNotation($wizardData['pricing_breakdown'] ?? '{}');
 
             $wizardData['selected_devices'] =
-                json_decode($wizardData['selected_devices'] ?? '[]', true) ?? [];
+                $parseObjectNotation($wizardData['selected_devices'] ?? '[]');
 
             $wizardData['selected_biometric_services'] =
-                json_decode($wizardData['selected_biometric_services'] ?? '{}', true) ?? [];
+                $parseObjectNotation($wizardData['selected_biometric_services'] ?? '{}');
 
             $wizardData['company_details'] =
-                json_decode($wizardData['company_details'] ?? '{}', true) ?? [];
+                $parseObjectNotation($wizardData['company_details'] ?? '{}');
 
             $wizardData['user_details'] =
-                json_decode($wizardData['user_details'] ?? '{}', true) ?? [];
+                $parseObjectNotation($wizardData['user_details'] ?? '{}');
         }
 
         /**
@@ -182,8 +228,10 @@ function injectWizardData(?string $wizardDataJson)
          * --------------------------------------------------
          */
         $check = json_decode(file_get_contents($storagePath), true);
-        if (!isset($check['subscription_details']['plan_slug'])) {
-            throw new Exception("Storage validation failed");
+        if (!isset($check['subscription_details']) || 
+            (!isset($check['subscription_details']['plan_slug']) && 
+             !isset($check['subscription_details']['plan_name']))) {
+            throw new Exception("Storage validation failed: missing subscription details or plan identifier");
         }
 
         echo "🎉 Wizard data injection completed successfully\n";
