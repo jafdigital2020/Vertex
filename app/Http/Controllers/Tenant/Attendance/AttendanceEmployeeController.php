@@ -510,6 +510,14 @@ class AttendanceEmployeeController extends Controller
             $subscription->trial_end &&
             now()->toDateString() >= \Carbon\Carbon::parse($subscription->trial_end)->toDateString()
         ) {
+            Log::warning('Clock-in blocked: Trial period ended', [
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'subscription_id' => $subscription->id,
+                'trial_end' => $subscription->trial_end,
+                'attempted_at' => now()->toDateTimeString()
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Your 7-day trial period has ended. Please contact your administrator.'
@@ -520,9 +528,39 @@ class AttendanceEmployeeController extends Controller
             $subscription &&
             $subscription->status === 'expired'
         ) {
+            Log::warning('Clock-in blocked: Subscription expired', [
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'subscription_id' => $subscription->id,
+                'subscription_status' => $subscription->status,
+                'subscription_end' => $subscription->subscription_end,
+                'attempted_at' => now()->toDateTimeString()
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Your subscription has expired. Please contact your administrator.'
+            ], 403);
+        }
+
+        // Check if current date exceeds subscription end date
+        if (
+            $subscription &&
+            $subscription->subscription_end &&
+            now()->toDateString() > \Carbon\Carbon::parse($subscription->subscription_end)->toDateString()
+        ) {
+            Log::warning('Clock-in blocked: Subscription end date exceeded', [
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'subscription_id' => $subscription->id,
+                'subscription_end' => $subscription->subscription_end,
+                'current_date' => now()->toDateString(),
+                'attempted_at' => now()->toDateTimeString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your subscription period has ended. Please contact your administrator to renew.'
             ], 403);
         }
 
@@ -1009,11 +1047,16 @@ class AttendanceEmployeeController extends Controller
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
 
-        // ✅ FIXED: Find current attendance for active shift
+        // ✅ FIXED: Find current attendance for active shift (including night shifts from previous day)
         $currentAttendance = Attendance::where('user_id', $user->id)
-            ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
             ->whereNull('date_time_out') // Must be currently clocked in
+            ->where(function ($query) use ($today) {
+                $yesterday = Carbon::yesterday()->toDateString();
+                // Include today's attendance OR yesterday's attendance (for night shifts)
+                $query->where('attendance_date', $today)
+                    ->orWhere('attendance_date', $yesterday);
+            })
             ->latest('date_time_in')
             ->first();
 
@@ -1113,13 +1156,18 @@ class AttendanceEmployeeController extends Controller
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
 
-        // Current shift attendance with active break
+        // Current shift attendance with active break (including night shifts from previous day)
         $currentAttendance = Attendance::where('user_id', $user->id)
-            ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
             ->whereNull('date_time_out')
             ->whereNotNull('break_in')
             ->whereNull('break_out')
+            ->where(function ($query) use ($today) {
+                $yesterday = Carbon::yesterday()->toDateString();
+                // Include today's attendance OR yesterday's attendance (for night shifts)
+                $query->where('attendance_date', $today)
+                    ->orWhere('attendance_date', $yesterday);
+            })
             ->latest('date_time_in')
             ->first();
 
@@ -1186,11 +1234,16 @@ class AttendanceEmployeeController extends Controller
         $user = Auth::user();
         $today = Carbon::today()->toDateString();
 
-        // ✅ Find current attendance for active shift
+        // ✅ Find current attendance for active shift (including night shifts from previous day)
         $currentAttendance = Attendance::where('user_id', $user->id)
-            ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
             ->whereNull('date_time_out') // Must be currently clocked in
+            ->where(function ($query) use ($today) {
+                $yesterday = Carbon::yesterday()->toDateString();
+                // Include today's attendance OR yesterday's attendance (for night shifts)
+                $query->where('attendance_date', $today)
+                    ->orWhere('attendance_date', $yesterday);
+            })
             ->latest('date_time_in')
             ->first();
 
@@ -1437,6 +1490,13 @@ class AttendanceEmployeeController extends Controller
         if (! $attendance) {
             return response()->json([
                 'message' => 'We could not find your clock-in record. Please make sure you have clocked in before trying to clock out.'
+            ], 403);
+        }
+
+        // Check if there's an ongoing break
+        if ($attendance->break_in && !$attendance->break_out) {
+            return response()->json([
+                'message' => 'You cannot clock out while on break. Please end your break first before clocking out.'
             ], 403);
         }
 
