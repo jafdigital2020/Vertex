@@ -124,6 +124,13 @@ jobs:
             echo "BILLING_CYCLE=${{ github.event.inputs.billing_cycle }}" >> $GITHUB_ENV
             echo "AMOUNT=${{ github.event.inputs.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=https://api-wizard.timora.ph/api/wizard/provisioning/github-callback" >> $GITHUB_ENV
+            echo "REFERENCE_NUMBER=REF-${{ github.event.inputs.company_code }}-001" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.inputs.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.inputs.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.inputs.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.inputs.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.inputs.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.inputs.user_details }}" >> $GITHUB_ENV
           fi
 
       - name: Decode wizard password
@@ -298,6 +305,13 @@ jobs:
             echo "BILLING_CYCLE=${{ github.event.inputs.billing_cycle }}" >> $GITHUB_ENV
             echo "AMOUNT=${{ github.event.inputs.amount }}" >> $GITHUB_ENV
             echo "CALLBACK_URL=https://api-wizard.timora.ph/api/wizard/provisioning/github-callback" >> $GITHUB_ENV
+            echo "REFERENCE_NUMBER=REF-${{ github.event.inputs.company_code }}-001" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_DETAILS=${{ github.event.inputs.subscription_details }}" >> $GITHUB_ENV
+            echo "PRICING_BREAKDOWN=${{ github.event.inputs.pricing_breakdown }}" >> $GITHUB_ENV
+            echo "SELECTED_DEVICES=${{ github.event.inputs.selected_devices }}" >> $GITHUB_ENV
+            echo "SELECTED_BIOMETRIC_SERVICES=${{ github.event.inputs.selected_biometric_services }}" >> $GITHUB_ENV
+            echo "COMPANY_DETAILS=${{ github.event.inputs.company_details }}" >> $GITHUB_ENV
+            echo "USER_DETAILS=${{ github.event.inputs.user_details }}" >> $GITHUB_ENV
           fi
 
       - name: Decode wizard password
@@ -669,24 +683,46 @@ jobs:
             echo "SELECTED_DEVICES length: ${#SELECTED_DEVICES}"
 
             # Use the complete wizard data from the payload instead of minimal data
-            # Use jq to properly construct JSON with actual payload data
-            WIZARD_JSON=$(jq -n \
-              --arg ref_num "${REFERENCE_NUMBER:-}" \
-              --argjson sub_details "${SUBSCRIPTION_DETAILS:-{}}" \
-              --argjson pricing "${PRICING_BREAKDOWN:-{}}" \
-              --argjson devices "${SELECTED_DEVICES:-[]}" \
-              --argjson services "${SELECTED_BIOMETRIC_SERVICES:-{}}" \
-              --argjson company "${COMPANY_DETAILS:-{}}" \
-              --argjson user "${USER_DETAILS:-{}}" \
-              '{
-                reference_number: $ref_num,
-                subscription_details: $sub_details,
-                pricing_breakdown: $pricing,
-                selected_devices: $devices,
-                selected_biometric_services: $services,
-                company_details: $company,
-                user_details: $user
-              }')
+            # Handle different input formats: repository_dispatch (parsed) vs workflow_dispatch (JSON strings)
+            if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+              # For repository_dispatch: data is already parsed objects
+              WIZARD_JSON=$(jq -n \
+                --arg ref_num "${REFERENCE_NUMBER:-}" \
+                --argjson sub_details "${SUBSCRIPTION_DETAILS:-{}}" \
+                --argjson pricing "${PRICING_BREAKDOWN:-{}}" \
+                --argjson devices "${SELECTED_DEVICES:-[]}" \
+                --argjson services "${SELECTED_BIOMETRIC_SERVICES:-{}}" \
+                --argjson company "${COMPANY_DETAILS:-{}}" \
+                --argjson user "${USER_DETAILS:-{}}" \
+                '{
+                  reference_number: $ref_num,
+                  subscription_details: $sub_details,
+                  pricing_breakdown: $pricing,
+                  selected_devices: $devices,
+                  selected_biometric_services: $services,
+                  company_details: $company,
+                  user_details: $user
+                }')
+            else
+              # For workflow_dispatch: data comes as JSON strings that need parsing
+              WIZARD_JSON=$(jq -n \
+                --arg ref_num "${REFERENCE_NUMBER:-}" \
+                --arg sub_details "${SUBSCRIPTION_DETAILS:-{}}" \
+                --arg pricing "${PRICING_BREAKDOWN:-{}}" \
+                --arg devices "${SELECTED_DEVICES:-[]}" \
+                --arg services "${SELECTED_BIOMETRIC_SERVICES:-{}}" \
+                --arg company "${COMPANY_DETAILS:-{}}" \
+                --arg user "${USER_DETAILS:-{}}" \
+                '{
+                  reference_number: $ref_num,
+                  subscription_details: ($sub_details | if . == "" or . == "{}" then {} else fromjson end),
+                  pricing_breakdown: ($pricing | if . == "" or . == "{}" then {} else fromjson end),
+                  selected_devices: ($devices | if . == "" or . == "[]" then [] else fromjson end),
+                  selected_biometric_services: ($services | if . == "" or . == "{}" then {} else fromjson end),
+                  company_details: ($company | if . == "" or . == "{}" then {} else fromjson end),
+                  user_details: ($user | if . == "" or . == "{}" then {} else fromjson end)
+                }')
+            fi
 
             # Debug: Show preview of reconstructed JSON  
             echo "📋 Wizard JSON preview (first 300 chars): ${WIZARD_JSON:0:300}"
