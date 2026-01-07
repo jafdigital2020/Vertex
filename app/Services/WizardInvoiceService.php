@@ -14,6 +14,7 @@ class WizardInvoiceService
     public function createInvoiceFromWizardData(array $wizardData, $subscription, $tenantId = 1)
     {
         try {
+            $wizardData = $this->normalizeWizardData($wizardData);
             Log::info('Creating invoice from wizard data', [
                 'wizard_data_keys' => array_keys($wizardData),
                 'subscription_id' => $subscription->id
@@ -98,6 +99,7 @@ class WizardInvoiceService
      */
     protected function createInvoiceLineItems($invoiceId, array $wizardData)
     {
+        $wizardData = $this->normalizeWizardData($wizardData);
         Log::info('Creating invoice line items', [
             'invoice_id' => $invoiceId,
             'wizard_data_keys' => array_keys($wizardData)
@@ -523,21 +525,6 @@ class WizardInvoiceService
             }
         }
 
-        // 8. Implementation Fee
-        if (($pricingBreakdown['implementation_fee'] ?? 0) > 0) {
-            $lineItems[] = [
-                'invoice_id' => $invoiceId,
-                'description' => "Implementation & Setup Fee",
-                'quantity' => 1,
-                'rate' => $pricingBreakdown['implementation_fee'],
-                'amount' => $pricingBreakdown['implementation_fee'],
-                'period' => 'one-time',
-                'metadata' => json_encode(['type' => 'implementation_fee']),
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ];
-        }
-
         // Insert all line items
         if (!empty($lineItems)) {
             Log::info('About to insert line items', [
@@ -564,6 +551,32 @@ class WizardInvoiceService
                 'subscription_details' => $subscriptionDetails
             ]);
         }
+    }
+
+    /**
+     * Normalize wizard payload fields that may arrive as JSON strings.
+     */
+    protected function normalizeWizardData(array $wizardData)
+    {
+        $jsonKeys = [
+            'subscription_details',
+            'pricing_breakdown',
+            'selected_devices',
+            'selected_biometric_services',
+            'company_details',
+            'user_details',
+        ];
+
+        foreach ($jsonKeys as $key) {
+            if (isset($wizardData[$key]) && is_string($wizardData[$key])) {
+                $decoded = json_decode($wizardData[$key], true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $wizardData[$key] = $decoded;
+                }
+            }
+        }
+
+        return $wizardData;
     }
 
     /**

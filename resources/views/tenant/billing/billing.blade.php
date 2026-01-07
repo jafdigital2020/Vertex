@@ -214,7 +214,8 @@ $page = 'bills-payment'; ?>
                                                     data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
                                                     data-plan="{{ $inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan ? $inv->upgradePlan->name : $inv->subscription->plan->name ?? 'N/A' }}"
                                                     data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
-                                                    data-billing-cycle="{{ $inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle ? $inv->billing_cycle : $inv->subscription->billing_cycle ?? 'N/A' }}">
+                                                    data-billing-cycle="{{ $inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle ? $inv->billing_cycle : $inv->subscription->billing_cycle ?? 'N/A' }}"
+                                                    data-has-wizard-items="{{ ($inv->is_wizard_generated ?? false) ? 'true' : 'false' }}">
 
                                                     {{ $inv->invoice_number }}
 
@@ -333,7 +334,8 @@ $page = 'bills-payment'; ?>
                                                                     data-bill-to-email="{{ $consolidatedInvoice->tenant->tenant_email ?? 'N/A' }}"
                                                                     data-plan="{{ $consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->upgradePlan ? $consolidatedInvoice->upgradePlan->name : $consolidatedInvoice->subscription->plan->name ?? 'N/A' }}"
                                                                     data-current-plan="{{ $consolidatedInvoice->subscription->plan->name ?? 'N/A' }}"
-                                                                    data-billing-cycle="{{ $consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->billing_cycle ? $consolidatedInvoice->billing_cycle : $consolidatedInvoice->subscription->billing_cycle ?? 'N/A' }}">
+                                                                    data-billing-cycle="{{ $consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->billing_cycle ? $consolidatedInvoice->billing_cycle : $consolidatedInvoice->subscription->billing_cycle ?? 'N/A' }}"
+                                                                    data-has-wizard-items="{{ ($consolidatedInvoice->is_wizard_generated ?? false) ? 'true' : 'false' }}">
                                                                     >
                                                                     {{ $consolidatedInvoice->invoice_number ?? 'INV-XXXX' }}
                                                                 </a>
@@ -481,8 +483,9 @@ $page = 'bills-payment'; ?>
         <!-- View Invoice Modal -->
         <div class="modal fade" id="view_invoice">
             <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-body p-5">
+                <div class="modal-content invoice-modal">
+                    <div class="modal-body invoice-modal__body p-5">
+                        <div class="invoice-topbar"></div>
 
                         <div class="row justify-content-between align-items-center mb-3">
                             <div class="col-md-6">
@@ -512,7 +515,7 @@ $page = 'bills-payment'; ?>
                             </div>
                         </div>
 
-                        <div class="row mb-3 d-flex justify-content-between">
+                        <div class="row mb-3 d-flex justify-content-between invoice-parties">
                             <div class="col-md-7">
                                 <p class="text-dark mb-2 fw-medium fs-16">Invoice From :</p>
                                 <div>
@@ -533,9 +536,9 @@ $page = 'bills-payment'; ?>
                         </div>
 
                         <!-- ✅ CHECK: Invoice Items Table -->
-                        <div class="mb-4">
+                        <div class="mb-4 invoice-items">
                             <div class="table-responsive mb-3">
-                                <table class="table">
+                                <table class="table invoice-items__table">
                                     <thead class="thead-light" id="inv-table-header">
                                         <tr>
                                             <th>Description</th>
@@ -556,25 +559,36 @@ $page = 'bills-payment'; ?>
                         <div class="row mb-3 d-flex justify-content-between">
                             <div class="col-md-4"></div>
                             <div class="col-md-4">
-                                <div class="d-flex justify-content-between align-items-center pe-3">
-                                    <p class="text-dark fw-medium mb-0">Sub Total</p>
-                                    <p class="mb-2" id="inv-subtotal">—</p>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center pe-3">
-                                    <p class="text-dark fw-medium mb-0">VAT (<span id="inv-vat-percentage">12</span>%)</p>
-                                    <p class="mb-2" id="inv-vat-amount">—</p>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center pe-3">
-                                    <p class="text-dark fw-medium mb-0">Total Amount</p>
-                                    <p class="mb-2" id="inv-total-amount">—</p>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center pe-3 border-top pt-2">
-                                    <p class="text-dark fw-medium mb-0">Amount Paid</p>
-                                    <p class="mb-2" id="inv-amount-paid">—</p>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center pe-3">
-                                    <p class="text-dark fw-medium mb-0">Balance Due</p>
-                                    <p class="text-dark fw-medium mb-2" id="inv-balance">—</p>
+                                <div class="invoice-summary">
+                                    <div class="invoice-summary__row">
+                                        <p class="text-dark fw-medium mb-0" id="inv-one-time-label">One time Payment Price</p>
+                                        <p class="mb-0" id="inv-one-time">—</p>
+                                    </div>
+                                    <div class="invoice-summary__row">
+                                        <p class="text-dark fw-medium mb-0" id="inv-recurring-label">Monthly Subscription Price</p>
+                                        <p class="mb-0" id="inv-recurring">—</p>
+                                    </div>
+                                    <div class="invoice-summary__divider"></div>
+                                    <div class="invoice-summary__row">
+                                        <p class="text-dark fw-medium mb-0">Sub Total</p>
+                                        <p class="mb-0" id="inv-subtotal">—</p>
+                                    </div>
+                                    <div class="invoice-summary__row">
+                                        <p class="text-dark fw-medium mb-0">VAT (<span id="inv-vat-percentage">12</span>%)</p>
+                                        <p class="mb-0" id="inv-vat-amount">—</p>
+                                    </div>
+                                    <div class="invoice-summary__row invoice-summary__row--total">
+                                        <p class="text-dark fw-semibold mb-0">Total Amount</p>
+                                        <p class="mb-0" id="inv-total-amount">—</p>
+                                    </div>
+                                    <div class="invoice-summary__row invoice-summary__row--muted">
+                                        <p class="text-dark fw-medium mb-0">Amount Paid</p>
+                                        <p class="mb-0" id="inv-amount-paid">—</p>
+                                    </div>
+                                    <div class="invoice-summary__row invoice-summary__row--balance">
+                                        <p class="text-dark fw-semibold mb-0">Balance Due</p>
+                                        <p class="text-dark fw-semibold mb-0" id="inv-balance">—</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -612,6 +626,181 @@ $page = 'bills-payment'; ?>
     @component('components.modal-popup')
     @endcomponent
 @endsection
+
+@push('styles')
+    <style>
+        #view_invoice .invoice-modal {
+            border: 0;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(23, 37, 84, 0.15);
+            overflow: hidden;
+        }
+
+        #view_invoice .invoice-modal__body {
+            position: relative;
+            background: linear-gradient(160deg, #f7f5f0 0%, #ffffff 45%, #f4f7fb 100%);
+        }
+
+        #view_invoice .invoice-topbar {
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 10px;
+            background: linear-gradient(90deg, #ff6c37 0%, #f2b705 50%, #2b6cb0 100%);
+        }
+
+        #view_invoice .invoice-parties {
+            padding: 16px 18px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        #view_invoice .invoice-items__table thead th {
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 0;
+            font-weight: 600;
+        }
+
+        #view_invoice .invoice-items .table-responsive {
+            overflow-x: visible;
+        }
+
+        #view_invoice .invoice-items__table {
+            table-layout: fixed;
+            width: 100%;
+            font-size: 12px;
+        }
+
+        #view_invoice .invoice-items__table th,
+        #view_invoice .invoice-items__table td {
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(1),
+        #view_invoice .invoice-items__table td:nth-child(1) {
+            width: 42%;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(2),
+        #view_invoice .invoice-items__table td:nth-child(2) {
+            width: 18%;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(3),
+        #view_invoice .invoice-items__table td:nth-child(3) {
+            width: 12%;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(4),
+        #view_invoice .invoice-items__table td:nth-child(4) {
+            width: 14%;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(5),
+        #view_invoice .invoice-items__table td:nth-child(5) {
+            width: 14%;
+        }
+
+        #view_invoice .invoice-items__table tbody tr {
+            background: #ffffff;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        }
+
+        #view_invoice .invoice-items__table tbody tr:nth-child(even) {
+            background: #ffffff;
+        }
+
+        #view_invoice .invoice-items__table td {
+            vertical-align: middle;
+            font-size: 12px;
+        }
+
+        #view_invoice .invoice-items__table th {
+            font-size: 12px;
+        }
+
+        #view_invoice .invoice-items__table td .badge,
+        #view_invoice .invoice-items__table td .badge[class*="bg-"] {
+            background: #eef2f7 !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5f5 !important;
+            font-weight: 500;
+        }
+
+        #view_invoice .invoice-summary {
+            padding: 0;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            font-size: 13px;
+        }
+
+        #view_invoice .invoice-summary__row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+
+        #view_invoice .invoice-summary__divider {
+            height: 1px;
+            background: rgba(15, 23, 42, 0.08);
+            margin: 6px 0;
+        }
+
+        #view_invoice .invoice-summary__row--total {
+            border-top: 1px solid rgba(15, 23, 42, 0.08);
+            margin-top: 4px;
+            padding-top: 8px;
+        }
+
+        #view_invoice .invoice-summary__row--muted {
+            border-top: 1px dashed rgba(148, 163, 184, 0.5);
+            margin-top: 4px;
+            padding-top: 8px;
+            color: #64748b;
+        }
+
+        #view_invoice .invoice-summary__row--balance {
+            border-top: 2px solid #0f172a;
+            margin-top: 4px;
+            padding-top: 8px;
+            font-size: 13px;
+        }
+
+        #view_invoice .badge {
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        #view_invoice .modal.fade .modal-dialog {
+            transform: translateY(12px);
+        }
+
+        #view_invoice .modal.show .modal-dialog {
+            transform: translateY(0);
+            transition: transform 280ms ease;
+        }
+
+        @media (max-width: 767px) {
+            #view_invoice .invoice-modal__body {
+                padding: 24px !important;
+            }
+
+            #view_invoice .invoice-summary {
+                margin-top: 16px;
+            }
+
+            #view_invoice .invoice-parties {
+                padding: 12px 14px;
+            }
+        }
+    </style>
+@endpush
 
 @push('scripts')
     <script>
@@ -1121,6 +1310,24 @@ $page = 'bills-payment'; ?>
             return isNaN(d) ? isoLike : d.toLocaleDateString();
         }
 
+        function setBreakdown(oneTimeTotal, recurringTotal, currency) {
+            const oneTimeEl = document.getElementById('inv-one-time');
+            const recurringEl = document.getElementById('inv-recurring');
+            const oneTimeLabel = document.getElementById('inv-one-time-label');
+            const recurringLabel = document.getElementById('inv-recurring-label');
+
+            const showOneTime = Number(oneTimeTotal || 0) > 0;
+            const showRecurring = Number(recurringTotal || 0) > 0;
+
+            if (oneTimeEl) oneTimeEl.textContent = showOneTime ? fmtMoney(oneTimeTotal, currency) : '—';
+            if (recurringEl) recurringEl.textContent = showRecurring ? fmtMoney(recurringTotal, currency) : '—';
+
+            if (oneTimeLabel) oneTimeLabel.style.display = showOneTime || showRecurring ? '' : 'none';
+            if (oneTimeEl) oneTimeEl.style.display = showOneTime || showRecurring ? '' : 'none';
+            if (recurringLabel) recurringLabel.style.display = showOneTime || showRecurring ? '' : 'none';
+            if (recurringEl) recurringEl.style.display = showOneTime || showRecurring ? '' : 'none';
+        }
+
         // Updated Invoice modal population
         document.addEventListener('DOMContentLoaded', function () {
             const invoiceModal = document.getElementById('view_invoice');
@@ -1233,7 +1440,20 @@ $page = 'bills-payment'; ?>
                                 .then(data => {
                                     tbody.innerHTML = '';
                                     if (data.success && data.items && data.items.length > 0) {
+                                        let oneTimeTotal = 0;
+                                        let recurringTotal = 0;
+
                                         data.items.forEach(item => {
+                                            const itemAmount = Number(item.amount || 0);
+                                            const itemPeriod = String(item.period || '').toLowerCase();
+                                            const itemType = String(item.type || '').toLowerCase();
+
+                                            if (itemPeriod === 'one-time' || itemType === 'implementation_fee' || itemType === 'addon_onetime') {
+                                                oneTimeTotal += itemAmount;
+                                            } else {
+                                                recurringTotal += itemAmount;
+                                            }
+
                                             const tr = document.createElement('tr');
                                             
                                             // Create type badge
@@ -1289,7 +1509,9 @@ $page = 'bills-payment'; ?>
                                             `;
                                             tbody.appendChild(tr);
                                         });
-                                        
+
+                                        setBreakdown(oneTimeTotal, recurringTotal, d.currency);
+
                                         // Always show quantity and rate columns for detailed invoices
                                         document.querySelectorAll('.qty-rate-column').forEach(col => {
                                             col.style.display = '';
@@ -1323,6 +1545,8 @@ $page = 'bills-payment'; ?>
 
                                         const balanceEl = document.getElementById('inv-balance');
                                         if (balanceEl) balanceEl.textContent = fmtMoney(Math.max(data.summary.total - amountPaid, 0), d.currency);
+                                    } else {
+                                        setBreakdown(0, 0, d.currency);
                                     }
                                 })
                                 .catch(error => {
@@ -1332,9 +1556,19 @@ $page = 'bills-payment'; ?>
                                     <td colspan="5" class="text-center text-danger">Error loading items</td>
                                 `;
                                     tbody.appendChild(tr);
+                                    setBreakdown(0, 0, d.currency);
                                 });
                             return; // Exit early for AJAX-loaded invoices
                         } else if (invoiceType === 'subscription') {
+                            let oneTimeTotal = 0;
+                            let recurringTotal = 0;
+
+                            if (implementationFee > 0) {
+                                oneTimeTotal += implementationFee;
+                            }
+
+                            recurringTotal += subscriptionAmount + licenseOverageAmount;
+
                             if (implementationFee > 0) {
                                 const trImpl = document.createElement('tr');
                                 trImpl.innerHTML = showQtyRate ? `
@@ -1395,6 +1629,8 @@ $page = 'bills-payment'; ?>
                             `;
                                 tbody.appendChild(tr);
                             }
+
+                            setBreakdown(oneTimeTotal, recurringTotal, d.currency);
                         } else if (invoiceType === 'license_overage') {
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
@@ -1403,8 +1639,9 @@ $page = 'bills-payment'; ?>
                             <td>${licenseOverageCount || 1}</td>
                             <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
                             <td class="text-end">${fmtMoney(licenseOverageAmount || amountDue, d.currency)}</td>
-                        `;
+                            `;
                             tbody.appendChild(tr);
+                            setBreakdown(0, licenseOverageAmount || amountDue, d.currency);
                         } else if (invoiceType === 'plan_upgrade') {
                             const implementationFee = Number(d.implementationFee || 0);
                             const planUpgradeAmount = Number(d.subscriptionAmount || 0);
@@ -1428,8 +1665,9 @@ $page = 'bills-payment'; ?>
                             </td>
                             <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                             <td class="text-end">${fmtMoney(planUpgradeAmount, d.currency)}</td>
-                        `;
+                            `;
                             tbody.appendChild(trPlan);
+                            setBreakdown(implementationFee, planUpgradeAmount, d.currency);
                         } else if (invoiceType === 'implementation_fee') {
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
@@ -1438,8 +1676,9 @@ $page = 'bills-payment'; ?>
                             </td>
                             <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                             <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
-                        `;
+                            `;
                             tbody.appendChild(tr);
+                            setBreakdown(amountDue, 0, d.currency);
                         } else {
                             const tr = document.createElement('tr');
                             tr.innerHTML = showQtyRate ? `
@@ -1452,8 +1691,9 @@ $page = 'bills-payment'; ?>
                             <td>${d.plan || 'Subscription'}</td>
                             <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                             <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
-                        `;
+                            `;
                             tbody.appendChild(tr);
+                            setBreakdown(0, amountDue, d.currency);
                         }
                     }
 
