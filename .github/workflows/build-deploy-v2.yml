@@ -45,6 +45,44 @@ on:
         description: "Amount paid"
         required: true
         type: string
+      reference_number:
+        description: "Payment reference number"
+        required: false
+        type: string
+      callback_url:
+        description: "Provisioning callback URL"
+        required: false
+        type: string
+
+      subscription_details:
+        description: "Wizard subscription details JSON"
+        required: false
+        type: string
+
+      pricing_breakdown:
+        description: "Wizard pricing breakdown JSON"
+        required: false
+        type: string
+
+      selected_devices:
+        description: "Selected devices JSON"
+        required: false
+        type: string
+
+      selected_biometric_services:
+        description: "Selected biometric services JSON"
+        required: false
+        type: string
+
+      company_details:
+        description: "Company details JSON"
+        required: false
+        type: string
+
+      user_details:
+        description: "User details JSON"
+        required: false
+        type: string
 
 jobs:
   laravel-tests:
