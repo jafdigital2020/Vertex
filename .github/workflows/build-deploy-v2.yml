@@ -698,47 +698,77 @@ jobs:
             echo "SELECTED_DEVICES length: ${#SELECTED_DEVICES}"
 
             # Use the complete wizard data from the payload instead of minimal data
-            # Handle different input formats: repository_dispatch (parsed) vs workflow_dispatch (JSON strings)
-            if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-              # For repository_dispatch: data is already parsed objects
-              WIZARD_JSON=$(jq -n \
+            # Handle different input formats and validate JSON before parsing
+            
+            # Function to validate and fix JSON format
+            fix_json() {
+              local input="$1"
+              # Check if it's already valid JSON
+              if echo "$input" | jq empty 2>/dev/null; then
+                echo "$input"
+                return 0
+              fi
+              
+              # If not valid, try to fix common issues
+              # Add quotes around unquoted keys and string values
+              echo "$input" | sed -E \
+                -e 's/([{,])([a-zA-Z_][a-zA-Z0-9_]*):([^",\[\]{}\s]+)/\1"\2":"\3"/g' \
+                -e 's/([{,])([a-zA-Z_][a-zA-Z0-9_]*):(\[)/\1"\2":\3/g' \
+                -e 's/([{,])([a-zA-Z_][a-zA-Z0-9_]*):(\{)/\1"\2":\3/g' \
+                -e 's/([{,])([a-zA-Z_][a-zA-Z0-9_]*):(".*")/\1"\2":\3/g'
+            }
+            
+            # Safely parse JSON data with error handling
+            parse_json_safely() {
+              local data="$1"
+              local fallback="$2"
+              
+              if [ -z "$data" ] || [ "$data" = "{}" ] || [ "$data" = "[]" ]; then
+                echo "$fallback"
+                return 0
+              fi
+              
+              # Try to parse as-is first
+              if echo "$data" | jq empty 2>/dev/null; then
+                echo "$data"
+              else
+                # Try to fix and parse
+                fixed_json=$(fix_json "$data")
+                if echo "$fixed_json" | jq empty 2>/dev/null; then
+                  echo "$fixed_json"
+                else
+                  echo "$fallback"
+                fi
+              fi
+            }
+            
+            # Parse each component safely
+            SAFE_SUBSCRIPTION_DETAILS=$(parse_json_safely "${SUBSCRIPTION_DETAILS:-}" "{}")
+            SAFE_PRICING_BREAKDOWN=$(parse_json_safely "${PRICING_BREAKDOWN:-}" "{}")
+            SAFE_SELECTED_DEVICES=$(parse_json_safely "${SELECTED_DEVICES:-}" "[]")
+            SAFE_SELECTED_BIOMETRIC_SERVICES=$(parse_json_safely "${SELECTED_BIOMETRIC_SERVICES:-}" "{}")
+            SAFE_COMPANY_DETAILS=$(parse_json_safely "${COMPANY_DETAILS:-}" "{}")
+            SAFE_USER_DETAILS=$(parse_json_safely "${USER_DETAILS:-}" "{}")
+            
+            # Build final wizard JSON
+            WIZARD_JSON=$(jq -n \
               --arg ref_num "${REFERENCE_NUMBER:-}" \
-              --arg sub_details "${SUBSCRIPTION_DETAILS:-{}}" \
-              --arg pricing "${PRICING_BREAKDOWN:-{}}" \
-              --arg devices "${SELECTED_DEVICES:-[]}" \
-              --arg services "${SELECTED_BIOMETRIC_SERVICES:-{}}" \
-              --arg company "${COMPANY_DETAILS:-{}}" \
-              --arg user "${USER_DETAILS:-{}}" \
+              --argjson sub_details "$SAFE_SUBSCRIPTION_DETAILS" \
+              --argjson pricing "$SAFE_PRICING_BREAKDOWN" \
+              --argjson devices "$SAFE_SELECTED_DEVICES" \
+              --argjson services "$SAFE_SELECTED_BIOMETRIC_SERVICES" \
+              --argjson company "$SAFE_COMPANY_DETAILS" \
+              --argjson user "$SAFE_USER_DETAILS" \
               '{
                 reference_number: $ref_num,
-                subscription_details: ($sub_details | fromjson),
-                pricing_breakdown: ($pricing | fromjson),
-                selected_devices: ($devices | fromjson),
-                selected_biometric_services: ($services | fromjson),
-                company_details: ($company | fromjson),
-                user_details: ($user | fromjson)
+                subscription_details: $sub_details,
+                pricing_breakdown: $pricing,
+                selected_devices: $devices,
+                selected_biometric_services: $services,
+                company_details: $company,
+                user_details: $user
               }'
             )
-            else
-              # For workflow_dispatch: data comes as JSON strings that need parsing
-              WIZARD_JSON=$(jq -n \
-                --arg ref_num "${REFERENCE_NUMBER:-}" \
-                --arg sub_details "${SUBSCRIPTION_DETAILS:-{}}" \
-                --arg pricing "${PRICING_BREAKDOWN:-{}}" \
-                --arg devices "${SELECTED_DEVICES:-[]}" \
-                --arg services "${SELECTED_BIOMETRIC_SERVICES:-{}}" \
-                --arg company "${COMPANY_DETAILS:-{}}" \
-                --arg user "${USER_DETAILS:-{}}" \
-                '{
-                  reference_number: $ref_num,
-                  subscription_details: ($sub_details | if . == "" or . == "{}" then {} else fromjson end),
-                  pricing_breakdown: ($pricing | if . == "" or . == "{}" then {} else fromjson end),
-                  selected_devices: ($devices | if . == "" or . == "[]" then [] else fromjson end),
-                  selected_biometric_services: ($services | if . == "" or . == "{}" then {} else fromjson end),
-                  company_details: ($company | if . == "" or . == "{}" then {} else fromjson end),
-                  user_details: ($user | if . == "" or . == "{}" then {} else fromjson end)
-                }')
-            fi
 
             # Debug: Show preview of reconstructed JSON  
             echo "📋 Wizard JSON preview (first 300 chars): ${WIZARD_JSON:0:300}"
