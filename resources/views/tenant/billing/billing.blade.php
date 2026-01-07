@@ -561,11 +561,11 @@ $page = 'bills-payment'; ?>
                             <div class="col-md-4">
                                 <div class="invoice-summary">
                                     <div class="invoice-summary__row">
-                                        <p class="text-dark fw-medium mb-0" id="inv-one-time-label">One time Payment Price</p>
+                                        <p class="text-dark fw-medium mb-0" id="inv-one-time-label">One time Payment</p>
                                         <p class="mb-0" id="inv-one-time">—</p>
                                     </div>
                                     <div class="invoice-summary__row">
-                                        <p class="text-dark fw-medium mb-0" id="inv-recurring-label">Monthly Subscription Price</p>
+                                        <p class="text-dark fw-medium mb-0" id="inv-recurring-label">Monthly Subscription</p>
                                         <p class="mb-0" id="inv-recurring">—</p>
                                     </div>
                                     <div class="invoice-summary__divider"></div>
@@ -670,7 +670,7 @@ $page = 'bills-payment'; ?>
         #view_invoice .invoice-items__table {
             table-layout: fixed;
             width: 100%;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         #view_invoice .invoice-items__table th,
@@ -715,11 +715,11 @@ $page = 'bills-payment'; ?>
 
         #view_invoice .invoice-items__table td {
             vertical-align: middle;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         #view_invoice .invoice-items__table th {
-            font-size: 12px;
+            font-size: 11px;
         }
 
         #view_invoice .invoice-items__table td .badge,
@@ -1456,37 +1456,6 @@ $page = 'bills-payment'; ?>
 
                                             const tr = document.createElement('tr');
                                             
-                                            // Create type badge
-                                            let typeBadge = '';
-                                            switch(item.type) {
-                                                case 'base_subscription':
-                                                    typeBadge = '<span class="badge bg-primary bg-opacity-10 text-primary ms-1">Base Plan</span>';
-                                                    break;
-                                                case 'additional_employees':
-                                                    typeBadge = '<span class="badge bg-info bg-opacity-10 text-info ms-1">Extra Users</span>';
-                                                    break;
-                                                case 'mobile_access':
-                                                    typeBadge = '<span class="badge bg-success bg-opacity-10 text-success ms-1">Mobile</span>';
-                                                    break;
-                                                case 'addon_monthly':
-                                                    typeBadge = '<span class="badge bg-secondary bg-opacity-10 text-secondary ms-1">Add-on</span>';
-                                                    break;
-                                                case 'addon_onetime':
-                                                    typeBadge = '<span class="badge bg-warning bg-opacity-10 text-warning ms-1">Setup</span>';
-                                                    break;
-                                                case 'biometric_device':
-                                                    typeBadge = '<span class="badge bg-dark bg-opacity-10 text-dark ms-1">Hardware</span>';
-                                                    break;
-                                                case 'biometric_service':
-                                                    typeBadge = '<span class="badge bg-danger bg-opacity-10 text-danger ms-1">Service</span>';
-                                                    break;
-                                                case 'implementation_fee':
-                                                    typeBadge = '<span class="badge ms-1" style="background: rgba(255, 108, 55, 0.1); color: #ff6c37;">Implementation</span>';
-                                                    break;
-                                                default:
-                                                    typeBadge = '<span class="badge bg-light text-dark ms-1">Standard</span>';
-                                            }
-                                            
                                             // Create period badge
                                             let periodBadge = '';
                                             if (item.period === 'one-time') {
@@ -1500,7 +1469,6 @@ $page = 'bills-payment'; ?>
                                             tr.innerHTML = `
                                                 <td>
                                                     <div class="fw-medium">${item.description}</div>
-                                                    ${typeBadge}
                                                 </td>
                                                 <td class="text-center">${periodBadge}</td>
                                                 <td class="text-center">${item.quantity}</td>

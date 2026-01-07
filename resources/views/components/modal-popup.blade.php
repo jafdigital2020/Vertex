@@ -11734,8 +11734,9 @@
     <!-- View Invoice -->
     <div class="modal fade" id="view_invoice">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-body p-5">
+            <div class="modal-content invoice-modal">
+                <div class="modal-body invoice-modal__body p-5">
+                    <div class="invoice-topbar"></div>
                     <div class="row justify-content-between align-items-center mb-3">
                         <div class="col-md-6">
                             <div class="mb-4">
@@ -11751,7 +11752,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row mb-3 d-flex justify-content-between">
+                    <div class="row mb-3 d-flex justify-content-between invoice-parties">
                         <div class="col-md-7">
                             <p class="text-dark mb-2 fw-medium fs-16">Invoice From :</p>
                             <div>
@@ -11771,9 +11772,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-4 invoice-items">
                         <div class="table-responsive mb-3">
-                            <table class="table">
+                            <table class="table invoice-items__table">
                                 <thead class="thead-light">
                                     <tr>
                                         <th>Plan</th>
@@ -11796,28 +11797,21 @@
                         </div>
                     </div>
                     <div class="row mb-3 d-flex justify-content-between">
+                        <div class="col-md-4"></div>
                         <div class="col-md-4">
-                            <div>
-                                <h6 class="mb-4">Payment info:</h6>
-                                <p class="mb-0">Credit Card - 123***********789</p>
-                                <div class="d-flex justify-content-between align-items-center mb-2 pe-3">
-                                    <p class="mb-0">Amount</p>
-                                    <p class="text-dark fw-medium mb-2">$200.00</p>
+                            <div class="invoice-summary">
+                                <div class="invoice-summary__row">
+                                    <p class="text-dark fw-medium mb-0">Sub Total</p>
+                                    <p class="mb-0">$200.00</p>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-flex justify-content-between align-items-center pe-3">
-                                <p class="text-dark fw-medium mb-0">Sub Total</p>
-                                <p class="mb-2">$200.00</p>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center pe-3">
-                                <p class="text-dark fw-medium mb-0">Tax </p>
-                                <p class="mb-2">$0.00</p>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center pe-3">
-                                <p class="text-dark fw-medium mb-0">Total</p>
-                                <p class="text-dark fw-medium mb-2">$200.00</p>
+                                <div class="invoice-summary__row">
+                                    <p class="text-dark fw-medium mb-0">Tax</p>
+                                    <p class="mb-0">$0.00</p>
+                                </div>
+                                <div class="invoice-summary__row invoice-summary__row--total">
+                                    <p class="text-dark fw-semibold mb-0">Total</p>
+                                    <p class="text-dark fw-semibold mb-0">$200.00</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -40472,4 +40466,3 @@
 
 
 @endif
-
