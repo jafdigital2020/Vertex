@@ -11777,20 +11777,20 @@
                             <table class="table invoice-items__table">
                                 <thead class="thead-light">
                                     <tr>
-                                        <th>Plan</th>
-                                        <th>Billing Cycle</th>
-                                        <th>Created Date</th>
-                                        <th>Expiring On</th>
-                                        <th>Amount</th>
+                                        <th>Description</th>
+                                        <th class="text-center">Type</th>
+                                        <th class="text-center">Quantity</th>
+                                        <th class="text-end">Rate</th>
+                                        <th class="text-end">Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>Advanced (Monthly)</td>
-                                        <td>30 Days</td>
-                                        <td>12/09/2024</td>
-                                        <td>12/10/2024</td>
-                                        <td>$200</td>
+                                        <td>Core Monthly Plan Subscription</td>
+                                        <td class="text-center">Monthly</td>
+                                        <td class="text-center">1</td>
+                                        <td class="text-end">$200.00</td>
+                                        <td class="text-end">$200.00</td>
                                     </tr>
                                 </tbody>
                             </table>
