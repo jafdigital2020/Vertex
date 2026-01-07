@@ -138,66 +138,99 @@ class WizardInvoiceService
 
         // 2. Base Subscription Fee
         if (($pricingBreakdown['base_price'] ?? 0) > 0) {
+            // Get the actual plan base price from config
+            $planDefaults = $this->getPlanDefaults();
+            $planSlug = $subscriptionDetails['plan_slug'] ?? 'unknown';
+            $configBasePrice = $planDefaults[$planSlug]['base_price'] ?? $pricingBreakdown['base_price'];
+            
+            // Use config price if available, otherwise use wizard price
+            $actualBasePrice = $configBasePrice > 0 ? $configBasePrice : $pricingBreakdown['base_price'];
+            
             $lineItems[] = [
                 'invoice_id' => $invoiceId,
                 'description' => "{$planName} Monthly Plan Subscription",
                 'quantity' => 1,
-                'rate' => $pricingBreakdown['base_price'],
-                'amount' => $pricingBreakdown['base_price'],
-                'period' => "$periodStart - $periodEnd",
-                'metadata' => json_encode(['type' => 'base_subscription', 'plan' => $subscriptionDetails['plan_slug']]),
+                'rate' => $actualBasePrice,
+                'amount' => $actualBasePrice,
+                'period' => $billingPeriod,
+                'metadata' => json_encode([
+                    'type' => 'base_subscription', 
+                    'plan' => $subscriptionDetails['plan_slug'],
+                    'config_base_price' => $configBasePrice,
+                    'wizard_base_price' => $pricingBreakdown['base_price'],
+                    'actual_base_price' => $actualBasePrice
+                ]),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ];
         }
 
-        // 3. Additional Employees
-        if (($pricingBreakdown['extra_cost'] ?? 0) > 0) {
-            $totalEmployees = $subscriptionDetails['total_employees'] ?? 0;
-            $planDefaults = $this->getPlanDefaults();
-            $planSlug = $subscriptionDetails['plan_slug'] ?? 'unknown';
-            $includedEmployees = $planDefaults[$planSlug]['included_employees'] ?? 0;
+        // 2. Additional Employees
+        $totalEmployees = $subscriptionDetails['total_employees'] ?? 0;
+        $planDefaults = $this->getPlanDefaults();
+        $planSlug = $subscriptionDetails['plan_slug'] ?? 'unknown';
+        $includedEmployees = $planDefaults[$planSlug]['included_employees'] ?? 0;
+        
+        // Calculate extra employees even if extra_cost is 0 (wizard might bundle costs)
+        $extraEmployees = max(0, $totalEmployees - $includedEmployees);
+        
+        if ($extraEmployees > 0) {
+            $extraUserRate = config('wizard.rates.extra_user_rate', 49);
+            $extraEmployeeCost = $extraEmployees * $extraUserRate;
             
-            // For starter plan, check if it's free up to 10 employees
-            if ($planSlug === 'starter') {
-                $freeEmployeeLimit = 10;
-                $extraEmployees = max(0, $totalEmployees - $freeEmployeeLimit);
-            } else {
-                $extraEmployees = max(0, $totalEmployees - $includedEmployees);
-            }
-            
-            if ($extraEmployees > 0) {
-                $employeeRate = ($pricingBreakdown['extra_cost'] / $extraEmployees);
-                $lineItems[] = [
-                    'invoice_id' => $invoiceId,
-                    'description' => "Additional Employees ({$extraEmployees} employees beyond plan limit)",
-                    'quantity' => $extraEmployees,
-                    'rate' => $employeeRate,
-                    'amount' => $pricingBreakdown['extra_cost'],
-                    'period' => "$periodStart - $periodEnd",
-                    'metadata' => json_encode([
-                        'type' => 'additional_employees', 
-                        'employee_count' => $extraEmployees,
-                        'total_employees' => $totalEmployees,
-                        'included_employees' => $includedEmployees
-                    ]),
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                ];
-            }
+            // Use explicit extra_cost if provided, otherwise calculate it
+            $actualExtraCost = ($pricingBreakdown['extra_cost'] ?? 0) > 0 
+                ? $pricingBreakdown['extra_cost'] 
+                : $extraEmployeeCost;
+                
+            $lineItems[] = [
+                'invoice_id' => $invoiceId,
+                'description' => "Additional Employees ({$extraEmployees} employees beyond {$includedEmployees} included)",
+                'quantity' => $extraEmployees,
+                'rate' => $extraUserRate,
+                'amount' => $actualExtraCost,
+                'period' => $billingPeriod,
+                'metadata' => json_encode([
+                    'type' => 'additional_employees', 
+                    'employee_count' => $extraEmployees,
+                    'total_employees' => $totalEmployees,
+                    'included_employees' => $includedEmployees,
+                    'rate_per_employee' => $extraUserRate,
+                    'calculated_cost' => $extraEmployeeCost,
+                    'actual_cost' => $actualExtraCost
+                ]),
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ];
         }
 
-        // 4. Mobile App Access
-        if (($pricingBreakdown['mobile_cost'] ?? 0) > 0) {
-            $mobileUsers = $subscriptionDetails['mobile_app_users'] ?? 0;
+        // 3. Mobile App Access
+        $mobileUsers = $subscriptionDetails['mobile_app_users'] ?? 0;
+        $mobileAccess = $subscriptionDetails['mobile_access'] ?? false;
+        
+        if ($mobileAccess && $mobileUsers > 0) {
+            $mobileAppRate = config('wizard.rates.mobile_app_rate', 49);
+            $calculatedMobileCost = $mobileUsers * $mobileAppRate;
+            
+            // Use explicit mobile_cost if provided, otherwise calculate it
+            $actualMobileCost = ($pricingBreakdown['mobile_cost'] ?? 0) > 0 
+                ? $pricingBreakdown['mobile_cost'] 
+                : $calculatedMobileCost;
+                
             $lineItems[] = [
                 'invoice_id' => $invoiceId,
                 'description' => "Mobile App Access ({$mobileUsers} users)",
                 'quantity' => $mobileUsers,
-                'rate' => 49.00, // Standard rate per mobile user
-                'amount' => $pricingBreakdown['mobile_cost'],
+                'rate' => $mobileAppRate,
+                'amount' => $actualMobileCost,
                 'period' => $billingPeriod,
-                'metadata' => json_encode(['type' => 'mobile_access', 'user_count' => $mobileUsers]),
+                'metadata' => json_encode([
+                    'type' => 'mobile_access', 
+                    'user_count' => $mobileUsers,
+                    'rate_per_user' => $mobileAppRate,
+                    'calculated_cost' => $calculatedMobileCost,
+                    'actual_cost' => $actualMobileCost
+                ]),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ];
@@ -227,21 +260,47 @@ class WizardInvoiceService
         }
 
         // 5. One-time Add-ons
-        if (($pricingBreakdown['one_time_addon_cost'] ?? 0) > 0) {
-            $addons = $subscriptionDetails['selected_addons'] ?? [];
-            $addonPrices = $this->getAddonPrices();
+        $addons = $subscriptionDetails['selected_addons'] ?? [];
+        $addonPrices = $this->getAddonPrices();
+        $totalOneTimeAddonCost = $pricingBreakdown['one_time_addon_cost'] ?? 0;
+        
+        if (!empty($addons)) {
+            $oneTimeAddons = array_filter($addons, function($addonKey) use ($addonPrices) {
+                return isset($addonPrices[$addonKey]) && $addonPrices[$addonKey]['type'] === 'one-time';
+            });
             
-            foreach ($addons as $addonKey) {
-                if (isset($addonPrices[$addonKey]) && $addonPrices[$addonKey]['type'] === 'one-time') {
-                    $addonPrice = $addonPrices[$addonKey]['price'];
+            if (!empty($oneTimeAddons)) {
+                $calculatedTotal = 0;
+                foreach ($oneTimeAddons as $addonKey) {
+                    $calculatedTotal += $addonPrices[$addonKey]['price'];
+                }
+                
+                // If wizard provided a total, distribute proportionally, otherwise use config prices
+                foreach ($oneTimeAddons as $addonKey) {
+                    $configPrice = $addonPrices[$addonKey]['price'];
+                    
+                    if ($totalOneTimeAddonCost > 0 && $calculatedTotal > 0) {
+                        // Distribute total cost proportionally
+                        $proportion = $configPrice / $calculatedTotal;
+                        $actualPrice = $totalOneTimeAddonCost * $proportion;
+                    } else {
+                        $actualPrice = $configPrice;
+                    }
+                    
                     $lineItems[] = [
                         'invoice_id' => $invoiceId,
                         'description' => $this->getAddonDescription($addonKey) . " - One-time Setup",
                         'quantity' => 1,
-                        'rate' => $addonPrice,
-                        'amount' => $addonPrice,
+                        'rate' => $actualPrice,
+                        'amount' => $actualPrice,
                         'period' => 'one-time',
-                        'metadata' => json_encode(['type' => 'addon_onetime', 'addon_key' => $addonKey]),
+                        'metadata' => json_encode([
+                            'type' => 'addon_onetime', 
+                            'addon_key' => $addonKey,
+                            'config_price' => $configPrice,
+                            'actual_price' => $actualPrice,
+                            'wizard_total' => $totalOneTimeAddonCost
+                        ]),
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
                     ];
@@ -489,20 +548,19 @@ class WizardInvoiceService
         $selectedAddons = $subscriptionDetails['selected_addons'] ?? [];
         
         // Get plan pricing from config
-        $planPricing = config('wizard.plans', []);
-        $planData = collect($planPricing)->firstWhere('slug', $planSlug);
+        $planDefaults = config('wizard.plan_defaults', []);
+        $planData = $planDefaults[$planSlug] ?? null;
         
         if (!$planData) {
             // Fallback pricing
             $basePrice = 0;
             $includedEmployees = 10;
-            $perEmployeeRate = 99;
+            $perEmployeeRate = 49;
             $implementationFee = 14999;
         } else {
-            $priceKey = $billingPeriod === 'yearly' ? 'annual_price' : 'monthly_price';
-            $basePrice = $planData[$priceKey] ?? 0;
+            $basePrice = $planData['base_price'] ?? 0;
             $includedEmployees = $planData['included_employees'] ?? 10;
-            $perEmployeeRate = $planData['per_employee_rate'] ?? 99;
+            $perEmployeeRate = config('wizard.rates.extra_user_rate', 49);
             $implementationFee = $planData['implementation_fee'] ?? 14999;
         }
         

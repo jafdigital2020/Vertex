@@ -79,12 +79,33 @@ function injectWizardData(?string $wizardDataJson)
                     return $decoded;
                 }
                 
-                // Parse object notation manually
+                // Parse object notation manually with improved array handling
                 $result = [];
                 
-                // Remove outer braces and split by commas
+                // Remove outer braces
                 $str = trim($str, '{}');
-                $pairs = explode(',', $str);
+                
+                // Use regex to properly split by commas outside of brackets
+                $pairs = [];
+                $current = '';
+                $bracketDepth = 0;
+                
+                for ($i = 0; $i < strlen($str); $i++) {
+                    $char = $str[$i];
+                    if ($char === '[') {
+                        $bracketDepth++;
+                    } elseif ($char === ']') {
+                        $bracketDepth--;
+                    } elseif ($char === ',' && $bracketDepth === 0) {
+                        $pairs[] = $current;
+                        $current = '';
+                        continue;
+                    }
+                    $current .= $char;
+                }
+                if ($current) {
+                    $pairs[] = $current;
+                }
                 
                 foreach ($pairs as $pair) {
                     if (strpos($pair, ':') !== false) {
@@ -95,7 +116,13 @@ function injectWizardData(?string $wizardDataJson)
                         // Handle arrays like [item1,item2]
                         if (str_starts_with($value, '[') && str_ends_with($value, ']')) {
                             $arrayContent = trim($value, '[]');
-                            $result[$key] = $arrayContent ? explode(',', $arrayContent) : [];
+                            if ($arrayContent) {
+                                // Split array items and trim each
+                                $items = array_map('trim', explode(',', $arrayContent));
+                                $result[$key] = $items;
+                            } else {
+                                $result[$key] = [];
+                            }
                         } 
                         // Handle boolean values
                         elseif ($value === 'true') {
@@ -103,9 +130,9 @@ function injectWizardData(?string $wizardDataJson)
                         } elseif ($value === 'false') {
                             $result[$key] = false;
                         } 
-                        // Handle numeric values
+                        // Handle numeric values (including decimals)
                         elseif (is_numeric($value)) {
-                            $result[$key] = (int)$value;
+                            $result[$key] = strpos($value, '.') !== false ? (float)$value : (int)$value;
                         } 
                         // Handle string values
                         else {
