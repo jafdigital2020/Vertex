@@ -493,7 +493,22 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
-          envs: PASSWORD,EMAIL,USERNAME,COMPANY_NAME,COMPANY_CODE,PLAN,BILLING_CYCLE,AMOUNT
+          envs: |
+            PASSWORD,
+            EMAIL,
+            USERNAME,
+            COMPANY_NAME,
+            COMPANY_CODE,
+            PLAN,
+            BILLING_CYCLE,
+            AMOUNT,
+            REFERENCE_NUMBER,
+            SUBSCRIPTION_DETAILS,
+            PRICING_BREAKDOWN,
+            SELECTED_DEVICES,
+            SELECTED_BIOMETRIC_SERVICES,
+            COMPANY_DETAILS,
+            USER_DETAILS
           script: |
             SITE_USER=$(echo "${{ env.USERNAME }}" | tr -cd '[:alnum:]-')-timoraph
             DB_NAME=$(echo "${{ env.COMPANY_NAME }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
@@ -728,7 +743,7 @@ jobs:
             echo "📋 Wizard JSON preview (first 300 chars): ${WIZARD_JSON:0:300}"
 
             # Set wizard data environment variable directly  
-            echo "WIZARD_SUBSCRIPTION_DATA='$WIZARD_JSON'" >> .env
+            echo "WIZARD_SUBSCRIPTION_DATA=$(printf '%s' "$WIZARD_JSON" | base64 -w0)" >> .env
             echo "📝 Wizard data environment variable set"
 
             # Inject wizard data using the script if available
