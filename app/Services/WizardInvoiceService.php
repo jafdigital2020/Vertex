@@ -72,8 +72,8 @@ class WizardInvoiceService
             // Insert invoice
             $invoiceId = DB::table('invoices')->insertGetId($invoiceData);
             
-            // Create detailed line items
-            $this->createInvoiceLineItems($invoiceId, $wizardData);
+            // Create detailed line items with invoice reference
+            $this->createInvoiceLineItems($invoiceId, $invoiceNumber, 'subscription', $wizardData);
             
             Log::info('Invoice created successfully from wizard data', [
                 'invoice_number' => $invoiceNumber,
@@ -96,7 +96,7 @@ class WizardInvoiceService
     /**
      * Create detailed invoice line items based on wizard subscription data
      */
-    protected function createInvoiceLineItems($invoiceId, array $wizardData)
+    protected function createInvoiceLineItems($invoiceId, $invoiceNumber, $invoiceType, array $wizardData)
     {
         $pricingBreakdown = $wizardData['pricing_breakdown'] ?? [];
         $subscriptionDetails = $wizardData['subscription_details'] ?? [];
@@ -125,6 +125,8 @@ class WizardInvoiceService
         if (($pricingBreakdown['implementation_fee'] ?? 0) > 0) {
             $lineItems[] = [
                 'invoice_id' => $invoiceId,
+                'invoice_number' => $invoiceNumber,
+                'invoice_type' => $invoiceType,
                 'description' => "Implementation Fee",
                 'quantity' => 1,
                 'rate' => $pricingBreakdown['implementation_fee'],
@@ -148,6 +150,8 @@ class WizardInvoiceService
             
             $lineItems[] = [
                 'invoice_id' => $invoiceId,
+                'invoice_number' => $invoiceNumber,
+                'invoice_type' => $invoiceType,
                 'description' => "{$planName} Monthly Plan Subscription",
                 'quantity' => 1,
                 'rate' => $actualBasePrice,
@@ -185,6 +189,8 @@ class WizardInvoiceService
                 
             $lineItems[] = [
                 'invoice_id' => $invoiceId,
+                'invoice_number' => $invoiceNumber,
+                'invoice_type' => $invoiceType,
                 'description' => "Additional Employees ({$extraEmployees} employees beyond {$includedEmployees} included)",
                 'quantity' => $extraEmployees,
                 'rate' => $extraUserRate,
@@ -219,6 +225,8 @@ class WizardInvoiceService
                 
             $lineItems[] = [
                 'invoice_id' => $invoiceId,
+                'invoice_number' => $invoiceNumber,
+                'invoice_type' => $invoiceType,
                 'description' => "Mobile App Access ({$mobileUsers} users)",
                 'quantity' => $mobileUsers,
                 'rate' => $mobileAppRate,
@@ -246,6 +254,8 @@ class WizardInvoiceService
                     $addonPrice = $addonPrices[$addonKey]['price'];
                     $lineItems[] = [
                         'invoice_id' => $invoiceId,
+                        'invoice_number' => $invoiceNumber,
+                        'invoice_type' => $invoiceType,
                         'description' => $this->getAddonDescription($addonKey) . " - Monthly",
                         'quantity' => 1,
                         'rate' => $addonPrice,
@@ -289,6 +299,8 @@ class WizardInvoiceService
                     
                     $lineItems[] = [
                         'invoice_id' => $invoiceId,
+                        'invoice_number' => $invoiceNumber,
+                        'invoice_type' => $invoiceType,
                         'description' => $this->getAddonDescription($addonKey) . " - One-time Setup",
                         'quantity' => 1,
                         'rate' => $actualPrice,
@@ -319,8 +331,8 @@ class WizardInvoiceService
                 
                 if ($deviceQuantity > 0 && $deviceTotal > 0) {
                     $lineItems[] = [
-                        'invoice_id' => $invoiceId,
-                        'description' => $deviceName . " - Biometric Device",
+                        'invoice_id' => $invoiceId,                        'invoice_number' => $invoiceNumber,
+                        'invoice_type' => $invoiceType,                        'description' => $deviceName . " - Biometric Device",
                         'quantity' => $deviceQuantity,
                         'rate' => $devicePrice,
                         'amount' => $deviceTotal,
@@ -353,6 +365,8 @@ class WizardInvoiceService
                 if ($deviceQuantity > 0 && $devicePrice > 0) {
                     $lineItems[] = [
                         'invoice_id' => $invoiceId,
+                        'invoice_number' => $invoiceNumber,
+                        'invoice_type' => $invoiceType,
                         'description' => $deviceName . " - Biometric Device",
                         'quantity' => $deviceQuantity,
                         'rate' => $devicePrice,
@@ -383,6 +397,8 @@ class WizardInvoiceService
                     if (($service['cost'] ?? 0) > 0) {
                         $lineItems[] = [
                             'invoice_id' => $invoiceId,
+                            'invoice_number' => $invoiceNumber,
+                            'invoice_type' => $invoiceType,
                             'description' => $service['service'] ?? 'Biometric Service',
                             'quantity' => 1,
                             'rate' => $service['cost'],
@@ -401,6 +417,8 @@ class WizardInvoiceService
                     if (isset($addonPrices[$serviceKey])) {
                         $lineItems[] = [
                             'invoice_id' => $invoiceId,
+                            'invoice_number' => $invoiceNumber,
+                            'invoice_type' => $invoiceType,
                             'description' => $addonPrices[$serviceKey]['name'],
                             'quantity' => 1,
                             'rate' => $addonPrices[$serviceKey]['price'],
@@ -418,6 +436,8 @@ class WizardInvoiceService
                     if (isset($addonPrices[$serviceKey])) {
                         $lineItems[] = [
                             'invoice_id' => $invoiceId,
+                            'invoice_number' => $invoiceNumber,
+                            'invoice_type' => $invoiceType,
                             'description' => $addonPrices[$serviceKey]['name'],
                             'quantity' => 1,
                             'rate' => $addonPrices[$serviceKey]['price'],
@@ -436,6 +456,8 @@ class WizardInvoiceService
         if (($pricingBreakdown['implementation_fee'] ?? 0) > 0) {
             $lineItems[] = [
                 'invoice_id' => $invoiceId,
+                'invoice_number' => $invoiceNumber,
+                'invoice_type' => $invoiceType,
                 'description' => "Implementation & Setup Fee",
                 'quantity' => 1,
                 'rate' => $pricingBreakdown['implementation_fee'],
