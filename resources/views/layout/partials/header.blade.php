@@ -2324,17 +2324,194 @@ $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
 
 <script>
     // ✅ IMPROVED Logout Function
-    async function logout() {
-        try {
-            // Show loading state
-            if (typeof toastr !== 'undefined') {
-                toastr.info('Logging out...');
-            }
+    // async function logout() {
+    //     try {
+    //         // Show loading state
+    //         if (typeof toastr !== 'undefined') {
+    //             toastr.info('Logging out...');
+    //         }
 
+    //         const token = localStorage.getItem('token');
+    //         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    //         if (token) {
+    //             const response = await fetch('/api/logout', {
+    //                 method: 'POST',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                     'Accept': 'application/json',
+    //                     'Authorization': `Bearer ${token}`,
+    //                     'X-CSRF-TOKEN': csrfToken
+    //                 }
+    //             });
+
+    //             console.log('Logout response status:', response.status);
+
+    //             const data = await response.json();
+    //             console.log('Logout response data:', data);
+
+    //             if (response.ok && data.success) {
+    //                 // ✅ Clear all local storage
+    //                 localStorage.removeItem('token');
+    //                 localStorage.clear();
+    //                 sessionStorage.clear();
+
+    //                 // ✅ Show success message
+    //                 if (typeof toastr !== 'undefined') {
+    //                     toastr.success(data.message || 'Logged out successfully');
+    //                 }
+
+    //                 // ✅ Redirect to login immediately
+    //                 window.location.href = '/login';
+    //             } else {
+    //                 throw new Error(data.message || 'Logout failed');
+    //             }
+    //         } else {
+    //             // No token found, just clear and redirect
+    //             console.log('No token found, clearing and redirecting...');
+    //             localStorage.clear();
+    //             sessionStorage.clear();
+    //             window.location.href = '/login';
+    //         }
+    //     } catch (error) {
+    //         console.error('Logout error:', error);
+
+    //         // ✅ Even if logout fails, clear local data and redirect
+    //         localStorage.removeItem('token');
+    //         localStorage.clear();
+    //         sessionStorage.clear();
+
+    //         if (typeof toastr !== 'undefined') {
+    //             toastr.warning('Logged out (with errors)');
+    //         }
+
+    //         // Force redirect after a short delay
+    //         setTimeout(() => {
+    //             window.location.href = '/login';
+    //         }, 500);
+    //     }
+    // }
+
+    // // ✅ IMPROVED Token Verification Function
+    // async function verifyToken() {
+    //     try {
+    //         const token = localStorage.getItem('token');
+    //         const currentPath = window.location.pathname;
+    //         const publicPaths = ['/login', '/register', '/forgot-password', '/otp-form', '/reset-password'];
+
+    //         // Skip token check for public pages
+    //     //     if (publicPaths.includes(currentPath)) {
+    //     //         return;
+    //     //     }
+
+    //     //     if (!token) {
+    //     //         console.log('No token found, redirecting to login...');
+    //     //         window.location.href = '/login';
+    //     //         return;
+    //     //     }
+
+    //     //     const response = await fetch('/api/verify-token', {
+    //     //         method: 'GET',
+    //     //         headers: {
+    //     //             'Authorization': `Bearer ${token}`,
+    //     //             'Accept': 'application/json'
+    //     //         }
+    //     //     });
+
+    //     //     console.log('Token verification status:', response.status);
+
+    //     //     if (!response.ok) {
+    //     //         console.log('Token invalid, clearing and redirecting...');
+    //     //         // Token is invalid
+    //     //         localStorage.removeItem('token');
+    //     //         localStorage.clear();
+    //     //         sessionStorage.clear();
+    //     //         window.location.href = '/login';
+    //     //     } else {
+    //     //         console.log('Token is valid');
+    //     //     }
+    //     // } catch (error) {
+    //         // console.error('Token verification error:', error);
+    //         // localStorage.removeItem('token');
+    //         // localStorage.clear();
+    //         // sessionStorage.clear();
+    //         // window.location.href = '/login';
+    //     // }
+
+    //       if (publicPaths.some(path => currentPath.includes(path))) {
+    //             return;
+    // }
+        
+    //         cons        t token = localStorage.getItem('token');
+    // if (        !token) {
+    //             if (!currentPath.includes('/login')) {
+    //         window.location.replace('/login');
+    //             }
+    //             return;
+    // }
+        
+    //         try {
+    //             const re        sponse = await fetch('/api/verify-token', {
+    //                 method: 'GET',
+    //                 headers: {
+    //             'Authorization': `Bearer ${token}`,
+    //                     'Accept': 'application/json'
+    //                 }
+    //     });
+        
+    //             if (!res        ponse.ok) {
+    //                 localStorage.clear();
+    //                 sessionStorage.clear();
+    //                 if (!currentPath.includes('/login')) {
+    //                     window.location.replace('/login');
+    //                 }
+    //             }
+    //     } catch (error) {
+    //     console.error('Token verification failed:', error);
+    //         // Don't clear and redirect on network errors, just log
+    //         localStorage.removeItem('token');
+    //         localStorage.clear();
+    //         sessionStorage.clear();
+    //         window.location.href = '/login';
+    // }
+    // }
+
+    // // ✅ Initialize Functions
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     // Verify token on page load (only for protected pages)
+    //     const currentPath = window.location.pathname;
+    //     const publicPaths = ['/login', '/register', '/forgot-password'];
+
+    //     if (!publicPaths.includes(currentPath)) {
+    //         verifyToken();
+    //     }
+
+    //     // Add logout event listeners to all logout buttons/links
+    //     const logoutButtons = document.querySelectorAll(
+    //         '[data-logout], .logout-btn, #logout-btn, .logout-link');
+
+    //     logoutButtons.forEach(button => {
+    //         button.addEventListener('click', function(e) {
+    //             e.preventDefault();
+    //             e.stopPropagation();
+    //             console.log('Logout button clicked');
+    //             logout();
+    //         });
+    //     });
+    // });
+
+
+    // 2nd version
+      async function logout() {
+        try {
+            console.log('🔴 Logout initiated');
+            
             const token = localStorage.getItem('token');
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             if (token) {
+                console.log('📤 Sending logout request with token');
+                
                 const response = await fetch('/api/logout', {
                     method: 'POST',
                     headers: {
@@ -2345,154 +2522,87 @@ $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
                     }
                 });
 
-                console.log('Logout response status:', response.status);
-
-                const data = await response.json();
-                console.log('Logout response data:', data);
-
-                if (response.ok && data.success) {
-                    // ✅ Clear all local storage
-                    localStorage.removeItem('token');
-                    localStorage.clear();
-                    sessionStorage.clear();
-
-                    // ✅ Show success message
-                    if (typeof toastr !== 'undefined') {
-                        toastr.success(data.message || 'Logged out successfully');
-                    }
-
-                    // ✅ Redirect to login immediately
-                    window.location.href = '/login';
-                } else {
-                    throw new Error(data.message || 'Logout failed');
-                }
-            } else {
-                // No token found, just clear and redirect
-                console.log('No token found, clearing and redirecting...');
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/login';
+                console.log('📥 Logout response:', response.status);
             }
-        } catch (error) {
-            console.error('Logout error:', error);
 
-            // ✅ Even if logout fails, clear local data and redirect
-            localStorage.removeItem('token');
+            // ✅ ALWAYS clear storage and redirect (even if API fails)
+            console.log('🧹 Clearing storage');
             localStorage.clear();
             sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(c => {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
 
-            if (typeof toastr !== 'undefined') {
-                toastr.warning('Logged out (with errors)');
-            }
-
-            // Force redirect after a short delay
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 500);
-        }
-    }
-
-    // ✅ IMPROVED Token Verification Function
-    async function verifyToken() {
-        try {
-            const token = localStorage.getItem('token');
-            const currentPath = window.location.pathname;
-            const publicPaths = ['/login', '/register', '/forgot-password', '/otp-form', '/reset-password'];
-
-            // Skip token check for public pages
-        //     if (publicPaths.includes(currentPath)) {
-        //         return;
-        //     }
-
-        //     if (!token) {
-        //         console.log('No token found, redirecting to login...');
-        //         window.location.href = '/login';
-        //         return;
-        //     }
-
-        //     const response = await fetch('/api/verify-token', {
-        //         method: 'GET',
-        //         headers: {
-        //             'Authorization': `Bearer ${token}`,
-        //             'Accept': 'application/json'
-        //         }
-        //     });
-
-        //     console.log('Token verification status:', response.status);
-
-        //     if (!response.ok) {
-        //         console.log('Token invalid, clearing and redirecting...');
-        //         // Token is invalid
-        //         localStorage.removeItem('token');
-        //         localStorage.clear();
-        //         sessionStorage.clear();
-        //         window.location.href = '/login';
-        //     } else {
-        //         console.log('Token is valid');
-        //     }
-        // } catch (error) {
-        //     console.error('Token verification error:', error);
-        //     localStorage.removeItem('token');
-        //     localStorage.clear();
-        //     sessionStorage.clear();
-        //     window.location.href = '/login';
-        // }
-
-          if (publicPaths.some(path => currentPath.includes(path))) {
-                return;
-    }
-        
-            cons        t token = localStorage.getItem('token');
-    if (        !token) {
-                if (!currentPath.includes('/login')) {
+            console.log('↪️ Redirecting to login');
+            
+            // Use replace to prevent back button issues
             window.location.replace('/login');
-                }
-                return;
-    }
-        
-            try {
-                const re        sponse = await fetch('/api/verify-token', {
-                    method: 'GET',
-                    headers: {
-                'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
-        });
-        
-                if (!res        ponse.ok) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    if (!currentPath.includes('/login')) {
-                        window.location.replace('/login');
-                    }
-                }
+            
         } catch (error) {
-        console.error('Token verification failed:', error);
-            // Don't clear and redirect on network errors, just log
-    }
+            console.error('❌ Logout error:', error);
+            
+            // Force logout even on error
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.replace('/login');
+        }
     }
 
-    // ✅ Initialize Functions
-    document.addEventListener('DOMContentLoaded', function() {
-        // Verify token on page load (only for protected pages)
+    // ✅ Token Verification (keep as is but simplified)
+    async function verifyToken() {
         const currentPath = window.location.pathname;
-        const publicPaths = ['/login', '/register', '/forgot-password'];
+        const publicPaths = ['/login', '/register', '/forgot-password', '/otp-form', '/reset-password'];
 
-        if (!publicPaths.includes(currentPath)) {
-            verifyToken();
+        // Skip verification on public pages
+        if (publicPaths.some(path => currentPath.includes(path))) {
+            return;
         }
 
-        // Add logout event listeners to all logout buttons/links
-        const logoutButtons = document.querySelectorAll(
-            '[data-logout], .logout-btn, #logout-btn, .logout-link');
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.replace('/login');
+            return;
+        }
 
-        logoutButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
+        try {
+            const response = await fetch('/api/verify-token', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.replace('/login');
+            }
+        } catch (error) {
+            console.error('Token verification failed:', error);
+            // Don't redirect on network errors
+        }
+    }
+
+    // ✅ Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verify token
+        verifyToken();
+
+        // Attach logout to all logout elements
+        const logoutElements = document.querySelectorAll('[data-logout], .logout-btn, #logout-btn, .logout-link');
+        
+        logoutElements.forEach(element => {
+            element.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Logout button clicked');
+                console.log('🔘 Logout clicked');
                 logout();
             });
         });
+
+        console.log(`✅ ${logoutElements.length} logout buttons initialized`);
     });
 </script>
