@@ -1,178 +1,206 @@
 <?php
 /**
  * GitHub Actions Wizard Data Injection Script
- * 
- * This script is called by GitHub Actions to inject wizard subscription data
- * into the Vertex system during provisioning.
- * 
- * Usage: php scripts/inject-wizard-data.php '{"subscription_details": {...}, "pricing_breakdown": {...}}'
+ *
+ * Supports:
+ *  - repository_dispatch (CLI JSON argument)
+ *  - workflow_dispatch (base64 JSON via .env)
+ *
+ * Usage:
+ *   php scripts/inject-wizard-data.php '{"subscription_details": {...}}'
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-function injectWizardData($wizardDataJson)
+function injectWizardData(?string $wizardDataJson)
 {
     try {
         echo "🚀 Starting wizard data injection...\n";
-        echo "📝 Input data length: " . strlen($wizardDataJson) . " characters\n";
-        
-        // Validate JSON input
-        $wizardData = json_decode($wizardDataJson, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception('Invalid JSON data: ' . json_last_error_msg() . "\nInput data: " . substr($wizardDataJson, 0, 500));
-        }
-        
-        // Enhanced validation - support both direct format and GitHub Actions format
-        $subscriptionDetails = null;
-        $pricingBreakdown = null;
-        
-        // Check if data comes from GitHub Actions (with json_encoded strings)
-        if (isset($wizardData['subscription_details']) && is_string($wizardData['subscription_details'])) {
-            echo "📦 Detected GitHub Actions format - decoding JSON strings...\n";
-            $subscriptionDetails = json_decode($wizardData['subscription_details'], true);
-            $pricingBreakdown = json_decode($wizardData['pricing_breakdown'], true);
-            
-            // Decode all JSON string fields
-            $wizardData['subscription_details'] = $subscriptionDetails;
-            $wizardData['pricing_breakdown'] = $pricingBreakdown;
-            
-            if (isset($wizardData['selected_devices']) && is_string($wizardData['selected_devices'])) {
-                $wizardData['selected_devices'] = json_decode($wizardData['selected_devices'], true) ?: [];
-            }
-            if (isset($wizardData['selected_biometric_services']) && is_string($wizardData['selected_biometric_services'])) {
-                $wizardData['selected_biometric_services'] = json_decode($wizardData['selected_biometric_services'], true) ?: [];
-            }
-            if (isset($wizardData['company_details']) && is_string($wizardData['company_details'])) {
-                $wizardData['company_details'] = json_decode($wizardData['company_details'], true) ?: [];
-            }
-            if (isset($wizardData['user_details']) && is_string($wizardData['user_details'])) {
-                $wizardData['user_details'] = json_decode($wizardData['user_details'], true) ?: [];
-            }
+
+        /**
+         * --------------------------------------------------
+         * STEP 1: Resolve wizard JSON source
+         * Priority:
+         *   1) CLI argument (repository_dispatch)
+         *   2) Base64 env (workflow_dispatch + SSH)
+         * --------------------------------------------------
+         */
+        $rawJson = null;
+
+        if (!empty($wizardDataJson) && trim($wizardDataJson) !== '{}') {
+            $rawJson = $wizardDataJson;
+            echo "📦 Using wizard data from CLI argument\n";
         } else {
-            echo "📊 Detected direct format - using data as-is...\n";
-            $subscriptionDetails = $wizardData['subscription_details'] ?? null;
-            $pricingBreakdown = $wizardData['pricing_breakdown'] ?? null;
+            $encoded = getenv('WIZARD_SUBSCRIPTION_DATA');
+
+            if ($encoded) {
+                $decoded = base64_decode($encoded, true);
+                if ($decoded === false) {
+                    throw new Exception("Invalid base64 in WIZARD_SUBSCRIPTION_DATA");
+                }
+                $rawJson = $decoded;
+                echo "📦 Using wizard data from WIZARD_SUBSCRIPTION_DATA env\n";
+            }
         }
-        
-        // Validate required data structure
+
+        if (!$rawJson) {
+            throw new Exception("No wizard data found (CLI arg and env both empty)");
+        }
+
+        echo "📝 Raw JSON length: " . strlen($rawJson) . " characters\n";
+
+        /**
+         * --------------------------------------------------
+         * STEP 2: Decode JSON safely
+         * --------------------------------------------------
+         */
+        $wizardData = json_decode($rawJson, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception(
+                "Invalid wizard JSON: " . json_last_error_msg() .
+                "\nPreview: " . substr($rawJson, 0, 300)
+            );
+        }
+
+        /**
+         * --------------------------------------------------
+         * STEP 3: Normalize formats
+         * --------------------------------------------------
+         */
+        if (isset($wizardData['subscription_details']) && is_string($wizardData['subscription_details'])) {
+            echo "📦 Detected stringified JSON fields – decoding...\n";
+
+            $wizardData['subscription_details'] =
+                json_decode($wizardData['subscription_details'], true) ?? [];
+
+            $wizardData['pricing_breakdown'] =
+                json_decode($wizardData['pricing_breakdown'] ?? '{}', true) ?? [];
+
+            $wizardData['selected_devices'] =
+                json_decode($wizardData['selected_devices'] ?? '[]', true) ?? [];
+
+            $wizardData['selected_biometric_services'] =
+                json_decode($wizardData['selected_biometric_services'] ?? '{}', true) ?? [];
+
+            $wizardData['company_details'] =
+                json_decode($wizardData['company_details'] ?? '{}', true) ?? [];
+
+            $wizardData['user_details'] =
+                json_decode($wizardData['user_details'] ?? '{}', true) ?? [];
+        }
+
+        /**
+         * --------------------------------------------------
+         * STEP 4: Validate & fallback
+         * --------------------------------------------------
+         */
+        $subscriptionDetails = $wizardData['subscription_details'] ?? null;
+        $pricingBreakdown    = $wizardData['pricing_breakdown'] ?? null;
+
         if (!$subscriptionDetails || !$pricingBreakdown) {
-            echo "⚠️ Warning: Missing or invalid subscription_details or pricing_breakdown\n";
-            echo "📋 Available keys: " . implode(', ', array_keys($wizardData)) . "\n";
-            
-            // Create minimal fallback structure
-            if (!$subscriptionDetails) {
-                $subscriptionDetails = [
-                    'plan_slug' => 'unknown',
-                    'billing_period' => 'monthly',
-                    'system_slug' => 'timora'
-                ];
-            }
-            if (!$pricingBreakdown) {
-                $pricingBreakdown = [
-                    'total_amount' => 0,
-                    'base_price' => 0,
-                    'implementation_fee' => 0
-                ];
-            }
+            echo "⚠️ Missing subscription_details or pricing_breakdown – applying fallback\n";
+
+            $subscriptionDetails ??= [
+                'plan_slug'      => 'unknown',
+                'billing_period' => 'monthly',
+                'system_slug'    => 'timora',
+            ];
+
+            $pricingBreakdown ??= [
+                'total_amount'        => 0,
+                'base_price'          => 0,
+                'implementation_fee'  => 0,
+            ];
+
             $wizardData['subscription_details'] = $subscriptionDetails;
-            $wizardData['pricing_breakdown'] = $pricingBreakdown;
+            $wizardData['pricing_breakdown']    = $pricingBreakdown;
         }
-        
-        echo "✅ Wizard data validation passed\n";
-        echo "📊 Subscription Plan: " . ($subscriptionDetails['plan_slug'] ?? 'Unknown') . "\n";
-        echo "🔄 Billing Period: " . ($subscriptionDetails['billing_period'] ?? 'Unknown') . "\n";
-        echo "💰 Total Amount: ₱" . number_format($pricingBreakdown['total_amount'] ?? 0, 2) . "\n";
-        echo "🏢 System: " . ($subscriptionDetails['system_slug'] ?? 'Unknown') . "\n";
-        
-        // Method 1: Write to storage file
+
+        /**
+         * --------------------------------------------------
+         * STEP 5: Log summary
+         * --------------------------------------------------
+         */
+        echo "✅ Wizard data validated\n";
+        echo "📊 Plan: " . ($subscriptionDetails['plan_slug'] ?? 'unknown') . "\n";
+        echo "🔄 Billing: " . ($subscriptionDetails['billing_period'] ?? 'unknown') . "\n";
+        echo "💰 Total: ₱" . number_format($pricingBreakdown['total_amount'] ?? 0, 2) . "\n";
+        echo "🏢 System: " . ($subscriptionDetails['system_slug'] ?? 'unknown') . "\n";
+
+        /**
+         * --------------------------------------------------
+         * STEP 6: Write storage file
+         * --------------------------------------------------
+         */
         $storagePath = __DIR__ . '/../storage/wizard_subscription_data.json';
-        $storageDir = dirname($storagePath);
-        
-        if (!is_dir($storageDir)) {
-            mkdir($storageDir, 0755, true);
-            echo "📁 Created storage directory: $storageDir\n";
-        }
-        
-        $writeResult = file_put_contents($storagePath, json_encode($wizardData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        if ($writeResult === false) {
-            throw new Exception("Failed to write wizard data to storage file: $storagePath");
-        }
-        echo "✅ Wizard data written to storage file: $storagePath (" . $writeResult . " bytes)\n";
-        
-        // Method 2: Append to .env file (base64 encoded to avoid shell issues)
+        @mkdir(dirname($storagePath), 0755, true);
+
+        file_put_contents(
+            $storagePath,
+            json_encode($wizardData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+
+        echo "✅ Stored wizard data: $storagePath\n";
+
+        /**
+         * --------------------------------------------------
+         * STEP 7: Write base64 env
+         * --------------------------------------------------
+         */
         $envPath = __DIR__ . '/../.env';
         if (file_exists($envPath)) {
-            $envContent = file_get_contents($envPath);
-            
-            // Remove existing WIZARD_SUBSCRIPTION_DATA if present
-            $envContent = preg_replace('/^WIZARD_SUBSCRIPTION_DATA=.*$/m', '', $envContent);
-            $envContent = trim($envContent) . "\n";
-            
-            // Add new wizard data (base64 encoded to avoid shell issues)
-            $encodedData = base64_encode(json_encode($wizardData));
-            $envContent .= "WIZARD_SUBSCRIPTION_DATA=" . $encodedData . "\n";
-            
-            $envWriteResult = file_put_contents($envPath, $envContent);
-            if ($envWriteResult === false) {
-                echo "⚠️ Warning: Failed to write wizard data to .env file\n";
-            } else {
-                echo "✅ Wizard data added to .env file (" . strlen($encodedData) . " chars encoded)\n";
-            }
-        } else {
-            echo "⚠️ Warning: .env file not found at $envPath\n";
+            $env = file_get_contents($envPath);
+            $env = preg_replace('/^WIZARD_SUBSCRIPTION_DATA=.*$/m', '', $env);
+            $env = trim($env) . PHP_EOL;
+
+            $encoded = base64_encode(json_encode($wizardData));
+            $env .= "WIZARD_SUBSCRIPTION_DATA=$encoded\n";
+
+            file_put_contents($envPath, $env);
+            echo "✅ Updated .env with base64 wizard data\n";
         }
-        
-        // Method 3: Create temporary config file for immediate use
-        $tempConfigPath = __DIR__ . '/../bootstrap/cache/wizard_data.php';
-        $tempConfigDir = dirname($tempConfigPath);
-        
-        if (!is_dir($tempConfigDir)) {
-            mkdir($tempConfigDir, 0755, true);
-            echo "📁 Created config cache directory: $tempConfigDir\n";
+
+        /**
+         * --------------------------------------------------
+         * STEP 8: Write cached config
+         * --------------------------------------------------
+         */
+        $cachePath = __DIR__ . '/../bootstrap/cache/wizard_data.php';
+        @mkdir(dirname($cachePath), 0755, true);
+
+        file_put_contents(
+            $cachePath,
+            "<?php\nreturn " . var_export($wizardData, true) . ";\n"
+        );
+
+        echo "✅ Cached wizard config written\n";
+
+        /**
+         * --------------------------------------------------
+         * STEP 9: Validate read-back
+         * --------------------------------------------------
+         */
+        $check = json_decode(file_get_contents($storagePath), true);
+        if (!isset($check['subscription_details']['plan_slug'])) {
+            throw new Exception("Storage validation failed");
         }
-        
-        $configContent = "<?php\n\n// Auto-generated wizard data - " . date('Y-m-d H:i:s') . "\nreturn " . var_export($wizardData, true) . ";\n";
-        $configWriteResult = file_put_contents($tempConfigPath, $configContent);
-        if ($configWriteResult === false) {
-            echo "⚠️ Warning: Failed to write wizard data to temporary config file\n";
-        } else {
-            echo "✅ Wizard data written to temporary config file: $tempConfigPath (" . $configWriteResult . " bytes)\n";
-        }
-        
-        // Method 4: Validate the written data can be read back
-        echo "🔍 Validating written data...\n";
-        if (file_exists($storagePath)) {
-            $testData = json_decode(file_get_contents($storagePath), true);
-            if ($testData && isset($testData['subscription_details']['plan_slug'])) {
-                echo "✅ Storage file validation passed - plan: " . $testData['subscription_details']['plan_slug'] . "\n";
-            } else {
-                echo "⚠️ Warning: Storage file validation failed\n";
-            }
-        }
-        
-        echo "🎉 Wizard data injection completed successfully!\n";
+
+        echo "🎉 Wizard data injection completed successfully\n";
         return true;
-        
-    } catch (Exception $e) {
-        echo "❌ Error injecting wizard data: " . $e->getMessage() . "\n";
-        echo "📋 Stack trace: " . $e->getTraceAsString() . "\n";
-        echo "🔍 Debug info:\n";
-        echo "  - Input data first 500 chars: " . substr($wizardDataJson, 0, 500) . "\n";
-        echo "  - JSON error: " . json_last_error_msg() . "\n";
+
+    } catch (Throwable $e) {
+        echo "❌ Wizard injection failed\n";
+        echo "Message: " . $e->getMessage() . "\n";
+        echo "Trace:\n" . $e->getTraceAsString() . "\n";
         return false;
     }
 }
 
-// Command-line execution
-if ($argc < 2) {
-    echo "Usage: php scripts/inject-wizard-data.php '<json-data>'\n";
-    echo "Example: php scripts/inject-wizard-data.php '{\"subscription_details\": {\"plan_slug\": \"pro\"}, \"pricing_breakdown\": {\"total_amount\": 15000}}'\n";
-    exit(1);
-}
-
-$wizardDataJson = $argv[1];
-echo "🚀 Starting wizard data injection...\n";
-echo "📝 Input data length: " . strlen($wizardDataJson) . " characters\n";
-
-$success = injectWizardData($wizardDataJson);
-exit($success ? 0 : 1);
+/**
+ * --------------------------------------------------
+ * CLI execution
+ * --------------------------------------------------
+ */
+$wizardDataJson = $argv[1] ?? null;
+exit(injectWizardData($wizardDataJson) ? 0 : 1);
