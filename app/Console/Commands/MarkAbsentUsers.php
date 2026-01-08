@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Carbon\Carbon;
 use App\Models\Attendance;
+use App\Models\LeaveRequest;
 use App\Models\ShiftAssignment;
 use Illuminate\Console\Command;
 use App\Models\OfficialBusiness;
@@ -123,6 +124,16 @@ class MarkAbsentUsers extends Command
                 continue;
             }
 
+            // Check if employee has an approved leave for this date
+            $hasApprovedLeave = LeaveRequest::where('user_id', $assign->user_id)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->exists();
+
+            if ($hasApprovedLeave) {
+                continue;
+            }
 
             // skip if attendance already exists for this shift today
             if (Attendance::where('shift_assignment_id', $assign->id)

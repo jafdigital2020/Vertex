@@ -191,17 +191,17 @@ return [
     ],
 
     // Hook to run after generating the docs
-    'afterGenerating' => function() {
-        // Remove the "Endpoints" group YAML file that contains undocumented routes
-        $endpointsFile = base_path('.scribe/endpoints/00.yaml');
-        if (file_exists($endpointsFile)) {
-            $content = file_get_contents($endpointsFile);
-            // Check if this is the "Endpoints" group (undocumented)
-            if (strpos($content, 'name: Endpoints') !== false) {
-                unlink($endpointsFile);
-            }
-        }
-    },
+    // 'afterGenerating' => function() {
+    //     // Remove the "Endpoints" group YAML file that contains undocumented routes
+    //     $endpointsFile = base_path('.scribe/endpoints/00.yaml');
+    //     if (file_exists($endpointsFile)) {
+    //         $content = file_get_contents($endpointsFile);
+    //         // Check if this is the "Endpoints" group (undocumented)
+    //         if (strpos($content, 'name: Endpoints') !== false) {
+    //             unlink($endpointsFile);
+    //         }
+    //     }
+    // },
 
     // Custom logo path. This will be used as the value of the src attribute for the <img> tag,
     // so make sure it points to an accessible URL or path. Set to false to not use a logo.
