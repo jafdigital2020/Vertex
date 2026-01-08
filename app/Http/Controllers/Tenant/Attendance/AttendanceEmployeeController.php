@@ -143,12 +143,8 @@ class AttendanceEmployeeController extends Controller
             ? 'Your 7-day trial period has ended. Please contact your administrator.'
             : ($expired ? 'Your subscription has expired. Please contact your administrator.' : null);
 
-        $currentClockIn = Attendance::where('user_id', $authUserId)
-            ->where('attendance_date', $today)
-            ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out')
-            ->latest('date_time_in')
-            ->first();
+        // ✅ ENHANCED: Use shift-based logic to find current active attendance
+        $currentClockIn = $this->findActiveAttendanceByShift($authUserId);
 
         $latestAttendance = Attendance::where('user_id',  $authUserId)
             ->latest('date_time_in')
@@ -373,7 +369,12 @@ class AttendanceEmployeeController extends Controller
         if (!$nextAssignment) {
             // If no next assignment, check if user is currently clocked in to any shift
             $currentAttendance = Attendance::where('user_id', $authUser->id)
-                ->where('attendance_date', $today)
+                ->where(function ($query) use ($today) {
+                    $yesterday = Carbon::yesterday()->toDateString();
+                    // Include today's attendance OR yesterday's attendance (for night shifts)
+                    $query->where('attendance_date', $today)
+                        ->orWhere('attendance_date', $yesterday);
+                })
                 ->whereNotNull('date_time_in')
                 ->whereNull('date_time_out') // Currently clocked in
                 ->latest('date_time_in')
@@ -665,13 +666,19 @@ class AttendanceEmployeeController extends Controller
             return response()->json(['message' => 'Clock-in on rest days is not allowed. Please contact your administrator.'], 403);
         }
 
-        // Check existing attendance for today
+        // Check existing attendance for today and yesterday (for night shifts)
         $existingAttendance = Attendance::where('user_id', $user->id)
-            ->where('attendance_date', $today)
+            ->where(function ($query) use ($today) {
+                $yesterday = Carbon::yesterday()->toDateString();
+                // Include today's attendance OR yesterday's attendance (for night shifts)
+                $query->where('attendance_date', $today)
+                    ->orWhere('attendance_date', $yesterday);
+            })
+            ->whereNull('date_time_out') // Only unclosed attendance matters
             ->latest('date_time_in')
             ->first();
 
-        if ($existingAttendance && !$existingAttendance->date_time_out) {
+        if ($existingAttendance) {
             return response()->json(['message' => 'You already clocked in your current shift and haven\'t clocked out.'], 403);
         }
 
@@ -1044,21 +1051,22 @@ class AttendanceEmployeeController extends Controller
     public function breakIn(Request $request)
     {
         $user = Auth::user();
-        $today = Carbon::today()->toDateString();
         $now = Carbon::now();
 
-        // ✅ FIXED: Find current attendance for active shift (including night shifts from previous day)
-        $currentAttendance = Attendance::where('user_id', $user->id)
-            ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out') // Must be currently clocked in
-            ->where(function ($query) use ($today) {
-                $yesterday = Carbon::yesterday()->toDateString();
-                // Include today's attendance OR yesterday's attendance (for night shifts)
-                $query->where('attendance_date', $today)
-                    ->orWhere('attendance_date', $yesterday);
-            })
-            ->latest('date_time_in')
-            ->first();
+        // ✅ ENHANCED: Find current attendance using shift-based logic
+        $currentAttendance = $this->findActiveAttendanceByShift($user->id);
+
+        // Additional validation: Ensure current time is within shift hours
+        if ($currentAttendance && $currentAttendance->shift) {
+            if (!$this->isWithinShiftHours($currentAttendance->shift, $now)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Break is only allowed during your shift hours (' . 
+                               $currentAttendance->shift->start_time . ' - ' . 
+                               $currentAttendance->shift->end_time . ').'
+                ], 403);
+            }
+        }
 
         if (!$currentAttendance) {
             return response()->json([
@@ -1067,20 +1075,40 @@ class AttendanceEmployeeController extends Controller
             ], 403);
         }
 
-        // ✅ NEW: Check if user already took a break for this shift (completed break cycle)
-        if ($currentAttendance->break_in && $currentAttendance->break_out) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You have already completed your break for this shift. Only one break is allowed per shift.'
-            ], 403);
+        // ✅ ENHANCED: Check if user already took ANY break for this specific shift
+        if ($currentAttendance->break_in) {
+            if ($currentAttendance->break_out) {
+                // Break already completed for this shift
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have already completed your break for this shift (' . 
+                               ($currentAttendance->shift->name ?? 'Current Shift') . '). Only one break is allowed per shift.'
+                ], 403);
+            } else {
+                // Break currently active for this shift
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already have an active break for this shift (' . 
+                               ($currentAttendance->shift->name ?? 'Current Shift') . '). Please end your current break first.'
+                ], 403);
+            }
         }
 
-        // ✅ EXISTING: Check if user has an active break (break_in but no break_out)
-        if ($currentAttendance->break_in && !$currentAttendance->break_out) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You already have an active break for this shift. Please end your current break first.'
-            ], 403);
+        // ✅ ADDITIONAL: Double-check for any other attendance records with the same shift_id that have breaks
+        if ($currentAttendance->shift_id) {
+            $existingBreakInShift = Attendance::where('user_id', $user->id)
+                ->where('shift_id', $currentAttendance->shift_id)
+                ->whereNotNull('break_in')
+                ->where('id', '!=', $currentAttendance->id) // Exclude current record
+                ->exists();
+
+            if ($existingBreakInShift) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have already used your break for this shift (' . 
+                               ($currentAttendance->shift->name ?? 'Current Shift') . '). Only one break is allowed per shift.'
+                ], 403);
+            }
         }
 
         // Get shift break minutes
@@ -1118,7 +1146,7 @@ class AttendanceEmployeeController extends Controller
                 'shift_id' => $currentAttendance->shift_id,
                 'shift_name' => $shift->name ?? 'Current Shift',
                 'break_type' => $request->break_type,
-                'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                'break_in' => $currentAttendance->break_in ? $currentAttendance->break_in->format('H:i:s') : null,
                 'max_break_minutes' => $maxBreakMinutes
             ]
         ]);
@@ -1153,23 +1181,27 @@ class AttendanceEmployeeController extends Controller
     public function breakOut(Request $request)
     {
         $user = Auth::user();
-        $today = Carbon::today()->toDateString();
         $now = Carbon::now();
 
-        // Current shift attendance with active break (including night shifts from previous day)
-        $currentAttendance = Attendance::where('user_id', $user->id)
-            ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out')
-            ->whereNotNull('break_in')
-            ->whereNull('break_out')
-            ->where(function ($query) use ($today) {
-                $yesterday = Carbon::yesterday()->toDateString();
-                // Include today's attendance OR yesterday's attendance (for night shifts)
-                $query->where('attendance_date', $today)
-                    ->orWhere('attendance_date', $yesterday);
-            })
-            ->latest('date_time_in')
-            ->first();
+        // ✅ ENHANCED: Find active attendance with break using shift-based logic
+        $currentAttendance = $this->findActiveAttendanceByShift($user->id);
+
+        // Validate that there's an active break
+        if ($currentAttendance && (!$currentAttendance->break_in || $currentAttendance->break_out)) {
+            $currentAttendance = null; // Reset if no active break found
+        }
+
+        // Additional validation: Ensure current time is within shift hours
+        if ($currentAttendance && $currentAttendance->shift) {
+            if (!$this->isWithinShiftHours($currentAttendance->shift, $now)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Break can only be ended during your shift hours (' . 
+                               $currentAttendance->shift->start_time . ' - ' . 
+                               $currentAttendance->shift->end_time . ').'
+                ], 403);
+            }
+        }
 
         if (!$currentAttendance) {
             return response()->json([
@@ -1219,8 +1251,8 @@ class AttendanceEmployeeController extends Controller
                 'attendance_id' => $currentAttendance->id,
                 'shift_id' => $currentAttendance->shift_id,
                 'shift_name' => $shiftName,
-                'break_in' => $currentAttendance->break_in->format('H:i:s'),
-                'break_out' => $currentAttendance->break_out->format('H:i:s'),
+                'break_in' => $currentAttendance->break_in ? $currentAttendance->break_in->format('H:i:s') : null,
+                'break_out' => $currentAttendance->break_out ? $currentAttendance->break_out->format('H:i:s') : null,
                 'duration_minutes' => $breakDuration,
                 'break_late_minutes' => $breakLate,
                 'max_break_minutes' => $maxBreakMinutes
@@ -1232,20 +1264,25 @@ class AttendanceEmployeeController extends Controller
     public function breakStatus()
     {
         $user = Auth::user();
-        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
 
-        // ✅ Find current attendance for active shift (including night shifts from previous day)
-        $currentAttendance = Attendance::where('user_id', $user->id)
-            ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out') // Must be currently clocked in
-            ->where(function ($query) use ($today) {
-                $yesterday = Carbon::yesterday()->toDateString();
-                // Include today's attendance OR yesterday's attendance (for night shifts)
-                $query->where('attendance_date', $today)
-                    ->orWhere('attendance_date', $yesterday);
-            })
-            ->latest('date_time_in')
-            ->first();
+        // ✅ ENHANCED: Use shift-based logic to find current active attendance
+        $currentAttendance = $this->findActiveAttendanceByShift($user->id);
+
+        // Additional validation: Check if current time is within shift hours
+        if ($currentAttendance && $currentAttendance->shift) {
+            if (!$this->isWithinShiftHours($currentAttendance->shift, $now)) {
+                return response()->json([
+                    'success' => true,
+                    'has_active_break' => false,
+                    'is_within_shift_hours' => false,
+                    'message' => 'Current time is outside shift hours (' . 
+                               $currentAttendance->shift->start_time . ' - ' . 
+                               $currentAttendance->shift->end_time . ').',
+                    'data' => null
+                ]);
+            }
+        }
 
         if (!$currentAttendance) {
             return response()->json([
@@ -1270,8 +1307,8 @@ class AttendanceEmployeeController extends Controller
                     'attendance_id' => $currentAttendance->id,
                     'shift_id' => $currentAttendance->shift_id,
                     'shift_name' => $shift->name ?? 'Current Shift',
-                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
-                    'break_out' => $currentAttendance->break_out->format('H:i:s'),
+                    'break_in' => $currentAttendance->break_in ? $currentAttendance->break_in->format('H:i:s') : null,
+                    'break_out' => $currentAttendance->break_out ? $currentAttendance->break_out->format('H:i:s') : null,
                     'break_completed' => true,
                     'max_break_minutes' => $maxBreakMinutes
                 ]
@@ -1291,7 +1328,7 @@ class AttendanceEmployeeController extends Controller
                     'attendance_id' => $currentAttendance->id,
                     'shift_id' => $currentAttendance->shift_id,
                     'shift_name' => $shift->name ?? 'Current Shift',
-                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                    'break_in' => $currentAttendance->break_in ? $currentAttendance->break_in->format('H:i:s') : null,
                     'current_duration' => $currentDuration,
                     'max_break_minutes' => $maxBreakMinutes,
                     'remaining_minutes' => $remainingMinutes,
@@ -1475,8 +1512,14 @@ class AttendanceEmployeeController extends Controller
         $today    = Carbon::today()->toDateString();
         $now      = Carbon::now();
 
-        // 2️⃣ Find the matching clock-in record
+        // 2️⃣ Find the matching clock-in record (including night shifts from previous day)
         $attendanceQuery = Attendance::where('user_id', $user->id)
+            ->where(function ($query) use ($today) {
+                $yesterday = Carbon::yesterday()->toDateString();
+                // Include today's attendance OR yesterday's attendance (for night shifts)
+                $query->where('attendance_date', $today)
+                    ->orWhere('attendance_date', $yesterday);
+            })
             ->whereNotNull('date_time_in')
             ->whereNull('date_time_out');
 
@@ -2229,7 +2272,12 @@ class AttendanceEmployeeController extends Controller
         if (!$nextAssignment) {
             // If no next assignment, check if user is currently clocked in to any shift
             $currentAttendance = Attendance::where('user_id', $authUser->id)
-                ->where('attendance_date', $today)
+                ->where(function ($query) use ($today) {
+                    $yesterday = Carbon::yesterday()->toDateString();
+                    // Include today's attendance OR yesterday's attendance (for night shifts)
+                    $query->where('attendance_date', $today)
+                        ->orWhere('attendance_date', $yesterday);
+                })
                 ->whereNotNull('date_time_in')
                 ->whereNull('date_time_out') // Currently clocked in
                 ->latest('date_time_in')
@@ -2697,5 +2745,77 @@ class AttendanceEmployeeController extends Controller
             'success' => true,
             'message' => 'Attendance request deleted successfully.'
         ], 200);
+    }
+
+    /**
+     * Check if the current time is within the shift's working hours.
+     * This handles both regular shifts and night shifts that cross midnight.
+     *
+     * @param ShiftList $shift
+     * @param Carbon $currentTime
+     * @return bool
+     */
+    private function isWithinShiftHours($shift, $currentTime = null)
+    {
+        if (!$shift || !$shift->start_time || !$shift->end_time) {
+            return false;
+        }
+
+        $now = $currentTime ?: Carbon::now();
+        $startTime = Carbon::parse($shift->start_time);
+        $endTime = Carbon::parse($shift->end_time);
+
+        // Handle night shifts that cross midnight (e.g., 22:00 to 06:00)
+        if ($endTime->lt($startTime)) {
+            // Night shift - check if current time is after start time today OR before end time today
+            return $now->gte($startTime) || $now->lte($endTime);
+        }
+        
+        // Regular day shift - check if current time is between start and end
+        return $now->gte($startTime) && $now->lte($endTime);
+    }
+
+    /**
+     * Find current active attendance based on shift timing rather than just date.
+     * This provides more accurate results for night shifts that cross midnight.
+     *
+     * @param int $userId
+     * @param int|null $shiftId
+     * @return Attendance|null
+     */
+    private function findActiveAttendanceByShift($userId, $shiftId = null)
+    {
+        $today = Carbon::today()->toDateString();
+        $yesterday = Carbon::yesterday()->toDateString();
+        $now = Carbon::now();
+
+        $query = Attendance::where('user_id', $userId)
+            ->whereNotNull('date_time_in')
+            ->whereNull('date_time_out');
+
+        if ($shiftId) {
+            // If specific shift ID provided, look for that shift
+            $query->where('shift_id', $shiftId);
+        }
+
+        // Look in both today's and yesterday's records for night shifts
+        $query->where(function ($subQuery) use ($today, $yesterday) {
+            $subQuery->where('attendance_date', $today)
+                ->orWhere('attendance_date', $yesterday);
+        });
+
+        $attendances = $query->with('shift')->get();
+
+        // If no specific shift ID provided, find the attendance where current time is within shift hours
+        if (!$shiftId && $attendances->count() > 1) {
+            foreach ($attendances as $attendance) {
+                if ($this->isWithinShiftHours($attendance->shift, $now)) {
+                    return $attendance;
+                }
+            }
+        }
+
+        // Return the latest attendance if found
+        return $attendances->sortByDesc('date_time_in')->first();
     }
 }
