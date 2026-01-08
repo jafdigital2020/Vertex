@@ -20,7 +20,12 @@
                             data-bs-target="#edit_shiftlist" data-id="{{ $shift->id }}"
                             data-name="{{ $shift->name }}" data-start-time="{{ $shift->start_time }}"
                             data-end-time="{{ $shift->end_time }}" data-break-minutes="{{ $shift->break_minutes }}"
-                            data-notes="{{ $shift->notes }}" data-branch-id="{{ $shift->branch_id }}"><i
+                            data-notes="{{ $shift->notes }}" data-branch-id="{{ $shift->branch_id }}"
+                            data-maximum-hours="{{ $shift->maximum_allowed_hours }}"
+                            data-grace-period="{{ $shift->grace_period }}"
+                            data-is-flexible="{{ $shift->is_flexible ? 1 : 0 }}"
+                            data-allow-extra-hours="{{ $shift->allow_extra_hours ? 1 : 0 }}"
+                            data-allowed-minutes-clockin="{{ $shift->allowed_minutes_before_clock_in }}"><i
                                 class="ti ti-edit"></i></a>
                     @endif
                     @if (in_array('Delete', $permission))
