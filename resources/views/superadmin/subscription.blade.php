@@ -250,356 +250,96 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-01.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">BrightWave Innovations</a></h6>
+                                @forelse ($subscriptions as $subscription)
+                                    @php
+                                        $latestInvoice = $subscription->invoices->first();
+                                        $vatPercentage = $latestInvoice && $latestInvoice->subscription && $latestInvoice->subscription->plan
+                                            ? ($latestInvoice->subscription->plan->vat_percentage ?? 12)
+                                            : 12;
+                                        $subtotal = $latestInvoice
+                                            ? (($latestInvoice->amount_due ?? 0) - ($latestInvoice->vat_amount ?? 0))
+                                            : 0;
+                                        $calculatedSubtotal = $subtotal;
+                                        $calculatedVatAmount = $latestInvoice->vat_amount ?? 0;
+                                        if ($latestInvoice && $subtotal === 0 && ($latestInvoice->amount_due ?? 0) > 0) {
+                                            $calculatedSubtotal = ($latestInvoice->amount_due ?? 0) / (1 + ($vatPercentage / 100));
+                                            $calculatedVatAmount = ($latestInvoice->amount_due ?? 0) - $calculatedSubtotal;
+                                        }
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox">
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>Advanced (Monthly)</td>
-                                    <td>30 Days</td>
-                                    <td>Credit Card</td>
-                                    <td>$200</td>
-                                    <td>12 Sep 2024</td>
-                                    <td>11 Oct 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-02.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Stellar Dynamics</a></h6>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center file-name-icon">
+                                                <a href="#" class="avatar avatar-md border rounded-circle">
+                                                    <img src="{{ URL::asset('build/img/company/company-01.svg') }}" class="img-fluid" alt="img">
+                                                </a>
+                                                <div class="ms-2">
+                                                    <h6 class="fw-medium">
+                                                        <a href="#">{{ $subscription->tenant->tenant_name ?? 'N/A' }}</a>
+                                                    </h6>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>Basic (Yearly)</td>
-                                    <td>365 Days</td>
-                                    <td>Paypal</td>
-                                    <td>$600</td>
-                                    <td>24 Oct 2024</td>
-                                    <td>23/10/2025</td>
-                                    <td>
-                                        <span class="badge badge-success d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-03.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Quantum Nexus</a></h6>
+                                        </td>
+                                        <td>{{ $subscription->plan->name ?? 'N/A' }}</td>
+                                        <td>{{ ucfirst($subscription->billing_cycle ?? 'N/A') }}</td>
+                                        <td>—</td>
+                                        <td>{{ $latestInvoice ? '₱' . number_format($latestInvoice->amount_due ?? 0, 2) : '—' }}</td>
+                                        <td>{{ $latestInvoice && $latestInvoice->issued_at ? \Carbon\Carbon::parse($latestInvoice->issued_at)->format('d M Y') : '—' }}</td>
+                                        <td>{{ $subscription->subscription_end ? \Carbon\Carbon::parse($subscription->subscription_end)->format('d M Y') : '—' }}</td>
+                                        <td>
+                                            <span class="badge badge-success d-flex align-items-center badge-xs">
+                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($latestInvoice->status ?? 'paid') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-icon d-inline-flex">
+                                                @if ($latestInvoice)
+                                                    <a href="#" class="me-2 invoice-details-btn" data-bs-toggle="modal" data-bs-target="#view_invoice"
+                                                        data-invoice-id="{{ $latestInvoice->id }}"
+                                                        data-invoice-number="{{ $latestInvoice->invoice_number }}"
+                                                        data-invoice-type="{{ $latestInvoice->invoice_type ?? 'subscription' }}"
+                                                        data-amount-due="{{ $latestInvoice->amount_due }}"
+                                                        data-amount-paid="{{ $latestInvoice->amount_paid }}"
+                                                        data-subscription-amount="{{ $latestInvoice->subscription_amount ?? $latestInvoice->amount_due }}"
+                                                        data-license-overage-count="{{ $latestInvoice->license_overage_count ?? 0 }}"
+                                                        data-license-overage-amount="{{ $latestInvoice->license_overage_amount ?? 0 }}"
+                                                        data-license-overage-rate="{{ $latestInvoice->license_overage_rate ?? 49 }}"
+                                                        data-implementation-fee="{{ $latestInvoice->implementation_fee ?? 0 }}"
+                                                        data-vat-percentage="{{ $vatPercentage }}"
+                                                        data-vat-amount="{{ $calculatedVatAmount }}"
+                                                        data-subtotal="{{ $calculatedSubtotal }}"
+                                                        data-currency="{{ $latestInvoice->currency ?? 'PHP' }}"
+                                                        data-due-date="{{ $latestInvoice->due_date }}"
+                                                        data-status="{{ $latestInvoice->status }}"
+                                                        data-period-start="{{ $latestInvoice->period_start }}"
+                                                        data-period-end="{{ $latestInvoice->period_end }}"
+                                                        data-issued-at="{{ $latestInvoice->issued_at }}"
+                                                        data-bill-to-name="{{ $subscription->tenant->tenant_name ?? 'N/A' }}"
+                                                        data-bill-to-address="{{ $subscription->tenant->tenant_address ?? 'N/A' }}"
+                                                        data-bill-to-email="{{ $subscription->tenant->tenant_email ?? 'N/A' }}"
+                                                        data-plan="{{ $latestInvoice->invoice_type === 'plan_upgrade' && $latestInvoice->upgradePlan ? $latestInvoice->upgradePlan->name : $subscription->plan->name ?? 'N/A' }}"
+                                                        data-current-plan="{{ $subscription->plan->name ?? 'N/A' }}"
+                                                        data-billing-cycle="{{ $latestInvoice->invoice_type === 'plan_upgrade' && $latestInvoice->billing_cycle ? $latestInvoice->billing_cycle : $subscription->billing_cycle ?? 'N/A' }}"
+                                                        data-has-wizard-items="{{ $latestInvoice->items && $latestInvoice->items->count() > 0 ? 'true' : 'false' }}">
+                                                        <i class="ti ti-file-invoice"></i>
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted me-2"><i class="ti ti-file-invoice"></i></span>
+                                                @endif
+                                                <a href="#" class="me-2"><i class="ti ti-download"></i></a>
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>Advanced (Monthly)</td>
-                                    <td>30 Days</td>
-                                    <td>Debit Card</td>
-                                    <td>$200</td>
-                                    <td>18 Feb 2024</td>
-                                    <td>17 Mar 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-04.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">EcoVision Enterprises</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Advanced (Monthly)</td>
-                                    <td>30 Days</td>
-                                    <td>Paypal</td>
-                                    <td>$200</td>
-                                    <td>17 Oct 2024</td>
-                                    <td>16 Nov 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-05.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Aurora Technologies</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Enterprise (Monthly)</td>
-                                    <td>30 Days</td>
-                                    <td>Credit Card</td>
-                                    <td>$400</td>
-                                    <td>20 Jul 2024</td>
-                                    <td>19 Aug 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-06.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">BlueSky Ventures</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Advanced (Monthly)</td>
-                                    <td>30 Days</td>
-                                    <td>Paypal</td>
-                                    <td>$200</td>
-                                    <td>10 Apr 2024</td>
-                                    <td>19 Aug 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-07.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">TerraFusion Energy</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Enterprise (Yearly)</td>
-                                    <td>365 Days</td>
-                                    <td>Credit Card</td>
-                                    <td>$4800</td>
-                                    <td>29 Aug 2024</td>
-                                    <td>28/08/2025</td>
-                                    <td>
-                                        <span class="badge badge-success d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-08.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">UrbanPulse Design</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Basic (Monthly)</td>
-                                    <td>30 Days</td>
-                                    <td>Credit Card</td>
-                                    <td>$50</td>
-                                    <td>22 Feb 2024</td>
-                                    <td>21 Mar 2024</td>
-                                    <td>
-                                        <span class="badge badge-danger d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Unpaid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-09.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Nimbus Networks</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Basic (Yearly)</td>
-                                    <td>365 Days</td>
-                                    <td>Paypal</td>
-                                    <td>$600</td>
-                                    <td>03 Nov 2024</td>
-                                    <td>02/11/2025</td>
-                                    <td>
-                                        <span class="badge badge-success d-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border rounded-circle">
-                                                <img src="{{ URL::asset('build/img/company/company-10.svg') }}" class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Epicurean Delights</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Advanced (Monthly)</td>
-                                    <td>30 Days</td>
-                                    <td>Credit Card</td>
-                                    <td>$200</td>
-                                    <td>17 Dec 2024</td>
-                                    <td>16 Jan 2024</td>
-                                    <td>
-                                        <span class="badge badge-success dlign-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Paid
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
-                                            <a href="#" class="me-2"><i class="ti ti-download"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted">No subscriptions found.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -667,6 +407,31 @@
             white-space: normal;
             word-break: break-word;
             font-size: 11px;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(1),
+        #view_invoice .invoice-items__table td:nth-child(1) {
+            width: 42%;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(2),
+        #view_invoice .invoice-items__table td:nth-child(2) {
+            width: 18%;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(3),
+        #view_invoice .invoice-items__table td:nth-child(3) {
+            width: 12%;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(4),
+        #view_invoice .invoice-items__table td:nth-child(4) {
+            width: 14%;
+        }
+
+        #view_invoice .invoice-items__table th:nth-child(5),
+        #view_invoice .invoice-items__table td:nth-child(5) {
+            width: 14%;
         }
 
         #view_invoice .invoice-items__table tbody tr {
@@ -752,4 +517,395 @@
             }
         }
     </style>
+@endpush
+
+@push('scripts')
+    <script>
+        function fmtMoney(value, currency) {
+            const num = Number(value ?? 0);
+            try {
+                return new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: currency || 'PHP'
+                }).format(num);
+            } catch (_) {
+                return `₱${num.toFixed(2)}`;
+            }
+        }
+
+        function fmtDate(isoLike) {
+            if (!isoLike) return '—';
+            const d = new Date(isoLike);
+            return isNaN(d) ? isoLike : d.toLocaleDateString();
+        }
+
+        function setBreakdown(oneTimeTotal, recurringTotal, currency) {
+            const oneTimeEl = document.getElementById('inv-one-time');
+            const recurringEl = document.getElementById('inv-recurring');
+            const oneTimeLabel = document.getElementById('inv-one-time-label');
+            const recurringLabel = document.getElementById('inv-recurring-label');
+
+            const showOneTime = Number(oneTimeTotal || 0) > 0;
+            const showRecurring = Number(recurringTotal || 0) > 0;
+
+            if (oneTimeEl) oneTimeEl.textContent = showOneTime ? fmtMoney(oneTimeTotal, currency) : '—';
+            if (recurringEl) recurringEl.textContent = showRecurring ? fmtMoney(recurringTotal, currency) : '—';
+
+            if (oneTimeLabel) oneTimeLabel.style.display = showOneTime || showRecurring ? '' : 'none';
+            if (oneTimeEl) oneTimeEl.style.display = showOneTime || showRecurring ? '' : 'none';
+            if (recurringLabel) recurringLabel.style.display = showOneTime || showRecurring ? '' : 'none';
+            if (recurringEl) recurringEl.style.display = showOneTime || showRecurring ? '' : 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const invoiceModal = document.getElementById('view_invoice');
+            if (!invoiceModal) return;
+
+            invoiceModal.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+
+                const d = btn.dataset;
+
+                const invNumber = document.getElementById('inv-number');
+                if (invNumber) invNumber.textContent = d.invoiceNumber || '—';
+
+                const invIssuedAt = document.getElementById('inv-issued-at');
+                if (invIssuedAt) invIssuedAt.textContent = fmtDate(d.issuedAt);
+
+                const invDueDate = document.getElementById('inv-due-date');
+                if (invDueDate) invDueDate.textContent = fmtDate(d.dueDate);
+
+                const billingCycleRow = document.getElementById('inv-billing-cycle-row');
+                const billingCycleEl = document.getElementById('inv-billing-cycle');
+                if (billingCycleRow && billingCycleEl && d.invoiceType === 'plan_upgrade' && d.billingCycle) {
+                    billingCycleRow.style.display = 'block';
+                    billingCycleEl.textContent = d.billingCycle.charAt(0).toUpperCase() + d.billingCycle.slice(1);
+                    billingCycleEl.className = d.billingCycle === 'yearly' ? 'badge bg-success' : 'badge bg-info';
+                } else if (billingCycleRow) {
+                    billingCycleRow.style.display = 'none';
+                }
+
+                const typeBadge = document.getElementById('inv-type-badge');
+                if (typeBadge) {
+                    const invoiceType = d.invoiceType || 'subscription';
+                    const licenseOverageCount = Number(d.licenseOverageCount || 0);
+
+                    switch (invoiceType) {
+                        case 'license_overage':
+                            typeBadge.textContent = 'License';
+                            typeBadge.className = 'badge bg-info ms-1';
+                            break;
+                        case 'custom_order':
+                            typeBadge.textContent = 'Custom Order';
+                            typeBadge.className = 'badge bg-warning ms-1';
+                            break;
+                        case 'subscription':
+                            if (licenseOverageCount > 0) {
+                                typeBadge.textContent = 'Inc. Overage';
+                                typeBadge.className = 'badge bg-primary ms-1';
+                            } else {
+                                typeBadge.textContent = 'Subscription';
+                                typeBadge.className = 'badge bg-success ms-1';
+                            }
+                            break;
+                        case 'consolidated':
+                            typeBadge.textContent = 'Consolidated';
+                            typeBadge.className = 'badge bg-secondary ms-1';
+                            break;
+                        default:
+                            typeBadge.textContent = invoiceType.charAt(0).toUpperCase() + invoiceType.slice(1);
+                            typeBadge.className = 'badge bg-success ms-1';
+                            break;
+                    }
+                }
+
+                const nameEl = document.getElementById('inv-to-name');
+                if (nameEl) nameEl.textContent = d.billToName || '—';
+
+                const addrEl = document.getElementById('inv-to-address');
+                if (addrEl) addrEl.textContent = d.billToAddress || '—';
+
+                const emailEl = document.getElementById('inv-to-email');
+                if (emailEl) emailEl.textContent = d.billToEmail || '—';
+
+                const tbody = document.getElementById('inv-items');
+                if (tbody) {
+                    tbody.innerHTML = '';
+
+                    const subscriptionAmount = Number(d.subscriptionAmount || 0);
+                    const licenseOverageAmount = Number(d.licenseOverageAmount || 0);
+                    const licenseOverageCount = Number(d.licenseOverageCount || 0);
+                    const licenseOverageRate = Number(d.licenseOverageRate || 49);
+                    const implementationFee = Number(d.implementationFee || 0);
+                    const amountDue = Number(d.amountDue || 0);
+                    const invoiceType = d.invoiceType || 'subscription';
+
+                    const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) ||
+                        invoiceType === 'license_overage' ||
+                        invoiceType === 'custom_order';
+                    const showQtyRate = hasOverage || (invoiceType === 'subscription' && implementationFee > 0);
+
+                    document.querySelectorAll('.qty-rate-column').forEach(col => {
+                        col.style.display = showQtyRate ? '' : 'none';
+                    });
+
+                    if (invoiceType === 'custom_order' || d.hasWizardItems === 'true') {
+                        fetch(`/billing/invoices/${d.invoiceId}/items`)
+                            .then(response => response.json())
+                            .then(data => {
+                                tbody.innerHTML = '';
+                                if (data.success && data.items && data.items.length > 0) {
+                                    let oneTimeTotal = 0;
+                                    let recurringTotal = 0;
+
+                                    data.items.forEach(item => {
+                                        const itemAmount = Number(item.amount || 0);
+                                        const itemPeriod = String(item.period || '').toLowerCase();
+                                        const itemType = String(item.type || '').toLowerCase();
+
+                                        if (itemPeriod === 'one-time' || itemType === 'implementation_fee' || itemType === 'addon_onetime') {
+                                            oneTimeTotal += itemAmount;
+                                        } else {
+                                            recurringTotal += itemAmount;
+                                        }
+
+                                        const tr = document.createElement('tr');
+
+                                        let periodBadge = '';
+                                        if (item.period === 'one-time') {
+                                            periodBadge = '<span class="badge bg-warning bg-opacity-10 text-warning">One-time</span>';
+                                        } else if (item.period) {
+                                            periodBadge = `<span class="badge bg-info bg-opacity-10 text-info">${item.period.charAt(0).toUpperCase() + item.period.slice(1)}</span>`;
+                                        } else {
+                                            periodBadge = '<span class="text-muted">-</span>';
+                                        }
+
+                                        tr.innerHTML = `
+                                            <td>
+                                                <div class="fw-medium">${item.description}</div>
+                                            </td>
+                                            <td class="text-center">${periodBadge}</td>
+                                            <td class="text-center">${item.quantity}</td>
+                                            <td class="text-end">${item.formatted_rate}</td>
+                                            <td class="text-end fw-medium">${item.formatted_amount}</td>
+                                        `;
+                                        tbody.appendChild(tr);
+                                    });
+
+                                    setBreakdown(oneTimeTotal, recurringTotal, d.currency);
+
+                                    document.querySelectorAll('.qty-rate-column').forEach(col => {
+                                        col.style.display = '';
+                                    });
+                                } else {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td colspan="5" class="text-center">No detailed items available</td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                }
+
+                                if (data.success && data.summary) {
+                                    const subtotalEl = document.getElementById('inv-subtotal');
+                                    if (subtotalEl) subtotalEl.textContent = data.summary.formatted_subtotal;
+
+                                    const vatPercentageEl = document.getElementById('inv-vat-percentage');
+                                    if (vatPercentageEl) vatPercentageEl.textContent = data.summary.vat_percentage;
+
+                                    const vatAmountEl = document.getElementById('inv-vat-amount');
+                                    if (vatAmountEl) vatAmountEl.textContent = data.summary.formatted_vat_amount;
+
+                                    const totalAmountEl = document.getElementById('inv-total-amount');
+                                    if (totalAmountEl) totalAmountEl.textContent = data.summary.formatted_total;
+
+                                    const amountPaid = Number(d.amountPaid || 0);
+                                    const amountPaidEl = document.getElementById('inv-amount-paid');
+                                    if (amountPaidEl) amountPaidEl.textContent = fmtMoney(amountPaid, d.currency);
+
+                                    const balanceEl = document.getElementById('inv-balance');
+                                    if (balanceEl) balanceEl.textContent = fmtMoney(Math.max(data.summary.total - amountPaid, 0), d.currency);
+                                } else {
+                                    setBreakdown(0, 0, d.currency);
+                                }
+                            })
+                            .catch(() => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td colspan="5" class="text-center text-danger">Error loading items</td>
+                                `;
+                                tbody.appendChild(tr);
+                                setBreakdown(0, 0, d.currency);
+                            });
+                        return;
+                    } else if (invoiceType === 'subscription') {
+                        let oneTimeTotal = 0;
+                        let recurringTotal = 0;
+
+                        if (implementationFee > 0) {
+                            oneTimeTotal += implementationFee;
+                        }
+                        recurringTotal += subscriptionAmount + licenseOverageAmount;
+
+                        if (implementationFee > 0) {
+                            const trImpl = document.createElement('tr');
+                            trImpl.innerHTML = showQtyRate ? `
+                            <td>Implementation Fee</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(implementationFee, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                        ` : `
+                            <td>Implementation Fee</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                        `;
+                            tbody.appendChild(trImpl);
+                        }
+
+                        if (subscriptionAmount > 0) {
+                            const tr1 = document.createElement('tr');
+                            tr1.innerHTML = showQtyRate ? `
+                            <td>${d.plan || '—'} Subscription</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(subscriptionAmount, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(subscriptionAmount, d.currency)}</td>
+                        ` : `
+                            <td>${d.plan || '—'} Subscription</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(subscriptionAmount, d.currency)}</td>
+                        `;
+                            tbody.appendChild(tr1);
+                        }
+
+                        if (licenseOverageCount > 0) {
+                            const tr2 = document.createElement('tr');
+                            tr2.innerHTML = `
+                            <td>New Licenses (Consolidated)</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>${licenseOverageCount}</td>
+                            <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(licenseOverageAmount, d.currency)}</td>
+                        `;
+                            tbody.appendChild(tr2);
+                        }
+
+                        if (subscriptionAmount === 0 && licenseOverageCount === 0 && amountDue > 0) {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = showQtyRate ? `
+                            <td>${d.plan || '—'} Subscription</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(amountDue, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        ` : `
+                            <td>${d.plan || '—'} Subscription</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        `;
+                            tbody.appendChild(tr);
+                        }
+
+                        setBreakdown(oneTimeTotal, recurringTotal, d.currency);
+                    } else if (invoiceType === 'license_overage') {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                        <td>License Overage</td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td>${licenseOverageCount || 1}</td>
+                        <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
+                        <td class="text-end">${fmtMoney(licenseOverageAmount || amountDue, d.currency)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                        setBreakdown(0, licenseOverageAmount || amountDue, d.currency);
+                    } else if (invoiceType === 'plan_upgrade') {
+                        const implementationFee = Number(d.implementationFee || 0);
+                        const planUpgradeAmount = Number(d.subscriptionAmount || 0);
+
+                        if (implementationFee > 0) {
+                            const trImpl = document.createElement('tr');
+                            trImpl.innerHTML = `
+                            <td>Implementation Fee Difference
+                                <br><small class="text-muted">Upgrading to ${d.plan || 'New Plan'}</small>
+                            </td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                        `;
+                            tbody.appendChild(trImpl);
+                        }
+
+                        const trPlan = document.createElement('tr');
+                        trPlan.innerHTML = `
+                        <td>Plan Price Difference
+                            <br><small class="text-muted">From ${d.currentPlan || 'Current Plan'} to ${d.plan || 'New Plan'} (${d.billingCycle ? d.billingCycle.charAt(0).toUpperCase() + d.billingCycle.slice(1) : 'N/A'})</small>
+                        </td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td class="text-end">${fmtMoney(planUpgradeAmount, d.currency)}</td>
+                        `;
+                        tbody.appendChild(trPlan);
+                        setBreakdown(implementationFee, planUpgradeAmount, d.currency);
+                    } else if (invoiceType === 'implementation_fee') {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                        <td>Implementation Fee: ${d.plan || 'Plan'}
+                            <br><small class="text-muted">One-time setup fee</small>
+                        </td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                        setBreakdown(amountDue, 0, d.currency);
+                    } else {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = showQtyRate ? `
+                        <td>${d.plan || 'Subscription'}</td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td>1</td>
+                        <td>${fmtMoney(amountDue, d.currency)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                    ` : `
+                        <td>${d.plan || 'Subscription'}</td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                        setBreakdown(0, amountDue, d.currency);
+                    }
+                }
+
+                const amountPaid = Number(d.amountPaid || 0);
+                const amountDue = Number(d.amountDue || 0);
+                const vatPercentage = Number(d.vatPercentage || 12);
+                const vatAmount = Number(d.vatAmount || 0);
+                const subtotal = Number(d.subtotal || 0);
+
+                let calculatedSubtotal = subtotal;
+                let calculatedVatAmount = vatAmount;
+
+                if (subtotal === 0 && amountDue > 0) {
+                    calculatedSubtotal = amountDue / (1 + (vatPercentage / 100));
+                    calculatedVatAmount = amountDue - calculatedSubtotal;
+                }
+
+                const subtotalEl = document.getElementById('inv-subtotal');
+                if (subtotalEl) subtotalEl.textContent = fmtMoney(calculatedSubtotal, d.currency);
+
+                const vatPercentageEl = document.getElementById('inv-vat-percentage');
+                if (vatPercentageEl) vatPercentageEl.textContent = vatPercentage;
+
+                const vatAmountEl = document.getElementById('inv-vat-amount');
+                if (vatAmountEl) vatAmountEl.textContent = fmtMoney(calculatedVatAmount, d.currency);
+
+                const totalAmountEl = document.getElementById('inv-total-amount');
+                if (totalAmountEl) totalAmountEl.textContent = fmtMoney(amountDue, d.currency);
+
+                const amountPaidEl = document.getElementById('inv-amount-paid');
+                if (amountPaidEl) amountPaidEl.textContent = fmtMoney(amountPaid, d.currency);
+
+                const balanceEl = document.getElementById('inv-balance');
+                if (balanceEl) balanceEl.textContent = fmtMoney(Math.max(amountDue - amountPaid, 0), d.currency);
+            });
+        });
+    </script>
 @endpush

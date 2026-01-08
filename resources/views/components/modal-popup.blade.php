@@ -11740,15 +11740,27 @@
                     <div class="row justify-content-between align-items-center mb-3">
                         <div class="col-md-6">
                             <div class="mb-4">
-                                <img src="{{ URL::asset('build/img/logo.svg') }}" class="img-fluid" alt="logo">
+                                <img src="{{ URL::asset('build/img/JAF-LOGO.png') }}" class="img-fluid" alt="logo"
+                                    style="max-width: 150px; height: auto;">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class=" text-end mb-3">
                                 <h5 class="text-dark mb-1">Invoice</h5>
-                                <p class="mb-1 fw-normal"><i class="ti ti-file-invoice me-1"></i>INV0287</p>
-                                <p class="mb-1 fw-normal"><i class="ti ti-calendar me-1"></i>Issue date : 12/09/2024 </p>
-                                <p class="fw-normal"><i class="ti ti-calendar me-1"></i>Due date : 12/10/2024 </p>
+                                <p class="mb-1 fw-normal">
+                                    <i class="ti ti-file-invoice me-1"></i><span id="inv-number">—</span>
+                                    <span id="inv-type-badge" class="badge ms-1">—</span>
+                                </p>
+                                <p class="mb-1 fw-normal">
+                                    <i class="ti ti-calendar me-1"></i>Issue date : <span id="inv-issued-at">—</span>
+                                </p>
+                                <p class="mb-1 fw-normal">
+                                    <i class="ti ti-calendar me-1"></i>Due date : <span id="inv-due-date">—</span>
+                                </p>
+                                <p class="fw-normal" id="inv-billing-cycle-row" style="display: none;">
+                                    <i class="ti ti-refresh me-1"></i>Billing Cycle : <span id="inv-billing-cycle"
+                                        class="badge bg-info">—</span>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -11756,19 +11768,18 @@
                         <div class="col-md-7">
                             <p class="text-dark mb-2 fw-medium fs-16">Invoice From :</p>
                             <div>
-                                <p class="mb-1">SmartHR</p>
-                                <p class="mb-1">367 Hillcrest Lane, Irvine, California,
-                                    United States</p>
-                                <p class="mb-1">smarthr@example.com</p>
+                                <p class="mb-1">JAF Digital Group Inc.</p>
+                                <p class="mb-1">Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner V.A.
+                                    Rufino St, Makati City, Metro Manila, Philippines</p>
+                                <p class="mb-1">support@timora.ph</p>
                             </div>
                         </div>
                         <div class="col-md-5">
                             <p class="text-dark mb-2 fw-medium fs-16">Invoice To :</p>
-                            <div>
-                                <p class="mb-1">BrightWave Innovations</p>
-                                <p class="mb-1">367 Hillcrest Lane, Irvine, California,
-                                    United States</p>
-                                <p class="mb-1">michael@example.com</p>
+                            <div id="inv-to">
+                                <p class="mb-1" id="inv-to-name">—</p>
+                                <p class="mb-1" id="inv-to-address">—</p>
+                                <p class="mb-1" id="inv-to-email">—</p>
                             </div>
                         </div>
                     </div>
@@ -11779,19 +11790,12 @@
                                     <tr>
                                         <th>Description</th>
                                         <th class="text-center">Type</th>
-                                        <th class="text-center">Quantity</th>
-                                        <th class="text-end">Rate</th>
+                                        <th class="text-center qty-rate-column">Quantity</th>
+                                        <th class="text-end qty-rate-column">Rate</th>
                                         <th class="text-end">Amount</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Core Monthly Plan Subscription</td>
-                                        <td class="text-center">Monthly</td>
-                                        <td class="text-center">1</td>
-                                        <td class="text-end">$200.00</td>
-                                        <td class="text-end">$200.00</td>
-                                    </tr>
+                                <tbody id="inv-items">
                                 </tbody>
                             </table>
                         </div>
@@ -11801,16 +11805,33 @@
                         <div class="col-md-4">
                             <div class="invoice-summary">
                                 <div class="invoice-summary__row">
-                                    <p class="text-dark fw-medium mb-0">Sub Total</p>
-                                    <p class="mb-0">$200.00</p>
+                                    <p class="text-dark fw-medium mb-0" id="inv-one-time-label">One time Payment Price</p>
+                                    <p class="mb-0" id="inv-one-time">—</p>
                                 </div>
                                 <div class="invoice-summary__row">
-                                    <p class="text-dark fw-medium mb-0">Tax</p>
-                                    <p class="mb-0">$0.00</p>
+                                    <p class="text-dark fw-medium mb-0" id="inv-recurring-label">Monthly Subscription Price</p>
+                                    <p class="mb-0" id="inv-recurring">—</p>
+                                </div>
+                                <div class="invoice-summary__divider"></div>
+                                <div class="invoice-summary__row">
+                                    <p class="text-dark fw-medium mb-0">Sub Total</p>
+                                    <p class="mb-0" id="inv-subtotal">—</p>
+                                </div>
+                                <div class="invoice-summary__row">
+                                    <p class="text-dark fw-medium mb-0">VAT (<span id="inv-vat-percentage">12</span>%)</p>
+                                    <p class="mb-0" id="inv-vat-amount">—</p>
                                 </div>
                                 <div class="invoice-summary__row invoice-summary__row--total">
-                                    <p class="text-dark fw-semibold mb-0">Total</p>
-                                    <p class="text-dark fw-semibold mb-0">$200.00</p>
+                                    <p class="text-dark fw-semibold mb-0">Total Amount</p>
+                                    <p class="mb-0" id="inv-total-amount">—</p>
+                                </div>
+                                <div class="invoice-summary__row invoice-summary__row--muted">
+                                    <p class="text-dark fw-medium mb-0">Amount Paid</p>
+                                    <p class="mb-0" id="inv-amount-paid">—</p>
+                                </div>
+                                <div class="invoice-summary__row invoice-summary__row--balance">
+                                    <p class="text-dark fw-semibold mb-0">Balance Due</p>
+                                    <p class="text-dark fw-semibold mb-0" id="inv-balance">—</p>
                                 </div>
                             </div>
                         </div>
@@ -11818,8 +11839,20 @@
                     <div class="card border mb-0">
                         <div class="card-body">
                             <p class="text-dark fw-medium mb-2">Terms & Conditions:</p>
-                            <p class="fs-12 fw-normal d-flex align-items-baseline mb-2"><i class="ti ti-point-filled text-primary me-1"></i>All payments must be made according to the agreed schedule. Late payments may incur additional fees.</p>
-                            <p class="fs-12 fw-normal d-flex align-items-baseline"><i class="ti ti-point-filled text-primary me-1"></i>We are not liable for any indirect, incidental, or consequential damages, including loss of profits, revenue, or data.</p>
+                            <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+                                <i class="ti ti-point-filled text-primary me-1"></i>
+                                All payments must be made according to the agreed schedule.
+                            </p>
+                            <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+                                <i class="ti ti-point-filled text-primary me-1"></i>
+                                License overage charges apply when employee count exceeds subscription limit during
+                                billing period.
+                            </p>
+                            <p class="fs-12 fw-normal d-flex align-items-baseline">
+                                <i class="ti ti-point-filled text-primary me-1"></i>
+                                We are not liable for any indirect, incidental, or consequential damages, including loss
+                                of profits, revenue, or data.
+                            </p>
                         </div>
                     </div>
                 </div>
