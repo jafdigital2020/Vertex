@@ -159,7 +159,7 @@ class AuthController extends Controller
 
                     $violation = Violation::where('user_id', $tenantUser->id)
                         ->latest()
-                        ->first();  // Get most recent violation
+                        ->first();   
 
                     $terminationDateReached = false;
 
