@@ -252,7 +252,7 @@
                             <tbody>
                                 @forelse ($subscriptions as $subscription)
                                     @php
-                                        $latestInvoice = $subscription->invoices->first();
+                                        $latestInvoice = $subscription->latest_invoice ?? $subscription->invoices->first();
                                         $vatPercentage = $latestInvoice && $latestInvoice->subscription && $latestInvoice->subscription->plan
                                             ? ($latestInvoice->subscription->plan->vat_percentage ?? 12)
                                             : 12;
@@ -651,7 +651,7 @@
                     });
 
                     if (invoiceType === 'custom_order' || d.hasWizardItems === 'true') {
-                        fetch(`/billing/invoices/${d.invoiceId}/items`)
+                        fetch(`/invoices/${d.invoiceId}/items`)
                             .then(response => response.json())
                             .then(data => {
                                 tbody.innerHTML = '';

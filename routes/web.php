@@ -157,6 +157,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
         Route::get('/superadmin-dashboard', [DashboardController::class, 'dashboardIndex'])->name('superadmin-dashboard');
         Route::get('/tenant', [OrganizationController::class, 'organizationIndex'])->name('superadmin-tenants');
         Route::get('/subscription', [SubscriptionController::class, 'subscriptionIndex'])->name('superadmin-subscription');
+        Route::get('/invoices/{invoice}/items', [App\Http\Controllers\Tenant\Billing\InvoiceController::class, 'getInvoiceItems'])->name('superadmin-invoice-items');
         Route::get('/packages', [PackageController::class, 'packageTable'])->name('superadmin-packagetable');
         Route::get('/packages-grid', [PackageController::class, 'packageGrid'])->name('superadmin-packageGrid');
         Route::get('/payment', [PaymentController::class, 'paymentIndex'])->name('superadmin-payment');
