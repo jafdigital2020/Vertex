@@ -164,9 +164,10 @@
                                                         <td class="text-center">{{ $sus->termination_date ?? '-' }}</td>
                                                         <td class="text-center">
                                                            @if($sus->termination_date !== null && $sus->last_pay_status !== 1 )
-                                                             Pending
+                                                           <span class="badge bg-warning">Pending</span>
+                                                            
                                                            @elseif($sus->termination_date !== null && $sus->last_pay_status === 1)
-                                                              Done
+                                                           <span class="badge bg-success">Done</span> 
                                                            @endif
                                                         </td>
                                                         <td class="text-center">{{ $sus->last_pay_date ?? '-'}}</td>

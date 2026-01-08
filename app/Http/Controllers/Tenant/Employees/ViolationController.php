@@ -1356,6 +1356,17 @@ class ViolationController extends Controller
                 'last_pay_status' => true, 
                 'last_payroll_id' => $lastPayrollId
             ]);  
+            if($violation->user_id){
+                $user = User::find($violation->user_id);
+                if ($user) {
+                    $user->notify(
+                        new UserNotification(
+                            "Your final pay has been processed following your termination. Please review your payroll details for accuracy."
+                        )
+                    );
+
+                }
+            } 
 
             return response()->json([
                 'attendances'       => $attendances,

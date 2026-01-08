@@ -45,9 +45,9 @@
                                                         <td class="text-center">{{ $sus->termination_date ?? '-' }}</td>
                                                         <td class="text-center">
                                                            @if($sus->termination_date !== null && $sus->last_pay_status !== 1 )
-                                                             Pending
+                                                           <span class="badge bg-warning">Pending</span> 
                                                            @elseif($sus->termination_date !== null && $sus->last_pay_status === 1)
-                                                              Done
+                                                           <span class="badge bg-success">Done</span> 
                                                            @endif
                                                         </td>
                                                         <td class="text-center">{{ $sus->last_pay_date ?? '-'}}</td>
@@ -124,7 +124,7 @@
                                                                         @endif -->
                                                                         @break  
 
-                                                                          @case('implemented')
+                                                                        @case('implemented')
                                                                         @if($sus->termination_date !== null && $sus->last_pay_status !== 1 )
                                                                         <button class="btn btn-sm btn-primary"
                                                                             onclick="processLastPay({{ $sus->employee->id }} , {{$sus->id}})"

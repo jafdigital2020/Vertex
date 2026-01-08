@@ -152,15 +152,31 @@ class AuthController extends Controller
             if ($tenantUser) {
                 
                 $terminated = EmploymentDetail::where('user_id', $tenantUser->id)
-                ->where('employment_state', 'Terminated')
-                ->exists();
+                    ->where('employment_state', 'Terminated')
+                    ->exists();
 
                 if ($terminated) {
-                    return response()->json([
-                        'message' => 'Your account has been terminated. Please contact HR for further assistance.',
-                        'type' => 'login'
-                    ], 403);
+
+                    $violation = Violation::where('user_id', $tenantUser->id)
+                        ->latest()
+                        ->first();  // Get most recent violation
+
+                    $terminationDateReached = false;
+
+                    if ($violation && $violation->termination_date) { 
+                        $terminationDateReached = \Carbon\Carbon::parse($violation->termination_date)
+                            ->isSameDay(\Carbon\Carbon::today()) 
+                            || \Carbon\Carbon::parse($violation->termination_date)->isBefore(\Carbon\Carbon::today());
+                    }
+
+                    if ($terminationDateReached) {
+                        return response()->json([
+                            'message' => 'Your account has been terminated. Please contact HR for further assistance.',
+                            'type' => 'login'
+                        ], 403);
+                    }
                 }
+
                 $suspended = Violation::where('user_id', $tenantUser->id)
                     ->where('status', 'implemented')
                     ->whereDate('suspension_start_date', '<=', Carbon::now())
