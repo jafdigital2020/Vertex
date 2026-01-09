@@ -13,7 +13,6 @@ use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\Tenant\DesignationController;
-use App\Http\Controllers\Tenant\OrganizationalStructureController;
 use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
@@ -57,6 +56,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayslipController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\PayrollBatchController;
 
 /*
 |--------------------------------------------------------------------------
@@ -456,6 +456,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // =================== Billing ================ //
     Route::get('/billing-overview', [BillingController::class, 'billingIndex'])->name('api.billing');
+
+    // ==================== Payroll Batch Management ==================== //
+    // Payroll Batch Users Management
+    Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('api.payroll-batch-users');
+    Route::get('/payroll/batch/users/filter', [PayrollBatchController::class, 'payrollBatchUsersFilter'])->name('api.payroll-batch-users-filter');
+    Route::post('/payroll/batch/users/update', [PayrollBatchController::class, 'payrollBatchUsersUpdate'])->name('api.payroll-batch-users-update');
+    Route::post('/payroll/batch/users/bulk-assign', [PayrollBatchController::class, 'payrollBatchBulkAssign'])->name('api.payroll-batch-bulk-assign');
+    
+    // Payroll Batch Settings Management
+    Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('api.payroll-batch-settings');
+    Route::post('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsStore'])->name('api.payroll-batch-settings-store');
+    Route::put('/payroll/batch/settings/{id}', [PayrollBatchController::class, 'payrollBatchSettingsUpdate'])->name('api.payroll-batch-settings-update');
+    Route::delete('/payroll/batch/settings/{id}', [PayrollBatchController::class, 'payrollBatchSettingsDelete'])->name('api.payroll-batch-settings-delete');
+    
+    // Organizational Data Fetch Endpoints (for cascading filters)
+    Route::post('/payroll/batch/fetch-departments', [PayrollBatchController::class, 'fetchDepartments'])->name('api.fetch-departments');
+    Route::post('/payroll/batch/fetch-designations', [PayrollBatchController::class, 'fetchDesignations'])->name('api.fetch-designations');
+    Route::post('/payroll/batch/fetch-employees', [PayrollBatchController::class, 'fetchEmployees'])->name('api.fetch-employees');
+    
+    // Payroll Duplicate Check
+    Route::post('/payroll/batch/check-duplicate', [PayrollBatchController::class, 'checkDuplicatePayroll'])->name('api.payroll-batch-check-duplicate');
 
     // ==================== Reports ==================== //
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
