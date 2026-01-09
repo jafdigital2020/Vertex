@@ -437,6 +437,14 @@ jobs:
               "logs": "File deployment started at $(date) - copying application files to server"
             }' || echo "Callback failed - continuing..."
 
+      - name: Debug workspace contents
+        run: |
+          pwd
+          ls -lah
+          echo "----"
+          ls -lah app bootstrap config database public routes scripts artisan composer.json composer.lock || true
+
+      # SCP only necessary Laravel files
       - name: Copy Laravel source (optimized)
         uses: appleboy/scp-action@v0.1.7
         with:
