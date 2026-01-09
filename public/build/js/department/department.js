@@ -59,19 +59,20 @@ document.addEventListener("DOMContentLoaded", function () {
     // Edit
     let editId = "";
 
-    // 🌟 1. Populate fields when edit icon is clicked
-    document.querySelectorAll('[data-bs-target="#edit_department"]').forEach(button => {
-        button.addEventListener("click", function () {
-            editId = this.getAttribute("data-id");
+    // 🌟 1. Populate fields when edit icon is clicked (using event delegation)
+    document.addEventListener("click", function(event) {
+        if (event.target.closest('[data-bs-target="#edit_department"]')) {
+            const button = event.target.closest('[data-bs-target="#edit_department"]');
+            editId = button.getAttribute("data-id");
 
             document.getElementById("editDepartmentId").value = editId;
-            document.getElementById("editDepartmentCode").value = this.getAttribute(
+            document.getElementById("editDepartmentCode").value = button.getAttribute(
                 "data-department_code");
-            document.getElementById("editDepartmentName").value = this.getAttribute(
+            document.getElementById("editDepartmentName").value = button.getAttribute(
                 "data-department_name");
 
             // Set and force update for select dropdown
-            const headOfDepartmentId = this.getAttribute("data-department_head");
+            const headOfDepartmentId = button.getAttribute("data-department_head");
             const select = document.getElementById("editHeadOfDepartment");
             select.value = headOfDepartmentId;
 
@@ -79,15 +80,17 @@ document.addEventListener("DOMContentLoaded", function () {
             select.dispatchEvent(new Event('change'));
 
             // Branch
-            const branchId = this.getAttribute("data-branch_id");
+            const branchId = button.getAttribute("data-branch_id");
             const editBranchSelect = document.getElementById("editBranchId");
             editBranchSelect.value = branchId;
 
             // Force UI update
             editBranchSelect.dispatchEvent(new Event('change'));
 
-            select2.dispatchEvent(new Event('change'));
-        });
+            if (typeof select2 !== 'undefined') {
+                select2.dispatchEvent(new Event('change'));
+            }
+        }
     });
 
     // 🌟 2. Handle update button click
@@ -144,19 +147,20 @@ document.addEventListener("DOMContentLoaded", function () {
     let deleteId = null;
     let authToken = localStorage.getItem("token");
 
-    const deleteButtons = document.querySelectorAll('.btn-delete');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const departmentNamePlaceHolder = document.getElementById('departmentNamePlaceHolder');
 
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            deleteId = this.getAttribute('data-id');
-            const departmentName = this.getAttribute('data-department_name');
+    // Use event delegation for delete buttons
+    document.addEventListener('click', function(event) {
+        if (event.target.closest('.btn-delete')) {
+            const button = event.target.closest('.btn-delete');
+            deleteId = button.getAttribute('data-id');
+            const departmentName = button.getAttribute('data-department_name');
 
             if (departmentNamePlaceHolder) {
                 departmentNamePlaceHolder.textContent = departmentName;
             }
-        });
+        }
     });
 
     confirmDeleteBtn?.addEventListener('click', function () {
