@@ -124,7 +124,7 @@
                                             </h6>
                                         </td>
                                         <td class="text-center">
-                                            <h6 class="fw-medium">{{ $department->department_code }}
+                                            <h6 class="fw-medium">{{ $department->department_code && $department->department_code !== 'null' ? $department->department_code : '' }}
                                             </h6>
                                         </td>
                                         <td class="text-center">
@@ -184,10 +184,10 @@
                                              @if (in_array('Update', $permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_department" data-id="{{ $department->id }}"
-                                                    data-department_code="{{ $department->department_code }}"
-                                                    data-department_name="{{ $department->department_name }}"
-                                                    data-department_head="{{ $department->head_of_department }}"
-                                                    data-branch_id="{{ $department->branch_id }}" title="Edit"><i
+                                                    data-department_code="{{ $department->department_code ?? '' }}"
+                                                    data-department_name="{{ $department->department_name ?? '' }}"
+                                                    data-department_head="{{ $department->head_of_department ?? '' }}"
+                                                    data-branch_id="{{ $department->branch_id ?? '' }}" title="Edit"><i
                                                         class="ti ti-edit"></i></a>
                                              @endif
                                              @if (in_array('Delete', $permission))
@@ -274,7 +274,7 @@
 
                 const rows = response.data.map(dep => {
                     const name = `<h6 class="fw-medium">${dep.department_name}</h6>`;
-                    const code = `<h6 class="fw-medium">${dep.department_code ?? ''}</h6>`;
+                    const code = `<h6 class="fw-medium">${dep.department_code && dep.department_code !== 'null' ? dep.department_code : ''}</h6>`;
                     const activeCnt = dep.employee_count;
                     const head = dep.head
                         ? `${dep.head.personal_information.last_name}, ${dep.head.personal_information.first_name}`
@@ -295,10 +295,10 @@
                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                 data-bs-target="#edit_department"
                                 data-id="${dep.id}"
-                                data-department_code="${dep.department_code}"
-                                data-department_name="${dep.department_name}"
-                                data-department_head="${dep.head_of_department}"
-                                data-branch_id="${dep.branch_id}"
+                                data-department_code="${dep.department_code || ''}"
+                                data-department_name="${dep.department_name || ''}"
+                                data-department_head="${dep.head_of_department || ''}"
+                                data-branch_id="${dep.branch_id || ''}"
                                 title="Edit">
                                 <i class="ti ti-edit"></i>
                                 </a>`;
