@@ -437,13 +437,23 @@ jobs:
               "logs": "File deployment started at $(date) - copying application files to server"
             }' || echo "Callback failed - continuing..."
 
-      - name: Copy files via SCP
+      - name: Copy Laravel source (optimized)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
-          source: "."
+          source: |
+            app/
+            bootstrap/
+            config/
+            database/
+            public/
+            routes/
+            scripts/
+            artisan
+            composer.json
+            composer.lock
           target: "/tmp/deploy-${{ env.SUBDOMAIN }}"
 
       - name: Move files to correct location with sanitized username
@@ -520,7 +530,7 @@ jobs:
 
             cd "/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}"
             cp .env.testing .env
-            composer install --no-dev
+            composer install --no-dev --prefer-dist --optimize-autoloader
 
             # Update .env with new DB credentials before running artisan commands
             ENV_PATH="/home/$SITE_USER/htdocs/${{ env.SUBDOMAIN }}/.env"
@@ -699,7 +709,7 @@ jobs:
 
             # Use the complete wizard data from the payload instead of minimal data
             # Handle different input formats and validate JSON before parsing
-            
+
             # Check if wizard data is available and valid
             if [ -n "$SUBSCRIPTION_DETAILS" ] && [ "$SUBSCRIPTION_DETAILS" != "{}" ]; then
               echo "📦 Processing wizard subscription data..."
