@@ -5248,8 +5248,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Calculation Basis</label>
-                                    <select class="select" name="calculation_basis" id="editAllowanceCalculationBasis" required>
-                                        <option value="" disabled>Select</option>
+                                    <select class="form-select" name="calculation_basis" id="editAllowanceCalculationBasis" required>
                                         <option value="fixed">Fixed</option>
                                         <option value="per_attended_day">Per Attended Day</option>
                                         <option value="per_attended_hour">Per Attended Hour</option>
